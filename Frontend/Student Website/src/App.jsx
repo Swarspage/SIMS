@@ -5,11 +5,12 @@ import ResetPassword from "./Pages/ResetPassword";
 import AdminStudentSection from "./Pages/AdminStudentSection";
 import StudentSignUp from "./Pages/StudentSignup";
 import LoginPage from "./Pages/LoginPage";
+import ActivitiesPage from "./Pages/ActivitiesPage";
 const App = () => {
   return (
     <>
       {/* <Home /> */}
-      <LoginPage />
+      <AdminStudentSection />
     </>
   );
 };
