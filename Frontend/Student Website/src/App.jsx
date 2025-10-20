@@ -10,6 +10,7 @@ import AdminActivity from "./Pages/AdminActivity";
 import AdminAchievements from "./Pages/AdminAchievement";
 import AdminInternship from "./Pages/AdminInternship";
 import AdminDashboard from "./Pages/AdminDashboard";
+import AdminPlacement from "./Pages/AdminPlacement"; // ← ADD THIS
 
 // Student Pages
 import StudentActivity from "./Pages/StudentActivity";
@@ -62,16 +63,8 @@ const App = () => {
           <Route path="activities" element={<AdminActivity />} />
           <Route path="achievements" element={<AdminAchievements />} />
           <Route path="internships" element={<AdminInternship />} />
-          <Route
-            path="placements"
-            element={
-              <div className="p-6">
-                <h1 className="text-2xl font-bold">
-                  Admin Placements Coming Soon
-                </h1>
-              </div>
-            }
-          />
+          <Route path="placements" element={<AdminPlacement />} />{" "}
+          {/* ← CHANGED THIS */}
         </Route>
 
         {/* Student Routes - PROTECTED */}
