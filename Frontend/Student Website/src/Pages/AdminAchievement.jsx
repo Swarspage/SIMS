@@ -87,8 +87,11 @@ export default function AdminAchievements() {
       {/* Achievement Cards */}
       <div className="bg-[#0f2130] rounded-2xl p-6 min-h-[60vh] overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {achievements.map((achievement) => (
-            <AchievementCard key={achievement.id} achievement={achievement} />
+          {achievements.map((achievement, index) => (
+            <AchievementCard
+              key={`achievement-${index}`}
+              achievement={achievement}
+            />
           ))}
         </div>
       </div>

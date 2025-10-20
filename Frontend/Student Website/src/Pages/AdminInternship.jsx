@@ -63,8 +63,8 @@ export default function AdminInternships() {
       {/* Internship Cards */}
       <div className="bg-[#0f2130] rounded-2xl p-6 min-h-[60vh] overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {internships.map((i) => (
-            <InternshipCard key={i.id} internship={i} />
+          {internships.map((i, index) => (
+            <InternshipCard key={`internship-${index}`} internship={i} />
           ))}
         </div>
       </div>

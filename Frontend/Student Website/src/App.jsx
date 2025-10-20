@@ -24,6 +24,9 @@ import StudentDashboard from "./Pages/StudentDashboard";
 import AdminLayout from "./layouts/AdminLayout";
 import StudentLayout from "./layouts/StudentLayout";
 
+// Protected Route Component
+import ProtectedRoute from "./components/ProtectedRoute";
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -34,8 +37,15 @@ const App = () => {
         <Route path="/admin/signup" element={<AdminSignUp />} />
         <Route path="/student/signup" element={<StudentSignUp />} />
 
-        {/* Admin Routes - Wrapped in AdminLayout */}
-        <Route path="/admin" element={<AdminLayout />}>
+        {/* Admin Routes - PROTECTED */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route
@@ -64,8 +74,15 @@ const App = () => {
           />
         </Route>
 
-        {/* Student Routes - Wrapped in StudentLayout */}
-        <Route path="/student" element={<StudentLayout />}>
+        {/* Student Routes - PROTECTED */}
+        <Route
+          path="/student"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <StudentLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Navigate to="/student/dashboard" replace />} />
           <Route path="dashboard" element={<StudentDashboard />} />
           <Route path="admission" element={<StudentAdmission />} />

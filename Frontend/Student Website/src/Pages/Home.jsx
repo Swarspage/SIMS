@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const navigate = useNavigate();
+
   // Sample data for achievements
   const achievements = [
     {
@@ -124,7 +127,10 @@ const Home = () => {
               </div>
 
               {/* Login Button */}
-              <button className="bg-[#1D3EA1] text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-800 transition duration-200">
+              <button
+                onClick={() => navigate("/login")}
+                className="bg-[#1D3EA1] text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-800 transition duration-200"
+              >
                 Login
               </button>
             </div>
