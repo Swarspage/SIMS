@@ -1,100 +1,73 @@
 const Admission = require("../models/Admission");
 const Student = require("../models/Student");
+const { admissionSchema, admissionStatusSchema, getAdmissionsValidation } = require("../validators/admissionValidation");
 
-// CREATE Admission (Student Only)
+//Create admission (Student only)
 const createAdmission = async (req, res) => {
   try {
-    const studentId = req.user.id; // from JWT
-    const { rollno, year, div, course, fees, academicYear } = req.body;
+    const studentId = req.user.id;
 
-    // Verify student existence
     const student = await Student.findById(studentId);
-    if (!student) {
+    if (!student)
       return res.status(404).json({ success: false, message: "Student not found" });
-    }
 
-    // Prevent duplicate admission in same year
-    const existing = await Admission.findOne({ stuID: studentId, academicYear });
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: "Admission already exists for this academic year",
-      });
-    }
+    const { error } = admissionSchema.validate(req.body);
+    if (error)
+      return res.status(400).json({ success: false, message: error.details[0].message });
 
-    // Create admission
+    const existing = await Admission.findOne({
+      stuID: studentId,
+      academicYear: req.body.academicYear,
+    });
+    if (existing)
+      return res.status(400).json({ success: false, message: "Admission already exists for this academic year" });
+
     const admission = new Admission({
       stuID: studentId,
-      rollno,
-      year,
-      div,
-      course,
-      fees,
-      academicYear,
+      ...req.body,
     });
 
     await admission.save();
     res.status(201).json({
       success: true,
-      message: "Admission form submitted successfully",
+      message: "Admission submitted successfully",
       data: admission,
     });
   } catch (err) {
-    console.error("Error creating admission:", err);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error while creating admission",
-    });
+    console.error("createAdmission error:", err);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
-// GET all Admissions of logged-in Student
+//Get all admissions of a student
 const getAdmissionsByStudent = async (req, res) => {
   try {
-    const studentId = req.user.id;
-    const admissions = await Admission.find({ stuID: studentId }).sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      data: admissions,
-    });
+    const admissions = await Admission.find({ stuID: req.user.id }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: admissions });
   } catch (err) {
-    console.error("Error fetching student admissions:", err);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error while fetching admissions",
-    });
+    console.error("getAdmissionsByStudent error:", err);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
-// UPDATE Admission (Student can edit only if pending)
+//Update admission (only if pending)
 const updateAdmission = async (req, res) => {
   try {
-    const studentId = req.user.id;
-    const admissionId = req.params.id;
-
-    const admission = await Admission.findById(admissionId);
-    if (!admission) {
+    const admission = await Admission.findById(req.params.id);
+    if (!admission)
       return res.status(404).json({ success: false, message: "Admission not found" });
-    }
 
-    if (admission.stuID.toString() !== studentId) {
-      return res.status(403).json({ success: false, message: "Unauthorized access" });
-    }
+    if (admission.stuID.toString() !== req.user.id)
+      return res.status(403).json({ success: false, message: "Unauthorized" });
 
-    if (admission.status !== "pending") {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot update admission after approval or rejection",
-      });
-    }
+    if (admission.status !== "pending")
+      return res.status(400).json({ success: false, message: "Cannot update after approval/rejection" });
 
-    // Allow only specific fields to be updated
-    const allowedFields = ["rollno", "year", "div", "course", "fees", "academicYear"];
-    allowedFields.forEach((field) => {
-      if (req.body[field] !== undefined) admission[field] = req.body[field];
-    });
+    const { error } = admissionSchema.validate(req.body);
+    if (error)
+      return res.status(400).json({ success: false, message: error.details[0].message });
 
+    Object.assign(admission, req.body);
     await admission.save();
 
     res.status(200).json({
@@ -103,132 +76,137 @@ const updateAdmission = async (req, res) => {
       data: admission,
     });
   } catch (err) {
-    console.error("Error updating admission:", err);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error while updating admission",
-    });
+    console.error("updateAdmission error:", err);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
-// DELETE Admission (Student can delete only if pending)
+//Delete admission (only if pending)
 const deleteAdmission = async (req, res) => {
   try {
-    const studentId = req.user.id;
-    const admissionId = req.params.id;
-
-    const admission = await Admission.findById(admissionId);
-    if (!admission) {
+    const admission = await Admission.findById(req.params.id);
+    if (!admission)
       return res.status(404).json({ success: false, message: "Admission not found" });
-    }
 
-    if (admission.stuID.toString() !== studentId) {
-      return res.status(403).json({ success: false, message: "Unauthorized access" });
-    }
+    if (admission.stuID.toString() !== req.user.id)
+      return res.status(403).json({ success: false, message: "Unauthorized" });
 
-    if (admission.status !== "pending") {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot delete admission after approval or rejection",
-      });
-    }
+    if (admission.status !== "pending")
+      return res.status(400).json({ success: false, message: "Cannot delete after approval/rejection" });
 
-    await Admission.findByIdAndDelete(admissionId);
-
-    res.status(200).json({
-      success: true,
-      message: "Admission deleted successfully",
-    });
+    await admission.remove();
+    res.status(200).json({ success: true, message: "Admission deleted successfully" });
   } catch (err) {
-    console.error("Error deleting admission:", err);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error while deleting admission",
-    });
+    console.error("deleteAdmission error:", err);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
-// ADMIN: Get All Admissions
+//Admin=> Get all admissions (with search, pagination, filters)
 const getAllAdmissions = async (req, res) => {
   try {
-    if (!req.user.isAdmin)
+    if (!req.user.isAdmin && req.user.role !== "admin")
       return res.status(403).json({ success: false, message: "Access denied" });
 
-    const admissions = await Admission.find()
-      .populate("stuID", "name email branch year div")
-      .sort({ createdAt: -1 });
+    const { error, value } = getAdmissionsValidation.validate(req.query);
+    if (error)
+      return res.status(400).json({ success: false, message: error.details[0].message });
 
-    res.status(200).json({ success: true, data: admissions });
-  } catch (err) {
-    console.error("Error fetching all admissions:", err);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error while fetching admissions",
-    });
-  }
-};
+    const page = Number(value.page || 1);
+    const limit = Math.min(Number(value.limit || 10), 50);
+    const skip = (page - 1) * limit;
 
-// ADMIN: Update Admission Status (Approve/Reject)
-const updateAdmissionStatus = async (req, res) => {
-  try {
-    if (!req.user.isAdmin)
-      return res.status(403).json({ success: false, message: "Access denied" });
+    const filter = {};
+    if (value.year) filter.year = value.year;
+    if (value.academicYear) filter.academicYear = value.academicYear;
+    if (value.filterPaid) filter.isFeesPaid = value.filterPaid === "paid";
 
-    const { id } = req.params;
-    const { status } = req.body;
-
-    if (!["approved", "rejected"].includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid status. Must be 'approved' or 'rejected'",
-      });
+    let searchQuery = {};
+    if (value.search) {
+      const regex = new RegExp(value.search, "i");
+      searchQuery = {
+        $or: [
+          { rollno: regex },
+          { div: regex },
+          { course: regex },
+          { academicYear: regex },
+        ],
+      };
     }
 
-    const admission = await Admission.findByIdAndUpdate(id, { status }, { new: true });
+    const query = { ...filter, ...searchQuery };
 
-    if (!admission) {
-      return res.status(404).json({ success: false, message: "Admission not found" });
-    }
+    const [admissions, total] = await Promise.all([
+      Admission.find(query)
+        .populate("stuID", "name branch year")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Admission.countDocuments(query),
+    ]);
 
     res.status(200).json({
       success: true,
-      message: `Admission ${status} successfully`,
+      data: admissions,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    console.error("getAllAdmissions error:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+//Admin=> Update admission status
+const updateAdmissionStatus = async (req, res) => {
+  try {
+    if (!req.user.isAdmin && req.user.role !== "admin")
+      return res.status(403).json({ success: false, message: "Access denied" });
+
+    const { error } = admissionStatusSchema.validate(req.body);
+    if (error)
+      return res.status(400).json({ success: false, message: error.details[0].message });
+
+    const admission = await Admission.findByIdAndUpdate(
+      req.params.id,
+      { status: req.body.status },
+      { new: true }
+    );
+
+    if (!admission)
+      return res.status(404).json({ success: false, message: "Admission not found" });
+
+    res.status(200).json({
+      success: true,
+      message: `Admission ${req.body.status} successfully`,
       data: admission,
     });
   } catch (err) {
-    console.error("Error updating admission status:", err);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error while updating status",
-    });
+    console.error("updateAdmissionStatus error:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-// ADMIN: Get All Unpaid Students
+//Admin => Get unpaid students
 const getUnpaidStudents = async (req, res) => {
   try {
-    if (!req.user.isAdmin)
+    if (!req.user.isAdmin && req.user.role !== "admin")
       return res.status(403).json({ success: false, message: "Access denied" });
 
     const unpaid = await Admission.getUnpaidStudents();
     res.status(200).json({ success: true, data: unpaid });
   } catch (err) {
-    console.error("Error fetching unpaid students:", err);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error while fetching unpaid students",
-    });
+    console.error("getUnpaidStudents error:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
 module.exports = {
-  // Student Routes
   createAdmission,
   getAdmissionsByStudent,
   updateAdmission,
   deleteAdmission,
-
-  // Admin Routes
   getAllAdmissions,
   updateAdmissionStatus,
   getUnpaidStudents,
