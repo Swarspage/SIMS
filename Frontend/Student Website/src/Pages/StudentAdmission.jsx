@@ -261,14 +261,12 @@
 //   );
 // }
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { admissionService } from "../services/admissionService";
 
 export default function StudentAdmission() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [admissions, setAdmissions] = useState([]);
-  const [currentAdmission, setCurrentAdmission] = useState(null);
 
   const [formData, setFormData] = useState({
     rollno: "",
@@ -277,43 +275,10 @@ export default function StudentAdmission() {
     course: "",
     admissionDate: "",
     fees: "",
-    isFeesPaid: "pending",
-    isScholarshipApplied: "none",
+    isFeesPaid: false,
+    isScholarshipApplied: false,
     academicYear: "",
   });
-
-  useEffect(() => {
-    fetchAdmissions();
-  }, []);
-
-  const fetchAdmissions = async () => {
-    try {
-      const data = await admissionService.getMyAdmissions();
-      setAdmissions(data);
-      if (data.length > 0) {
-        loadAdmissionIntoForm(data[0]);
-      }
-    } catch (err) {
-      console.error("Error fetching admissions:", err);
-    }
-  };
-
-  const loadAdmissionIntoForm = (admission) => {
-    setCurrentAdmission(admission);
-    setFormData({
-      rollno: admission.rollno || "",
-      year: admission.year || "",
-      div: admission.div || "",
-      course: admission.course || "",
-      admissionDate: admission.admissionDate
-        ? new Date(admission.admissionDate).toISOString().split("T")[0]
-        : "",
-      fees: admission.fees || "",
-      isFeesPaid: admission.isFeesPaid ? "full" : "pending",
-      isScholarshipApplied: admission.isScholarshipApplied ? "merit" : "none",
-      academicYear: admission.academicYear || "",
-    });
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -325,23 +290,25 @@ export default function StudentAdmission() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const dataToSend = {
-        ...formData,
-        isFeesPaid: formData.isFeesPaid === "full",
-        isScholarshipApplied: formData.isScholarshipApplied !== "none",
-      };
+      // Remove admissionDate - backend sets it automatically
+      const { admissionDate, ...dataToSend } = formData;
 
-      if (currentAdmission) {
-        await admissionService.updateAdmission(
-          currentAdmission._id,
-          dataToSend
-        );
-      } else {
-        await admissionService.createAdmission(dataToSend);
-      }
-
+      await admissionService.createAdmission(dataToSend);
+      alert("Admission created successfully!");
       setIsEditMode(false);
-      fetchAdmissions();
+
+      // Reset form
+      setFormData({
+        rollno: "",
+        year: "",
+        div: "",
+        course: "",
+        admissionDate: "",
+        fees: "",
+        isFeesPaid: false,
+        isScholarshipApplied: false,
+        academicYear: "",
+      });
     } catch (err) {
       console.error("Error saving admission:", err);
       alert(err.response?.data?.message || "Failed to save");
@@ -372,8 +339,6 @@ export default function StudentAdmission() {
 
       {/* Admission Form */}
       <div className="bg-[#1e293b] rounded-2xl p-8">
-        {/* Student ID - REMOVED */}
-
         {/* Roll No, Year, Div, Course Row */}
         <div className="grid grid-cols-4 gap-6 mb-6">
           {/* Roll No */}
@@ -406,10 +371,9 @@ export default function StudentAdmission() {
                 className="w-full px-4 py-3 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-gray-800 disabled:bg-gray-200 disabled:cursor-not-allowed"
               >
                 <option value="">Year</option>
-                <option value="fy">First Year</option>
-                <option value="sy">Second Year</option>
-                <option value="ty">Third Year</option>
-                <option value="final">Final Year</option>
+                <option value="FY">First Year</option>
+                <option value="SY">Second Year</option>
+                <option value="TY">Third Year</option>
               </select>
               <svg
                 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
@@ -510,15 +474,13 @@ export default function StudentAdmission() {
             </label>
             <div className="relative">
               <select
-                name="status"
-                value={currentAdmission?.status || "pending"}
                 disabled
                 className="w-full px-4 py-3 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-gray-200 text-gray-600 cursor-not-allowed"
               >
                 <option value="">Status</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
               </select>
               <svg
                 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
@@ -563,8 +525,13 @@ export default function StudentAdmission() {
             <div className="relative">
               <select
                 name="isFeesPaid"
-                value={formData.isFeesPaid}
-                onChange={handleChange}
+                value={formData.isFeesPaid ? "full" : "pending"}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isFeesPaid: e.target.value === "full",
+                  }))
+                }
                 disabled={!isEditMode}
                 className="w-full px-4 py-3 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-gray-800 disabled:bg-gray-200 disabled:cursor-not-allowed"
               >
@@ -597,8 +564,13 @@ export default function StudentAdmission() {
             <div className="relative">
               <select
                 name="isScholarshipApplied"
-                value={formData.isScholarshipApplied}
-                onChange={handleChange}
+                value={formData.isScholarshipApplied ? "merit" : "none"}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isScholarshipApplied: e.target.value !== "none",
+                  }))
+                }
                 disabled={!isEditMode}
                 className="w-full px-4 py-3 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-gray-800 disabled:bg-gray-200 disabled:cursor-not-allowed"
               >
@@ -636,7 +608,7 @@ export default function StudentAdmission() {
             value={formData.academicYear}
             onChange={handleChange}
             disabled={!isEditMode}
-            placeholder="Academic Year (Eg : 2024 - 25)"
+            placeholder="Academic Year (Eg : 2024 - 2025)"
             className="w-full px-4 py-3 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-800 disabled:bg-gray-200 disabled:cursor-not-allowed"
           />
         </div>

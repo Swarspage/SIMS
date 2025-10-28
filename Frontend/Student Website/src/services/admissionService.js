@@ -2,7 +2,7 @@ import API from "../api/axios";
 
 export const admissionService = {
   createAdmission: async (admissionData) => {
-    const response = await API.post("/admission/create", admissionData);
+    const response = await API.post("/admission", admissionData); // Changed from "/admission/create"
     return response.data;
   },
 
@@ -12,15 +12,12 @@ export const admissionService = {
   },
 
   updateAdmission: async (admissionId, admissionData) => {
-    const response = await API.put(
-      `/admission/update/${admissionId}`,
-      admissionData
-    );
+    const response = await API.put(`/admission/${admissionId}`, admissionData); // Changed from "/admission/update/"
     return response.data;
   },
 
   deleteAdmission: async (admissionId) => {
-    const response = await API.delete(`/admission/delete/${admissionId}`);
+    const response = await API.delete(`/admission/${admissionId}`); // Changed from "/admission/delete/"
     return response.data;
   },
 };

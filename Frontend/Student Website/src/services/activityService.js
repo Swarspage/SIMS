@@ -2,13 +2,8 @@ import API from "../api/axios";
 
 export const activityService = {
   // Create activity
-  createActivity: async (activityData, certificate) => {
-    const formData = new FormData();
-    Object.keys(activityData).forEach((key) => {
-      formData.append(key, activityData[key]);
-    });
-    if (certificate) formData.append("certificate", certificate);
-
+  createActivity: async (formData) => {
+    // formData is already a FormData object from component
     const response = await API.post("/activities", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });

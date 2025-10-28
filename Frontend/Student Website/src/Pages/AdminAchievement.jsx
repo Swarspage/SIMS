@@ -3,16 +3,17 @@ import { EyeIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { achievementService } from "../services/achievementService";
 
 // Achievement Card Component
-function AchievementCard({ achievement }) {
+function AchievementCard({ achievement, onView, onDelete }) {
   return (
     <div className="bg-white border border-gray-300 rounded-md shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col">
       {/* Image Section */}
       <div className="bg-gray-200 h-40 w-full flex items-center justify-center">
         <img
           src={
-            achievement.eventPhoto?.url || "https://via.placeholder.com/300x200"
+            achievement?.photographs?.eventPhoto?.url ||
+            "https://via.placeholder.com/300x200"
           }
-          alt={achievement.title || "Achievement"}
+          alt={achievement?.title || "Achievement"}
           className="w-full h-full object-cover"
         />
       </div>
@@ -20,26 +21,39 @@ function AchievementCard({ achievement }) {
       {/* Content Section */}
       <div className="p-4 flex flex-col flex-grow text-center">
         <h3 className="text-md font-bold text-gray-900 uppercase">
-          {achievement.title || achievement.eventName}
+          {achievement?.title || "No Title"}
         </h3>
-        <p className="text-sm text-gray-500">{achievement.studentID}</p>
+        <p className="text-sm text-gray-500">
+          {achievement?.stuID?.studentID || achievement?.stuID || "N/A"}
+        </p>
 
         <p className="text-sm text-gray-600 mt-2 line-clamp-3">
-          {achievement.description}
+          {achievement?.description || "No description"}
         </p>
 
         <p className="text-sm text-gray-600 mt-2">
-          {achievement.date ||
-            new Date(achievement.createdAt).toLocaleDateString()}
+          {achievement?.date?.from
+            ? new Date(achievement.date.from).toLocaleDateString()
+            : achievement?.createdAt
+            ? new Date(achievement.createdAt).toLocaleDateString()
+            : "No Date"}
         </p>
 
         {/* Action Buttons */}
         <div className="mt-4 flex gap-2 justify-center">
-          <button className="px-4 py-2 bg-blue-900 text-white rounded-md hover:bg-blue-800 transition flex items-center gap-2">
+          <button
+            onClick={() => onView && onView(achievement)}
+            className="px-4 py-2 bg-blue-900 text-white rounded-md hover:bg-blue-800 transition flex items-center gap-2"
+          >
             <EyeIcon className="h-4 w-4" />
+            View
           </button>
-          <button className="px-4 py-2 bg-blue-900 text-white rounded-md hover:bg-blue-800 transition flex items-center gap-2">
+          <button
+            onClick={() => onDelete && onDelete(achievement._id)}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition flex items-center gap-2"
+          >
             <TrashIcon className="h-4 w-4" />
+            Delete
           </button>
         </div>
       </div>
@@ -61,12 +75,35 @@ export default function AdminAchievements() {
   const fetchAchievements = async () => {
     try {
       const data = await achievementService.getAllAchievements();
-      setAchievements(data);
+      console.log("Fetched achievements:", data); // Debug log
+      setAchievements(data || []); // Ensure it's always an array
+      setError(null);
     } catch (err) {
+      console.error("Error fetching achievements:", err);
       setError("Failed to load achievements. Backend might not be running!");
-      console.error(err);
+      setAchievements([]); // Set empty array on error
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleView = (achievement) => {
+    console.log("View achievement:", achievement);
+    // TODO: Add modal or navigation to view details
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this achievement?")) {
+      return;
+    }
+
+    try {
+      await achievementService.deleteAchievement(id);
+      // Refresh the list after deletion
+      fetchAchievements();
+    } catch (err) {
+      console.error("Error deleting achievement:", err);
+      alert("Failed to delete achievement");
     }
   };
 
@@ -75,7 +112,9 @@ export default function AdminAchievements() {
       {/* Heading */}
       <div className="mb-4 text-lg font-semibold">
         Showing total{" "}
-        <span className="text-red-600">{achievements.length} Achievements</span>
+        <span className="text-red-600">
+          {achievements?.length || 0} Achievements
+        </span>
       </div>
 
       {/* Filter / Buttons Row */}
@@ -99,7 +138,7 @@ export default function AdminAchievements() {
         <button className="px-4 py-2 rounded border bg-green-100 text-green-700">
           Management Achievement
         </button>
-        <button className="px-4 py-2 rounded bg-[#1e293b] text-white">
+        <button className="px-4 py-2 rounded bg-[#1e293b] text-white hover:bg-[#0f172a]">
           +Add
         </button>
         <button className="px-4 py-2 rounded border bg-red-100 text-red-700">
@@ -127,7 +166,7 @@ export default function AdminAchievements() {
         {/* Empty State */}
         {!loading && !error && achievements.length === 0 && (
           <div className="text-center text-white py-12">
-            No achievements found. Backend might be empty!
+            No achievements found. Click +Add to create one!
           </div>
         )}
 
@@ -136,8 +175,10 @@ export default function AdminAchievements() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {achievements.map((achievement, index) => (
               <AchievementCard
-                key={achievement._id || `achievement-${index}`}
+                key={achievement?._id || `achievement-${index}`}
                 achievement={achievement}
+                onView={handleView}
+                onDelete={handleDelete}
               />
             ))}
           </div>

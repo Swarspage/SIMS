@@ -102,7 +102,7 @@ const Home = () => {
               </a>
             </nav>
 
-            {/* Search Bar and Login */}
+            {/* Search Bar and Login Buttons */}
             <div className="flex items-center space-x-4">
               {/* Search Bar */}
               <div className="hidden md:flex items-center border border-gray-300 rounded-lg px-3 py-2">
@@ -126,12 +126,20 @@ const Home = () => {
                 />
               </div>
 
-              {/* Login Button */}
+              {/* Student Login Button */}
               <button
                 onClick={() => navigate("/login")}
                 className="bg-[#1D3EA1] text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-800 transition duration-200"
               >
-                Login
+                Student Login
+              </button>
+
+              {/* Admin Login Button */}
+              <button
+                onClick={() => navigate("/admin/login")}
+                className="bg-[#0b234f] text-white px-6 py-2 rounded-lg font-medium hover:bg-[#182137] transition duration-200 border border-white"
+              >
+                Admin Login
               </button>
             </div>
           </div>
