@@ -1,8 +1,29 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import PlacementCard from "../components/PlacementCard";
-import placements from "../data/placements";
+import { placementService } from "../services/placementService";
 
 export default function AdminPlacement() {
+  const [placements, setPlacements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch placements from backend when component loads
+  useEffect(() => {
+    fetchPlacements();
+  }, []);
+
+  const fetchPlacements = async () => {
+    try {
+      const data = await placementService.getAllPlacements();
+      setPlacements(data);
+    } catch (err) {
+      setError("Failed to load placements. Backend might not be running!");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="p-6">
       {/* Heading */}
@@ -26,11 +47,36 @@ export default function AdminPlacement() {
 
       {/* Placement Cards */}
       <div className="bg-[#0f2130] rounded-2xl p-6 min-h-[60vh] overflow-y-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {placements.map((p, index) => (
-            <PlacementCard key={`placement-${index}`} placement={p} />
-          ))}
-        </div>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-white text-xl">Loading placements...</div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="bg-red-100 text-red-700 p-4 rounded-lg">{error}</div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && placements.length === 0 && (
+          <div className="text-center text-white py-12">
+            No placements found. Backend might be empty!
+          </div>
+        )}
+
+        {/* Placements Grid */}
+        {!loading && !error && placements.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {placements.map((p, index) => (
+              <PlacementCard
+                key={p._id || `placement-${index}`}
+                placement={p}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );
