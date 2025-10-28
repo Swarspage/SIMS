@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { EyeIcon, TrashIcon } from "@heroicons/react/24/solid";
-import achievements from "../data/achievements";
+import { achievementService } from "../services/achievementService";
 
 // Achievement Card Component
 function AchievementCard({ achievement }) {
@@ -9,8 +9,10 @@ function AchievementCard({ achievement }) {
       {/* Image Section */}
       <div className="bg-gray-200 h-40 w-full flex items-center justify-center">
         <img
-          src={achievement.image}
-          alt={achievement.name}
+          src={
+            achievement.eventPhoto?.url || "https://via.placeholder.com/300x200"
+          }
+          alt={achievement.title || "Achievement"}
           className="w-full h-full object-cover"
         />
       </div>
@@ -18,15 +20,18 @@ function AchievementCard({ achievement }) {
       {/* Content Section */}
       <div className="p-4 flex flex-col flex-grow text-center">
         <h3 className="text-md font-bold text-gray-900 uppercase">
-          {achievement.name}
+          {achievement.title || achievement.eventName}
         </h3>
-        <p className="text-sm text-gray-500">{achievement.studentName}</p>
+        <p className="text-sm text-gray-500">{achievement.studentID}</p>
 
         <p className="text-sm text-gray-600 mt-2 line-clamp-3">
           {achievement.description}
         </p>
 
-        <p className="text-sm text-gray-600 mt-2">{achievement.date}</p>
+        <p className="text-sm text-gray-600 mt-2">
+          {achievement.date ||
+            new Date(achievement.createdAt).toLocaleDateString()}
+        </p>
 
         {/* Action Buttons */}
         <div className="mt-4 flex gap-2 justify-center">
@@ -44,12 +49,33 @@ function AchievementCard({ achievement }) {
 
 // Main Admin Achievements Page Component
 export default function AdminAchievements() {
+  const [achievements, setAchievements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch achievements from backend when component loads
+  useEffect(() => {
+    fetchAchievements();
+  }, []);
+
+  const fetchAchievements = async () => {
+    try {
+      const data = await achievementService.getAllAchievements();
+      setAchievements(data);
+    } catch (err) {
+      setError("Failed to load achievements. Backend might not be running!");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="p-6">
       {/* Heading */}
       <div className="mb-4 text-lg font-semibold">
         Showing total{" "}
-        <span className="text-red-600">{achievements.length} Activities</span>
+        <span className="text-red-600">{achievements.length} Achievements</span>
       </div>
 
       {/* Filter / Buttons Row */}
@@ -86,14 +112,36 @@ export default function AdminAchievements() {
 
       {/* Achievement Cards */}
       <div className="bg-[#0f2130] rounded-2xl p-6 min-h-[60vh] overflow-y-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {achievements.map((achievement, index) => (
-            <AchievementCard
-              key={`achievement-${index}`}
-              achievement={achievement}
-            />
-          ))}
-        </div>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-white text-xl">Loading achievements...</div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="bg-red-100 text-red-700 p-4 rounded-lg">{error}</div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && achievements.length === 0 && (
+          <div className="text-center text-white py-12">
+            No achievements found. Backend might be empty!
+          </div>
+        )}
+
+        {/* Achievements Grid */}
+        {!loading && !error && achievements.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {achievements.map((achievement, index) => (
+              <AchievementCard
+                key={achievement._id || `achievement-${index}`}
+                achievement={achievement}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );

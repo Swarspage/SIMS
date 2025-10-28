@@ -6,8 +6,11 @@ export default function PlacementCard({ placement }) {
       {/* Image */}
       <div className="h-40 bg-gray-300 flex items-center justify-center overflow-hidden">
         <img
-          src={placement.image}
-          alt={placement.student}
+          src={
+            placement.placementProof?.url ||
+            "https://via.placeholder.com/300x200"
+          }
+          alt={placement.studentID || "Placement"}
           className="w-full h-full object-cover"
         />
       </div>
@@ -15,25 +18,25 @@ export default function PlacementCard({ placement }) {
       {/* Content */}
       <div className="p-4">
         <h3 className="text-lg font-bold text-gray-800 mb-2">
-          {placement.student}
+          {placement.studentID}
         </h3>
 
         <div className="space-y-1 text-sm text-gray-600 mb-3">
           <p>
-            <span className="font-semibold">Branch:</span> {placement.branch}
-          </p>
-          <p>
-            <span className="font-semibold">Year:</span> {placement.year}
-          </p>
-          <p>
-            <span className="font-semibold">Company:</span> {placement.company}
+            <span className="font-semibold">Company:</span>{" "}
+            {placement.companyName}
           </p>
           <p>
             <span className="font-semibold">Position:</span>{" "}
             {placement.position}
           </p>
           <p>
-            <span className="font-semibold">Date:</span> {placement.date}
+            <span className="font-semibold">Package:</span>{" "}
+            {placement.package || "N/A"}
+          </p>
+          <p>
+            <span className="font-semibold">Type:</span>{" "}
+            {placement.placementType}
           </p>
         </div>
 
