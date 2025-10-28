@@ -27,12 +27,12 @@ const achievementSchema = new mongoose.Schema(
     teamMembers: { type: [String], default: [] },
     photographs: {
       eventPhoto: {
-        url: { type: String, required: true },
-        publicId: { type: String, required: true },
+        url: { type: String, required: true },                         // Cloudinary URL
+        publicId: { type: String, required: true },                    // Cloudinary public_id => deletion
       },
       certificate: {
-        url: { type: String, required: true },
-        publicId: { type: String, required: true },
+        url: { type: String, required: true },                       // Cloudinary URL
+        publicId: { type: String, required: true },                 // Cloudinary public_id => deletion
       },
     },
   },

@@ -417,6 +417,9 @@ const deleteStudent = async (req, res) => {
 		// Delete student photo from Cloudinary if exists
 		if (student.studentPhoto.publicId) {
 			const delResult=await cloudinary.uploader.destroy(student.studentPhoto.publicId);
+
+			console.log("Cloudinary delete result:", delResult);
+
 			
 			if(delResult.result !== "ok" && delResult.result !== "not found"){
 				return res.status(500).json({ success: false, message: "Cannot delete student. Please try again later." });
@@ -425,7 +428,6 @@ const deleteStudent = async (req, res) => {
 
 
 		const result=await Student.findByIdAndDelete(studentId);
-
 
 		if(!result){
 			return res.status(500).json({success:false, message:"Cannot delete student. Please try again later."})
