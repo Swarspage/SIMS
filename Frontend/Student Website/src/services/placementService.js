@@ -2,13 +2,7 @@ import API from "../api/axios";
 
 export const placementService = {
   // Create placement
-  createPlacement: async (placementData, placementProof) => {
-    const formData = new FormData();
-    Object.keys(placementData).forEach((key) => {
-      formData.append(key, placementData[key]);
-    });
-    if (placementProof) formData.append("placementProof", placementProof);
-
+  createPlacement: async (formData) => {
     const response = await API.post("/placement", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -16,13 +10,7 @@ export const placementService = {
   },
 
   // Update placement
-  updatePlacement: async (placementId, placementData, placementProof) => {
-    const formData = new FormData();
-    Object.keys(placementData).forEach((key) => {
-      formData.append(key, placementData[key]);
-    });
-    if (placementProof) formData.append("placementProof", placementProof);
-
+  updatePlacement: async (placementId, formData) => {
     const response = await API.put(`/placement/${placementId}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -35,15 +23,15 @@ export const placementService = {
     return response.data;
   },
 
-  // Get all placements (Admin)
+  // ✅ FIXED: Get all placements (Admin)
   getAllPlacements: async () => {
-    const response = await API.get("/placement/all");
+    const response = await API.get("/placement");
     return response.data;
   },
 
   // Get own placements (Student)
   getOwnPlacements: async () => {
-    const response = await API.get("/placement");
+    const response = await API.get("/placement/me");
     return response.data;
   },
 

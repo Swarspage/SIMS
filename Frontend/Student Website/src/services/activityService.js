@@ -3,22 +3,23 @@ import API from "../api/axios";
 export const activityService = {
   // Create activity
   createActivity: async (formData) => {
-    // formData is already a FormData object from component
     const response = await API.post("/activities", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
   },
 
-  // Get activities by student ID
-  getActivityByStu: async (stuID) => {
-    const response = await API.get(`/activities/${stuID}`);
+  // Get activities by logged-in student
+  getActivityByStu: async () => {
+    const response = await API.get("/activities");
     return response.data;
   },
 
   // Update activity
-  updateActivity: async (id, activityData) => {
-    const response = await API.put(`/activities/${id}`, activityData);
+  updateActivity: async (id, formData) => {
+    const response = await API.put(`/activities/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
 
@@ -28,9 +29,15 @@ export const activityService = {
     return response.data;
   },
 
-  // Get all activities
+  // ✅ FIXED: Get all activities (Admin only)
   getAllActivities: async () => {
-    const response = await API.get("/activities");
+    const response = await API.get("/activities/all");
+    return response.data;
+  },
+
+  // Get activities by specific student (Admin only)
+  getActivitiesByStudent: async (studentId) => {
+    const response = await API.get(`/activities/student/${studentId}`);
     return response.data;
   },
 };

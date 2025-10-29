@@ -2,13 +2,7 @@ import API from "../api/axios";
 
 export const higherStudiesService = {
   // Create higher study
-  createHigherStudy: async (higherStudyData, marksheet) => {
-    const formData = new FormData();
-    Object.keys(higherStudyData).forEach((key) => {
-      formData.append(key, higherStudyData[key]);
-    });
-    if (marksheet) formData.append("marksheet", marksheet);
-
+  createHigherStudy: async (formData) => {
     const response = await API.post("/higherStudies", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -16,13 +10,7 @@ export const higherStudiesService = {
   },
 
   // Update higher study
-  updateHigherStudy: async (higherStudyId, higherStudyData, marksheet) => {
-    const formData = new FormData();
-    Object.keys(higherStudyData).forEach((key) => {
-      formData.append(key, higherStudyData[key]);
-    });
-    if (marksheet) formData.append("marksheet", marksheet);
-
+  updateHigherStudy: async (higherStudyId, formData) => {
     const response = await API.put(
       `/higherStudies/${higherStudyId}`,
       formData,

@@ -2,29 +2,23 @@ import API from "../api/axios";
 
 export const internshipService = {
   // Create internship
-  createInternship: async (internshipData, internshipReport, photoProof) => {
-    const formData = new FormData();
-    Object.keys(internshipData).forEach((key) => {
-      formData.append(key, internshipData[key]);
-    });
-    if (internshipReport) formData.append("internshipReport", internshipReport);
-    if (photoProof) formData.append("photoProof", photoProof);
-
+  createInternship: async (formData) => {
+    // formData is already a FormData object from component
     const response = await API.post("/internship", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
   },
 
-  // Get all internships (Admin)
+  // ✅ FIXED: Get all internships (Admin) - was calling wrong endpoint!
   getAllInternships: async () => {
-    const response = await API.get("/internship/all");
+    const response = await API.get("/internship"); // Correct endpoint
     return response.data;
   },
 
   // Get own internships (Student)
   getOwnInternships: async () => {
-    const response = await API.get("/internship");
+    const response = await API.get("/internship/me");
     return response.data;
   },
 
@@ -43,19 +37,8 @@ export const internshipService = {
   },
 
   // Update internship
-  updateInternship: async (
-    internshipId,
-    internshipData,
-    photoProof,
-    internshipReport
-  ) => {
-    const formData = new FormData();
-    Object.keys(internshipData).forEach((key) => {
-      formData.append(key, internshipData[key]);
-    });
-    if (photoProof) formData.append("photoProof", photoProof);
-    if (internshipReport) formData.append("internshipReport", internshipReport);
-
+  updateInternship: async (internshipId, formData) => {
+    // formData is already a FormData object from component
     const response = await API.put(`/internship/${internshipId}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
