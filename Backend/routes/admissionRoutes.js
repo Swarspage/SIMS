@@ -11,15 +11,17 @@ const {
   getUnpaidStudents,
 } = require("../controllers/admissionController");
 
-// Student routes
+// ==================== STUDENT ROUTES ====================
 router.post("/", verifyToken, createAdmission);
 router.get("/my-admissions", verifyToken, getAdmissionsByStudent);
 router.put("/:id", verifyToken, updateAdmission);
 router.delete("/:id", verifyToken, deleteAdmission);
 
-// Admin routes
-router.get("/all", verifyToken, getAllAdmissions);
-router.put("/status/:id", verifyToken, updateAdmissionStatus);
-router.get("/unpaid", verifyToken, getUnpaidStudents);
+// ==================== ADMIN ROUTES (ORDER MATTERS!) ====================
+// ⚠️ IMPORTANT: Specific routes MUST come before dynamic routes (/:id)
+
+router.get("/all", verifyToken, getAllAdmissions); // ✅ BEFORE /:id
+router.put("/status/:id", verifyToken, updateAdmissionStatus); // Specific
+router.get("/unpaid", verifyToken, getUnpaidStudents); // Specific
 
 module.exports = router;
