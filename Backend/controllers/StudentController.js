@@ -1,3 +1,1083 @@
+// const Student = require("../models/Student");
+// const Admin = require("../models/Admin");
+// const cloudinary = require("../config/cloudinaryConfig");
+// const { uploadToCloudinary } = require("../helpers/UploadToCloudinary");
+
+// const xlsx = require("xlsx");
+// const fs = require("fs");
+// const path = require("path");
+
+// const crypto = require("crypto");
+// const bcrypt = require("bcrypt");
+// const nodemailer = require("nodemailer");
+
+// require("dotenv").config();
+
+// const {
+//   importExcelSchema,
+//   addStudentDetailsSchema,
+//   updateStudentSchema,
+//   getStudentsValidation,
+// } = require("../validators/studentValidation");
+
+// const cascadeDeleteStudent = require("../helpers/cascadeDeleteStudent");
+
+// // Configure your email transporter (example with Gmail)
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: {
+//     user: process.env.emailUser, // your email
+//     pass: process.env.emailPassword, // app password if 2FA enabled
+//   },
+// });
+
+// // Function to generate strong random password
+// const generateRandomPassword = (length = 14) => {
+//   return crypto.randomBytes(length).toString("base64").slice(0, length);
+// };
+
+// const importExcelDataWithPasswords = async (req, res) => {
+//   try {
+//     const adminId = req.user.id;
+
+//     // Verify admin exists
+//     const adminExists = await Admin.findById(adminId);
+//     if (!adminExists) {
+//       return res
+//         .status(403)
+//         .json({ success: false, message: "Admin not found or unauthorized" });
+//     }
+
+//     if (!req.file) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "No file uploaded" });
+//     }
+
+//     // 1️⃣ Read Excel file
+//     const workbook = xlsx.readFile(req.file.path);
+//     const sheetName = workbook.SheetNames[0];
+//     const sheet = workbook.Sheets[sheetName];
+
+//     // 2️⃣ Convert Excel sheet to JSON
+//     const rawData = xlsx.utils.sheet_to_json(sheet);
+
+//     if (rawData.length === 0) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Excel file is empty" });
+//     }
+
+//     // 3️⃣ Extract studentID & email
+//     const filteredData = rawData
+//       .map((row) => ({
+//         studentID: row.studentID || row.StudentID || row["Student ID"] || "",
+//         email: row.email || row.Email || row["Email ID"] || "",
+//       }))
+//       .filter((item) => item.studentID && item.email);
+
+//     if (filteredData.length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "No valid studentID or email fields found in Excel file",
+//       });
+//     }
+
+//     // 4️⃣ For each student: generate, hash, save, and email
+//     let successCount = 0;
+//     let failedStudents = [];
+
+//     for (const data of filteredData) {
+//       try {
+//         const randomPassword = generateRandomPassword(14);
+//         const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+//         // Validate current student object
+//         const { error, value } = importExcelSchema.validate(data, {
+//           abortEarly: false,
+//         });
+//         if (error) {
+//           const validationErrors = error.details.map((err) => ({
+//             field: err.path[0],
+//             message: err.message,
+//           }));
+
+//           failedStudents.push({
+//             studentID: data.studentID,
+//             email: data.email,
+//             error: validationErrors,
+//           });
+//           continue; // Skip this student, continue with next
+//         }
+
+//         const newStudent = new Student({
+//           studentID: data.studentID.trim(),
+//           email: data.email.trim(),
+//           password: hashedPassword,
+//         });
+
+//         const savedStudent = await newStudent.save();
+
+//         // Only send email if saved successfully
+//         const mailOptions = {
+//           from: process.env.emailUser,
+//           to: data.email,
+//           subject: "Your Account Password",
+//           text: `Hello ${data.studentID},\n\nYour new password is: ${randomPassword}\n`,
+//         };
+
+//         await transporter.sendMail(mailOptions);
+//         successCount++;
+//       } catch (err) {
+//         console.error(`❌ Failed for ${data.studentID}:`, err.message);
+//         failedStudents.push({
+//           studentID: data.studentID,
+//           email: data.email,
+//           error: err.message,
+//         });
+//       }
+//     }
+
+//     // 5️⃣ Delete uploaded file
+//     fs.unlinkSync(req.file.path);
+
+//     res.status(200).json({
+//       success: true,
+//       message: `Process completed. ${successCount} students added and emailed successfully.`,
+//       failed: failedStudents,
+//     });
+//   } catch (error) {
+//     console.error("Error importing Excel:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Error importing Excel data",
+//     });
+//   }
+// };
+
+// // Controller: Export all students to Excel
+// const exportAllStudentsToExcel = async (req, res) => {
+//   try {
+//     const adminId = req.user.id;
+
+//     if (req.user.role !== "admin") {
+//       return res
+//         .status(403)
+//         .json({ success: false, message: "Admin not found or unauthorized" });
+//     }
+
+//     // Verify admin exists
+//     const adminExists = await Admin.findById(adminId);
+//     if (!adminExists) {
+//       return res
+//         .status(403)
+//         .json({ success: false, message: "Admin not found or unauthorized" });
+//     }
+
+//     // 1. Fetch all students from DB
+//     const students = await Student.find();
+
+//     if (!students || students.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "No students found in the database.",
+//       });
+//     }
+
+//     // 2. Format data for Excel
+//     const formattedData = students.map((student) => ({
+//       StudentID: student.studentID || "",
+//       Name:
+//         student.name?.lastName +
+//           student.name?.firstName +
+//           student.name?.middleName || "",
+//       Email: student.email || "",
+//       Branch: student.branch + "Engineering" || "",
+//       Year: student.year || "",
+//       DOB: student.dob || "",
+//       BloodGroup: student.bloodGroup || "",
+//       MobileNo: student.mobileNo || "",
+//       CurrentStreet: student.currentAddress?.street || "",
+//       CurrentCity: student.currentAddress?.city || "",
+//       CurrentPincode: student.currentAddress?.pincode || "",
+//       StudentPhotoURL: student.studentPhoto?.url || "",
+//     }));
+
+//     // 3. Create a new workbook and sheet
+//     const workbook = xlsx.utils.book_new();
+//     const worksheet = xlsx.utils.json_to_sheet(formattedData);
+
+//     xlsx.utils.book_append_sheet(workbook, worksheet, "Students");
+
+//     // 4. Save file temporarily to server
+//     const exportDir = path.join(__dirname, "../exports");
+//     if (!fs.existsSync(exportDir)) fs.mkdirSync(exportDir);
+
+//     const filePath = path.join(exportDir, `Students_${Date.now()}.xlsx`);
+//     xlsx.writeFile(workbook, filePath);
+
+//     // 5. Send file to user for download
+//     res.download(filePath, "StudentsData.xlsx", (err) => {
+//       if (err) {
+//         console.error("Error while downloading file:", err);
+//         res
+//           .status(500)
+//           .json({ success: false, message: "File download failed" });
+//       }
+
+//       // 6. Delete file after sending (to avoid clutter)
+//       fs.unlink(filePath, (delErr) => {
+//         if (delErr) console.error("Error deleting temp file:", delErr);
+//       });
+//     });
+//   } catch (error) {
+//     console.error("Error exporting students to Excel:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error while exporting data.",
+//     });
+//   }
+// };
+
+// // Add remaining Details from schema --for student
+// const addStudentDetails = async (req, res) => {
+//   let dbSaved = false; //flag to track if save to Db oprations succeeds or fails
+
+//   let uploadResult = null;
+
+//   try {
+//     const studentId = req.user.id;
+
+//     const student = await Student.findById(studentId);
+//     if (!student) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Student not found" });
+//     }
+
+//     // Destructure fields from request body
+//     const {
+//       firstName,
+//       middleName,
+//       lastName,
+//       motherName,
+//       PRN,
+//       branch,
+//       year,
+//       dob,
+//       bloodGroup,
+//       currentStreet,
+//       currentCity,
+//       pincode,
+//       nativeStreet,
+//       nativeCity,
+//       nativePincode,
+//       category,
+//       mobileNo,
+//       parentMobileNo,
+//     } = req.body;
+
+//     // Basic required field check
+//     if (
+//       !firstName ||
+//       !middleName ||
+//       !lastName ||
+//       !motherName ||
+//       !PRN ||
+//       !branch ||
+//       !year ||
+//       !dob ||
+//       !bloodGroup ||
+//       !currentStreet ||
+//       !currentCity ||
+//       !pincode ||
+//       !nativeStreet ||
+//       !nativeCity ||
+//       !nativePincode ||
+//       !category ||
+//       !mobileNo ||
+//       !parentMobileNo
+//     ) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "All fields are required" });
+//     }
+
+//     if (!req.file) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Student Photo required" });
+//     }
+
+//     // Validate input using Joi
+//     const { error, value } = addStudentDetailsSchema.validate(
+//       {
+//         firstName,
+//         middleName,
+//         lastName,
+//         motherName,
+//         PRN,
+//         branch,
+//         year,
+//         dob,
+//         bloodGroup,
+//         currentStreet,
+//         currentCity,
+//         pincode,
+//         nativeStreet,
+//         nativeCity,
+//         nativePincode,
+//         category,
+//         mobileNo,
+//         parentMobileNo,
+//       },
+//       { abortEarly: false }
+//     );
+//     if (error) {
+//       const validationErrors = error.details.map((err) => ({
+//         field: err.path[0],
+//         message: err.message,
+//       }));
+
+//       return res.status(400).json({
+//         success: false,
+//         message: "Validation failed",
+//         errors: validationErrors,
+//       });
+//     }
+
+//     // Convert dob string to Date before saving
+//     const dobDate = new Date(dob);
+
+//     let studentPhoto = null;
+//     if (req.file) {
+//       uploadResult = await uploadToCloudinary(req.file.path);
+//       if (!uploadResult) {
+//         return res.status(500).json({
+//           success: false,
+//           message: "Photo upload failed, Please try again later",
+//         });
+//       }
+//       studentPhoto = {
+//         url: uploadResult.url,
+//         publicId: uploadResult.publicId,
+//       };
+//     }
+
+//     //Build nested object for name
+//     const name = {
+//       firstName,
+//       middleName,
+//       lastName,
+//       motherName,
+//     };
+
+//     // Build nested objects for addresses
+//     const currentAddress = {
+//       street: currentStreet,
+//       city: currentCity,
+//       pincode: pincode,
+//     };
+
+//     const nativeAddress = {
+//       street: nativeStreet,
+//       city: nativeCity,
+//       nativePincode: nativePincode,
+//     };
+
+//     // Update the existing student
+//     const studentWithAddedDetails = await Student.findByIdAndUpdate(
+//       studentId,
+//       {
+//         name,
+//         PRN,
+//         branch,
+//         year,
+//         dob: dobDate,
+//         bloodGroup,
+//         currentAddress,
+//         nativeAddress,
+//         category,
+//         mobileNo,
+//         parentMobileNo,
+//         studentPhoto,
+//       },
+//       { new: true } // Return the updated document
+//     );
+//     dbSaved = true;
+
+//     res.status(201).json({
+//       success: true,
+//       data: studentWithAddedDetails,
+//       message: "Added details successfully!",
+//     });
+//   } catch (err) {
+//     console.error("Error in createPersonalDetail:", err);
+
+//     // if Db update failed, then delete photo uploaded to cloudinary
+//     if (!dbSaved) {
+//       await cloudinary.uploader.destroy(uploadResult.publicId);
+//     }
+//     res.status(500).json({ success: false, message: "Internal Server Error" });
+//   }
+// };
+
+// // ==================== UPDATE STUDENT ====================
+// const updateStudent = async (req, res) => {
+//   let dbSaved = false;
+//   let uploadResult = null;
+//   try {
+//     const { studentId } = req.params;
+//     const userId = req.user.id;
+
+//     const student = await Student.findById(studentId);
+
+//     if (!student) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Student not found" });
+//     }
+
+//     // Verify requester
+//     if (req.user.role === "admin") {
+//       const adminExists = await Admin.findById(userId);
+//       if (!adminExists) {
+//         return res
+//           .status(403)
+//           .json({ success: false, message: "Admin not found or unauthorized" });
+//       }
+//     } else if (req.user.role === "student") {
+//       if (student._id.toString() !== userId.toString()) {
+//         return res.status(403).json({
+//           success: false,
+//           message: "Resource does not belong to logged in student",
+//         });
+//       }
+//     } else {
+//       return res.status(400).json({ success: false, message: "Bad Request" });
+//     }
+
+//     //for dealing with updated studentPhoto later
+//     if (!student.studentPhoto || !student.studentPhoto.publicId) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           "Please fill the details first. You cannot update without uploading a profile photo initially.",
+//       });
+//     }
+
+//     const oldPublicId = student.studentPhoto.publicId;
+
+//     const {
+//       firstName,
+//       middleName,
+//       lastName,
+//       motherName,
+//       PRN,
+//       branch,
+//       year,
+//       dob,
+//       bloodGroup,
+//       currentStreet,
+//       currentCity,
+//       pincode,
+//       nativeStreet,
+//       nativeCity,
+//       nativePincode,
+//       category,
+//       mobileNo,
+//       parentMobileNo,
+//     } = req.body;
+
+//     // Validate input using Joi
+//     const { error, value } = updateStudentSchema.validate(
+//       {
+//         firstName,
+//         middleName,
+//         lastName,
+//         motherName,
+//         PRN,
+//         branch,
+//         year,
+//         dob,
+//         bloodGroup,
+//         currentStreet,
+//         currentCity,
+//         pincode,
+//         nativeStreet,
+//         nativeCity,
+//         nativePincode,
+//         category,
+//         mobileNo,
+//         parentMobileNo,
+//       },
+//       { abortEarly: false }
+//     );
+//     if (error) {
+//       const validationErrors = error.details.map((err) => ({
+//         field: err.path[0],
+//         message: err.message,
+//       }));
+
+//       return res.status(400).json({
+//         success: false,
+//         message: "Validation failed",
+//         errors: validationErrors,
+//       });
+//     }
+
+//     // Convert dob string to Date before saving
+//     const dobDate = new Date(value.dob);
+
+//     const updatedData = {};
+
+//     // Name
+//     if (req.body.firstName) updatedData["name.firstName"] = req.body.firstName;
+//     if (req.body.middleName)
+//       updatedData["name.middleName"] = req.body.middleName;
+//     if (req.body.lastName) updatedData["name.lastName"] = req.body.lastName;
+//     if (req.body.motherName)
+//       updatedData["name.motherName"] = req.body.motherName;
+
+//     // Current Address
+//     if (req.body.currentStreet)
+//       updatedData["currentAddress.street"] = req.body.currentStreet;
+//     if (req.body.currentCity)
+//       updatedData["currentAddress.city"] = req.body.currentCity;
+//     if (req.body.pincode)
+//       updatedData["currentAddress.pincode"] = req.body.pincode;
+
+//     // Native Address
+//     if (req.body.nativeStreet)
+//       updatedData["nativeAddress.street"] = req.body.nativeStreet;
+//     if (req.body.nativeCity)
+//       updatedData["nativeAddress.city"] = req.body.nativeCity;
+//     if (req.body.nativePincode)
+//       updatedData["nativeAddress.nativePincode"] = req.body.nativePincode;
+
+//     // Other top-level fields
+//     if (req.body.PRN) updatedData.PRN = req.body.PRN;
+//     if (req.body.branch) updatedData.branch = req.body.branch;
+//     if (req.body.year) updatedData.year = req.body.year;
+//     if (req.body.dob) updatedData.dob = dobDate;
+//     if (req.body.bloodGroup) updatedData.bloodGroup = req.body.bloodGroup;
+//     if (req.body.category) updatedData.category = req.body.category;
+//     if (req.body.mobileNo) updatedData.mobileNo = req.body.mobileNo;
+//     if (req.body.parentMobileNo)
+//       updatedData.parentMobileNo = req.body.parentMobileNo;
+
+//     // Handle student photo upload
+//     const photoFile = req.file;
+
+//     if (photoFile) {
+//       // Upload new photo
+//       uploadResult = await uploadToCloudinary(photoFile.path);
+
+//       if (!uploadResult) {
+//         return res.status(500).json({
+//           success: false,
+//           message: "Failed to upload details. please try again later",
+//         });
+//       }
+
+//       // Set uploaded photo in updatedData
+//       updatedData.studentPhoto = {
+//         url: uploadResult.url,
+//         publicId: uploadResult.publicId,
+//       };
+//     }
+
+//     // Update DB
+//     const updatedStudent = await Student.findByIdAndUpdate(
+//       studentId,
+//       { $set: updatedData },
+//       { new: true, runValidators: true, select: "-password" }
+//     );
+//     dbSaved = true;
+
+//     //if DB update succeeds then delete old photo from cloudinary
+//     try {
+//       await cloudinary.uploader.destroy(oldPublicId);
+//     } catch (err) {
+//       console.error("Old photo deletion failed:", err.message);
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Student updated successfully",
+//       data: updatedStudent,
+//     });
+//   } catch (err) {
+//     console.error("Error in updateStudent:", err);
+//     if (!dbSaved && uploadResult.publicId) {
+//       await cloudinary.uploader.destroy(uploadResult.publicId);
+//     }
+//     res.status(500).json({ success: false, message: "Internal Server Error" });
+//   }
+// };
+
+// // ==================== DELETE STUDENT ====================
+// const deleteStudent = async (req, res) => {
+//   try {
+//     const { studentId } = req.params;
+//     const userId = req.user.id;
+
+//     const student = await Student.findById(studentId);
+
+//     if (!student) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Student not found" });
+//     }
+
+//     // Verify requester
+//     if (req.user.role === "admin") {
+//       const adminExists = await Admin.findById(userId);
+//       if (!adminExists) {
+//         return res
+//           .status(403)
+//           .json({ success: false, message: "Admin not found or unauthorized" });
+//       }
+//     } else if (req.user.role === "student") {
+//       if (student._id.toString() !== userId.toString()) {
+//         return res.status(403).json({
+//           success: false,
+//           message: "Resource does not belong to logged in student",
+//         });
+//       }
+//     } else {
+//       return res.status(400).json({ success: false, message: "Bad Request" });
+//     }
+
+//     if (!student.studentPhoto.publicId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "To delete a student all details are necessary to be filled.",
+//       });
+//     }
+
+//     // Delete student photo from Cloudinary if exists
+//     if (student.studentPhoto.publicId) {
+//       const delResult = await cloudinary.uploader.destroy(
+//         student.studentPhoto.publicId
+//       );
+
+//       console.log("Cloudinary delete result:", delResult);
+
+//       if (delResult.result !== "ok" && delResult.result !== "not found") {
+//         return res.status(500).json({
+//           success: false,
+//           message: "Cannot delete student. Please try again later.",
+//         });
+//       }
+//     }
+
+//     const result = await Student.findByIdAndDelete(studentId);
+
+//     if (!result) {
+//       return res.status(500).json({
+//         success: false,
+//         message: "Cannot delete student. Please try again later.",
+//       });
+//     }
+
+//     // delete other documents in other schemas referencing to this student --only if studdent is first successfully deleted from Student.js
+//     if (result) {
+//       await cascadeDeleteStudent(studentId);
+//     }
+
+//     res
+//       .status(200)
+//       .json({ success: true, message: "Student deleted successfully" });
+//   } catch (err) {
+//     console.error("Error in deleteStudent:", err);
+//     res.status(500).json({ success: false, message: "Internal Server Error" });
+//   }
+// };
+
+// // GET STUDENTS (with optional pagination)
+// const getStudents = async (req, res) => {
+//   try {
+//     const adminId = req.user.id;
+
+//     // Verify admin
+//     const adminExists = await Admin.exists({ _id: adminId });
+//     if (!adminExists) {
+//       return res.status(403).json({ success: false, message: "Unauthorized" });
+//     }
+
+//     // Get query params
+//     const { year, search, page, limit } = req.query;
+
+//     // Validate input using Joi
+//     const { error, value } = getStudentsValidation.validate(
+//       { year, search, page, limit },
+//       { abortEarly: false }
+//     );
+//     if (error) {
+//       const validationErrors = error.details.map((err) => ({
+//         field: err.path[0],
+//         message: err.message,
+//       }));
+
+//       return res.status(400).json({
+//         success: false,
+//         message: "Validation failed",
+//         errors: validationErrors,
+//       });
+//     }
+
+//     // Use defaults
+//     const pageNum = value.page || 1;
+//     const limitNum = value.limit || 10;
+
+//     const skip = (pageNum - 1) * limitNum;
+
+//     // Build filter
+//     const filter = {};
+//     if (year) {
+//       filter.year = year.trim();
+//     }
+//     if (search) {
+//       // sanitize to prevent regex injection
+//       const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+//       filter.$or = [
+//         { "name.firstName": { $regex: safeSearch, $options: "i" } },
+//         { "name.middleName": { $regex: safeSearch, $options: "i" } },
+//         { "name.lastName": { $regex: safeSearch, $options: "i" } },
+//         { "name.motherName": { $regex: safeSearch, $options: "i" } },
+//       ];
+//     }
+
+//     // Get total count for filtered results
+//     const total = await Student.countDocuments(filter);
+
+//     // Fetch students with pagination
+//     const students = await Student.find(filter)
+//       .skip(skip)
+//       .limit(limitNum)
+//       .select("-password")
+//       .sort({ createdAt: -1 })
+//       .lean();
+
+//     return res.json({
+//       success: true,
+//       data: students,
+//       total,
+//       page: pageNum,
+//       totalPages: Math.ceil(total / limitNum),
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// };
+
+// // ==================== GET SINGLE STUDENT BY ID (Admin) ====================
+// const getSingleStudent = async (req, res) => {
+//   try {
+//     const { studentId } = req.params;
+//     if (!studentId) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Student ID is required" });
+//     }
+
+//     const adminId = req.user.id;
+
+//     // Verify requester exists
+//     if (req.user.role === "admin") {
+//       const adminExists = await Admin.findById(adminId);
+//       if (!adminExists) {
+//         return res
+//           .status(403)
+//           .json({ success: false, message: "Admin not found or unauthorized" });
+//       }
+//     } else {
+//       return res.status(400).json({ success: false, message: "Bad Request" });
+//     }
+
+//     const student = await Student.findById(studentId);
+//     if (!student) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Student not found" });
+//     }
+
+//     return res.status(200).json({ success: true, data: student });
+//   } catch (error) {
+//     console.error("Error in getSingleStudent:", error);
+//     return res.status(500).json({ success: false, message: "Server Error" });
+//   }
+// };
+
+// // Get single Student from req.user.id ( for student )
+// const getStudentById = async (req, res) => {
+//   try {
+//     const studentId = req.user.id;
+
+//     if (!studentId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Student ID is required, Please Login first",
+//       });
+//     }
+
+//     const student = await Student.findById(studentId);
+//     if (!student) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Student not found" });
+//     }
+
+//     return res.status(200).json({ success: true, data: student });
+//   } catch (error) {
+//     console.error("Error in getStudentById : ", error);
+//     return res.status(500).json({ success: false, message: "Server Error" });
+//   }
+// };
+
+// // Get ALL students without pagination (Admin only)
+// const getAllStudents = async (req, res) => {
+//   try {
+//     const adminId = req.user.id;
+
+//     // Verify admin
+//     if (req.user.role !== "admin") {
+//       return res.status(403).json({ success: false, message: "Unauthorized" });
+//     }
+
+//     const adminExists = await Admin.findById(adminId);
+//     if (!adminExists) {
+//       return res
+//         .status(403)
+//         .json({ success: false, message: "Admin not found" });
+//     }
+
+//     // Get ALL students without pagination
+//     const students = await Student.find()
+//       .select("-password")
+//       .sort({ createdAt: -1 })
+//       .lean();
+
+//     return res.status(200).json({
+//       success: true,
+//       data: students,
+//       total: students.length,
+//     });
+//   } catch (err) {
+//     console.error("Error in getAllStudents:", err);
+//     res.status(500).json({ success: false, message: "Server Error" });
+//   }
+// };
+
+// module.exports = {
+//   addStudentDetails,
+//   getStudentById,
+//   getStudents,
+//   getAllStudents,
+//   getSingleStudent,
+//   updateStudent,
+//   deleteStudent,
+//   importExcelDataWithPasswords,
+//   exportAllStudentsToExcel,
+// };
+// //__________________________________________________________________________________________________________
+// const importExcelDataWithPasswords = async (req, res) => {
+//   try {
+//     const adminId = req.user.id;
+
+//     // Verify admin exists
+//     const adminExists = await Admin.findById(adminId);
+//     if (!adminExists) {
+//       return res
+//         .status(403)
+//         .json({ success: false, message: "Admin not found or unauthorized" });
+//     }
+
+//     if (!req.file) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "No file uploaded" });
+//     }
+
+//     // 1️⃣ Read Excel file
+//     const workbook = xlsx.readFile(req.file.path);
+//     const sheetName = workbook.SheetNames[0];
+//     const sheet = workbook.Sheets[sheetName];
+
+//     // 2️⃣ Convert Excel sheet to JSON
+//     const rawData = xlsx.utils.sheet_to_json(sheet);
+
+//     if (rawData.length === 0) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Excel file is empty" });
+//     }
+
+//     // 3️⃣ Extract studentID & email
+//     const filteredData = rawData
+//       .map((row) => ({
+//         studentID: row.studentID || row.StudentID || row["Student ID"] || "",
+//         email: row.email || row.Email || row["Email ID"] || "",
+//       }))
+//       .filter((item) => item.studentID && item.email);
+
+//     if (filteredData.length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "No valid studentID or email fields found in Excel file",
+//       });
+//     }
+
+//     // 4️⃣ For each student: generate, hash, save, and email
+//     let successCount = 0;
+//     let failedStudents = [];
+//     let createdStudents = []; // ✅ NEW: Track all created students
+
+//     for (const data of filteredData) {
+//       try {
+//         const randomPassword = generateRandomPassword(14);
+//         const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+//         // Validate current student object
+//         const { error, value } = importExcelSchema.validate(data, {
+//           abortEarly: false,
+//         });
+//         if (error) {
+//           const validationErrors = error.details.map((err) => ({
+//             field: err.path[0],
+//             message: err.message,
+//           }));
+
+//           failedStudents.push({
+//             studentID: data.studentID,
+//             email: data.email,
+//             error: validationErrors,
+//           });
+//           continue;
+//         }
+
+//         const newStudent = new Student({
+//           studentID: data.studentID.trim(),
+//           email: data.email.trim(),
+//           password: hashedPassword,
+//         });
+
+//         const savedStudent = await newStudent.save();
+
+//         // ✅ NEW: Store created student info
+//         createdStudents.push({
+//           studentID: data.studentID,
+//           email: data.email,
+//           password: randomPassword, // ✅ Temporary for admin email only
+//         });
+
+//         // Send email to STUDENT with password
+//         const mailOptions = {
+//           from: process.env.emailUser,
+//           to: data.email,
+//           subject: "Your Account Password",
+//           text: `Hello ${data.studentID},\n\nYour new password is: ${randomPassword}\n\nUse your Student ID and this password to login.\n\nBest regards,\nDatta Meghe College Of Engineering`,
+//         };
+
+//         await transporter.sendMail(mailOptions);
+//         successCount++;
+//       } catch (err) {
+//         console.error(`❌ Failed for ${data.studentID}:`, err.message);
+//         failedStudents.push({
+//           studentID: data.studentID,
+//           email: data.email,
+//           error: err.message,
+//         });
+//       }
+//     }
+
+//     // ✅ NEW: Send ADMIN SUMMARY EMAIL
+//     if (createdStudents.length > 0) {
+//       const studentListHTML = createdStudents
+//         .map(
+//           (s) =>
+//             `<tr><td>${s.studentID}</td><td>${s.email}</td><td>${s.password}</td></tr>`
+//         )
+//         .join("");
+
+//       const adminEmailBody = `
+//         <h2>Student Import Summary Report</h2>
+//         <p><strong>Total Students Imported:</strong> ${successCount}</p>
+//         <p><strong>Failed:</strong> ${failedStudents.length}</p>
+//         <br/>
+//         <table border="1" cellpadding="10" cellspacing="0">
+//           <thead>
+//             <tr style="background-color: #2563eb; color: white;">
+//               <th>Student ID</th>
+//               <th>Email</th>
+//               <th>Password</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             ${studentListHTML}
+//           </tbody>
+//         </table>
+//         <br/>
+//         ${
+//           failedStudents.length > 0
+//             ? `<h3>Failed Students:</h3><pre>${JSON.stringify(
+//                 failedStudents,
+//                 null,
+//                 2
+//               )}</pre>`
+//             : ""
+//         }
+//         <br/>
+//         <p>This is an automated email from Datta Meghe College System.</p>
+//       `;
+
+//       const adminMailOptions = {
+//         from: process.env.emailUser,
+//         to: process.env.ADMIN_EMAIL, // ✅ Send to admin email from env
+//         subject: `Student Import Report - ${successCount} Students Added`,
+//         html: adminEmailBody,
+//       };
+
+//       try {
+//         await transporter.sendMail(adminMailOptions);
+//         console.log("✅ Admin notification email sent");
+//       } catch (adminEmailErr) {
+//         console.error("⚠️ Failed to send admin email:", adminEmailErr.message);
+//       }
+//     }
+
+//     // 5️⃣ Delete uploaded file
+//     fs.unlinkSync(req.file.path);
+
+//     res.status(200).json({
+//       success: true,
+//       message: `Process completed. ${successCount} students added and emailed successfully. Admin notification sent.`,
+//       failed: failedStudents,
+//       created: successCount,
+//     });
+//   } catch (error) {
+//     console.error("Error importing Excel:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Error importing Excel data",
+//     });
+//   }
+// };
+
+// module.exports = {
+//   addStudentDetails,
+//   getStudentById,
+//   getStudents,
+//   getAllStudents,
+//   getSingleStudent,
+//   updateStudent,
+//   deleteStudent,
+//   importExcelDataWithPasswords, // ✅ ADD THIS
+//   exportAllStudentsToExcel, // ✅ ADD THIS
+// };
+//_________________________________________________________________________________
 const Student = require("../models/Student");
 const Admin = require("../models/Admin");
 const cloudinary = require("../config/cloudinaryConfig");
@@ -22,25 +1102,25 @@ const {
 
 const cascadeDeleteStudent = require("../helpers/cascadeDeleteStudent");
 
-// Configure your email transporter (example with Gmail)
+// Configure email transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.emailUser, // your email
-    pass: process.env.emailPassword, // app password if 2FA enabled
+    user: process.env.emailUser,
+    pass: process.env.emailPassword,
   },
 });
 
-// Function to generate strong random password
+// Generate random password
 const generateRandomPassword = (length = 14) => {
   return crypto.randomBytes(length).toString("base64").slice(0, length);
 };
 
+// ==================== IMPORT EXCEL WITH PASSWORDS ====================
 const importExcelDataWithPasswords = async (req, res) => {
   try {
     const adminId = req.user.id;
 
-    // Verify admin exists
     const adminExists = await Admin.findById(adminId);
     if (!adminExists) {
       return res
@@ -54,12 +1134,10 @@ const importExcelDataWithPasswords = async (req, res) => {
         .json({ success: false, message: "No file uploaded" });
     }
 
-    // 1️⃣ Read Excel file
     const workbook = xlsx.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
 
-    // 2️⃣ Convert Excel sheet to JSON
     const rawData = xlsx.utils.sheet_to_json(sheet);
 
     if (rawData.length === 0) {
@@ -68,7 +1146,6 @@ const importExcelDataWithPasswords = async (req, res) => {
         .json({ success: false, message: "Excel file is empty" });
     }
 
-    // 3️⃣ Extract studentID & email
     const filteredData = rawData
       .map((row) => ({
         studentID: row.studentID || row.StudentID || row["Student ID"] || "",
@@ -83,16 +1160,15 @@ const importExcelDataWithPasswords = async (req, res) => {
       });
     }
 
-    // 4️⃣ For each student: generate, hash, save, and email
     let successCount = 0;
     let failedStudents = [];
+    let createdStudents = [];
 
     for (const data of filteredData) {
       try {
         const randomPassword = generateRandomPassword(14);
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-        // Validate current student object
         const { error, value } = importExcelSchema.validate(data, {
           abortEarly: false,
         });
@@ -107,7 +1183,7 @@ const importExcelDataWithPasswords = async (req, res) => {
             email: data.email,
             error: validationErrors,
           });
-          continue; // Skip this student, continue with next
+          continue;
         }
 
         const newStudent = new Student({
@@ -118,12 +1194,17 @@ const importExcelDataWithPasswords = async (req, res) => {
 
         const savedStudent = await newStudent.save();
 
-        // Only send email if saved successfully
+        createdStudents.push({
+          studentID: data.studentID,
+          email: data.email,
+          password: randomPassword,
+        });
+
         const mailOptions = {
           from: process.env.emailUser,
           to: data.email,
           subject: "Your Account Password",
-          text: `Hello ${data.studentID},\n\nYour new password is: ${randomPassword}\n`,
+          text: `Hello ${data.studentID},\n\nYour new password is: ${randomPassword}\n\nUse your Student ID and this password to login.\n\nBest regards,\nDatta Meghe College Of Engineering`,
         };
 
         await transporter.sendMail(mailOptions);
@@ -138,13 +1219,83 @@ const importExcelDataWithPasswords = async (req, res) => {
       }
     }
 
-    // 5️⃣ Delete uploaded file
+    if (createdStudents.length > 0) {
+      console.log("📧 ========== ADMIN EMAIL DEBUG ==========");
+      console.log("emailUser:", process.env.emailUser);
+      console.log("ADMIN_EMAIL:", process.env.ADMIN_EMAIL);
+      console.log("Created Students Count:", createdStudents.length);
+
+      const studentListHTML = createdStudents
+        .map(
+          (s) =>
+            `<tr><td>${s.studentID}</td><td>${s.email}</td><td>${s.password}</td></tr>`
+        )
+        .join("");
+
+      const adminEmailBody = `
+        <h2>Student Import Summary Report</h2>
+        <p><strong>Total Students Imported:</strong> ${successCount}</p>
+        <p><strong>Failed:</strong> ${failedStudents.length}</p>
+        <br/>
+        <table border="1" cellpadding="10" cellspacing="0">
+          <thead>
+            <tr style="background-color: #2563eb; color: white;">
+              <th>Student ID</th>
+              <th>Email</th>
+              <th>Password</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${studentListHTML}
+          </tbody>
+        </table>
+        <br/>
+        ${
+          failedStudents.length > 0
+            ? `<h3>Failed Students:</h3><pre>${JSON.stringify(
+                failedStudents,
+                null,
+                2
+              )}</pre>`
+            : ""
+        }
+        <br/>
+        <p>This is an automated email from Datta Meghe College System.</p>
+      `;
+
+      const adminMailOptions = {
+        from: process.env.emailUser,
+        to: process.env.ADMIN_EMAIL,
+        subject: `Student Import Report - ${successCount} Students Added`,
+        html: adminEmailBody,
+      };
+
+      console.log("📧 Mail Options:", {
+        from: adminMailOptions.from,
+        to: adminMailOptions.to,
+        subject: adminMailOptions.subject,
+      });
+
+      try {
+        console.log("📨 Sending email with transporter...");
+        const result = await transporter.sendMail(adminMailOptions);
+        console.log("✅ Admin notification email sent!");
+        console.log("Email Result:", result.response);
+      } catch (adminEmailErr) {
+        console.error("⚠️ ADMIN EMAIL FAILED!");
+        console.error("Error Message:", adminEmailErr.message);
+        console.error("Error Code:", adminEmailErr.code);
+        console.error("Full Error:", adminEmailErr);
+      }
+    }
+
     fs.unlinkSync(req.file.path);
 
     res.status(200).json({
       success: true,
-      message: `Process completed. ${successCount} students added and emailed successfully.`,
+      message: `Process completed. ${successCount} students added and emailed successfully. Admin notification sent.`,
       failed: failedStudents,
+      created: successCount,
     });
   } catch (error) {
     console.error("Error importing Excel:", error);
@@ -155,26 +1306,9 @@ const importExcelDataWithPasswords = async (req, res) => {
   }
 };
 
-// Controller: Export all students to Excel
+// ==================== EXPORT STUDENTS TO EXCEL ====================
 const exportAllStudentsToExcel = async (req, res) => {
   try {
-    const adminId = req.user.id;
-
-    if (req.user.role !== "admin") {
-      return res
-        .status(403)
-        .json({ success: false, message: "Admin not found or unauthorized" });
-    }
-
-    // Verify admin exists
-    const adminExists = await Admin.findById(adminId);
-    if (!adminExists) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Admin not found or unauthorized" });
-    }
-
-    // 1. Fetch all students from DB
     const students = await Student.find();
 
     if (!students || students.length === 0) {
@@ -184,15 +1318,16 @@ const exportAllStudentsToExcel = async (req, res) => {
       });
     }
 
-    // 2. Format data for Excel
     const formattedData = students.map((student) => ({
       StudentID: student.studentID || "",
       Name:
-        student.name?.lastName +
-          student.name?.firstName +
-          student.name?.middleName || "",
+        (student.name?.firstName || "") +
+          " " +
+          (student.name?.middleName || "") +
+          " " +
+          (student.name?.lastName || "") || "",
       Email: student.email || "",
-      Branch: student.branch + "Engineering" || "",
+      Branch: student.branch || "",
       Year: student.year || "",
       DOB: student.dob || "",
       BloodGroup: student.bloodGroup || "",
@@ -200,32 +1335,22 @@ const exportAllStudentsToExcel = async (req, res) => {
       CurrentStreet: student.currentAddress?.street || "",
       CurrentCity: student.currentAddress?.city || "",
       CurrentPincode: student.currentAddress?.pincode || "",
-      StudentPhotoURL: student.studentPhoto?.url || "",
     }));
 
-    // 3. Create a new workbook and sheet
     const workbook = xlsx.utils.book_new();
     const worksheet = xlsx.utils.json_to_sheet(formattedData);
-
     xlsx.utils.book_append_sheet(workbook, worksheet, "Students");
 
-    // 4. Save file temporarily to server
     const exportDir = path.join(__dirname, "../exports");
     if (!fs.existsSync(exportDir)) fs.mkdirSync(exportDir);
 
     const filePath = path.join(exportDir, `Students_${Date.now()}.xlsx`);
     xlsx.writeFile(workbook, filePath);
 
-    // 5. Send file to user for download
     res.download(filePath, "StudentsData.xlsx", (err) => {
       if (err) {
         console.error("Error while downloading file:", err);
-        res
-          .status(500)
-          .json({ success: false, message: "File download failed" });
       }
-
-      // 6. Delete file after sending (to avoid clutter)
       fs.unlink(filePath, (delErr) => {
         if (delErr) console.error("Error deleting temp file:", delErr);
       });
@@ -239,10 +1364,9 @@ const exportAllStudentsToExcel = async (req, res) => {
   }
 };
 
-// Add remaining Details from schema --for student
+// ==================== ADD STUDENT DETAILS ====================
 const addStudentDetails = async (req, res) => {
-  let dbSaved = false; //flag to track if save to Db oprations succeeds or fails
-
+  let dbSaved = false;
   let uploadResult = null;
 
   try {
@@ -255,7 +1379,6 @@ const addStudentDetails = async (req, res) => {
         .json({ success: false, message: "Student not found" });
     }
 
-    // Destructure fields from request body
     const {
       firstName,
       middleName,
@@ -277,7 +1400,6 @@ const addStudentDetails = async (req, res) => {
       parentMobileNo,
     } = req.body;
 
-    // Basic required field check
     if (
       !firstName ||
       !middleName ||
@@ -309,7 +1431,6 @@ const addStudentDetails = async (req, res) => {
         .json({ success: false, message: "Student Photo required" });
     }
 
-    // Validate input using Joi
     const { error, value } = addStudentDetailsSchema.validate(
       {
         firstName,
@@ -346,7 +1467,6 @@ const addStudentDetails = async (req, res) => {
       });
     }
 
-    // Convert dob string to Date before saving
     const dobDate = new Date(dob);
 
     let studentPhoto = null;
@@ -364,7 +1484,6 @@ const addStudentDetails = async (req, res) => {
       };
     }
 
-    //Build nested object for name
     const name = {
       firstName,
       middleName,
@@ -372,7 +1491,6 @@ const addStudentDetails = async (req, res) => {
       motherName,
     };
 
-    // Build nested objects for addresses
     const currentAddress = {
       street: currentStreet,
       city: currentCity,
@@ -385,7 +1503,6 @@ const addStudentDetails = async (req, res) => {
       nativePincode: nativePincode,
     };
 
-    // Update the existing student
     const studentWithAddedDetails = await Student.findByIdAndUpdate(
       studentId,
       {
@@ -402,7 +1519,7 @@ const addStudentDetails = async (req, res) => {
         parentMobileNo,
         studentPhoto,
       },
-      { new: true } // Return the updated document
+      { new: true }
     );
     dbSaved = true;
 
@@ -412,10 +1529,9 @@ const addStudentDetails = async (req, res) => {
       message: "Added details successfully!",
     });
   } catch (err) {
-    console.error("Error in createPersonalDetail:", err);
+    console.error("Error in addStudentDetails:", err);
 
-    // if Db update failed, then delete photo uploaded to cloudinary
-    if (!dbSaved) {
+    if (!dbSaved && uploadResult) {
       await cloudinary.uploader.destroy(uploadResult.publicId);
     }
     res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -438,7 +1554,6 @@ const updateStudent = async (req, res) => {
         .json({ success: false, message: "Student not found" });
     }
 
-    // Verify requester
     if (req.user.role === "admin") {
       const adminExists = await Admin.findById(userId);
       if (!adminExists) {
@@ -457,7 +1572,6 @@ const updateStudent = async (req, res) => {
       return res.status(400).json({ success: false, message: "Bad Request" });
     }
 
-    //for dealing with updated studentPhoto later
     if (!student.studentPhoto || !student.studentPhoto.publicId) {
       return res.status(400).json({
         success: false,
@@ -489,7 +1603,6 @@ const updateStudent = async (req, res) => {
       parentMobileNo,
     } = req.body;
 
-    // Validate input using Joi
     const { error, value } = updateStudentSchema.validate(
       {
         firstName,
@@ -526,12 +1639,10 @@ const updateStudent = async (req, res) => {
       });
     }
 
-    // Convert dob string to Date before saving
     const dobDate = new Date(value.dob);
 
     const updatedData = {};
 
-    // Name
     if (req.body.firstName) updatedData["name.firstName"] = req.body.firstName;
     if (req.body.middleName)
       updatedData["name.middleName"] = req.body.middleName;
@@ -539,7 +1650,6 @@ const updateStudent = async (req, res) => {
     if (req.body.motherName)
       updatedData["name.motherName"] = req.body.motherName;
 
-    // Current Address
     if (req.body.currentStreet)
       updatedData["currentAddress.street"] = req.body.currentStreet;
     if (req.body.currentCity)
@@ -547,7 +1657,6 @@ const updateStudent = async (req, res) => {
     if (req.body.pincode)
       updatedData["currentAddress.pincode"] = req.body.pincode;
 
-    // Native Address
     if (req.body.nativeStreet)
       updatedData["nativeAddress.street"] = req.body.nativeStreet;
     if (req.body.nativeCity)
@@ -555,7 +1664,6 @@ const updateStudent = async (req, res) => {
     if (req.body.nativePincode)
       updatedData["nativeAddress.nativePincode"] = req.body.nativePincode;
 
-    // Other top-level fields
     if (req.body.PRN) updatedData.PRN = req.body.PRN;
     if (req.body.branch) updatedData.branch = req.body.branch;
     if (req.body.year) updatedData.year = req.body.year;
@@ -566,11 +1674,9 @@ const updateStudent = async (req, res) => {
     if (req.body.parentMobileNo)
       updatedData.parentMobileNo = req.body.parentMobileNo;
 
-    // Handle student photo upload
     const photoFile = req.file;
 
     if (photoFile) {
-      // Upload new photo
       uploadResult = await uploadToCloudinary(photoFile.path);
 
       if (!uploadResult) {
@@ -580,14 +1686,12 @@ const updateStudent = async (req, res) => {
         });
       }
 
-      // Set uploaded photo in updatedData
       updatedData.studentPhoto = {
         url: uploadResult.url,
         publicId: uploadResult.publicId,
       };
     }
 
-    // Update DB
     const updatedStudent = await Student.findByIdAndUpdate(
       studentId,
       { $set: updatedData },
@@ -595,7 +1699,6 @@ const updateStudent = async (req, res) => {
     );
     dbSaved = true;
 
-    //if DB update succeeds then delete old photo from cloudinary
     try {
       await cloudinary.uploader.destroy(oldPublicId);
     } catch (err) {
@@ -609,7 +1712,7 @@ const updateStudent = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in updateStudent:", err);
-    if (!dbSaved && uploadResult.publicId) {
+    if (!dbSaved && uploadResult && uploadResult.publicId) {
       await cloudinary.uploader.destroy(uploadResult.publicId);
     }
     res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -630,7 +1733,6 @@ const deleteStudent = async (req, res) => {
         .json({ success: false, message: "Student not found" });
     }
 
-    // Verify requester
     if (req.user.role === "admin") {
       const adminExists = await Admin.findById(userId);
       if (!adminExists) {
@@ -656,7 +1758,6 @@ const deleteStudent = async (req, res) => {
       });
     }
 
-    // Delete student photo from Cloudinary if exists
     if (student.studentPhoto.publicId) {
       const delResult = await cloudinary.uploader.destroy(
         student.studentPhoto.publicId
@@ -681,7 +1782,6 @@ const deleteStudent = async (req, res) => {
       });
     }
 
-    // delete other documents in other schemas referencing to this student --only if studdent is first successfully deleted from Student.js
     if (result) {
       await cascadeDeleteStudent(studentId);
     }
@@ -695,21 +1795,18 @@ const deleteStudent = async (req, res) => {
   }
 };
 
-// GET STUDENTS (with optional pagination)
+// ==================== GET STUDENTS (WITH PAGINATION) ====================
 const getStudents = async (req, res) => {
   try {
     const adminId = req.user.id;
 
-    // Verify admin
     const adminExists = await Admin.exists({ _id: adminId });
     if (!adminExists) {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    // Get query params
     const { year, search, page, limit } = req.query;
 
-    // Validate input using Joi
     const { error, value } = getStudentsValidation.validate(
       { year, search, page, limit },
       { abortEarly: false }
@@ -727,19 +1824,16 @@ const getStudents = async (req, res) => {
       });
     }
 
-    // Use defaults
     const pageNum = value.page || 1;
     const limitNum = value.limit || 10;
 
     const skip = (pageNum - 1) * limitNum;
 
-    // Build filter
     const filter = {};
     if (year) {
       filter.year = year.trim();
     }
     if (search) {
-      // sanitize to prevent regex injection
       const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
       filter.$or = [
         { "name.firstName": { $regex: safeSearch, $options: "i" } },
@@ -749,10 +1843,8 @@ const getStudents = async (req, res) => {
       ];
     }
 
-    // Get total count for filtered results
     const total = await Student.countDocuments(filter);
 
-    // Fetch students with pagination
     const students = await Student.find(filter)
       .skip(skip)
       .limit(limitNum)
@@ -773,7 +1865,7 @@ const getStudents = async (req, res) => {
   }
 };
 
-// ==================== GET SINGLE STUDENT BY ID (Admin) ====================
+// ==================== GET SINGLE STUDENT BY ID (ADMIN) ====================
 const getSingleStudent = async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -785,7 +1877,6 @@ const getSingleStudent = async (req, res) => {
 
     const adminId = req.user.id;
 
-    // Verify requester exists
     if (req.user.role === "admin") {
       const adminExists = await Admin.findById(adminId);
       if (!adminExists) {
@@ -811,7 +1902,7 @@ const getSingleStudent = async (req, res) => {
   }
 };
 
-// Get single Student from req.user.id ( for student )
+// ==================== GET STUDENT BY ID (FOR STUDENT) ====================
 const getStudentById = async (req, res) => {
   try {
     const studentId = req.user.id;
@@ -837,12 +1928,11 @@ const getStudentById = async (req, res) => {
   }
 };
 
-// Get ALL students without pagination (Admin only)
+// ==================== GET ALL STUDENTS (ADMIN ONLY) ====================
 const getAllStudents = async (req, res) => {
   try {
     const adminId = req.user.id;
 
-    // Verify admin
     if (req.user.role !== "admin") {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
@@ -854,7 +1944,6 @@ const getAllStudents = async (req, res) => {
         .json({ success: false, message: "Admin not found" });
     }
 
-    // Get ALL students without pagination
     const students = await Student.find()
       .select("-password")
       .sort({ createdAt: -1 })
@@ -871,6 +1960,7 @@ const getAllStudents = async (req, res) => {
   }
 };
 
+// ==================== EXPORTS ====================
 module.exports = {
   addStudentDetails,
   getStudentById,
