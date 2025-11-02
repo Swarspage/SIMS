@@ -1,66 +1,3 @@
-// const express = require("express");
-// const router = express.Router();
-// const {
-//   addStudentDetails,
-//   getStudentById,
-//   getStudents,
-//   getAllStudents, // ✅ ADD THIS IMPORT
-//   getSingleStudent,
-//   updateStudent,
-//   deleteStudent,
-//   importExcelDataWithPasswords,
-//   exportAllStudentsToExcel,
-// } = require("../controllers/StudentController");
-
-// const uploadExcel = require("../middlewares/excelMulter");
-// const verifyToken = require("../middlewares/VerifyToken");
-// const upload = require("../middlewares/multer");
-// const trimRequestBodyStrings = require("../middlewares/trimRequestBodyStrings");
-
-// // ==================== IMPORT/EXPORT ROUTES ====================
-// // route to add excel file and then send generated passwords via email --admin access
-// router.post(
-//   "/import",
-//   verifyToken,
-//   uploadExcel.single("studentData"),
-//   importExcelDataWithPasswords
-// );
-
-// // route to download all student data in Excel format
-// router.get("/export-students", verifyToken, exportAllStudentsToExcel);
-
-// // ==================== CRUD ROUTES ====================
-// // route to add remaining details --student
-// router.post(
-//   "/",
-//   verifyToken,
-//   upload.single("studentPhoto"),
-//   trimRequestBodyStrings,
-//   addStudentDetails
-// );
-
-// // route to update remaining details --student & admin
-// router.put(
-//   "/:studentId",
-//   verifyToken,
-//   upload.single("studentPhoto"),
-//   trimRequestBodyStrings,
-//   updateStudent
-// );
-
-// // route to delete student --student & admin
-// router.delete("/:studentId", verifyToken, deleteStudent);
-
-// // ==================== GET ROUTES (ORDER MATTERS!) ====================
-// // ⚠️ Specific routes MUST come before dynamic routes (/:studentId)
-
-// router.get("/all", verifyToken, getAllStudents); // ✅ Admin only - Get ALL students (no pagination)
-// router.get("/me", verifyToken, getStudentById); // Student self
-// router.get("/", verifyToken, getStudents); // Admin only - with search, filter and pagination
-// router.get("/:studentId", verifyToken, getSingleStudent); // Admin only - Get single student by ID
-
-// module.exports = router;
-
 const express = require("express");
 const router = express.Router();
 const {
@@ -91,15 +28,16 @@ router.post(
   importExcelDataWithPasswords
 );
 
-// Temporary: Test without auth
+// Export route
 router.get("/export-students", exportAllStudentsToExcel);
 
-// Get specific routes
+// Get all students and get my data
 router.get("/all", verifyToken, getAllStudents);
 router.get("/me", verifyToken, getStudentById);
 
 // ==================== CRUD ROUTES ====================
 
+// Create student details (POST)
 router.post(
   "/",
   verifyToken,
@@ -108,6 +46,10 @@ router.post(
   addStudentDetails
 );
 
+// ==================== DYNAMIC ROUTES LAST ====================
+// ⚠️ All specific named routes MUST come BEFORE these
+
+// Update student (PUT)
 router.put(
   "/:studentId",
   verifyToken,
@@ -116,12 +58,13 @@ router.put(
   updateStudent
 );
 
+// Delete student (DELETE)
 router.delete("/:studentId", verifyToken, deleteStudent);
 
-// ==================== DYNAMIC ROUTES LAST ====================
-// These come AFTER all specific routes
-
+// Get all students with pagination (GET)
 router.get("/", verifyToken, getStudents);
+
+// Get single student by ID (GET)
 router.get("/:studentId", verifyToken, getSingleStudent);
 
 module.exports = router;
