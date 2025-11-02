@@ -41,10 +41,10 @@ export const achievementService = {
     return response.data;
   },
 
-  // Get achievements by student ID
-  getAchievementsByStu: async (studentId) => {
-    const response = await API.get(`/achievements/student/${studentId}`);
-    return response.data.data; // Return the data array
+  // ✅ CORRECT - Uses student's own route
+  getAchievementsByStu: async () => {
+    const response = await API.get("/achievements");
+    return response.data.data;
   },
 
   // Update achievement

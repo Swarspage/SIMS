@@ -12,7 +12,19 @@ const {
   deleteAchievement,
 } = require("../controllers/achievementController");
 
-// Create Achievement (accept 2 files)
+// ==================== SPECIFIC ROUTES FIRST ====================
+// These MUST come before generic routes
+
+// Get all achievements (admin)
+router.get("/all", verifyToken, getAllAchievements);
+
+// Get student achievements by admin
+router.get("/student/:studentId", verifyToken, getStudentAchievementsByAdmin);
+
+// ==================== GENERIC ROUTES LAST ====================
+// These come AFTER specific routes
+
+// Create Achievement
 router.post(
   "/",
   verifyToken,
@@ -23,10 +35,10 @@ router.post(
   createAchievement
 );
 
+// Get own achievements (student)
 router.get("/", verifyToken, getOwnAchievements);
 
-
-// Update achievement (accept new files)
+// Update achievement
 router.put(
   "/:id",
   verifyToken,
@@ -40,11 +52,4 @@ router.put(
 // Delete achievement
 router.delete("/:id", verifyToken, deleteAchievement);
 
-// Get all achievements (admin)
-router.get("/all", verifyToken, getAllAchievements);
-router.get("/student/:studentId", verifyToken, getStudentAchievementsByAdmin);
-
 module.exports = router;
-
-
-

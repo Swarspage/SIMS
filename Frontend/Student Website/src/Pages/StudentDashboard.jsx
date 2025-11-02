@@ -27,15 +27,18 @@ export default function StudentDashboard() {
     try {
       setLoading(true);
 
-      // Get student ID from token
-      const studentId = achievementService.getStudentIdFromToken();
-      console.log("🔍 Student ID:", studentId);
+      console.log("🚀 Starting dashboard data fetch...");
 
       // Fetch Activities
       let activities = [];
       try {
         console.log("📍 Fetching activities...");
-        activities = await activityService.getActivitiesByStu(studentId);
+        const activityResponse = await activityService.getActivityByStu();
+        activities =
+          activityResponse.data ||
+          activityResponse.activities ||
+          activityResponse ||
+          [];
         console.log("✅ Activities fetched:", activities);
       } catch (err) {
         console.error("❌ Error fetching activities:", err);
@@ -45,7 +48,13 @@ export default function StudentDashboard() {
       let achievements = [];
       try {
         console.log("📍 Fetching achievements...");
-        achievements = await achievementService.getAchievementsByStu(studentId);
+        const achievementResponse =
+          await achievementService.getAchievementsByStu();
+        achievements =
+          achievementResponse.data ||
+          achievementResponse.achievements ||
+          achievementResponse ||
+          [];
         console.log("✅ Achievements fetched:", achievements);
       } catch (err) {
         console.error("❌ Error fetching achievements:", err);
@@ -55,11 +64,14 @@ export default function StudentDashboard() {
       let hasInternship = false;
       try {
         console.log("📍 Fetching internships...");
-        const internships = await internshipService.getInternshipsByStu(
-          studentId
-        );
+        const internshipResponse = await internshipService.getOwnInternships();
+        const internships =
+          internshipResponse.data ||
+          internshipResponse.internships ||
+          internshipResponse ||
+          [];
         console.log("✅ Internships fetched:", internships);
-        hasInternship = internships && internships.length > 0;
+        hasInternship = internships.length > 0;
       } catch (err) {
         console.error("❌ Error fetching internships:", err);
       }
@@ -68,9 +80,14 @@ export default function StudentDashboard() {
       let hasPlacement = false;
       try {
         console.log("📍 Fetching placements...");
-        const placements = await placementService.getPlacementsByStu(studentId);
+        const placementResponse = await placementService.getOwnPlacements();
+        const placements =
+          placementResponse.data ||
+          placementResponse.placements ||
+          placementResponse ||
+          [];
         console.log("✅ Placements fetched:", placements);
-        hasPlacement = placements && placements.length > 0;
+        hasPlacement = placements.length > 0;
       } catch (err) {
         console.error("❌ Error fetching placements:", err);
       }
@@ -79,11 +96,15 @@ export default function StudentDashboard() {
       let hasHigherStudies = false;
       try {
         console.log("📍 Fetching higher studies...");
-        const higherStudies = await higherStudiesService.getHigherStudiesByStu(
-          studentId
-        );
+        const higherStudiesResponse =
+          await higherStudiesService.getOwnHigherStudies();
+        const higherStudies =
+          higherStudiesResponse.data ||
+          higherStudiesResponse.higherStudies ||
+          higherStudiesResponse ||
+          [];
         console.log("✅ Higher studies fetched:", higherStudies);
-        hasHigherStudies = higherStudies && higherStudies.length > 0;
+        hasHigherStudies = higherStudies.length > 0;
       } catch (err) {
         console.error("❌ Error fetching higher studies:", err);
       }

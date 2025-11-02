@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { admissionService } from "../services/admissionService";
 
 export default function StudentAdmission() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [admission, setAdmission] = useState(null);
 
   const [formData, setFormData] = useState({
     rollno: "",
@@ -18,6 +20,39 @@ export default function StudentAdmission() {
     isScholarshipApplied: false,
     academicYear: "",
   });
+
+  useEffect(() => {
+    fetchAdmissionData();
+  }, []);
+
+  const fetchAdmissionData = async () => {
+    try {
+      const data = await admissionService.getMyAdmissions();
+      if (data && data.length > 0) {
+        const admissionRecord = data[0];
+        setAdmission(admissionRecord);
+        setFormData({
+          rollno: admissionRecord.rollno || "",
+          year: admissionRecord.year || "",
+          div: admissionRecord.div || "",
+          course: admissionRecord.course || "",
+          admissionDate: admissionRecord.admissionDate
+            ? new Date(admissionRecord.admissionDate)
+                .toISOString()
+                .split("T")[0]
+            : "",
+          fees: admissionRecord.fees || "",
+          isFeesPaid: admissionRecord.isFeesPaid || false,
+          isScholarshipApplied: admissionRecord.isScholarshipApplied || false,
+          academicYear: admissionRecord.academicYear || "",
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching admission data:", err);
+    } finally {
+      setPageLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,21 +73,17 @@ export default function StudentAdmission() {
 
     try {
       const { admissionDate, ...dataToSend } = formData;
-      await admissionService.createAdmission(dataToSend);
-      setSuccess("Admission created successfully!");
-      setIsEditMode(false);
 
-      setFormData({
-        rollno: "",
-        year: "",
-        div: "",
-        course: "",
-        admissionDate: "",
-        fees: "",
-        isFeesPaid: false,
-        isScholarshipApplied: false,
-        academicYear: "",
-      });
+      if (admission) {
+        await admissionService.updateAdmission(admission._id, dataToSend);
+        setSuccess("Admission updated successfully!");
+      } else {
+        await admissionService.createAdmission(dataToSend);
+        setSuccess("Admission created successfully!");
+      }
+
+      setIsEditMode(false);
+      fetchAdmissionData();
     } catch (err) {
       console.error("Error saving admission:", err);
       if (err.response?.data?.errors) {
@@ -68,6 +99,180 @@ export default function StudentAdmission() {
     }
   };
 
+  // =============== PROFILE VIEW ===============
+  if (!isEditMode && admission) {
+    return (
+      <main className="p-8 bg-slate-50 min-h-screen">
+        {/* Success Message */}
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span>{success}</span>
+          </div>
+        )}
+
+        {/* Header with Info */}
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-900">
+              Admission Details
+            </h1>
+            <p className="text-slate-600 mt-2">
+              Roll No: <span className="font-semibold">{formData.rollno}</span>{" "}
+              | Academic Year:{" "}
+              <span className="font-semibold">{formData.academicYear}</span>
+            </p>
+            <p className="text-slate-600">
+              {formData.course} - {formData.year} {formData.div}
+            </p>
+          </div>
+
+          <button
+            onClick={handleEdit}
+            className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            Edit Details
+          </button>
+        </div>
+
+        {/* Profile Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="p-8">
+            <div className="grid grid-cols-2 gap-8">
+              {/* Academic Information */}
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 mb-4">
+                  Academic Information
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-semibold">
+                      Roll Number
+                    </p>
+                    <p className="text-sm text-slate-900 font-medium">
+                      {formData.rollno || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-semibold">
+                      Year
+                    </p>
+                    <p className="text-sm text-slate-900 font-medium">
+                      {formData.year || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-semibold">
+                      Division
+                    </p>
+                    <p className="text-sm text-slate-900 font-medium">
+                      {formData.div || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-semibold">
+                      Course
+                    </p>
+                    <p className="text-sm text-slate-900 font-medium">
+                      {formData.course || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Admission Information */}
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 mb-4">
+                  Admission Information
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-semibold">
+                      Admission Date
+                    </p>
+                    <p className="text-sm text-slate-900 font-medium">
+                      {formData.admissionDate
+                        ? new Date(formData.admissionDate).toLocaleDateString(
+                            "en-IN"
+                          )
+                        : "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-semibold">
+                      Academic Year
+                    </p>
+                    <p className="text-sm text-slate-900 font-medium">
+                      {formData.academicYear || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-semibold">
+                      Status
+                    </p>
+                    <p className="text-sm text-slate-900 font-medium">
+                      {admission.status || "Active"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Financial Information */}
+            <div className="mt-8 pt-8 border-t border-slate-200">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">
+                Financial Information
+              </h3>
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">
+                    Fees Amount
+                  </p>
+                  <p className="text-sm text-slate-900 font-medium">
+                    ₹{formData.fees || "0"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">
+                    Payment Status
+                  </p>
+                  <p
+                    className={`text-sm font-medium ${
+                      formData.isFeesPaid ? "text-green-600" : "text-orange-600"
+                    }`}
+                  >
+                    {formData.isFeesPaid ? "Paid" : "Pending"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">
+                    Scholarship
+                  </p>
+                  <p
+                    className={`text-sm font-medium ${
+                      formData.isScholarshipApplied
+                        ? "text-blue-600"
+                        : "text-slate-600"
+                    }`}
+                  >
+                    {formData.isScholarshipApplied ? "Applied" : "None"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // =============== FORM VIEW (EDIT MODE) ===============
   return (
     <main className="p-8 bg-slate-50 min-h-screen">
       {/* Success Message */}
@@ -104,15 +309,6 @@ export default function StudentAdmission() {
           <h1 className="text-3xl font-bold text-slate-900">Admission Form</h1>
           <p className="text-slate-600 mt-1">Manage your admission details</p>
         </div>
-
-        {!isEditMode && (
-          <button
-            onClick={handleEdit}
-            className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            Edit Form
-          </button>
-        )}
       </div>
 
       {/* Form Card */}
@@ -131,16 +327,15 @@ export default function StudentAdmission() {
                 {/* Roll No */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Roll No
+                    Roll No <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     name="rollno"
                     value={formData.rollno}
                     onChange={handleChange}
-                    disabled={!isEditMode}
                     placeholder="Enter roll no"
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     required
                   />
                 </div>
@@ -148,14 +343,13 @@ export default function StudentAdmission() {
                 {/* Year */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Year
+                    Year <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="year"
                     value={formData.year}
                     onChange={handleChange}
-                    disabled={!isEditMode}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed appearance-none"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
                     required
                   >
                     <option value="">Select Year</option>
@@ -168,16 +362,15 @@ export default function StudentAdmission() {
                 {/* Division */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Division
+                    Division <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     name="div"
                     value={formData.div}
                     onChange={handleChange}
-                    disabled={!isEditMode}
                     placeholder="A, B, C"
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     required
                   />
                 </div>
@@ -185,14 +378,13 @@ export default function StudentAdmission() {
                 {/* Course */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Course
+                    Course <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="course"
                     value={formData.course}
                     onChange={handleChange}
-                    disabled={!isEditMode}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed appearance-none"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
                     required
                   >
                     <option value="">Select Course</option>
@@ -226,8 +418,7 @@ export default function StudentAdmission() {
                     name="admissionDate"
                     value={formData.admissionDate}
                     onChange={handleChange}
-                    disabled={!isEditMode}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   />
                   <p className="text-xs text-slate-500 mt-2">
                     Optional - Backend will set automatically
@@ -263,17 +454,16 @@ export default function StudentAdmission() {
                 {/* Fees Amount */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Fees Amount (₹)
+                    Fees Amount (₹) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
                     name="fees"
                     value={formData.fees}
                     onChange={handleChange}
-                    disabled={!isEditMode}
                     placeholder="0"
                     min="0"
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     required
                   />
                 </div>
@@ -281,7 +471,7 @@ export default function StudentAdmission() {
                 {/* Fees Paid Status */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Payment Status
+                    Payment Status <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="isFeesPaid"
@@ -292,8 +482,7 @@ export default function StudentAdmission() {
                         isFeesPaid: e.target.value === "full",
                       }))
                     }
-                    disabled={!isEditMode}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed appearance-none"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
                     required
                   >
                     <option value="">Select Status</option>
@@ -306,7 +495,7 @@ export default function StudentAdmission() {
                 {/* Scholarship */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Scholarship
+                    Scholarship <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="isScholarshipApplied"
@@ -317,8 +506,7 @@ export default function StudentAdmission() {
                         isScholarshipApplied: e.target.value !== "none",
                       }))
                     }
-                    disabled={!isEditMode}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed appearance-none"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
                     required
                   >
                     <option value="">Select Type</option>
@@ -332,24 +520,23 @@ export default function StudentAdmission() {
             </div>
 
             {/* Section: Academic Year */}
-            <div className="mb-10">
+            <div className="mb-8">
               <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
                 Academic Information
               </h2>
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Academic Year
+                  Academic Year <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="academicYear"
                   value={formData.academicYear}
                   onChange={handleChange}
-                  disabled={!isEditMode}
                   placeholder="2024-2025"
                   pattern="\d{4}-\d{4}"
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   required
                 />
                 <p className="text-xs text-slate-500 mt-2">
@@ -366,6 +553,7 @@ export default function StudentAdmission() {
                 type="button"
                 onClick={() => {
                   setIsEditMode(false);
+                  fetchAdmissionData();
                   setError("");
                   setSuccess("");
                 }}
