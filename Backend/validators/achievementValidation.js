@@ -2,7 +2,7 @@ const Joi = require("joi");
 
 const achievementSchema = Joi.object({
   category: Joi.string()
-    .valid("Coding competitions", "Committee", "Hackathons", "Sports", "Cultural", "Technical" ,"Other")
+    .valid("Coding competitions", "Committee", "Hackathons", "Sports", "Cultural", "Technical", "Other")
     .required(),
 
   title: Joi.string().min(3).max(100).required(),
@@ -21,6 +21,9 @@ const achievementSchema = Joi.object({
     .required(),
 
   teamMembers: Joi.array().items(Joi.string()).default([]),
+
+  // Certification Course
+  certification_course: Joi.string().allow("").max(500),
 });
 
 module.exports = { achievementSchema };
