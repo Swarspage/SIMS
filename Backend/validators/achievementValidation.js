@@ -2,7 +2,7 @@ const Joi = require("joi");
 
 const achievementSchema = Joi.object({
   category: Joi.string()
-    .valid("Coding competitions", "Committee", "Hackathons", "Sports", "Cultural", "Technical")
+    .valid("Coding competitions", "Committee", "Hackathons", "Sports", "Cultural", "Technical" ,"Other")
     .required(),
 
   title: Joi.string().min(3).max(100).required(),
