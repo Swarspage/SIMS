@@ -9,7 +9,15 @@ const achievementSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["Coding competitions", "Committee", "Hackathons", "Sports", "Cultural", "Technical"],
+      enum: [
+        "Coding competitions",
+        "Committee",
+        "Hackathons",
+        "Sports",
+        "Cultural",
+        "Technical",
+        "Other", // ✅ Added new category
+      ],
       required: true,
     },
     title: { type: String, required: true },
@@ -27,12 +35,12 @@ const achievementSchema = new mongoose.Schema(
     teamMembers: { type: [String], default: [] },
     photographs: {
       eventPhoto: {
-        url: { type: String, required: true },                         // Cloudinary URL
-        publicId: { type: String, required: true },                    // Cloudinary public_id => deletion
+        url: { type: String, required: true }, // Cloudinary URL
+        publicId: { type: String, required: true }, // Cloudinary public_id => deletion
       },
       certificate: {
-        url: { type: String, required: true },                       // Cloudinary URL
-        publicId: { type: String, required: true },                 // Cloudinary public_id => deletion
+        url: { type: String, required: true }, // Cloudinary URL
+        publicId: { type: String, required: true }, // Cloudinary public_id => deletion
       },
     },
   },
