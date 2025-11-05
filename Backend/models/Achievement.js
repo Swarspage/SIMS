@@ -16,7 +16,7 @@ const achievementSchema = new mongoose.Schema(
         "Sports",
         "Cultural",
         "Technical",
-        "Other", // ✅ Added new category
+        "Other",
       ],
       required: true,
     },
@@ -33,18 +33,27 @@ const achievementSchema = new mongoose.Schema(
       required: true,
     },
     teamMembers: { type: [String], default: [] },
+
+    //Certification Course
+    certification_course: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: "", // optional
+    },
+
     photographs: {
       eventPhoto: {
-        url: { type: String, required: true }, // Cloudinary URL
-        publicId: { type: String, required: true }, // Cloudinary public_id => deletion
+        url: { type: String, required: true },
+        publicId: { type: String, required: true },
       },
       certificate: {
-        url: { type: String, required: true }, // Cloudinary URL
-        publicId: { type: String, required: true }, // Cloudinary public_id => deletion
+        url: { type: String, required: true },
+        publicId: { type: String, required: true },
       },
     },
   },
-  { timestamps: true } // adds createdAt & updatedAt
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Achievement", achievementSchema);
