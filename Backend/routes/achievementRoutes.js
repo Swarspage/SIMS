@@ -12,44 +12,40 @@ const {
   deleteAchievement,
 } = require("../controllers/achievementController");
 
-// ==================== SPECIFIC ROUTES FIRST ====================
-// These MUST come before generic routes
-
-// Get all achievements (admin)
-router.get("/all", verifyToken, getAllAchievements);
-
-// Get student achievements by admin
-router.get("/student/:studentId", verifyToken, getStudentAchievementsByAdmin);
-
-// ==================== GENERIC ROUTES LAST ====================
-// These come AFTER specific routes
-
-// Create Achievement
+//Create Achievement (accept 3–4 files)
 router.post(
   "/",
   verifyToken,
   upload.fields([
     { name: "eventPhoto", maxCount: 1 },
     { name: "certificate", maxCount: 1 },
+    { name: "course_certificate", maxCount: 1 }, // new field
   ]),
   createAchievement
 );
 
-// Get own achievements (student)
+//Get achievements of logged-in student
 router.get("/", verifyToken, getOwnAchievements);
 
-// Update achievement
+// Update Achievement (allow replacing any uploaded file)
 router.put(
   "/:id",
   verifyToken,
   upload.fields([
     { name: "eventPhoto", maxCount: 1 },
     { name: "certificate", maxCount: 1 },
+    { name: "course_certificate", maxCount: 1 },
   ]),
   updateAchievement
 );
 
-// Delete achievement
+//Delete an achievement
 router.delete("/:id", verifyToken, deleteAchievement);
+
+//Admin: Get all achievements (with filtering options)
+router.get("/all", verifyToken, getAllAchievements);
+
+//Admin: Get specific student's achievements
+router.get("/student/:studentId", verifyToken, getStudentAchievementsByAdmin);
 
 module.exports = router;
