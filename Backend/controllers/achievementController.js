@@ -8,9 +8,8 @@ const { achievementSchema } = require("../validators/achievementValidation");
 // Allowed types & size
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_PROOF_TYPES = ["image/jpeg", "image/jpg", "image/png"];
-const ALLOWED_REPORT_TYPE = "application/pdf";
 
-// Helper to validate files
+// Validate file type and size
 const validateFile = (file, allowedTypes, maxSize) => {
   if (!file) return false;
   if (!allowedTypes.includes(file.mimetype)) return false;
@@ -18,7 +17,7 @@ const validateFile = (file, allowedTypes, maxSize) => {
   return true;
 };
 
-// Helper to delete files safely
+// Safely delete Cloudinary file
 const safeDeleteFile = async (publicId) => {
   try {
     if (publicId) await cloudinary.uploader.destroy(publicId);
@@ -27,35 +26,36 @@ const safeDeleteFile = async (publicId) => {
   }
 };
 
-
-// CREATE Achievement (Student Only)
-
+// CREATE Achievement
 const createAchievement = async (req, res) => {
   let uploadedFiles = [];
   try {
     const { id, role } = req.user;
+
     if (role !== "student")
-      return res
-        .status(403)
-        .json({ success: false, message: "Only students can add achievements" });
+      return res.status(403).json({
+        success: false,
+        message: "Only students can add achievements",
+      });
 
     const student = await Student.findById(id);
     if (!student)
-      return res
-        .status(404)
-        .json({ success: false, message: "Student not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
 
-    // Validate input
+    // Validate body
     const { error } = achievementSchema.validate(req.body);
     if (error)
       return res
         .status(400)
         .json({ success: false, message: error.details[0].message });
 
-    // Validate required files
+    // Required files
     const eventPhotoFile = req.files?.eventPhoto?.[0];
     const certificateFile = req.files?.certificate?.[0];
-    const reportFile = req.files?.report?.[0]; // optional PDF
+    const certificationFile = req.files?.course_certificate?.[0]; // optional
 
     if (!eventPhotoFile || !certificateFile)
       return res.status(400).json({
@@ -63,7 +63,7 @@ const createAchievement = async (req, res) => {
         message: "Both event photo and certificate are required",
       });
 
-    // File type & size validation
+    // Validate files
     if (!validateFile(eventPhotoFile, ALLOWED_PROOF_TYPES, MAX_FILE_SIZE))
       return res.status(400).json({
         success: false,
@@ -76,38 +76,52 @@ const createAchievement = async (req, res) => {
         message: "Certificate must be JPG/PNG and <= 5MB",
       });
 
-    if (reportFile && !validateFile(reportFile, [ALLOWED_REPORT_TYPE], MAX_FILE_SIZE))
+    if (
+      certificationFile &&
+      !validateFile(certificationFile, ALLOWED_PROOF_TYPES, MAX_FILE_SIZE)
+    )
       return res.status(400).json({
         success: false,
-        message: "Report must be PDF and <= 5MB",
+        message: "Certification file must be JPG/PNG and <= 5MB",
       });
 
-    // Upload files to Cloudinary
+    // Upload to Cloudinary
     const eventPhoto = await uploadToCloudinary(eventPhotoFile.path);
     uploadedFiles.push(eventPhoto.publicId);
 
     const certificate = await uploadToCloudinary(certificateFile.path);
     uploadedFiles.push(certificate.publicId);
 
-    let report = null;
-    if (reportFile) {
-      report = await uploadToCloudinary(reportFile.path);
-      uploadedFiles.push(report.publicId);
+    let course_certificate = null;
+    if (certificationFile) {
+      course_certificate = await uploadToCloudinary(
+        certificationFile.path
+      );
+      uploadedFiles.push( course_certificate.publicId);
     }
 
-    // Save record with certification_course if provided
+    // Create new Achievement
     const achievement = new Achievement({
       stuID: id,
       ...req.body, // includes certification_course
       photographs: {
         eventPhoto: { url: eventPhoto.url, publicId: eventPhoto.publicId },
         certificate: { url: certificate.url, publicId: certificate.publicId },
-        ...(report ? { report: { url: report.url, publicId: report.publicId } } : {}),
       },
+      course_certificate: course_certificate
+        ? {
+            url: course_certificate.url,
+            publicId: course_certificate.publicId,
+          }
+        : {},
     });
 
-    const populated = await achievement.populate("stuID", "name roll branch year");
     await achievement.save();
+
+    const populated = await achievement.populate(
+      "stuID",
+      "name roll branch year"
+    );
 
     res.status(201).json({
       success: true,
@@ -115,7 +129,6 @@ const createAchievement = async (req, res) => {
       data: populated,
     });
   } catch (err) {
-    // Cleanup uploaded files if DB save fails
     for (const publicId of uploadedFiles) {
       await safeDeleteFile(publicId);
     }
@@ -124,9 +137,7 @@ const createAchievement = async (req, res) => {
   }
 };
 
-
-// UPDATE Achievement (Student/Admin)
-
+// UPDATE Achievement
 const updateAchievement = async (req, res) => {
   let uploadedFiles = [];
   try {
@@ -140,7 +151,7 @@ const updateAchievement = async (req, res) => {
     if (role === "student" && achievement.stuID.toString() !== id)
       return res
         .status(403)
-        .json({ success: false, message: "Not authorized to update this record" });
+        .json({ success: false, message: "Not authorized to update" });
 
     if (role === "admin") {
       const admin = await Admin.findById(id);
@@ -150,64 +161,57 @@ const updateAchievement = async (req, res) => {
           .json({ success: false, message: "Admin not authorized" });
     }
 
-    const { error } = achievementSchema.validate(req.body, { presence: "optional" });
+    const { error } = achievementSchema.validate(req.body, {
+      presence: "optional",
+    });
     if (error)
       return res
         .status(400)
         .json({ success: false, message: error.details[0].message });
 
-    // Handle file updates
-    if (req.files?.eventPhoto) {
-      const file = req.files.eventPhoto[0];
-      if (!validateFile(file, ALLOWED_PROOF_TYPES, MAX_FILE_SIZE))
-        return res
-          .status(400)
-          .json({ success: false, message: "Event photo must be JPG/PNG and <= 5MB" });
+    // File replacements
+    const fileUpdates = [
+      { key: "eventPhoto", types: ALLOWED_PROOF_TYPES },
+      { key: "certificate", types: ALLOWED_PROOF_TYPES },
+      { key: "course_certificate", types: ALLOWED_PROOF_TYPES },
+    ];
 
-      await cloudinary.uploader.destroy(achievement.photographs.eventPhoto.publicId);
-      const newEventPhoto = await uploadToCloudinary(file.path);
-      uploadedFiles.push(newEventPhoto.publicId);
-      achievement.photographs.eventPhoto = {
-        url: newEventPhoto.url,
-        publicId: newEventPhoto.publicId,
-      };
+    for (const { key, types } of fileUpdates) {
+      if (req.files?.[key]) {
+        const file = req.files[key][0];
+        if (!validateFile(file, types, MAX_FILE_SIZE))
+          return res.status(400).json({
+            success: false,
+            message: `${key} file invalid or too large`,
+          });
+
+        // Delete old file if exists
+        const existing =
+          key === "course_certificate"
+            ? achievement.course_certificate
+            : achievement.photographs[key];
+
+        if (existing?.publicId)
+          await cloudinary.uploader.destroy(existing.publicId);
+
+        const uploaded = await uploadToCloudinary(file.path);
+        uploadedFiles.push(uploaded.publicId);
+
+        if (key === "course_certificate") {
+          achievement.course_certificate = {
+            url: uploaded.url,
+            publicId: uploaded.publicId,
+          };
+        } else {
+          achievement.photographs[key] = {
+            url: uploaded.url,
+            publicId: uploaded.publicId,
+          };
+        }
+      }
     }
 
-    if (req.files?.certificate) {
-      const file = req.files.certificate[0];
-      if (!validateFile(file, ALLOWED_PROOF_TYPES, MAX_FILE_SIZE))
-        return res
-          .status(400)
-          .json({ success: false, message: "Certificate must be JPG/PNG and <= 5MB" });
-
-      await cloudinary.uploader.destroy(achievement.photographs.certificate.publicId);
-      const newCertificate = await uploadToCloudinary(file.path);
-      uploadedFiles.push(newCertificate.publicId);
-      achievement.photographs.certificate = {
-        url: newCertificate.url,
-        publicId: newCertificate.publicId,
-      };
-    }
-
-    if (req.files?.report) {
-      const file = req.files.report[0];
-      if (!validateFile(file, [ALLOWED_REPORT_TYPE], MAX_FILE_SIZE))
-        return res
-          .status(400)
-          .json({ success: false, message: "Report must be PDF and <= 5MB" });
-
-      if (achievement.photographs.report)
-        await cloudinary.uploader.destroy(achievement.photographs.report.publicId);
-
-      const newReport = await uploadToCloudinary(file.path);
-      uploadedFiles.push(newReport.publicId);
-      achievement.photographs.report = {
-        url: newReport.url,
-        publicId: newReport.publicId,
-      };
-    }
-
-    // Update certification_course and other text fields
+    // Update text fields
     Object.assign(achievement, req.body);
     await achievement.save();
 
@@ -225,7 +229,7 @@ const updateAchievement = async (req, res) => {
   }
 };
 
-// DELETE Achievement 
+// DELETE Achievement
 const deleteAchievement = async (req, res) => {
   try {
     const { id, role } = req.user;
@@ -238,7 +242,7 @@ const deleteAchievement = async (req, res) => {
     if (role === "student" && achievement.stuID.toString() !== id)
       return res
         .status(403)
-        .json({ success: false, message: "Not authorized to delete this record" });
+        .json({ success: false, message: "Not authorized to delete" });
 
     if (role === "admin") {
       const admin = await Admin.findById(id);
@@ -248,29 +252,33 @@ const deleteAchievement = async (req, res) => {
           .json({ success: false, message: "Admin not authorized" });
     }
 
-    // Delete all cloud files
+    // Delete all associated files
     for (const key of Object.keys(achievement.photographs)) {
       await safeDeleteFile(achievement.photographs[key].publicId);
     }
+    if (achievement.course_certificate?.publicId)
+      await safeDeleteFile(achievement.course_certificate.publicId);
 
     await achievement.deleteOne();
-    res
-      .status(200)
-      .json({ success: true, message: "Achievement deleted successfully" });
+
+    res.status(200).json({
+      success: true,
+      message: "Achievement deleted successfully",
+    });
   } catch (err) {
     console.error("Error deleting achievement:", err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-// GET: Own Achievements (Student)
+// GET: Student’s Own Achievements
 const getOwnAchievements = async (req, res) => {
   try {
     const { id, role } = req.user;
     if (role !== "student")
       return res
         .status(403)
-        .json({ success: false, message: "Only students can view their achievements" });
+        .json({ success: false, message: "Only students can view this" });
 
     const achievements = await Achievement.find({ stuID: id })
       .populate("stuID", "name roll branch year")
@@ -309,16 +317,11 @@ const getAllAchievements = async (req, res) => {
     } = req.query;
 
     const query = {};
-
     if (category) query.category = category;
     if (achievementType) query.achievementType = achievementType;
 
-    // Filter by certification_course (case-insensitive)
     if (certification_course) {
-      query.certification_course = {
-        $regex: certification_course,
-        $options: "i",
-      };
+      query.certification_course = { $regex: certification_course, $options: "i" };
     }
 
     if (search) {
@@ -360,7 +363,7 @@ const getAllAchievements = async (req, res) => {
   }
 };
 
-// GET: Achievements by Student (Admin)
+// GET: Specific Student’s Achievements (Admin)
 const getStudentAchievementsByAdmin = async (req, res) => {
   try {
     const { id, role } = req.user;
@@ -369,7 +372,7 @@ const getStudentAchievementsByAdmin = async (req, res) => {
     if (role !== "admin")
       return res
         .status(403)
-        .json({ success: false, message: "Only admins can view student achievements" });
+        .json({ success: false, message: "Only admins can view this" });
 
     const student = await Student.findById(studentId);
     if (!student)
@@ -390,12 +393,8 @@ const getStudentAchievementsByAdmin = async (req, res) => {
     if (category) query.category = category;
     if (achievementType) query.achievementType = achievementType;
 
-    // Filter for certification_course
     if (certification_course) {
-      query.certification_course = {
-        $regex: certification_course,
-        $options: "i",
-      };
+      query.certification_course = { $regex: certification_course, $options: "i" };
     }
 
     if (search) {
