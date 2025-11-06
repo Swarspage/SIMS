@@ -2,7 +2,15 @@ const Joi = require("joi");
 
 const achievementSchema = Joi.object({
   category: Joi.string()
-    .valid("Coding competitions", "Committee", "Hackathons", "Sports", "Cultural", "Technical", "Other")
+    .valid(
+      "Coding competitions",
+      "Committee",
+      "Hackathons",
+      "Sports",
+      "Cultural",
+      "Technical",
+      "Other"
+    )
     .required(),
 
   title: Joi.string().min(3).max(100).required(),
@@ -22,8 +30,33 @@ const achievementSchema = Joi.object({
 
   teamMembers: Joi.array().items(Joi.string()).default([]),
 
-  // Certification Course
-  certification_course: Joi.string().allow("").max(500),
+  // Optional Certification Course Field
+  certification_course: Joi.string()
+    .trim()
+    .max(500)
+    .allow("")
+    .messages({
+      "string.max": "Certification course name too long (max 500 characters)",
+    }),
+
+  // course Certification Certificate
+  course_certificate: Joi.object({
+    url: Joi.string().uri().optional(),
+    publicId: Joi.string().optional(),
+  }).optional(),
+
+  // Uploaded Event Photos
+  photographs: Joi.object({
+    eventPhoto: Joi.object({
+      url: Joi.string().uri().optional(),
+      publicId: Joi.string().optional(),
+    }).optional(),
+
+    certificate: Joi.object({
+      url: Joi.string().uri().optional(),
+      publicId: Joi.string().optional(),
+    }).optional(),
+  }).optional(),
 });
 
 module.exports = { achievementSchema };
