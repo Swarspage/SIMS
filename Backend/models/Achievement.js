@@ -65,7 +65,7 @@ const achievementSchema = new mongoose.Schema(
     },
 
     // Course certificate upload (new field)
-    certification_certificate: {
+    course_certificate: {
       url: { type: String, default: "" },
       publicId: { type: String, default: "" },
     },
