@@ -7,6 +7,7 @@ const achievementSchema = new mongoose.Schema(
       ref: "Student",
       required: true,
     },
+
     category: {
       type: String,
       enum: [
@@ -20,28 +21,56 @@ const achievementSchema = new mongoose.Schema(
       ],
       required: true,
     },
-    title: { type: String, required: true },
-    description: { type: String, required: true },
-    issuedBy: { type: String, required: true },
+
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    issuedBy: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     date: {
       from: { type: Date, required: true },
       to: { type: Date, required: true },
     },
+
     achievementType: {
       type: String,
       enum: ["Participation", "Winner", "Runner-up"],
       required: true,
     },
-    teamMembers: { type: [String], default: [] },
 
-    //Certification Course
+    teamMembers: {
+      type: [String],
+      default: [],
+    },
+
+    // Certification Course (new field)
     certification_course: {
       type: String,
       trim: true,
       maxlength: 500,
-      default: "", // optional
+      default: "",
     },
 
+    // Course certificate upload (new field)
+    certification_certificate: {
+      url: { type: String, default: "" },
+      publicId: { type: String, default: "" },
+    },
+
+    //event photos
     photographs: {
       eventPhoto: {
         url: { type: String, required: true },
