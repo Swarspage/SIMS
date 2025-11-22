@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 
 export default function StudentSidebar() {
   const location = useLocation();
-  const navigate = useNavigate(); // ✅ ADD THIS
+  const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
 
   const menuItems = [
     { name: "Dashboard", path: "/student/dashboard" },
@@ -16,10 +17,11 @@ export default function StudentSidebar() {
     { name: "Placements", path: "/student/placement" },
   ];
 
-  const getIcon = (name) => {
+  // COLORS for icon: normal, active, hover
+  const getIcon = (name, isActive) => {
     const common = {
       className: "w-5 h-5 flex-shrink-0",
-      stroke: "currentColor",
+      stroke: isActive ? "white" : "currentColor",
       fill: "none",
       strokeWidth: 1.5,
       strokeLinecap: "round",
@@ -83,36 +85,58 @@ export default function StudentSidebar() {
     }
   };
 
-  // ✅ UPDATED LOGOUT FUNCTION
   const handleLogout = () => {
-    // Clear authentication data
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("role");
-
-    // Navigate to home
     navigate("/");
   };
 
   return (
-    <aside className="w-64 bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800 flex flex-col justify-between h-screen sticky top-0 p-6 shadow-lg border-r border-slate-200">
+    <aside
+      className={`bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800 flex flex-col justify-between h-screen sticky top-0 p-4 shadow-lg border-r border-slate-200 transition-all duration-300
+        ${collapsed ? "w-20 min-w-[80px]" : "w-64 min-w-[256px]"}`}
+      style={{ zIndex: 50 }}
+    >
+      {/* Collapse Button */}
+      <button
+        className="absolute -right-4 top-6 z-10 bg-blue-500 text-white rounded-full p-1 shadow transition-all duration-300 group"
+        onClick={() => setCollapsed(!collapsed)}
+        title={collapsed ? "Expand" : "Collapse"}
+      >
+        {collapsed ? (
+          <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
+            <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="2" />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
+            <path d="M13 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" />
+          </svg>
+        )}
+      </button>
       {/* Top Section */}
       <div className="flex flex-col">
         {/* Logo Section */}
-        <div className="flex flex-col items-center mb-12 pb-8 border-b-2 border-slate-200">
+        <div
+          className={`flex flex-col items-center mb-12 pb-8 border-b-2 border-slate-200 ${
+            collapsed ? "gap-2" : ""
+          }`}
+        >
           <div className="relative mb-3">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 rounded-full bg-blue-100/50 blur-2xl"></div>
             <img
               src={logo}
               alt="logo"
-              className="relative w-20 h-20 object-contain"
+              className={`relative ${
+                collapsed ? "w-10 h-10" : "w-20 h-20"
+              } object-contain transition-all`}
             />
           </div>
-          <div className="text-xs font-semibold text-center text-slate-700 leading-tight">
-            Datta Meghe College Of Engineering
-          </div>
+          {!collapsed && (
+            <div className="text-xs font-semibold text-center text-slate-700 leading-tight">
+              Datta Meghe College Of Engineering
+            </div>
+          )}
         </div>
-
         {/* Navigation */}
         <nav className="flex flex-col gap-2">
           {menuItems.map((item) => {
@@ -121,21 +145,23 @@ export default function StudentSidebar() {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 text-sm font-medium
+                className={`group px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 text-sm font-medium
                   ${
                     isActive
                       ? "bg-blue-500 text-white shadow-md"
                       : "text-slate-700 hover:bg-slate-200 hover:text-slate-900"
-                  }`}
+                  }
+                `}
               >
-                <span className="flex-shrink-0">{getIcon(item.name)}</span>
-                <span>{item.name}</span>
+                <span className="flex-shrink-0 flex items-center justify-center">
+                  {getIcon(item.name, isActive)}
+                </span>
+                {!collapsed && <span>{item.name}</span>}
               </Link>
             );
           })}
         </nav>
       </div>
-
       {/* Bottom Section - Logout */}
       <div className="flex flex-col gap-3 pt-6 border-t-2 border-slate-200">
         <button
@@ -152,7 +178,7 @@ export default function StudentSidebar() {
           >
             <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
           </svg>
-          <span>Logout</span>
+          {!collapsed && <span>Logout</span>}
         </button>
       </div>
     </aside>

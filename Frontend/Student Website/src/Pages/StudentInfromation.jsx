@@ -134,7 +134,7 @@
 //         setLoading(false);
 //         return;
 //       }
-//       // ✅ FIXED: Photo is required for initial form submission
+
 //       if (!studentPhoto && !photoPreview) {
 //         setError(
 //           "❌ Student photo is REQUIRED! Please upload a photo to continue."
@@ -168,16 +168,6 @@
 //         formDataToSend.append("studentPhoto", studentPhoto);
 //       }
 
-//       console.log("=== FormData Contents ===");
-//       for (let [key, value] of formDataToSend.entries()) {
-//         if (value instanceof File) {
-//           console.log(`${key}: [FILE] ${value.name} (${value.size} bytes)`);
-//         } else {
-//           console.log(`${key}: "${value}"`);
-//         }
-//       }
-//       console.log("========================");
-
 //       if (!studentId) {
 //         const response = await studentService.addStudent(formDataToSend);
 //         setSuccess("Student information added successfully!");
@@ -186,10 +176,7 @@
 //           localStorage.setItem("studentId", response.data._id);
 //         }
 //       } else {
-//         const response = await studentService.updateStudent(
-//           studentId,
-//           formDataToSend
-//         );
+//         await studentService.updateStudent(studentId, formDataToSend);
 //         setSuccess("Student information updated successfully!");
 //       }
 
@@ -208,6 +195,174 @@
 //     }
 //   };
 
+//   // =============== PROFILE VIEW ===============
+//   if (!isEditMode && photoPreview) {
+//     return (
+//       <main className="p-8 bg-slate-50 min-h-screen">
+//         {/* Success Message */}
+//         {success && (
+//           <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
+//             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+//               <path
+//                 fillRule="evenodd"
+//                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+//                 clipRule="evenodd"
+//               />
+//             </svg>
+//             <span>{success}</span>
+//           </div>
+//         )}
+
+//         {/* Header with Profile */}
+//         <div className="flex items-start justify-between mb-8">
+//           <div>
+//             <h1 className="text-4xl font-bold text-slate-900">
+//               {formData.firstName} {formData.middleName} {formData.lastName}
+//             </h1>
+//             <p className="text-slate-600 mt-2">
+//               ID: <span className="font-semibold">{formData.studentID}</span> |
+//               PRN: <span className="font-semibold">{formData.PRN}</span>
+//             </p>
+//             <p className="text-slate-600">
+//               {formData.branch} - {formData.year}
+//             </p>
+//           </div>
+
+//           <button
+//             onClick={handleEdit}
+//             className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+//           >
+//             Edit Profile
+//           </button>
+//         </div>
+
+//         {/* Profile Card */}
+//         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+//           {/* Profile Header with Photo */}
+//           <div className="h-32 bg-gradient-to-r from-blue-500 to-blue-600 relative">
+//             <div className="absolute bottom-0 left-8 translate-y-1/2">
+//               <img
+//                 src={photoPreview}
+//                 alt="Student"
+//                 className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+//               />
+//             </div>
+//           </div>
+
+//           {/* Profile Content */}
+//           <div className="p-8 pt-24">
+//             <div className="grid grid-cols-2 gap-8">
+//               {/* Personal Information */}
+//               <div>
+//                 <h3 className="text-lg font-bold text-slate-900 mb-4">
+//                   Personal Information
+//                 </h3>
+//                 <div className="space-y-3">
+//                   <div>
+//                     <p className="text-xs text-slate-500 uppercase font-semibold">
+//                       Mother's Name
+//                     </p>
+//                     <p className="text-sm text-slate-900 font-medium">
+//                       {formData.motherName || "N/A"}
+//                     </p>
+//                   </div>
+//                   <div>
+//                     <p className="text-xs text-slate-500 uppercase font-semibold">
+//                       Date of Birth
+//                     </p>
+//                     <p className="text-sm text-slate-900 font-medium">
+//                       {formData.dob
+//                         ? new Date(formData.dob).toLocaleDateString("en-IN")
+//                         : "N/A"}
+//                     </p>
+//                   </div>
+//                   <div>
+//                     <p className="text-xs text-slate-500 uppercase font-semibold">
+//                       Blood Group
+//                     </p>
+//                     <p className="text-sm text-slate-900 font-medium">
+//                       {formData.bloodGroup || "N/A"}
+//                     </p>
+//                   </div>
+//                   <div>
+//                     <p className="text-xs text-slate-500 uppercase font-semibold">
+//                       Category
+//                     </p>
+//                     <p className="text-sm text-slate-900 font-medium">
+//                       {formData.category || "N/A"}
+//                     </p>
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {/* Contact Information */}
+//               <div>
+//                 <h3 className="text-lg font-bold text-slate-900 mb-4">
+//                   Contact Information
+//                 </h3>
+//                 <div className="space-y-3">
+//                   <div>
+//                     <p className="text-xs text-slate-500 uppercase font-semibold">
+//                       Email
+//                     </p>
+//                     <p className="text-sm text-slate-900 font-medium">
+//                       {formData.email || "N/A"}
+//                     </p>
+//                   </div>
+//                   <div>
+//                     <p className="text-xs text-slate-500 uppercase font-semibold">
+//                       Mobile
+//                     </p>
+//                     <p className="text-sm text-slate-900 font-medium">
+//                       {formData.mobileNo || "N/A"}
+//                     </p>
+//                   </div>
+//                   <div>
+//                     <p className="text-xs text-slate-500 uppercase font-semibold">
+//                       Parent's Mobile
+//                     </p>
+//                     <p className="text-sm text-slate-900 font-medium">
+//                       {formData.parentMobileNo || "N/A"}
+//                     </p>
+//                   </div>
+//                 </div>
+//               </div>
+//             </div>
+
+//             {/* Address Information */}
+//             <div className="mt-8 pt-8 border-t border-slate-200">
+//               <div className="grid grid-cols-2 gap-8">
+//                 <div>
+//                   <h4 className="font-bold text-slate-900 mb-3">
+//                     Current Address
+//                   </h4>
+//                   <p className="text-sm text-slate-700">
+//                     {formData.currentStreet}, {formData.currentCity}
+//                   </p>
+//                   <p className="text-sm text-slate-700">
+//                     Pincode: {formData.currentPincode}
+//                   </p>
+//                 </div>
+//                 <div>
+//                   <h4 className="font-bold text-slate-900 mb-3">
+//                     Native Address
+//                   </h4>
+//                   <p className="text-sm text-slate-700">
+//                     {formData.nativeStreet}, {formData.nativeCity}
+//                   </p>
+//                   <p className="text-sm text-slate-700">
+//                     Pincode: {formData.nativePincode}
+//                   </p>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </main>
+//     );
+//   }
+
+//   // =============== FORM VIEW (EDIT MODE) ===============
 //   return (
 //     <main className="p-8 bg-slate-50 min-h-screen">
 //       {/* Success Message */}
@@ -248,15 +403,6 @@
 //             Complete and manage your profile details
 //           </p>
 //         </div>
-
-//         {!isEditMode && (
-//           <button
-//             onClick={handleEdit}
-//             className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-//           >
-//             Edit Form
-//           </button>
-//         )}
 //       </div>
 
 //       {/* Form Card */}
@@ -280,8 +426,7 @@
 //                     name="firstName"
 //                     value={formData.firstName}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -295,8 +440,7 @@
 //                     name="middleName"
 //                     value={formData.middleName}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -310,8 +454,7 @@
 //                     name="lastName"
 //                     value={formData.lastName}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -328,8 +471,7 @@
 //                     name="motherName"
 //                     value={formData.motherName}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -355,19 +497,12 @@
 //                         readOnly
 //                       />
 //                     </div>
-//                     <label
-//                       className={`px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg transition ${
-//                         !isEditMode
-//                           ? "opacity-50 cursor-not-allowed"
-//                           : "cursor-pointer hover:bg-blue-700"
-//                       }`}
-//                     >
+//                     <label className="px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg cursor-pointer hover:bg-blue-700 transition">
 //                       UPLOAD
 //                       <input
 //                         type="file"
 //                         accept="image/*"
 //                         onChange={handlePhotoChange}
-//                         disabled={!isEditMode}
 //                         className="hidden"
 //                       />
 //                     </label>
@@ -399,8 +534,7 @@
 //                     name="dob"
 //                     value={formData.dob}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -413,8 +547,7 @@
 //                     name="bloodGroup"
 //                     value={formData.bloodGroup}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed appearance-none"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
 //                     required
 //                   >
 //                     <option value="">Select Blood Group</option>
@@ -437,8 +570,7 @@
 //                     name="branch"
 //                     value={formData.branch}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed appearance-none"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
 //                     required
 //                   >
 //                     <option value="">Select Branch</option>
@@ -459,8 +591,7 @@
 //                     name="year"
 //                     value={formData.year}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed appearance-none"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
 //                     required
 //                   >
 //                     <option value="">Select Year</option>
@@ -487,8 +618,7 @@
 //                   name="currentStreet"
 //                   value={formData.currentStreet}
 //                   onChange={handleChange}
-//                   disabled={!isEditMode}
-//                   className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                   className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                   required
 //                 />
 //               </div>
@@ -503,8 +633,7 @@
 //                     name="currentCity"
 //                     value={formData.currentCity}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -517,8 +646,7 @@
 //                     name="currentPincode"
 //                     value={formData.currentPincode}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -540,8 +668,7 @@
 //                   name="nativeStreet"
 //                   value={formData.nativeStreet}
 //                   onChange={handleChange}
-//                   disabled={!isEditMode}
-//                   className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                   className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                   required
 //                 />
 //               </div>
@@ -556,8 +683,7 @@
 //                     name="nativeCity"
 //                     value={formData.nativeCity}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -570,8 +696,7 @@
 //                     name="nativePincode"
 //                     value={formData.nativePincode}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -594,8 +719,7 @@
 //                     name="mobileNo"
 //                     value={formData.mobileNo}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -608,8 +732,7 @@
 //                     name="parentMobileNo"
 //                     value={formData.parentMobileNo}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -640,8 +763,7 @@
 //                     name="category"
 //                     value={formData.category}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed appearance-none"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
 //                     required
 //                   >
 //                     <option value="">Select Category</option>
@@ -673,10 +795,9 @@
 //                     name="PRN"
 //                     value={formData.PRN}
 //                     onChange={handleChange}
-//                     disabled={!isEditMode}
 //                     placeholder="15-digit PRN (e.g., 123456789012345)"
 //                     maxLength="15"
-//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
+//                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                     required
 //                   />
 //                 </div>
@@ -927,11 +1048,10 @@ export default function StudentInformation() {
     }
   };
 
-  // =============== PROFILE VIEW ===============
+  // ================= PROFILE VIEW =================
   if (!isEditMode && photoPreview) {
     return (
-      <main className="p-8 bg-slate-50 min-h-screen">
-        {/* Success Message */}
+      <main className="p-4 sm:p-8 bg-slate-50 min-h-screen">
         {success && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -945,8 +1065,7 @@ export default function StudentInformation() {
           </div>
         )}
 
-        {/* Header with Profile */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex flex-col md:flex-row items-start justify-between mb-8 gap-4">
           <div>
             <h1 className="text-4xl font-bold text-slate-900">
               {formData.firstName} {formData.middleName} {formData.lastName}
@@ -959,7 +1078,6 @@ export default function StudentInformation() {
               {formData.branch} - {formData.year}
             </p>
           </div>
-
           <button
             onClick={handleEdit}
             className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
@@ -968,9 +1086,7 @@ export default function StudentInformation() {
           </button>
         </div>
 
-        {/* Profile Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          {/* Profile Header with Photo */}
           <div className="h-32 bg-gradient-to-r from-blue-500 to-blue-600 relative">
             <div className="absolute bottom-0 left-8 translate-y-1/2">
               <img
@@ -981,9 +1097,8 @@ export default function StudentInformation() {
             </div>
           </div>
 
-          {/* Profile Content */}
-          <div className="p-8 pt-24">
-            <div className="grid grid-cols-2 gap-8">
+          <div className="p-4 sm:p-8 pt-24">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               {/* Personal Information */}
               <div>
                 <h3 className="text-lg font-bold text-slate-900 mb-4">
@@ -1026,7 +1141,6 @@ export default function StudentInformation() {
                   </div>
                 </div>
               </div>
-
               {/* Contact Information */}
               <div>
                 <h3 className="text-lg font-bold text-slate-900 mb-4">
@@ -1060,10 +1174,9 @@ export default function StudentInformation() {
                 </div>
               </div>
             </div>
-
             {/* Address Information */}
             <div className="mt-8 pt-8 border-t border-slate-200">
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div>
                   <h4 className="font-bold text-slate-900 mb-3">
                     Current Address
@@ -1094,10 +1207,9 @@ export default function StudentInformation() {
     );
   }
 
-  // =============== FORM VIEW (EDIT MODE) ===============
+  // ================ FORM VIEW (EDIT MODE) ====================
   return (
-    <main className="p-8 bg-slate-50 min-h-screen">
-      {/* Success Message */}
+    <main className="p-4 sm:p-8 bg-slate-50 min-h-screen">
       {success && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -1111,7 +1223,6 @@ export default function StudentInformation() {
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -1125,7 +1236,6 @@ export default function StudentInformation() {
         </div>
       )}
 
-      {/* Page Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">
@@ -1137,18 +1247,15 @@ export default function StudentInformation() {
         </div>
       </div>
 
-      {/* Form Card */}
       <form onSubmit={handleSubmit}>
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-8">
+          <div className="p-4 sm:p-8">
             {/* SECTION: Personal Information */}
             <div className="mb-10">
               <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
                 Personal Information
               </h2>
-
-              {/* Row: First, Middle, Last Name */}
-              <div className="grid grid-cols-3 gap-6 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     First Name <span className="text-red-500">*</span>
@@ -1162,7 +1269,6 @@ export default function StudentInformation() {
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Middle Name <span className="text-red-500">*</span>
@@ -1176,7 +1282,6 @@ export default function StudentInformation() {
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Last Name <span className="text-red-500">*</span>
@@ -1191,9 +1296,7 @@ export default function StudentInformation() {
                   />
                 </div>
               </div>
-
-              {/* Row: Mother's Name & Photo */}
-              <div className="grid grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Mother's Name <span className="text-red-500">*</span>
@@ -1207,7 +1310,6 @@ export default function StudentInformation() {
                     required
                   />
                 </div>
-
                 {/* Photo Upload */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -1249,14 +1351,12 @@ export default function StudentInformation() {
                 </div>
               </div>
             </div>
-
             {/* SECTION: Academic Information */}
             <div className="mb-10">
               <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
                 Academic Information
               </h2>
-
-              <div className="grid grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Date of Birth <span className="text-red-500">*</span>
@@ -1270,7 +1370,6 @@ export default function StudentInformation() {
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Blood Group <span className="text-red-500">*</span>
@@ -1293,7 +1392,6 @@ export default function StudentInformation() {
                     <option value="O-">O-</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Branch <span className="text-red-500">*</span>
@@ -1314,7 +1412,6 @@ export default function StudentInformation() {
                     <option value="Chemical">Chemical</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Year <span className="text-red-500">*</span>
@@ -1334,13 +1431,11 @@ export default function StudentInformation() {
                 </div>
               </div>
             </div>
-
-            {/* SECTION: Address Information */}
+            {/* SECTION: Current Address */}
             <div className="mb-10">
               <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
                 Current Address
               </h2>
-
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Street Address <span className="text-red-500">*</span>
@@ -1354,8 +1449,7 @@ export default function StudentInformation() {
                   required
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     City <span className="text-red-500">*</span>
@@ -1384,13 +1478,11 @@ export default function StudentInformation() {
                 </div>
               </div>
             </div>
-
             {/* SECTION: Native Address */}
             <div className="mb-10">
               <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
                 Native Address
               </h2>
-
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Street Address <span className="text-red-500">*</span>
@@ -1404,8 +1496,7 @@ export default function StudentInformation() {
                   required
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     City <span className="text-red-500">*</span>
@@ -1434,14 +1525,12 @@ export default function StudentInformation() {
                 </div>
               </div>
             </div>
-
             {/* SECTION: Contact & Category */}
             <div className="mb-10">
               <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
                 Contact Information
               </h2>
-
-              <div className="grid grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Mobile No. <span className="text-red-500">*</span>
@@ -1469,8 +1558,7 @@ export default function StudentInformation() {
                   />
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Email Address
@@ -1486,7 +1574,6 @@ export default function StudentInformation() {
                     Cannot be changed
                   </p>
                 </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Category <span className="text-red-500">*</span>
@@ -1510,14 +1597,12 @@ export default function StudentInformation() {
                 </div>
               </div>
             </div>
-
             {/* SECTION: Identifiers */}
             <div className="mb-8">
               <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
                 Identifiers
               </h2>
-
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     PRN Number <span className="text-red-500">*</span>
@@ -1533,7 +1618,6 @@ export default function StudentInformation() {
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Student ID
@@ -1552,10 +1636,8 @@ export default function StudentInformation() {
               </div>
             </div>
           </div>
-
-          {/* Form Actions */}
           {isEditMode && (
-            <div className="flex justify-end gap-4 px-8 py-6 bg-slate-50 border-t border-slate-200">
+            <div className="flex flex-col sm:flex-row justify-end gap-4 px-4 sm:px-8 py-6 bg-slate-50 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => {
