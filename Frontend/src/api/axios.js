@@ -1,14 +1,14 @@
 import axios from "axios";
 
 // Backend URL
-const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = "https://student-website-backend.onrender.com/api";
 
 // Create axios instance
 const API = axios.create({
   baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
-  },
+  },  
   withCredentials: true,
   timeout: 10000,
 });
@@ -39,16 +39,16 @@ API.interceptors.request.use(
 );
 
 // ✅ RESPONSE INTERCEPTOR
-// API.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     if (error.response?.status === 401) {
-//       // ✅ CHANGED: Clear localStorage instead of cookie
-//       localStorage.removeItem("token");
-//       window.location.href = "/login";
-//     }
-//     return Promise.reject(error);
-//   }
-// );
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // ✅ CHANGED: Clear localStorage instead of cookie
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default API;

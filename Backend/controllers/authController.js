@@ -17,7 +17,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
 const cookieOptions = {
   httpOnly: true,
   maxAge: 1000 * 60 * 60 * 24, // 1 day
-  sameSite: "lax",
+  secure: true,
+  sameSite: "none",
 };
 
 // ---------------- SIGNUP ----------------
@@ -227,7 +228,7 @@ exports.adminLogin = async (req, res) => {
 // ---------------- LOGOUT ----------------
 exports.logout = (req, res) => {
   try {
-    res.clearCookie("token", { httpOnly: true, sameSite: "lax" });
+    res.clearCookie("token", { httpOnly: true, sameSite: "none", secure: true });
     return res
       .status(200)
       .json({ success: true, message: "Logout successful" });
