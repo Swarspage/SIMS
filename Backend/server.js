@@ -1,56 +1,36 @@
-// server.js
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 require("dotenv").config();
 
-// DEBUG CHECK
+// ✅ ADD THIS DEBUG CHECK
 console.log("🔍 ENVIRONMENT VARIABLES CHECK:");
 console.log("EMAIL_USER loaded:", process.env.EMAIL_USER ? "✅ YES" : "❌ NO");
-console.log("EMAIL_PASSWORD loaded:", process.env.EMAIL_PASSWORD ? "✅ YES" : "❌ NO");
-console.log("ADMIN_EMAIL loaded:", process.env.ADMIN_EMAIL ? "✅ YES" : "❌ NO");
-console.log("FRONTEND_URL:", process.env.FRONTEND_URL || "not set (add your deployed frontend URL)");
-console.log("LOCAL_DEV_ORIGIN:", "http://localhost:5173");
+console.log(
+  "EMAIL_PASSWORD loaded:",
+  process.env.EMAIL_PASSWORD ? "✅ YES" : "❌ NO"
+);
+console.log(
+  "ADMIN_EMAIL loaded:",
+  process.env.ADMIN_EMAIL ? "✅ YES" : "❌ NO"
+);
 
-// Use Render / host provided port if available
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 const app = express();
 
 connectDB();
 
-// Simple request logger to help debug deployed requests
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - origin: ${req.headers.origin} - from ${req.ip}`);
-  next();
-});
-
-// CORS configuration (supports credentials - explicit origins)
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  process.env.FRONTEND_URL, // set this in Render env as e.g. https://your-frontend.com
-].filter(Boolean);
-
+// ✅ FIXED CORS - More permissive for dev
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps, curl, or server-to-server)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        return callback(null, true);
-      } else {
-        const msg = `CORS for origin ${origin} not allowed`;
-        return callback(new Error(msg), false);
-      }
-    },
+    origin: ["http://localhost:5173", "https://student-website-seven.vercel.app"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// handle preflight for all routes (helpful)
 app.options("*", (req, res) => {
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Origin", req.headers.origin || "");
@@ -76,15 +56,6 @@ app.use("/api/student", require("./routes/StudentRoutes"));
 
 app.get("/", (req, res) => {
   res.send("API is running...");
-});
-
-// Helpful 404 for unknown API endpoints
-app.use((req, res) => {
-  res.status(404).json({
-    status: 404,
-    message: "Not Found - check the path. Try GET / or /api/whatever",
-    path: req.originalUrl,
-  });
 });
 
 app.listen(PORT, () => {
