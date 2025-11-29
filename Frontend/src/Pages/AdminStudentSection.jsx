@@ -182,7 +182,7 @@ export default function AdminStudentSection() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/student/export-students",
+        "https://student-website-backend.onrender.com/api/student/export-students",
         {
           method: "GET",
           headers: {

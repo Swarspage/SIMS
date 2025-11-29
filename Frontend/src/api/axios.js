@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Backend URL
-const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = "https://student-website-backend.onrender.com/api";
 
 // Create axios instance
 const API = axios.create({
