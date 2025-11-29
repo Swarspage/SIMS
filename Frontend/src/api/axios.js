@@ -9,8 +9,7 @@ const API = axios.create({
   headers: {
     "Content-Type": "application/json",
   },  
-  withCredentials: true,
-  timeout: 10000,
+  withCredentials: true
 });
 
 // ✅ REQUEST INTERCEPTOR - Read from localStorage (NOT cookie)
