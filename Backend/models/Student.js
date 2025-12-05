@@ -9,11 +9,11 @@ const studentSchema = new mongoose.Schema({
         motherName : { type : String , } ,
     },
 
-    PRN: { type: String, } , 
-    studentID: { type: String, unique: true} ,
+    PRN: { type: String, }, //dont keep PRN unique:true because otherwise it gives E11000 duplicate key error collection when uploading excel file in /import studentRoute.
+    studentID: { type: String, unique: true},
 
-    email: { type: String, unique: true , },
-    password: { type: String,  },
+    email: { type: String, unique: true, },
+    password: { type: String, },
 
     branch: {
         type: String,
@@ -61,6 +61,10 @@ const studentSchema = new mongoose.Schema({
 
     mobileNo : { type: String, } , 
     parentMobileNo : { type: String, } ,
+
+    abcId : {type: String},
+    parentEmail: {type: String},
+
 
 
 }, 
