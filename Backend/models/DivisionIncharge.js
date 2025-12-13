@@ -12,7 +12,7 @@ const divisionInchargeSchema = new mongoose.Schema({
         enum : ["SE", "TE", "BE"],
     },
 
-    div : {
+    division : {
         type : String,
         enum : ["A", "B", "C"],
     },

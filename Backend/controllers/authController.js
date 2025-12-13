@@ -1,9 +1,12 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const DivisionIncharge = require("../models/DivisionIncharge");
 
 const Student = require("../models/Student.js")
 const Admin = require('../models/Admin.js');
 const { signupSchema, loginSchema } = require('../validators/authValidation.js');
+
+const { divisionInchargeLoginSchema } = require("../validators/divisionInchargeValidation.js");
 
 const {uploadToCloudinary}=require("../helpers/UploadToCloudinary.js");
 
@@ -18,7 +21,7 @@ const cookieOptions = {
   sameSite: "none",
 };
 
-// ---------------- SIGNUP ----------------
+// SIGNUP
 exports.signup = async (req, res) => {
     try {
         const { firstName, middleName, lastName, studentID, PRN, email, password, branch, year } = req.body;
@@ -96,7 +99,7 @@ exports.signup = async (req, res) => {
     }
 };
 
-// ---------------- LOGIN ----------------
+// LOGIN
 exports.login = async (req, res) => {
     try {
         const { studentID, password } = req.body;
@@ -150,7 +153,7 @@ exports.login = async (req, res) => {
     }
 };
 
-// ---------------- ADMIN LOGIN ----------------
+// ADMIN LOGIN
 exports.adminLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -184,7 +187,70 @@ exports.adminLogin = async (req, res) => {
     }
 };
 
-// ---------------- LOGOUT ----------------
+
+
+exports.divisionInchargeLogin = async (req, res) => {
+  try {
+
+    
+    const { email, password } = req.body;
+
+    // Joi Validation
+    const { error } = divisionInchargeLoginSchema.validate({ email, password });
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+
+
+    // Find User
+    const divisionIncharge = await DivisionIncharge.findOne({ email });
+    if (!divisionIncharge) {
+      return res.status(400).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // Password Check
+    const match = await bcrypt.compare(password, divisionIncharge.password);
+    if (!match) {
+      return res.status(400).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // JWT Token
+    const token = jwt.sign(
+      { id: divisionIncharge._id, email: divisionIncharge.email, role: 'divisionIncharge', division : divisionIncharge.division, year: divisionIncharge.year },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    res.cookie('token', token, cookieOptions);
+
+    // Response
+    return res.status(200).json({
+      success: true,
+      message: 'Division Incharge login successful',
+      token,
+      user: {
+        id: divisionIncharge._id,
+        email: divisionIncharge.email,
+        role: 'divisionIncharge',
+        division : divisionIncharge.division, 
+        year: divisionIncharge.year
+      }
+    });
+
+  } catch (error) {
+    console.error("Division Incharge Login Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error. Please try again later."
+    });
+  }
+};
+
+
+// LOGOUT
 exports.logout = (req, res) => {
     try {
         res.clearCookie('token',{ httpOnly: true, sameSite: "none", secure: true });

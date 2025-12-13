@@ -25,6 +25,12 @@ const studentSchema = new mongoose.Schema({
         enum : [ "SE", "TE", "BE"],
     },
 
+    division: {
+        type: String,
+        enum: ["A", "B", "C"]
+    },
+
+
 
     // Store both Cloudinary URL and publicId for deletion
     studentPhoto: {

@@ -45,6 +45,7 @@ app.use("/api/admission", require("./routes/admissionRoutes"));
 app.use("/api/placement", require("./routes/PlacementRoutes"));
 app.use("/api/higherStudies", require("./routes/HigherStudiesRoutes"));
 app.use("/api/student", require("./routes/StudentRoutes"));
+app.use("/api/divisionIncharge", require("./routes/divisionInchargeRoutes"));
 
 app.get("/", (req, res) => {
   res.send("API is running...");
