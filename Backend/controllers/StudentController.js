@@ -369,7 +369,7 @@ const exportAllStudentsToExcel = async (req, res) => {
 
 
 
-// Add remaining Details from schema --for student or admin
+// Add remaining Details from schema --for student or admin or divisionIncharge
 const addStudentDetails = async (req, res) => {
     let uploadedFiles = null;
     let dbSaved = false;
@@ -381,7 +381,12 @@ const addStudentDetails = async (req, res) => {
 
             studentId = req.user.id;
 
-        } else if (req.user.role === "admin") {
+			//added this check so that, one studnet cannot manipulate other student's data.
+			if (req.body.studentId && req.body.studentId !== req.user.id) {
+				return res.status(403).json({ success: false, message: "Students cannot modify other profiles" });
+			}
+
+        } else if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
 
             studentId = req.body.studentId;
 			if (!studentId) {
@@ -392,10 +397,6 @@ const addStudentDetails = async (req, res) => {
                 return res.status(400).json({ success: false, message: "Invalid Student ID format" });
             }
 
-            const studentExists = await Student.findById(studentId);
-            if (!studentExists) {
-                return res.status(404).json({ success: false, message: "Student not found" });
-            }
 
 		}else{
 			return res.status(401).json({ success: false, message: "Unauthorized access" });
@@ -459,6 +460,7 @@ const addStudentDetails = async (req, res) => {
                 PRN: value.PRN,
                 branch: value.branch,
                 year: value.year,
+				division: value.division,
                 dob: value.dob,
                 bloodGroup: value.bloodGroup,
                 currentAddress,
@@ -473,9 +475,15 @@ const addStudentDetails = async (req, res) => {
             { new: true }
         );
 
+		if (!updatedStudent) {
+			return res.status(404).json({ success: false, message: "Student not found" });
+		}
+
         dbSaved = true;
 
-        return res.status(201).json({ success: true, message: "Student details added successfully", data: updatedStudent });
+		
+
+        return res.status(200).json({ success: true, message: "Student details added successfully", data: updatedStudent });
 
     } catch (err) {
         console.error("Error in addStudentDetails:", err);
@@ -490,19 +498,30 @@ const addStudentDetails = async (req, res) => {
     }
 };
 
-// UPDATE STUDENT -- student or admin
+// UPDATE STUDENT -- student or admin or divisionIncharge
 const updateStudent = async (req, res) => {
     let dbSaved = false;
     let uploadedFiles = null;
     let studentId;
 
     try {
+		
         // Determine studentId based on role
-        if (req.user.role === "admin") {
-            studentId = req.params.studentId; // fixed typo from studentIdl
+        if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
+            studentId = req.params.studentId;
+			if (!studentId) {
+                return res.status(400).json({ success: false, message: "Student ID is required for admin" });
+            }
+
+			if (!mongoose.Types.ObjectId.isValid(studentId)) {
+                return res.status(400).json({ success: false, message: "Invalid Student ID format" });
+            }
+
         } else if (req.user.role === "student") {
             studentId = req.user.id;
-        }
+        }else{
+			return res.status(401).json({ success: false, message: "Unauthorized access" });
+		}
 
         if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
             return res.status(400).json({ success: false, message: "Student ID required in valid format." });
@@ -517,6 +536,14 @@ const updateStudent = async (req, res) => {
         if (req.user.role === "student" && student._id.toString() !== req.user.id.toString()) {
             return res.status(403).json({ success: false, message: "Resource does not belong to logged-in student" });
         }
+
+		// Verify for division Incharge
+		if(req.user.role === "divisionIncharge"){
+
+			if (student.division !== req.user.division) {
+				return res.status(403).json({ success: false, message: "You can only update your division's student details." });
+			}
+		}
 
         // Ensure student already has a photo
         if (!student.studentPhoto || !student.studentPhoto.publicId) {
@@ -561,6 +588,7 @@ const updateStudent = async (req, res) => {
         if (value.PRN) updatedData.PRN = value.PRN;
         if (value.branch) updatedData.branch = value.branch;
         if (value.year) updatedData.year = value.year;
+		if (value.division) updatedData.division=value.division;
         if (value.dob) updatedData.dob = new Date(value.dob);
         if (value.bloodGroup) updatedData.bloodGroup = value.bloodGroup;
         if (value.category) updatedData.category = value.category;
@@ -589,6 +617,10 @@ const updateStudent = async (req, res) => {
             { $set: updatedData },
             { new: true, runValidators: true, select: "-password" }
         );
+
+		if (!updatedStudent) {
+			return res.status(404).json({ success: false, message: "Student not found" });
+		}
 
         dbSaved = true;
 
@@ -625,12 +657,26 @@ const deleteStudent = async (req, res) => {
 
 
 		// Verify requester
-		if (req.user.role === "admin") {
+		if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
 
 			studentId=req.params.studentId;
 
 			if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
 				return res.status(400).json({ success:false, message: "Student ID required in valid format." });
+			}
+			
+
+			// Verify for division Incharge
+			if(req.user.role === "divisionIncharge"){
+
+				const student = await Student.findById(studentId);
+				if (!student) {
+					return res.status(404).json({ success: false, message: "Student not found" });
+				}
+
+				if (student.division !== req.user.division) {
+					return res.status(403).json({ success: false, message: "You can only delete your division's student details." });
+				}
 			}
 
 			
@@ -674,15 +720,18 @@ const deleteStudent = async (req, res) => {
 };
 
 
-// GET STUDENTS (with optional pagination) --admin only
+// GET STUDENTS (with optional pagination) --admin and divisionIncharge only
 const getStudents = async (req, res) => {
   try {
 
     // Get query params
-    const { year, search, page, limit } = req.query;
+    const { year, division, search, page, limit } = req.query;
+
+	
+
 
 	// Validate input using Joi
-	const { error, value } = getStudentsValidation.validate({ year, search, page, limit }, { abortEarly: false });
+	const { error, value } = getStudentsValidation.validate({ year, division, search, page, limit }, { abortEarly: false });
 	if (error) {
 		const validationErrors = error.details.map(err => ({
 			field: err.path[0],
@@ -703,8 +752,21 @@ const getStudents = async (req, res) => {
 
 	const filter = {};
 
-	if (value.year) {
-		filter.year = value.year;
+	if (req.user.role === "divisionIncharge" && value.division && value.division !== req.user.division && value.year && value.year !== req.user.year) {
+		return res.status(403).json({ success: false, message: "You can only access your own division's students." });
+	}
+
+	// If divisionIncharge, restrict by their division & year
+	if (req.user.role === "divisionIncharge") {
+		filter.division = req.user.division;
+		filter.year = req.user.year;
+
+	} else if(req.user.role === "admin") {
+		// Admin can filter by query params
+		if (value.division) filter.division = value.division;
+		if (value.year) filter.year = value.year;
+	}else{
+		return res.status(403).json({success: false, message: "Unauthorized role."});
 	}
 
 	if (value.search) {
@@ -747,7 +809,7 @@ const getStudents = async (req, res) => {
 };
 
 
-// GET SINGLE STUDENT BY ID (Admin)
+// GET SINGLE STUDENT BY ID Admin or DivisionIncharge
 const getSingleStudent = async (req, res) => {
 	try {
 

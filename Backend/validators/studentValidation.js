@@ -35,6 +35,8 @@ const addStudentDetailsSchema = Joi.object({
     parentEmail: Joi.string().email({ tlds: { allow: false } }).trim().lowercase().required(),
     abcId: Joi.string().pattern(/^\d{12}$/).trim().required(), // exactly 12 digits
 
+    division : Joi.string().valid("A", "B", "C").required(),
+
 }).options({ 
     abortEarly: false,  // return all errors at once
     stripUnknown: true, // remove any extra fields
@@ -68,6 +70,8 @@ const updateStudentSchema2 = Joi.object({
     mobileNo: Joi.string().pattern(/^[6-9]\d{9}$/),
     parentMobileNo: Joi.string().pattern(/^[6-9]\d{9}$/),
 
+    
+
 });
 
 const updateStudentSchema = Joi.object({
@@ -98,7 +102,9 @@ const updateStudentSchema = Joi.object({
 
     // New optional fields for update
     parentEmail: Joi.string().email({ tlds: { allow: false } }).trim().lowercase(),
-    abcId: Joi.string().pattern(/^\d{12}$/).trim() // exactly 12 digits
+    abcId: Joi.string().pattern(/^\d{12}$/).trim(), // exactly 12 digits
+
+    division : Joi.string().valid("A", "B", "C").required(),
 }).options({ 
     abortEarly: false,  
     stripUnknown: true,
@@ -108,6 +114,7 @@ const updateStudentSchema = Joi.object({
 
 const getStudentsValidation = Joi.object({
     year: Joi.string().valid("SE", "TE", "BE").optional(),
+    division: Joi.string().valid("A", "B", "C").optional(),
     search: Joi.string().max(100).optional(),
     page: Joi.number().integer().min(1).optional(),
     limit: Joi.number().integer().min(1).max(20).optional()

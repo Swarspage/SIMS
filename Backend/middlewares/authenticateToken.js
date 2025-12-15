@@ -18,7 +18,7 @@ const authenticateToken = async (req, res, next) => {
         const decoded = jwt.verify(token, JWT_SECRET);
 
         // Attach user info to request
-        req.user = decoded; // contains { id, email(admin) , role }
+        req.user = decoded; // contains { id, email(admin) , role, year and division if role is divisionIncharge }
 
         // Check user exists in DB
         if (req.user.role === "admin") {
@@ -41,6 +41,8 @@ const authenticateToken = async (req, res, next) => {
             if (!divisionInchargeExists) {
                 return res.status(404).json({ success: false, message: "Division Incharge not found" });
             }
+        }else{
+            return res.status(401).json({ success: false, message: "Invalid role." });
         }
 
         next();
