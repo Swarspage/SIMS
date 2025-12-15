@@ -31,17 +31,27 @@ const createInternship = async (req, res) => {
     let dbSaved=false; //flag to track if save to Db operations succeeds or fails
 
     try {
-        const { id } = req.user;
 
         let stuID;
 
         if(req.user.role === "student"){
             stuID=req.user.id;
-        }else if(req.user.role==="admin"){
+        }else if(req.user.role==="admin" || req.user.role === "divisionIncharge"){
             stuID=req.body.studentId;
+
+            if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
+                return res.status(400).json({ success: false, message: "Student ID required in valid format." });
+            }
+
             const student = await Student.findById(stuID);
             if (!student) {
                 return res.status(404).json({ success: false, message: "Student not found. Cannot create internship."});
+            }
+
+            if(req.user.role === "divisionIncharge"){
+                if(student.year !== req.user.year || student.division !== req.user.division){
+                    return res.status(403).json({success: false, message: "You can only access students of your division"});
+                }
             }
         }
 
@@ -110,7 +120,7 @@ const createInternship = async (req, res) => {
         return res.status(201).json({ success: true, internship });
 
     } catch (err) {
-        console.error("Error in getSingleInternship controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+        console.error("Error in createInternship  controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
         
         // if save to DB operation fails, then files stored in cloudinary must be deleted, as files are useless now
         if (!dbSaved && uploadedFiles) {
@@ -127,12 +137,12 @@ const createInternship = async (req, res) => {
 
 
 
-// GET INTERNSHIPS (with optional pagination, search, year filter, and paid/unpaid filter)
+// GET INTERNSHIPS (with optional pagination, search, year filter, and paid/unpaid filter) --admin or division incharge
 const getInternships = async (req, res) => {
     try {
 
         // Get query params
-        const { year, search, page, limit, isPaid } = req.query;
+        const { year, division, search, page, limit, isPaid } = req.query;
 
         // Validate input
         const { error, value } = getInternshipsValidation.validate(
@@ -173,20 +183,35 @@ const getInternships = async (req, res) => {
         // Build match conditions
         const match = {};
 
-        if (year) {
-        match["student.year"] = year.trim();
+        // Division Incharge filter
+        if (req.user.role === "divisionIncharge") {
+            match["student.year"] = req.user.year;
+            match["student.division"] = req.user.division;
+        }else if(req.user.role === "admin"){
+            if (year) {
+                match["student.year"] = year.trim();
+            }
+
+            if (division) {
+                match["student.division"] = division.trim();
+            }
+
+        }else{
+            return res.status(403).json({ success: false, message: "Unautorized role.", });
         }
 
+        
+
         if (search) {
-        const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-        match.$or = [
-            { companyName: { $regex: safeSearch, $options: "i" } },
-            { role: { $regex: safeSearch, $options: "i" } },
-            { description: { $regex: safeSearch, $options: "i" } },
-            { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
-            { "student.name.middleName": { $regex: safeSearch, $options: "i" } },
-            { "student.name.lastName": { $regex: safeSearch, $options: "i" } },
-        ];
+            const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+            match.$or = [
+                { companyName: { $regex: safeSearch, $options: "i" } },
+                { role: { $regex: safeSearch, $options: "i" } },
+                { description: { $regex: safeSearch, $options: "i" } },
+                { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
+                { "student.name.middleName": { $regex: safeSearch, $options: "i" } },
+                { "student.name.lastName": { $regex: safeSearch, $options: "i" } },
+            ];
         }
 
         // Filter by paid/unpaid
@@ -263,6 +288,7 @@ const getOwnInternships = async (req, res) => {
 
 
 //GET internships by studentId -- for admin
+//tailor this for division incharge too
 //use case:- admin clicks on student -> clicks on internships -> then internships are shown
 // controllers/adminInternshipController.js
 const getStudentInternshipsByAdmin = async (req, res) => {
@@ -281,7 +307,7 @@ const getStudentInternshipsByAdmin = async (req, res) => {
         const internships = await Internship.find({ stuID: studentId })
             .populate({
                 path: "stuID",
-                select: "name branch year"  // only these fields
+                select: "name branch year division"  // only these fields
             })
             .sort({ startDate: -1 });
 
@@ -297,7 +323,7 @@ const getStudentInternshipsByAdmin = async (req, res) => {
 };
 
 
-// GET single internship details by internshipId --for both admin and student
+// GET single internship details by internshipId --for admin, student, divisionIncharge
 //use case for student:- when student clicks on a single internship to  view details or update it( before upddating, details are required)
 //use case for admin:- in all internshipd, admin clicks on single internship to get its details
 const getSingleInternship = async (req, res) => {
@@ -313,17 +339,26 @@ const getSingleInternship = async (req, res) => {
         }
 
 
-        const internship = await Internship.findById(internshipId)
-            .populate({ path: "stuID", select: "name branch year" });
+        let query = Internship.findById(internshipId);
+        if (req.user.role !== "student") {
+            query = query.populate("stuID", "year division");
+        }
 
+        const internship = await query; // execute once
         if (!internship) {
             return res.status(404).json({ success: false, message: "Internship not found" });
         }
 
-        if(req.user.role==="student"){
-            if(internship.stuID != req.user.id){
-                return res.status(401).json({ success: false, message: "Requested resource does not belong to the logged in student." });
+        if (req.user.role === "student") {
+            if (internship.stuID.toString() !== req.user.id.toString()) {
+                return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
             }
+        } else if (req.user.role === "divisionIncharge") {
+            if (internship.stuID.year !== req.user.year || internship.stuID.division !== req.user.division) {
+                return res.status(403).json({ success: false, message: "You can only access students in your division." });
+            }
+        } else if (req.user.role !== "admin") {
+            return res.status(400).json({ success: false, message: "Wrong Role." });
         }
 
         return res.status(200).json({ success: true, data: internship });
@@ -354,15 +389,26 @@ const updateInternship = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid internship ID format" });
         }
 
-        const existingInternship = await Internship.findById(internshipId);
+        let query = Internship.findById(internshipId);
+        if (req.user.role !== "student") {
+            query = query.populate("stuID", "year division");
+        }
+
+        const existingInternship = await query; // execute once
         if (!existingInternship) {
             return res.status(404).json({ success: false, message: "Internship not found" });
         }
 
         if (req.user.role === "student") {
             if (existingInternship.stuID.toString() !== req.user.id.toString()) {
-                return res.status(403).json({ success: false, message: "Internship does not belong to the logged in student" });
+                return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
             }
+        } else if (req.user.role === "divisionIncharge") {
+            if (existingInternship.stuID.year !== req.user.year || existingInternship.stuID.division !== req.user.division) {
+                return res.status(403).json({ success: false, message: "You can only access students in your division." });
+            }
+        } else if (req.user.role !== "admin") {
+            return res.status(400).json({ success: false, message: "Wrong Role." });
         }
 
         const { companyName, startDate, endDate, role, durationMonths, isPaid: isPaidRaw, stipend, description } = req.body;
@@ -390,12 +436,18 @@ const updateInternship = async (req, res) => {
             return res.status(400).json({ success: false, message: "Stipend amount required if internship is paid" });
         }
 
-        const stipendInfo = { isPaid: parsedIsPaid };
-        if (parsedIsPaid) stipendInfo.stipend = parsedStipend;
+        if (parsedIsPaid !== undefined) {
+            updatedData.stipendInfo = {
+                isPaid: parsedIsPaid,
+                ...(parsedIsPaid && { stipend: parsedStipend })
+            };
 
+            // Remove flat fields so they don't go to DB
+            delete updatedData.isPaid;
+            delete updatedData.stipend;
+        }
 
-
-        /* ---------------------- FILE HANDLING LOGIC ---------------------- */
+        /* FILE HANDLING LOGIC */
 
         const filteredFiles = {};
 
@@ -415,7 +467,7 @@ const updateInternship = async (req, res) => {
             uploadedFiles = await validateAndUploadFiles(filteredFiles, activeConfigs);
         }
 
-        /* ---------- DELETE OLD FILES + ADD NEW ---------- */
+        /* DELETE OLD FILES + ADD NEW */
 
         if (uploadedFiles.internshipReport) {
 
@@ -447,7 +499,17 @@ const updateInternship = async (req, res) => {
             newPublicIds.push(uploadedFiles.photoProof.publicId);
         }
 
-        /* ---------------------- DB UPDATE ---------------------- */
+        if (
+            Object.keys(updatedData).length === 0 &&
+            Object.keys(uploadedFiles).length === 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "No data provided to update"
+            });
+        }
+
+        /* DB UPDATE */
 
         const updatedInternship = await Internship.findByIdAndUpdate(
             internshipId,
@@ -475,8 +537,6 @@ const updateInternship = async (req, res) => {
 const deleteInternship = async (req, res) => {
     try {
 
-        const userId=req.user.id; //its ok if request is from student or admin, as both can delete or update , but user has to exist compulsory
-
         const { internshipId } = req.params;
 
         if(!internshipId){
@@ -487,18 +547,28 @@ const deleteInternship = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid internship ID format"});
         }
 
-        // Find internship
-        const internship = await Internship.findById(internshipId);
+        let query = Internship.findById(internshipId);
+        if (req.user.role !== "student") {
+            query = query.populate("stuID", "year division");
+        }
+
+        const internship = await query; // execute once
         if (!internship) {
             return res.status(404).json({ success: false, message: "Internship not found" });
         }
 
-        if(req.user.role==="student"){
-
-            if(internship.stuID.toString() !== userId.toString()){
-                return res.status(400).json({ success: false, message: "Resource does not belong to logged in student." });
+        if (req.user.role === "student") {
+            if (internship.stuID.toString() !== req.user.id.toString()) {
+                return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
             }
+        } else if (req.user.role === "divisionIncharge") {
+            if (internship.stuID.year !== req.user.year || internship.stuID.division !== req.user.division) {
+                return res.status(403).json({ success: false, message: "You can only access students in your division." });
+            }
+        } else if (req.user.role !== "admin") {
+            return res.status(400).json({ success: false, message: "Wrong Role." });
         }
+
 
 
         // Delete files from Cloudinary if public_id exists
