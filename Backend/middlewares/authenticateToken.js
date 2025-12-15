@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const Admin = require("../models/Admin");
 const Student = require("../models/Student");
+const DivisionIncharge = require("../models/DivisionIncharge");
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
 
@@ -32,6 +33,13 @@ const authenticateToken = async (req, res, next) => {
             const studentExists = await Student.findById(req.user.id);
             if (!studentExists) {
                 return res.status(404).json({ success: false, message: "Student not found" });
+            }
+        }else if(req.user.role === "divisionIncharge"){
+
+            const divisionInchargeExists = await DivisionIncharge.findById(req.user.id);
+
+            if (!divisionInchargeExists) {
+                return res.status(404).json({ success: false, message: "Division Incharge not found" });
             }
         }
 
