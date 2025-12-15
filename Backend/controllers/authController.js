@@ -192,7 +192,6 @@ exports.adminLogin = async (req, res) => {
 exports.divisionInchargeLogin = async (req, res) => {
   try {
 
-    
     const { email, password } = req.body;
 
     // Joi Validation
