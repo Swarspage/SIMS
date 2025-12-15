@@ -752,12 +752,14 @@ const getStudents = async (req, res) => {
 
 	const filter = {};
 
-	if (req.user.role === "divisionIncharge" && value.division && value.division !== req.user.division && value.year && value.year !== req.user.year) {
-		return res.status(403).json({ success: false, message: "You can only access your own division's students." });
-	}
 
 	// If divisionIncharge, restrict by their division & year
 	if (req.user.role === "divisionIncharge") {
+
+		// if( value.division !== req.user.division ||  value.year !== req.user.year) {
+		// 	return res.status(403).json({ success: false, message: "You can only access your own division's students." });
+		// }
+
 		filter.division = req.user.division;
 		filter.year = req.user.year;
 
@@ -820,15 +822,19 @@ const getSingleStudent = async (req, res) => {
 			return res.status(400).json({ success:false, message: "Student ID required in valid format." });
 		}
 
-		// Verify role
-		if (req.user.role !== "admin") {
-			return res.status(403).json({ success: false, message: "Unauthorized access." });
-		}
 
 		const student = await Student.findById(studentId).select("-password -__v");
 		if (!student) {
 			return res.status(404).json({ success: false, message: "Student not found" });
 		}
+
+		if (req.user.role === "divisionIncharge") {
+
+			if( student.division !== req.user.division ||  student.year !== req.user.year) {
+				return res.status(403).json({ success: false, message: "You can only access your own division's students." });
+			}
+
+		} 
 
 		return res.status(200).json({ success: true, data: student });
 	} catch (error) {
