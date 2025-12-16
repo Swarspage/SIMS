@@ -14,13 +14,17 @@ const createPlacementSchema = Joi.object({
 
 	placementType: Joi.string().valid("Campus", "Off-Campus").required(),
 
-	package: Joi.number().positive().min(1).max(100).required(),
+	package: Joi.number().positive().min(1).max(100).precision(2).required(),
 
 	placementYear: Joi.string().min(1).pattern(yearPattern).required(),
 
 	passoutYear: Joi.string().min(1).pattern(yearPattern).required(),
 
 	joiningYear: Joi.string().min(1).pattern(yearPattern).required(),
+}).options({
+	stripUnknown: true,   // removes extra fields
+	convert: true,         // string -> number conversion not allowed
+	abortEarly: false
 });
 
 
@@ -33,7 +37,7 @@ const updatePlacementSchema = Joi.object({
 
 	placementType: Joi.string().valid("Campus", "Off-Campus").empty("").optional(),
 
-	package: Joi.number().positive().min(1).max(100).empty("").optional(),
+	package: Joi.number().positive().min(1).max(100).precision(2).empty("").optional(),
 
 	placementYear: Joi.string().pattern(yearPattern).empty("").optional(),
 
@@ -44,7 +48,7 @@ const updatePlacementSchema = Joi.object({
 }).min(1)	// at least one field is required to update
 .options({
 	stripUnknown: true,   // removes extra fields
-	convert: false,         // string -> number conversion not allowed
+	convert: true,         // string -> number conversion allowed
 	abortEarly: false
 }); 
 
@@ -53,6 +57,8 @@ const updatePlacementSchema = Joi.object({
 const getPlacementsValidation = Joi.object({
 	
 	year: Joi.string().valid("SE", "TE", "BE").optional(),
+
+	division: Joi.string().valid("A", "B", "C").optional(),
 
 	placementType: Joi.string().valid("Campus", "Off-Campus").optional(),
 

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { createPlacement, updatePlacement, deletePlacement, getPlacements, getOwnPlacements, getStudentPlacementsByAdmin, getSinglePlacement, } = require("../controllers/PlacementController");
+const { createPlacement, updatePlacement, deletePlacement, getPlacements, getOwnPlacements, getPlacementsByStudentId, getSinglePlacement, } = require("../controllers/PlacementController");
 
 const verifyToken =require ("../middlewares/VerifyToken");
 
@@ -41,7 +41,7 @@ router.get("/me", authenticateToken , authorizeRoles("student"), trimRequestBody
 router.get("/", authenticateToken , authorizeRoles("admin"), trimRequestBodyStrings, getPlacements);
 
 // Get Placements of Specific Student (Admin)
-router.get("/student-placement-by-admin/:studentId", authenticateToken , authorizeRoles("admin"), trimRequestBodyStrings, getStudentPlacementsByAdmin);
+router.get("/student-placement-by-admin/:studentId", authenticateToken , authorizeRoles("admin"), trimRequestBodyStrings, getPlacementsByStudentId);
 
 // Get Single Placement by ID
 router.get("/:placementId", authenticateToken , authorizeRoles("admin", "student"), trimRequestBodyStrings, getSinglePlacement);

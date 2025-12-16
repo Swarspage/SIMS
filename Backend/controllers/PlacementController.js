@@ -27,42 +27,31 @@ const createPlacement = async (req, res) => {
 		if (req.user.role === "student") {
 			stuID = req.user.id;
 		} 
-		else if (req.user.role === "admin") {
+		else if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
 			stuID = req.body.studentId;
 
-			if(!stuID){
-				return res.status(400).json({ success: false, message: "Student ID compulsory for admin" });
-			}
-
-			if (!mongoose.Types.ObjectId.isValid(stuID)) {
-				return res.status(400).json({ success: false, message: "Invalid Student ID format" });
+			if(!stuID || !mongoose.Types.ObjectId.isValid(stuID)){
+				return res.status(400).json({ success: false, message: "Student ID required in valid format." });
 			}
 
 			const student = await Student.findById(stuID);
 			if (!student) {
 				return res.status(404).json({ success: false, message: "Student not found. Cannot create placement." });
 			}
+
+			if(req.user.role === "divisionIncharge"){
+				if(student.year !== req.user.year || student.division !== req.user.division){
+					return res.status(403).json({ success: false, message: "You can access students of only your division." });
+				}
+			}
+		}else{
+			return res.status(403).json({ success: false, message: "Unauthorised access." });
 		}
 
 		const { companyName, role, placementType, package, placementYear, passoutYear, joiningYear } = req.body;
 
-		// convert
-		const parsedPackage = Number(package);
-
-		if (isNaN(parsedPackage) || parsedPackage <= 0) {
-			return res.status(400).json({ success: false, message: "Package must be a valid positive number" });
-		}
-
 		// Joi Validation
-		const { error } = createPlacementSchema.validate({
-			companyName,
-			role,
-			placementType,
-			package: parsedPackage,
-			placementYear,
-			passoutYear,
-			joiningYear
-		}, { abortEarly: false });
+		const { error, value: validatedData } = createPlacementSchema.validate(req.body, { abortEarly: false });
 
 		if (error) {
 			const validationErrors = error.details.map(err => ({
@@ -80,7 +69,7 @@ const createPlacement = async (req, res) => {
 			return res.status(400).json({ success: false, message: "Placement Year cannot be greater than Joining Year" });
 		}
 
-		if (!req.files || Object.keys(req.files).length === 0) {
+		if (!req.files?.placementProof) {
 			return res.status(400).json({ success: false, message: "Placement proof is required" });
 		}
 
@@ -91,13 +80,7 @@ const createPlacement = async (req, res) => {
 		// Create Placement in DB
 		const placement = new Placement({
 			stuID,
-			companyName,
-			role,
-			placementType,
-			package: parsedPackage,
-			placementYear,
-			passoutYear,
-			joiningYear,
+			...validatedData,
 			placementProof: {
 				url: uploadedFiles.placementProof.url,
 				publicId: uploadedFiles.placementProof.publicId
@@ -133,46 +116,42 @@ const updatePlacement = async (req, res) => {
 
 		const { placementId } = req.params;
 
-		if (!placementId) {
-			return res.status(400).json({ success: false, message: "Placement ID is required" });
+		if(!placementId || !mongoose.Types.ObjectId.isValid(placementId)){
+			return res.status(400).json({ success: false, message: "Placement ID required in valid format." });
 		}
 
-		if (!mongoose.Types.ObjectId.isValid(placementId)) {
-			return res.status(400).json({ success: false, message: "Invalid Placement ID format" });
+		let query = Placement.findById(placementId);
+		if (req.user.role === "divisionIncharge") {
+			query = query.populate("stuID", "year division");
 		}
-
-		const existingPlacement = await Placement.findById(placementId);
+		
+		const existingPlacement = await query; // execute once
 
 		if (!existingPlacement) {
 			return res.status(404).json({ success: false, message: "Placement not found" });
 		}
 
-		
-
-		// Role based logic
 		if (req.user.role === "student") {
-
-			const stuID = req.user.id;
-
-			if (existingPlacement.stuID.toString() !== stuID.toString()) {
-				return res.status(403).json({ success: false, message: "Placement does not belong to logged in student" });
+			if (existingPlacement.stuID.toString() !== req.user.id.toString()) {
+				return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
 			}
-
+		} else if (req.user.role === "divisionIncharge") {
+			if (existingPlacement.stuID.year !== req.user.year || existingPlacement.stuID.division !== req.user.division) {
+				return res.status(403).json({ success: false, message: "You can only access students in your division." });
+			}
+		} else if (req.user.role !== "admin") {
+			return res.status(403).json({ success: false, message: "Wrong Role." });
 		}
 
 		// Extract body
 		let { companyName, role, placementType, package, placementYear, passoutYear, joiningYear } = req.body;
-
-		// Sanitize input
-		const parsedPackage = package === undefined || package === null || package === "" ? undefined : Number(package);
-
 
 		// Joi validation
 		const { error, value: updatedData } = updatePlacementSchema.validate({
 			companyName,
 			role,
 			placementType,
-			package: parsedPackage,
+			package,
 			placementYear,
 			passoutYear,
 			joiningYear
@@ -236,6 +215,10 @@ const updatePlacement = async (req, res) => {
 			{ new: true, runValidators: true }
 		);
 
+		if(!updatedPlacement){
+			return res.status(404).json({success : false, message : "Placement not found."});
+		}
+
 		dbSaved = true;
 
 		return res.status(200).json({ success: true, message: "Placement updated successfully", data: updatedPlacement });
@@ -266,22 +249,34 @@ const deletePlacement = async (req, res) => {
 			return res.status(400).json({ success: false, message: "Invalid Placement ID" });
 		}
 
-		const placement = await Placement.findById(placementId);
 
-		if (!placement) {
-			return res.status(404).json({ success: false, message: "Invalid Placement ID" });
+		let query = Placement.findById(placementId);
+		if (req.user.role === "divisionIncharge") {
+			query = query.populate("stuID", "year division");
+		}
+		
+		const existingPlacement = await query; // execute once
+		if (!existingPlacement) {
+			return res.status(404).json({ success: false, message: "Placement not found" });
 		}
 
 		if (req.user.role === "student") {
-
-			const stuID = req.user.id;
-
-			if(placement.stuID.toString() !== stuID.toString()){
-				return res.status(403).json({ success: false, message: "Placement does not belong to the logged in student" });
+			if (existingPlacement.stuID.toString() !== req.user.id.toString()) {
+				return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
 			}
+		} else if (req.user.role === "divisionIncharge") {
+			if (existingPlacement.stuID.year !== req.user.year || existingPlacement.stuID.division !== req.user.division) {
+				return res.status(403).json({ success: false, message: "You can only access students in your division." });
+			}
+		} else if (req.user.role !== "admin") {
+			return res.status(403).json({ success: false, message: "Wrong Role." });
 		}
 
 		const delResult = await Placement.findByIdAndDelete(placementId);
+
+		if(!delResult){
+			return res.status(404).json({success : false, message: "Delete failed."});
+		}
 		
 
 		// Delete Cloudinary proof file
@@ -303,11 +298,12 @@ const deletePlacement = async (req, res) => {
 };
 
 
-//GET PLACEMENTS (search by placement fields & student name + year filter + pagination) --version2 --admin only
+//GET PLACEMENTS (search by placement fields & student name + year filter + pagination) --admin or divisionIncharge
 const getPlacements = async (req, res) => {
 	try {
 		// Get and trim query params
 		const year = req.query.year?.trim();
+		const division = req.query.division?.trim();
 		const search = req.query.search?.trim();
 		const placementType = req.query.placementType?.trim();
 		const page = req.query.page;
@@ -325,6 +321,12 @@ const getPlacements = async (req, res) => {
 			}));
 			return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
 		}
+
+		if(req.user.role === "divisionIncharge"){
+            if((year && year !== req.user.year) || (division &&  division !== req.user.division) ){
+                return res.status(403).json({ success: false, message: "You can only access students  of your division."});
+            }
+        }
 
 		const pageNum = value.page || 1;
 		const limitNum = Math.min(value.limit || 10, 20);
@@ -349,7 +351,22 @@ const getPlacements = async (req, res) => {
 		// Build match conditions
 		const match = {};
 
-		if (year) match["student.year"] = year;
+		 // Division Incharge filter
+        if (req.user.role === "divisionIncharge") {
+            match["student.year"] = req.user.year;
+            match["student.division"] = req.user.division;
+        }else if(req.user.role === "admin"){
+            if (year) {
+                match["student.year"] = year.trim();
+            }
+
+            if (division) {
+                match["student.division"] = division.trim();
+            }
+
+        }else{
+            return res.status(403).json({ success: false, message: "Unautorized role.", });
+        }
 
 		if (search) {
 			const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
@@ -435,33 +452,35 @@ const getOwnPlacements = async (req, res) => {
 	}
 };
 
-// GET STUDENT'S PLACEMENTS --admin only
-const getStudentPlacementsByAdmin = async (req, res) => {
+// GET STUDENT'S PLACEMENTS --admin or division incharge
+const getPlacementsByStudentId = async (req, res) => {
 	try {
 
 		const { studentId } = req.params;
-		if (!studentId) {
-			return res.status(400).json({ success: false, message: "Student ID is required" });
+		if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
+			return res.status(400).json({ success: false, message: "Student ID is required in valid format." });
 		}
 
-		if (!mongoose.Types.ObjectId.isValid(studentId)) {
-			return res.status(400).json({ success: false, message: "Invalid Student ID format"});
+
+		if(req.user.role === "divisionIncharge"){
+			const student = await Student.findById(studentId);
+
+			if(student.year !== req.user.year || student.division !== req.user.division){
+				return res.status(403).json({success : false, message: "You can only access students of your own division."});
+			}
 		}
 
 		const placements = await Placement.find({ stuID: studentId }).sort({ createdAt: -1 }).lean();
 
-		if (!placements.length) {
-			return res.status(404).json({ success: false, message: "Student not found or no placements available" });
-		}
 
 		return res.status(200).json({ success: true, data: placements });
 	} catch (err) {
-		console.error("Error in getStudentPlacementsByAdmin controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+		console.error("Error in getPlacementsByStudentId controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
         return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
 	}
 };
 
-// GET SINGLE PLACEMENT --student or admin
+// GET SINGLE PLACEMENT --student or admin or divisionIncharge
 const getSinglePlacement = async (req, res) => {
   try {
 	
@@ -474,19 +493,30 @@ const getSinglePlacement = async (req, res) => {
 			return res.status(400).json({ success: false, message: "Invalid placement ID format"});
 		}
 
-		const placement = await Placement.findById(placementId)
-		.populate({ path: "stuID", select: "name branch year" }).lean();
-
-		if (!placement) {
+		let query = Placement.findById(placementId);
+		if (req.user.role === "divisionIncharge") {
+			query = query.populate("stuID", "year division");
+		}
+		
+		const existingPlacement = await query; // execute once
+		if (!existingPlacement) {
 			return res.status(404).json({ success: false, message: "Placement not found" });
 		}
 
-		if (req.user.role === "student" && placement.stuID._id.toString() !== req.user.id) {
-			return res.status(403).json({ success: false, message: "Unauthorized access" });
+		if (req.user.role === "student") {
+			if (existingPlacement.stuID.toString() !== req.user.id.toString()) {
+				return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
+			}
+		} else if (req.user.role === "divisionIncharge") {
+			if (existingPlacement.stuID.year !== req.user.year || existingPlacement.stuID.division !== req.user.division) {
+				return res.status(403).json({ success: false, message: "You can only access students in your division." });
+			}
+		} else if (req.user.role !== "admin") {
+			return res.status(403).json({ success: false, message: "Wrong Role." });
 		}
 
 
-		return res.status(200).json({ success: true, data: placement });
+		return res.status(200).json({ success: true, data: existingPlacement });
 	} catch (err) {
 		console.error("Error in getSinglePlacement controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
         return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
@@ -500,6 +530,6 @@ module.exports = {
 	deletePlacement,
 	getPlacements,
 	getOwnPlacements,
-	getStudentPlacementsByAdmin,
+	getPlacementsByStudentId,
 	getSinglePlacement,
 };
