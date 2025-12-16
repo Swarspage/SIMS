@@ -370,7 +370,7 @@ const getSingleInternship = async (req, res) => {
                 return res.status(403).json({ success: false, message: "You can only access students in your division." });
             }
         } else if (req.user.role !== "admin") {
-            return res.status(400).json({ success: false, message: "Wrong Role." });
+            return res.status(403).json({ success: false, message: "Wrong Role." });
         }
 
         return res.status(200).json({ success: true, data: internship });
@@ -420,7 +420,7 @@ const updateInternship = async (req, res) => {
                 return res.status(403).json({ success: false, message: "You can only access students in your division." });
             }
         } else if (req.user.role !== "admin") {
-            return res.status(400).json({ success: false, message: "Wrong Role." });
+            return res.status(403).json({ success: false, message: "Wrong Role." });
         }
 
         const { companyName, startDate, endDate, role, durationMonths, isPaid: isPaidRaw, stipend, description } = req.body;
@@ -578,7 +578,7 @@ const deleteInternship = async (req, res) => {
                 return res.status(403).json({ success: false, message: "You can only access students in your division." });
             }
         } else if (req.user.role !== "admin") {
-            return res.status(400).json({ success: false, message: "Wrong Role." });
+            return res.status(403).json({ success: false, message: "Wrong Role." });
         }
 
 

@@ -12,39 +12,39 @@ const authorizeRoles=require("../middlewares/authorizeRoles");
 const trimRequestBodyStrings=require("../middlewares/trimRequestBodyStrings");
 
 
-// Create Placement (Student or Admin)
+// Create Placement --student or admin or divisionIncharge
 router.post("/",
     authenticateToken , 
-    authorizeRoles("admin", "student"),
+    authorizeRoles("admin", "student", "divisionIncharge"),
     upload.fields([{ name: "placementProof", maxCount: 1 }]),
     trimRequestBodyStrings,
     createPlacement
 );
 
-// Update Placement (Admin or Student)
+// Update Placement --student or admin or divisionIncharge
 router.put(
     "/:placementId",
     authenticateToken , 
-    authorizeRoles("admin", "student"),
+    authorizeRoles("admin", "student", "divisionIncharge"),
     upload.fields([{ name: "placementProof", maxCount: 1 }]),
     trimRequestBodyStrings,
     updatePlacement
 );
 
-// Delete Placement (Admin or Student)
-router.delete("/:placementId", authenticateToken , authorizeRoles("admin", "student"), trimRequestBodyStrings, deletePlacement);
+// Delete Placement --student or admin or divisionIncharge
+router.delete("/:placementId", authenticateToken , authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings, deletePlacement);
 
 // Get Logged-in Student’s Own Placements --student only
 router.get("/me", authenticateToken , authorizeRoles("student"), trimRequestBodyStrings, getOwnPlacements);
 
-// Get All Placements (Admin only)
-router.get("/", authenticateToken , authorizeRoles("admin"), trimRequestBodyStrings, getPlacements);
+// Get All Placements --admin or divisionIncharge
+router.get("/", authenticateToken , authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings, getPlacements);
 
-// Get Placements of Specific Student (Admin)
-router.get("/student-placement-by-admin/:studentId", authenticateToken , authorizeRoles("admin"), trimRequestBodyStrings, getPlacementsByStudentId);
+// Get Placements of Specific Student --admin or divisionIncharge
+router.get("/student-placement-by-admin/:studentId", authenticateToken , authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings, getPlacementsByStudentId);
 
-// Get Single Placement by ID
-router.get("/:placementId", authenticateToken , authorizeRoles("admin", "student"), trimRequestBodyStrings, getSinglePlacement);
+// Get Single Placement by ID --student or admin or divisionIncharge
+router.get("/:placementId", authenticateToken , authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings, getSinglePlacement);
 
 
 module.exports = router;

@@ -121,7 +121,7 @@ const updatePlacement = async (req, res) => {
 		}
 
 		let query = Placement.findById(placementId);
-		if (req.user.role === "divisionIncharge") {
+		if (req.user.role !== "student") {
 			query = query.populate("stuID", "year division");
 		}
 		
@@ -251,7 +251,7 @@ const deletePlacement = async (req, res) => {
 
 
 		let query = Placement.findById(placementId);
-		if (req.user.role === "divisionIncharge") {
+		if (req.user.role !== "student") {
 			query = query.populate("stuID", "year division");
 		}
 		
@@ -494,7 +494,7 @@ const getSinglePlacement = async (req, res) => {
 		}
 
 		let query = Placement.findById(placementId);
-		if (req.user.role === "divisionIncharge") {
+		if (req.user.role !== "student") {
 			query = query.populate("stuID", "year division");
 		}
 		

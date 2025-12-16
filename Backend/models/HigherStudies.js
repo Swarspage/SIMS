@@ -10,7 +10,7 @@ const higherStudiesSchema = new mongoose.Schema({
 
 	examName: {
 		type: String,
-		enum: ["GATE", "CAT", "GRE", "TOFEL", "IELTS", "UPSC"],
+		enum: ["GATE", "CAT", "GRE", "TOEFL", "IELTS", "UPSC"],
 		required: true,
 	},
 
