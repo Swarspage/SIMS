@@ -11,10 +11,10 @@ const authenticateToken= require("../middlewares/authenticateToken");
 const authorizeRoles=require("../middlewares/authorizeRoles");
 const trimRequestBodyStrings=require("../middlewares/trimRequestBodyStrings");
 
-// create internship
+// create internship --admin or student or divisionIncharge
 router.post("/" , 
     authenticateToken , 
-    authorizeRoles("admin", "student"),
+    authorizeRoles("admin", "student", "divisionIncharge"),
     upload.fields([
         { name: "internshipReport", maxCount: 1 },
         { name: "photoProof", maxCount: 1 },
@@ -23,22 +23,22 @@ router.post("/" ,
     createInternship
 );
 
-//get all internships --admin
-router.get("/" , authenticateToken, authorizeRoles("admin"), trimRequestBodyStrings, getInternships);
+//get all internships --admin or divisionIncharge(division restriction in controller)
+router.get("/" , authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings, getInternships);
 
 // get all internships of a student --student
 router.get("/me",authenticateToken, authorizeRoles("student"), trimRequestBodyStrings, getOwnInternships );
 
-// get all internships of a student --admin
-router.get("/student-internship-by-admin/:studentId", authenticateToken, authorizeRoles("admin"), trimRequestBodyStrings, getStudentInternshipsByAdmin);
+// get all internships of a student --admin or divisionIncharge
+router.get("/student-internship-by-admin/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings, getStudentInternshipsByAdmin);
 
-//can be used by both admin or student
-router.get("/:internshipId", authenticateToken, authorizeRoles("admin", "student"), trimRequestBodyStrings, getSingleInternship);
+//can be used by admin or student or divisionIncharge
+router.get("/:internshipId", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings, getSingleInternship);
 
-//update internship
+//update internship --admin or student or divisionIncharge
 router.put("/:internshipId" ,
     authenticateToken, 
-    authorizeRoles("admin", "student"),
+    authorizeRoles("admin", "student", "divisionIncharge"),
     upload.fields([
         { name: "photoProof" }, 
         { name: "internshipReport" }
@@ -48,7 +48,7 @@ router.put("/:internshipId" ,
 );
 
 
-//del internship --admin and student
-router.delete("/:internshipId" , authenticateToken, authorizeRoles("admin", "student"), trimRequestBodyStrings, deleteInternship);
+//del internship --admin or student or divisionIncharge
+router.delete("/:internshipId" , authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings, deleteInternship);
 
 module.exports = router;

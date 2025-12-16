@@ -157,6 +157,12 @@ const getInternships = async (req, res) => {
         return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
         }
 
+        if(req.user.role === "divisionIncharge"){
+            if((year && year !== req.user.year) || (division &&  division !== req.user.division) ){
+                return res.status(403).json({ success: false, message: "You can only access students  of your division."});
+            }
+        }
+
         const pageNum = value.page || 1;
         const limitNum = Math.min(value.limit || 10, 20);
         const skip = (pageNum - 1) * limitNum;
@@ -296,12 +302,22 @@ const getStudentInternshipsByAdmin = async (req, res) => {
 
         const { studentId } = req.params;
 
-        if (!studentId) {
-            return res.status(400).json({ success: false, message: "Student ID is required" });
+        if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
+            return res.status(400).json({ success: false, message: "Student ID is required in valid format." });
         }
 
-         if (!mongoose.Types.ObjectId.isValid(studentId)) {
-            return res.status(400).json({ success: false, message: "Invalid internship ID format"});
+        if(req.user.role === "divisionIncharge"){
+
+            const student = await Student.findById(studentId).select("year division");
+            if (!student) {
+                return res.status(404).json({ success: false, message: "Student not found" });
+            }
+
+
+            if(student.year !== req.user.year || student.division !== req.user.division){
+                return res.status(403).json({success: false, message: "You can only access students of your division"});
+            }
+           
         }
 
         const internships = await Internship.find({ stuID: studentId })
@@ -310,10 +326,6 @@ const getStudentInternshipsByAdmin = async (req, res) => {
                 select: "name branch year division"  // only these fields
             })
             .sort({ startDate: -1 });
-
-        if(internships.length===0){
-            return res.status(400).json({ success: false, message: "No internships founf for this student. If any doubt, please check student ID sent."});
-        }
 
         return res.status(200).json({ success: true, data: internships });
     } catch (err) {
