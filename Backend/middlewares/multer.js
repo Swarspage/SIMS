@@ -1,3 +1,4 @@
+//this middleware handles file uploads(mostly cloudinary) to our server from client side or postman etc
 const multer= require("multer");
 
 const storage= multer.diskStorage({
