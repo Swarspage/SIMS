@@ -237,11 +237,14 @@ Password: ${job.password}`
 const exportAllStudentsToExcel = async (req, res) => {
   try {
 
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ success: false, message: "Admin not found or unauthorized" });
+    const filter = {};
+
+    if(req.user.role === "divisionIncharge"){
+      filter.division = req.user.division;
+      filter.year = req.user.year;
     }
 
-    const students = await Student.find();
+    const students = await Student.find(filter);
     if (!students || students.length === 0) {
       return res.status(404).json({ success: false, message: "No students found in the database." });
     }
@@ -269,6 +272,7 @@ const exportAllStudentsToExcel = async (req, res) => {
 
   { header: "Branch", key: "Branch", width: 20 },
   { header: "Year", key: "Year", width: 10 },
+  { header: "Division", key: "Division", width: 10 },
 
   { header: "DOB", key: "DOB", width: 15 },
   { header: "Blood Group", key: "BloodGroup", width: 10 },
@@ -293,8 +297,8 @@ const exportAllStudentsToExcel = async (req, res) => {
 ];
 
 
-    // Add rows
-    const formattedData = students.map((student) => ({
+  // Add rows
+  const formattedData = students.map((student) => ({
   StudentID: student.studentID || "",
   PRN: student.PRN || "",
 
@@ -313,6 +317,7 @@ const exportAllStudentsToExcel = async (req, res) => {
 
   Branch: student.branch || "",
   Year: student.year || "",
+  Division : student.division || "",
 
   DOB: student.dob
     ? new Date(student.dob).toLocaleDateString("en-GB")

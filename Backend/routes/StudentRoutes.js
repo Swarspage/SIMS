@@ -13,10 +13,10 @@ const authorizeRoles=require("../middlewares/authorizeRoles");
 const uploadMemoryStorage=require("../middlewares/multerImportExcel");
 
 // route to add excel file and then send generated passwords via email --admin access
-router.post('/import', authenticateToken, authorizeRoles("admin"), uploadMemoryStorage.single("studentData"), importExcelDataWithPasswords );
+router.post('/import', authenticateToken, authorizeRoles("admin", "divisionIncharge"), uploadMemoryStorage.single("studentData"), importExcelDataWithPasswords );
 
 // route to dwnload all student data in Excel format
-router.get("/export-students", authenticateToken, authorizeRoles("admin"), exportAllStudentsToExcel);
+router.get("/export-students", authenticateToken, authorizeRoles("admin", "divisionIncharge"), exportAllStudentsToExcel);
 
 // route to add remaining details --student or admin or divisionIncharge
 router.post('/',    
