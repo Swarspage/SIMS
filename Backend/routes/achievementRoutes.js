@@ -34,7 +34,7 @@ router.post(
 );
 
 //Get achievements of logged-in student
-router.get("/me", authenticateToken, authorizeRoles("student"), trimRequestBodyStrings , getOwnAchievements);
+router.get("/", authenticateToken, authorizeRoles("student"), trimRequestBodyStrings , getOwnAchievements);
 
 // Update Achievement (allow replacing any uploaded file)
 router.put(
@@ -53,13 +53,13 @@ router.put(
 //Delete an achievement
 router.delete("/:id", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings , deleteAchievement);
 
-//Admin: Get all achievements (with filtering options) -> admin or divisionIncharge
-router.get("/", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings , getAllAchievements);
+//Get all achievements (with filtering options) -> admin or divisionIncharge
+router.get("/all", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings , getAllAchievements);
 
-//Admin: Get specific student's achievements -> admin or divisionIncharge
+//Get specific student's achievements -> admin or divisionIncharge
 router.get("/student/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings , getStudentAchievementsByAdmin);
 
-// Get Single Achievement by ID  -- student | admin | divisionIncharge
+// Get Single Achievement by ID  -- student | admin | divisionInchargee
 // router.get(
 //   "/single/:achievementId",
 //   authenticateToken,

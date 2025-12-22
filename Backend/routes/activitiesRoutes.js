@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const verifyToken = require("../middlewares/VerifyToken");
+// const verifyToken = require("../middlewares/VerifyToken");
 const upload = require("../middlewares/multer");
 
 
@@ -12,12 +12,16 @@ const { createActivity , getActivityByStu , getActivitiesByStudentAdmin , update
 
 //Student Routes
 router.post("/", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings , upload.single("certificate"), createActivity);
-router.get("/", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings , getActivityByStu);
+router.get("/", authenticateToken, authorizeRoles("student"), trimRequestBodyStrings , getActivityByStu);
 router.put("/:id", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings , upload.single("certificate"), updateActivity);
 router.delete("/:id", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings , deleteActivity);
 
-// Admin Routes
-router.get("/all", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings , getAllActivities);
-router.get("/student/:studentId", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings , getActivitiesByStudentAdmin);
+//admin & DI Routes
+//Get all activities (with filtering options) -> admin or divisionIncharge
+
+router.get("/all", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings , getAllActivities);
+
+//Get specific student's activity -> admin or divisionIncharge
+router.get("/student/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings , getActivitiesByStudentAdmin);
 
 module.exports = router;
