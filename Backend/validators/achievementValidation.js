@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-const achievementSchema = Joi.object({
+const baseAchievementSchema = {
   category: Joi.string()
     .valid(
       "Coding competitions",
@@ -30,33 +30,53 @@ const achievementSchema = Joi.object({
 
   teamMembers: Joi.array().items(Joi.string()).default([]),
 
-  // Optional Certification Course Field
+  // // Optional Certification Course Field
+  // certification_course: Joi.string()
+  //   .trim()
+  //   .max(500)
+  //   .allow("")
+  //   .messages({
+  //     "string.max": "Certification course name too long (max 500 characters)",
+  //   }),
+
+  // // course Certification Certificate
+  // course_certificate: Joi.object({
+  //   url: Joi.string().uri().optional(),
+  //   publicId: Joi.string().optional(),
+  // }).optional(),
+
+  // // Uploaded Event Photos
+  // photographs: Joi.object({
+  //   eventPhoto: Joi.object({
+  //     url: Joi.string().uri().optional(),
+  //     publicId: Joi.string().optional(),
+  //   }).optional(),
+
+  //   certificate: Joi.object({
+  //     url: Joi.string().uri().optional(),
+  //     publicId: Joi.string().optional(),
+  //   }).optional(),
+  // }).optional(),
+
   certification_course: Joi.string()
     .trim()
     .max(500)
     .allow("")
-    .messages({
-      "string.max": "Certification course name too long (max 500 characters)",
-    }),
+    .optional(),
+};
 
-  // course Certification Certificate
-  course_certificate: Joi.object({
-    url: Joi.string().uri().optional(),
-    publicId: Joi.string().optional(),
-  }).optional(),
+//create a base schema without required fields for update validation
+const createAchievementSchema = Joi.object(baseAchievementSchema);
 
-  // Uploaded Event Photos
-  photographs: Joi.object({
-    eventPhoto: Joi.object({
-      url: Joi.string().uri().optional(),
-      publicId: Joi.string().optional(),
-    }).optional(),
 
-    certificate: Joi.object({
-      url: Joi.string().uri().optional(),
-      publicId: Joi.string().optional(),
-    }).optional(),
-  }).optional(),
-});
+const updateAchievementSchema = Joi.object(
+  Object.fromEntries(
+    Object.entries(baseAchievementSchema).map(([key, schema]) => [
+      key,
+      schema.optional(),
+    ])
+  )
+);
 
-module.exports = { achievementSchema };
+
+module.exports = { createAchievementSchema , updateAchievementSchema };
