@@ -8,12 +8,12 @@ const {
   deleteSemInfo,
   getAllSemInfos,
   getOwnSemInfos,
-  getStudentSemInfosByAdmin
+  getStudentSemInfos
 } = require("../controllers/semInfoController");
 
 // Admin routes 
 router.get("/all", verifyToken, getAllSemInfos);
-router.get("/student/:studentId", verifyToken, getStudentSemInfosByAdmin);
+router.get("/student/:studentId", verifyToken, getStudentSemInfos);
 
 // Student routes
 router.get("/", verifyToken, getOwnSemInfos);

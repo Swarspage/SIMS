@@ -220,7 +220,7 @@ const getOwnSemInfos = async (req, res) => {
 
 // GET SPECIFIC STUDENT'S SEMESTER INFOS (ADMIN)
 // GET SPECIFIC STUDENT'S SEMESTER INFOS (ADMIN) with filter + search + pagination
-const getStudentSemInfosByAdmin = async (req, res) => {
+const getStudentSemInfos = async (req, res) => {
   try {
     const { id, role } = req.user;
     const { studentId } = req.params;
@@ -280,5 +280,5 @@ module.exports = {
   deleteSemInfo,
   getAllSemInfos,
   getOwnSemInfos,
-  getStudentSemInfosByAdmin
+  getStudentSemInfos
 };
