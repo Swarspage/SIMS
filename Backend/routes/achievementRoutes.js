@@ -12,7 +12,7 @@ const {
   createAchievement,
   getOwnAchievements,
   getAllAchievements,
-  getStudentAchievementsByAdmin,
+  getStudentAchievements,
   updateAchievement,
   deleteAchievement,
   // getSingleAchievement,
@@ -57,7 +57,7 @@ router.delete("/:id", authenticateToken, authorizeRoles("admin", "student", "div
 router.get("/all", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings , getAllAchievements);
 
 //Get specific student's achievements -> admin or divisionIncharge
-router.get("/student/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings , getStudentAchievementsByAdmin);
+router.get("/student/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings , getStudentAchievements);
 
 // Get Single Achievement by ID  -- student | admin | divisionInchargee
 // router.get(

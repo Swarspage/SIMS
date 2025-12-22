@@ -203,7 +203,7 @@ const getAllAchievements = async (req, res) => {
 
 /* -------------------- GET ACHIEVEMENTS BY STUDENT (ADMIN/DI) ------------------- */
 
-const getStudentAchievementsByAdmin = async (req, res) => {
+const getStudentAchievements = async (req, res) => {
   try {
     const { studentId } = req.params;
 
@@ -378,5 +378,5 @@ module.exports = {
   deleteAchievement,
   getOwnAchievements,
   getAllAchievements,
-  getStudentAchievementsByAdmin,
+  getStudentAchievements,
 };
