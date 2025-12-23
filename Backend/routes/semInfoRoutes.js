@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const verifyToken = require("../middlewares/VerifyToken");
+// const verifyToken = require("../middlewares/VerifyToken");
+
+const authenticateToken = require("../middlewares/authenticateToken");
+const authorizeRoles = require("../middlewares/authorizeRoles");
+const trimRequestBodyStrings = require("../middlewares/trimRequestBodyStrings");
 
 const {
   addSemInfo,
@@ -11,14 +15,14 @@ const {
   getStudentSemInfos
 } = require("../controllers/semInfoController");
 
-// Admin routes 
-router.get("/all", verifyToken, getAllSemInfos);
-router.get("/student/:studentId", verifyToken, getStudentSemInfos);
+// Admin or DI routes 
+router.get("/all", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings, getAllSemInfos);
+router.get("/student/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings, getStudentSemInfos);
 
 // Student routes
-router.get("/", verifyToken, getOwnSemInfos);
-router.post("/", verifyToken, addSemInfo);
-router.put("/:id", verifyToken, updateSemInfo);
-router.delete("/:id", verifyToken, deleteSemInfo);
+router.get("/", authenticateToken, authorizeRoles("student"), trimRequestBodyStrings, getOwnSemInfos);
+router.post("/", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings, addSemInfo);
+router.put("/:id", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings, updateSemInfo);
+router.delete("/:id", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings, deleteSemInfo);
 
 module.exports = router;

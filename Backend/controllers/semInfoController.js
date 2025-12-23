@@ -1,6 +1,6 @@
+const mongoose = require("mongoose");
 const SemesterInfo = require("../models/SemesterInfo");
 const Student = require("../models/Student");
-const Admin = require("../models/Admin");
 const { semInfoSchema } = require("../validators/seminfoValidation");
 
 // Helper to calculate defaulter
@@ -8,277 +8,269 @@ const calculateDefaulter = (attendance, kts) => {
   return attendance < 75 || (kts && kts.length > 0);
 };
 
-// CREATE SEMESTER INFO
+//create sem info student or admin/DI
 const addSemInfo = async (req, res) => {
   try {
-    const { id, role } = req.user;
-    if (role !== "student") return res.status(403).json({ success: false, message: "Only students can add semester info" });
+    let stuID;
 
-    const student = await Student.findById(id);
-    if (!student) return res.status(404).json({ success: false, message: "Student not found" });
+    // ROLE HANDLING
+    if (req.user.role === "student") {
+      stuID = req.user.id;
+    } 
+    else if (["admin", "divisionIncharge"].includes(req.user.role)) {
+      stuID = req.body.studentId;
 
+      if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
+        return res.status(400).json({ success: false, message: "Invalid student ID" });
+      }
+
+      const student = await Student.findById(stuID);
+      if (!student) {
+        return res.status(404).json({ success: false, message: "Student not found" });
+      }
+
+      // DI restriction
+      if (
+        req.user.role === "divisionIncharge" &&
+        (student.year !== req.user.year ||
+         student.division !== req.user.division)
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Division access denied",
+        });
+      }
+    } 
+    else {
+      return res.status(403).json({ success: false, message: "Unauthorized role" });
+    }
+
+    // Joi validation
     const { error } = semInfoSchema.validate(req.body);
-    if (error) return res.status(400).json({ success: false, message: error.details[0].message });
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
 
     const { semester, attendance, kts, marks } = req.body;
 
     const semInfo = new SemesterInfo({
-      stuID: id,
+      stuID,
       semester,
       attendance,
       kts,
       marks,
-      isDefaulter: calculateDefaulter(attendance, kts)
+      isDefaulter: calculateDefaulter(attendance, kts),
     });
 
     await semInfo.save();
 
-    res.status(201).json({ success: true, message: "Semester info added successfully", data: semInfo });
+    res.status(201).json({
+      success: true,
+      message: "Semester info added successfully",
+      data: semInfo,
+    });
+
   } catch (err) {
-    console.error("Error in addSemInfo:", err);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.error("addSemInfo error:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-// UPDATE SEMESTER INFO
+//update sem info
 const updateSemInfo = async (req, res) => {
   try {
-    const { id, role } = req.user;
-    const { id: semInfoId } = req.params;
+    const semInfo = await SemesterInfo
+      .findById(req.params.id)
+      .populate("stuID", "year division");
 
-    const semInfo = await SemesterInfo.findById(semInfoId);
-    if (!semInfo) return res.status(404).json({ success: false, message: "Semester info not found" });
-
-    if (role === "student" && semInfo.stuID.toString() !== id) {
-      return res.status(403).json({ success: false, message: "Not authorized to update this record" });
+    if (!semInfo) {
+      return res.status(404).json({ success: false, message: "Semester info not found" });
     }
 
-    if (role === "admin") {
-      const admin = await Admin.findById(id);
-      if (!admin) return res.status(403).json({ success: false, message: "Admin not authorized" });
+    // STUDENT OWNERSHIP
+    if (
+      req.user.role === "student" &&
+      semInfo.stuID._id.toString() !== req.user.id
+    ) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    const { error } = semInfoSchema.validate(req.body, { presence: "optional", allowUnknown: true });
-    if (error) return res.status(400).json({ success: false, message: error.details[0].message });
+    // DI CHECK
+    if (
+      req.user.role === "divisionIncharge" &&
+      (semInfo.stuID.year !== req.user.year ||
+       semInfo.stuID.division !== req.user.division)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Division access denied",
+      });
+    }
 
-    // Only update fields that exist
-    const updatedData = {};
-    ["semester", "attendance", "kts", "marks"].forEach(field => {
-      if (req.body[field] !== undefined) updatedData[field] = req.body[field];
+    // STUDENT FIELD LIMIT
+    if (req.user.role === "student") {
+      const allowed = ["attendance", "kts"];
+      Object.keys(req.body).forEach(key => {
+        if (!allowed.includes(key)) delete req.body[key];
+      });
+    }
+
+    const { error } = semInfoSchema.validate(req.body, {
+      presence: "optional",
     });
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
 
-    // Recalculate isDefaulter if attendance or KTs change
-    if (updatedData.attendance !== undefined || updatedData.kts !== undefined) {
-      updatedData.isDefaulter = calculateDefaulter(
-        updatedData.attendance ?? semInfo.attendance,
-        updatedData.kts ?? semInfo.kts
+    // Update fields
+    Object.assign(semInfo, req.body);
+
+    // Recalculate defaulter
+    if (req.body.attendance !== undefined || req.body.kts !== undefined) {
+      semInfo.isDefaulter = calculateDefaulter(
+        req.body.attendance ?? semInfo.attendance,
+        req.body.kts ?? semInfo.kts
       );
     }
 
-    const updatedSemInfo = await SemesterInfo.findByIdAndUpdate(semInfoId, { $set: updatedData }, { new: true, runValidators: true });
+    await semInfo.save();
 
-    res.status(200).json({ success: true, message: "Semester info updated successfully", data: updatedSemInfo });
+    res.status(200).json({
+      success: true,
+      message: "Semester info updated successfully",
+      data: semInfo,
+    });
+
   } catch (err) {
-    console.error("Error in updateSemInfo:", err);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.error("updateSemInfo error:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-// DELETE SEMESTER INFO
+//delete sem info
 const deleteSemInfo = async (req, res) => {
   try {
-    const { id, role } = req.user;
-    const { id: semInfoId } = req.params;
+    const semInfo = await SemesterInfo
+      .findById(req.params.id)
+      .populate("stuID", "year division");
 
-    const semInfo = await SemesterInfo.findById(semInfoId);
-    if (!semInfo) return res.status(404).json({ success: false, message: "Semester info not found" });
-
-    if (role === "student" && semInfo.stuID.toString() !== id) {
-      return res.status(403).json({ success: false, message: "Not authorized to delete this record" });
+    if (!semInfo) {
+      return res.status(404).json({ success: false, message: "Semester info not found" });
     }
 
-    if (role === "admin") {
-      const admin = await Admin.findById(id);
-      if (!admin) return res.status(403).json({ success: false, message: "Admin not authorized" });
+    if (
+      req.user.role === "student" &&
+      semInfo.stuID._id.toString() !== req.user.id
+    ) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    await SemesterInfo.findByIdAndDelete(semInfoId);
-    res.status(200).json({ success: true, message: "Semester info deleted successfully" });
+    if (
+      req.user.role === "divisionIncharge" &&
+      (semInfo.stuID.year !== req.user.year ||
+       semInfo.stuID.division !== req.user.division)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Division access denied",
+      });
+    }
+
+    await SemesterInfo.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Semester info deleted successfully",
+    });
+
   } catch (err) {
-    console.error("Error in deleteSemInfo:", err);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.error("deleteSemInfo error:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-// GET ALL SEMESTER INFOS (ADMIN)
-// GET ALL SEMESTER INFOS (ADMIN) with filter + search + pagination
+// get all sem infos by admin or di
 const getAllSemInfos = async (req, res) => {
   try {
-    const { id, role } = req.user;
-    if (role !== "admin") {
-      return res.status(403).json({ success: false, message: "Only admins can view all semester records" });
+    const query = {};
+
+    if (req.user.role === "divisionIncharge") {
+      const students = await Student.find({
+        year: req.user.year,
+        division: req.user.division,
+      }).select("_id");
+
+      query.stuID = { $in: students.map(s => s._id) };
     }
 
-    const admin = await Admin.findById(id);
-    if (!admin) return res.status(403).json({ success: false, message: "Admin not authorized" });
+    const data = await SemesterInfo.find(query)
+      .populate("stuID", "name roll year division")
+      .sort({ createdAt: -1 });
 
-    //Extract filters from query params
-    const { semester, isDefaulter, search, page = 1, limit = 10 } = req.query;
+    res.status(200).json({ success: true, data });
 
-    //Build query object
-    const query = {};
-    if (semester) query.semester = Number(semester);
-    if (isDefaulter !== undefined) query.isDefaulter = isDefaulter === "true";
-
-    //Pagination setup
-    const skip = (Number(page) - 1) * Number(limit);
-
-    //If search by student name
-    let semQuery = SemesterInfo.find(query)
-      .populate({
-        path: "stuID",
-        select: "name roll branch year",
-        match: search ? { name: { $regex: search, $options: "i" } } : {}, // case-insensitive
-      })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
-
-    const semData = await semQuery;
-
-    //Total count (ignoring search filter in populate)
-    const total = await SemesterInfo.countDocuments(query);
-
-    //Remove nulls from search (when populate didn't match)
-    const filteredData = semData.filter(item => item.stuID !== null);
-
-    res.status(200).json({
-      success: true,
-      total,
-      page: Number(page),
-      totalPages: Math.ceil(total / limit),
-      count: filteredData.length,
-      data: filteredData,
-    });
   } catch (err) {
-    console.error("Error in getAllSemInfos:", err);
+    console.error("getAllSemInfos error:", err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-
-// GET LOGGED-IN STUDENT'S SEMESTER INFOS
-// GET LOGGED-IN STUDENT'S SEMESTER INFOS (with filter + search + pagination)
+//get own sem infos by student
 const getOwnSemInfos = async (req, res) => {
   try {
-    const { id, role } = req.user;
-    if (role !== "student") {
-      return res.status(403).json({ success: false, message: "Only students can access their own semester info" });
-    }
+    const data = await SemesterInfo.find({ stuID: req.user.id })
+      .sort({ createdAt: -1 });
 
-    //Extract query params
-    const { semester, isDefaulter, search, page = 1, limit = 5 } = req.query;
+    res.status(200).json({ success: true, data });
 
-    //Build base query
-    const query = { stuID: id };
-    if (semester) query.semester = Number(semester);
-    if (isDefaulter !== undefined) query.isDefaulter = isDefaulter === "true";
-
-    //Pagination setup
-    const skip = (Number(page) - 1) * Number(limit);
-
-    //Search by subject name (inside marks array)
-    let searchCondition = {};
-    if (search) {
-      searchCondition = {
-        marks: { $elemMatch: { subject: { $regex: search, $options: "i" } } }
-      };
-    }
-
-    //Fetch filtered + searched data
-    const semInfos = await SemesterInfo.find({ ...query, ...searchCondition })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
-
-    //Total count for pagination
-    const total = await SemesterInfo.countDocuments({ ...query, ...searchCondition });
-
-    res.status(200).json({
-      success: true,
-      total,
-      page: Number(page),
-      totalPages: Math.ceil(total / limit),
-      count: semInfos.length,
-      data: semInfos
-    });
   } catch (err) {
-    console.error("Error in getOwnSemInfos:", err);
+    console.error("getOwnSemInfos error:", err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-// GET SPECIFIC STUDENT'S SEMESTER INFOS (ADMIN)
-// GET SPECIFIC STUDENT'S SEMESTER INFOS (ADMIN) with filter + search + pagination
+//get student sem infos by admin or di
 const getStudentSemInfos = async (req, res) => {
   try {
-    const { id, role } = req.user;
     const { studentId } = req.params;
 
-    if (role !== "admin") 
-      return res.status(403).json({ success: false, message: "Only admins can view student semester info" });
-
-    const student = await Student.findById(studentId);
-    if (!student) 
-      return res.status(404).json({ success: false, message: "Student not found" });
-
-    // Extract filters from query params
-    const { semester, isDefaulter, search, page = 1, limit = 10 } = req.query;
-
-    // Build query
-    const query = { stuID: studentId };
-    if (semester) query.semester = Number(semester);
-    if (isDefaulter !== undefined) query.isDefaulter = isDefaulter === "true";
-
-    // Pagination setup
-    const skip = (Number(page) - 1) * Number(limit);
-
-    // Search by subject name (inside marks array)
-    let searchCondition = {};
-    if (search) {
-      searchCondition = {
-        marks: { $elemMatch: { subject: { $regex: search, $options: "i" } } }
-      };
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ success: false, message: "Invalid student ID" });
     }
 
-    // Fetch data with filters + search + pagination
-    const semInfos = await SemesterInfo.find({ ...query, ...searchCondition })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
 
-    const total = await SemesterInfo.countDocuments({ ...query, ...searchCondition });
+    if (
+      req.user.role === "divisionIncharge" &&
+      (student.year !== req.user.year ||
+       student.division !== req.user.division)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Division access denied",
+      });
+    }
 
-    res.status(200).json({
-      success: true,
-      student: { name: student.name, roll: student.roll, branch: student.branch, year: student.year },
-      total,
-      page: Number(page),
-      totalPages: Math.ceil(total / limit),
-      count: semInfos.length,
-      data: semInfos
-    });
+    const data = await SemesterInfo.find({ stuID: studentId })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, data });
+
   } catch (err) {
-    console.error("Error in getStudentSemInfosByAdmin:", err);
+    console.error("getStudentSemInfos error:", err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
+//exporting all controller functions
 module.exports = {
   addSemInfo,
   updateSemInfo,
   deleteSemInfo,
   getAllSemInfos,
   getOwnSemInfos,
-  getStudentSemInfos
+  getStudentSemInfos,
 };
