@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const SemesterInfo = require("../models/SemesterInfo");
 const Student = require("../models/Student");
-const { semInfoSchema } = require("../validators/seminfoValidation");
+const { semInfoCreateSchema , semInfoUpdateSchema } = require("../validators/seminfoValidation");
 
 // Helper to calculate defaulter
 const calculateDefaulter = (attendance, kts) => {
@@ -13,11 +13,10 @@ const addSemInfo = async (req, res) => {
   try {
     let stuID;
 
-    // ROLE HANDLING
+    // Role handling
     if (req.user.role === "student") {
       stuID = req.user.id;
-    } 
-    else if (["admin", "divisionIncharge"].includes(req.user.role)) {
+    } else if (["admin", "divisionIncharge"].includes(req.user.role)) {
       stuID = req.body.studentId;
 
       if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
@@ -40,15 +39,17 @@ const addSemInfo = async (req, res) => {
           message: "Division access denied",
         });
       }
-    } 
-    else {
+    } else {
       return res.status(403).json({ success: false, message: "Unauthorized role" });
     }
 
-    // Joi validation
-    const { error } = semInfoSchema.validate(req.body);
+    // validation
+    const { error } = semInfoCreateSchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ success: false, message: error.details[0].message });
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
     }
 
     const { semester, attendance, kts, marks } = req.body;
@@ -84,7 +85,10 @@ const updateSemInfo = async (req, res) => {
       .populate("stuID", "year division");
 
     if (!semInfo) {
-      return res.status(404).json({ success: false, message: "Semester info not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Semester info not found",
+      });
     }
 
     // STUDENT OWNERSHIP
@@ -115,21 +119,23 @@ const updateSemInfo = async (req, res) => {
       });
     }
 
-    const { error } = semInfoSchema.validate(req.body, {
-      presence: "optional",
-    });
+    // VALIDATION
+    const { error } = semInfoUpdateSchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ success: false, message: error.details[0].message });
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
     }
 
-    // Update fields
+    // UPDATE DATA
     Object.assign(semInfo, req.body);
 
-    // Recalculate defaulter
+    // RECALCULATE DEFAULTER
     if (req.body.attendance !== undefined || req.body.kts !== undefined) {
       semInfo.isDefaulter = calculateDefaulter(
-        req.body.attendance ?? semInfo.attendance,
-        req.body.kts ?? semInfo.kts
+        semInfo.attendance,
+        semInfo.kts
       );
     }
 
@@ -155,7 +161,10 @@ const deleteSemInfo = async (req, res) => {
       .populate("stuID", "year division");
 
     if (!semInfo) {
-      return res.status(404).json({ success: false, message: "Semester info not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Semester info not found",
+      });
     }
 
     if (
@@ -176,7 +185,7 @@ const deleteSemInfo = async (req, res) => {
       });
     }
 
-    await SemesterInfo.findByIdAndDelete(req.params.id);
+    await semInfo.deleteOne();
 
     res.status(200).json({
       success: true,
@@ -215,6 +224,7 @@ const getAllSemInfos = async (req, res) => {
   }
 };
 
+
 //get own sem infos by student
 const getOwnSemInfos = async (req, res) => {
   try {
@@ -229,18 +239,25 @@ const getOwnSemInfos = async (req, res) => {
   }
 };
 
+
 //get student sem infos by admin or di
 const getStudentSemInfos = async (req, res) => {
   try {
     const { studentId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
-      return res.status(400).json({ success: false, message: "Invalid student ID" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid student ID",
+      });
     }
 
     const student = await Student.findById(studentId);
     if (!student) {
-      return res.status(404).json({ success: false, message: "Student not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
     }
 
     if (
@@ -264,6 +281,7 @@ const getStudentSemInfos = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
 
 //exporting all controller functions
 module.exports = {
