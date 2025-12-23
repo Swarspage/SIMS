@@ -1,43 +1,65 @@
 const Joi = require("joi");
 
+//create activity validation
 const activityCreateSchema = Joi.object({
   title: Joi.string()
     .min(3)
     .max(100)
     .required()
-    .message("Title is required and must be 3-100 characters"),
+    .messages({
+      "string.base": "Title must be a string",
+      "string.empty": "Title is required",
+      "string.min": "Title must be at least 3 characters",
+      "string.max": "Title must not exceed 100 characters",
+      "any.required": "Title is required",
+    }),
 
   description: Joi.string()
     .min(5)
     .max(500)
     .required()
-    .message("Description is required and must be 5-500 characters"),
+    .messages({
+      "string.empty": "Description is required",
+      "string.min": "Description must be at least 5 characters",
+      "string.max": "Description must not exceed 500 characters",
+      "any.required": "Description is required",
+    }),
 
   date: Joi.date()
     .required()
-    .message("Date is required and must be valid"),
+    .messages({
+      "date.base": "Date must be a valid date",
+      "any.required": "Date is required",
+    }),
 });
 
-
+//update activity validation
 const activityUpdateSchema = Joi.object({
   title: Joi.string()
     .min(3)
     .max(100)
-    .optional()
-    .message("Title must be 3-100 characters if provided"),
+    .messages({
+      "string.min": "Title must be at least 3 characters",
+      "string.max": "Title must not exceed 100 characters",
+    }),
 
   description: Joi.string()
     .min(5)
     .max(500)
-    .optional()
-    .message("Description must be 5-500 characters if provided"),
+    .messages({
+      "string.min": "Description must be at least 5 characters",
+      "string.max": "Description must not exceed 500 characters",
+    }),
 
   date: Joi.date()
-    .optional()
-    .message("Date must be valid if provided"),
+    .messages({
+      "date.base": "Date must be a valid date",
+    }),
 })
-  .min(1)
-  .message("At least one field is required to update");
+.min(1)
+.messages({
+  "object.min": "At least one field is required to update",
+});
 
 module.exports = {
   activityCreateSchema,
