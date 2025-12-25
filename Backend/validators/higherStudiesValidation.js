@@ -5,6 +5,10 @@ const createHigherStudySchema = Joi.object({
     examName: Joi.string().valid("GATE", "CAT", "GRE", "TOFEL", "IELTS", "UPSC").required(),
 
     score: Joi.string().required(),
+}).options({
+  convert:true,
+  stripUnknown: true,
+  abortEarly : false,
 });
 
 // --------------------------- UPDATE HIGHER STUDY --------------------------- //
@@ -14,7 +18,8 @@ const updateHigherStudySchema = Joi.object({
     score: Joi.string(),
 }).min(1).options({
   convert:true,
-  stripUnknown: true
+  stripUnknown: true,
+  abortEarly : false,
 });
 
 const getHigherStudiesValidation = Joi.object({

@@ -20,6 +20,10 @@ const internshipValidationSchema = Joi.object({
     }),
 
     description: Joi.string().trim().min(10).required()
+}).options({
+    stripUnknown: true,
+    convert: true,        
+    abortEarly : false,
 });
 
 
@@ -40,7 +44,8 @@ const updateInternshipValidationSchema = Joi.object({
 .min(1) // At least one field is required
 .options({
     stripUnknown: true,  // removes extra fields not in schema
-    convert: false        // prevent automatic string -> number conversion
+    convert: true,        // prevent automatic string -> number conversion
+    abortEarly : false,
 });
 
 const getInternshipsValidation = Joi.object({

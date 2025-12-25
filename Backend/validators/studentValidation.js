@@ -105,7 +105,7 @@ const updateStudentSchema = Joi.object({
     abcId: Joi.string().pattern(/^\d{12}$/).trim(), // exactly 12 digits
 
     division : Joi.string().valid("A", "B", "C").required(),
-}).options({ 
+}).min(1).options({ 
     abortEarly: false,  
     stripUnknown: true,
     convert: true
