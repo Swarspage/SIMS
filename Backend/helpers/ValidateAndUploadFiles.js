@@ -24,7 +24,7 @@ const validateAndUploadFiles = async (filesObj, fileConfigs) => {
 
         if (file.size > maxSize) {
             throw new Error(
-            `${friendlyName} exceeds ${maxSize / (1024 * 1024)}MB`
+            `${friendlyName} exceeds max size.`
             );
         }
         }

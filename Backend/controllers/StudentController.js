@@ -3,7 +3,7 @@ const Admin = require("../models/Admin");
 const cloudinary = require("../config/cloudinaryConfig");
 const { uploadToCloudinary } = require("../helpers/UploadToCloudinary");
 
-const xlsx = require("xlsx");
+
 const fs = require("fs");
 const path = require("path");
 
@@ -44,6 +44,7 @@ const generateRandomPassword = (length = 14) => {
 };
 
 
+// for studentPhoto
 const fileConfigs =[
 	{
 		fieldName: "studentPhoto",
@@ -52,6 +53,14 @@ const fileConfigs =[
 		friendlyName: "Student Photo"
 	},
 ];
+
+// for excel import
+const allowedTypes = [
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+  "application/vnd.ms-excel", // .xls
+];
+
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
 
 // Helper to safely get cell value as string
 const getCellValue = (cell) => {
@@ -71,6 +80,17 @@ const importExcelDataWithPasswords = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "No file uploaded"
+      });
+    }
+
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({success : false, message : ""});
+    }
+
+    if (req.file.size > MAX_FILE_SIZE) {
+      return res.status(400).json({
+        success: false,
+        message: "Excel file size must be less than or equal to 1MB"
       });
     }
 
