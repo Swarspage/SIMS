@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import avatar from "../assets/Students.png";
 import { studentService } from "../services/studentService";
-import StudentProfileSidebar from "../components/StudentProfileSidebar";
 
 // StudentCard Component
 function StudentCard({ student, onViewProfile }) {
@@ -52,6 +51,310 @@ function StudentCard({ student, onViewProfile }) {
   );
 }
 
+// Full Page Student Profile View
+function StudentProfileView({ student, onBack }) {
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 sm:p-8">
+      {/* Back Button */}
+      <button
+        onClick={onBack}
+        className="mb-6 px-4 py-2.5 rounded-lg bg-slate-700 text-white text-sm font-semibold hover:bg-slate-800 transition-colors flex items-center gap-2"
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back to Student List
+      </button>
+
+      {/* Two-Column Layout Container */}
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* LEFT COLUMN - Main Content (2/3 width on desktop) */}
+          <div className="lg:col-span-2 space-y-6 order-2 lg:order-1">
+
+            {/* Personal Information Card */}
+            <div className="bg-white rounded-2xl shadow-md border border-slate-200 p-6 sm:p-8 hover:shadow-lg transition-shadow">
+              <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-3 border-b-2 border-blue-500">
+                Personal Information
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    First Name
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.name?.firstName || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Last Name
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.name?.lastName || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Middle Name
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.name?.middleName || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Mother's Name
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.name?.motherName || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Date of Birth
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.dob
+                      ? new Date(student.dob).toLocaleDateString("en-IN")
+                      : "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Blood Group
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.bloodGroup || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Category
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.category || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Branch
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.branch || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Year
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.year || "N/A"}
+                  </p>
+                </div>
+                {student.division && (
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                      Division
+                    </p>
+                    <p className="text-base text-slate-800 font-medium">
+                      {student.division}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Phone
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.mobileNo || "N/A"}
+                  </p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Parent's Mobile
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.parentMobileNo || "N/A"}
+                  </p>
+                </div>
+                {student.parentEmail && (
+                  <div className="sm:col-span-2">
+                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                      Parent's Email
+                    </p>
+                    <p className="text-base text-slate-800 font-medium">
+                      {student.parentEmail}
+                    </p>
+                  </div>
+                )}
+                {student.abcId && (
+                  <div className="sm:col-span-2">
+                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                      ABC ID
+                    </p>
+                    <p className="text-base text-slate-800 font-medium">
+                      {student.abcId}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Address Card */}
+            <div className="bg-white rounded-2xl shadow-md border border-slate-200 p-6 sm:p-8 hover:shadow-lg transition-shadow">
+              <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-3 border-b-2 border-blue-500">
+                Address Information
+              </h2>
+              <div className="space-y-6">
+                {/* Current Address */}
+                <div>
+                  <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-4">
+                    Current Address
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                        Street
+                      </p>
+                      <p className="text-base text-slate-800 font-medium">
+                        {student.currentAddress?.street || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                        City
+                      </p>
+                      <p className="text-base text-slate-800 font-medium">
+                        {student.currentAddress?.city || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                        Pincode
+                      </p>
+                      <p className="text-base text-slate-800 font-medium">
+                        {student.currentAddress?.pincode || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-slate-200"></div>
+
+                {/* Native Address */}
+                <div>
+                  <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-4">
+                    Native Address
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                        Street
+                      </p>
+                      <p className="text-base text-slate-800 font-medium">
+                        {student.nativeAddress?.street || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                        City
+                      </p>
+                      <p className="text-base text-slate-800 font-medium">
+                        {student.nativeAddress?.city || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                        Pincode
+                      </p>
+                      <p className="text-base text-slate-800 font-medium">
+                        {student.nativeAddress?.nativePincode || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN - Profile Card (1/3 width on desktop, appears first on mobile) */}
+          <div className="lg:col-span-1 order-1 lg:order-2">
+            <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl shadow-xl p-8 text-white sticky top-8 hover:shadow-2xl transition-all">
+              {/* Profile Photo - Large and Prominent */}
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <img
+                    src={student.studentPhoto?.url || avatar}
+                    alt="Student"
+                    className="w-40 h-40 sm:w-44 sm:h-44 lg:w-52 lg:h-52 rounded-full object-cover border-4 border-white shadow-2xl ring-4 ring-slate-500"
+                  />
+                  <div className="absolute -bottom-2 -right-2 bg-green-400 w-10 h-10 rounded-full border-4 border-white flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Student Name */}
+              <div className="text-center mb-6">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+                  {student.name?.firstName} {student.name?.middleName} {student.name?.lastName}
+                </h1>
+                <p className="text-slate-300 text-base">
+                  {student.branch} - {student.year}
+                </p>
+              </div>
+
+              {/* Info Cards */}
+              <div className="space-y-3 mb-6">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
+                    Student ID
+                  </p>
+                  <p className="text-base font-bold">
+                    {student.studentID || "N/A"}
+                  </p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
+                    PRN Number
+                  </p>
+                  <p className="text-base font-bold">
+                    {student.PRN || "N/A"}
+                  </p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
+                    Email Address
+                  </p>
+                  <p className="text-sm font-medium break-all">
+                    {student.email || "N/A"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  );
+}
+
 // Main App Component
 export default function AdminStudentSection() {
   const [students, setStudents] = useState([]);
@@ -59,9 +362,9 @@ export default function AdminStudentSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Sidebar state
+  // View state - changed from sidebar to full page
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("list"); // "list" or "profile"
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -125,16 +428,16 @@ export default function AdminStudentSection() {
     setFilteredStudents(filtered);
   };
 
-  // Handle view profile
+  // Handle view profile - changed to full page view
   const handleViewProfile = (student) => {
     setSelectedStudent(student);
-    setIsSidebarOpen(true);
+    setViewMode("profile");
   };
 
-  // Handle close sidebar
-  const handleCloseSidebar = () => {
-    setIsSidebarOpen(false);
-    setTimeout(() => setSelectedStudent(null), 300);
+  // Handle back to list
+  const handleBackToList = () => {
+    setViewMode("list");
+    setSelectedStudent(null);
   };
 
   // ✅ HANDLE IMPORT EXCEL
@@ -162,7 +465,7 @@ export default function AdminStudentSection() {
       console.error("Import error:", err);
       alert(
         err.response?.data?.message ||
-          "Failed to import students. Check file format."
+        "Failed to import students. Check file format."
       );
     } finally {
       setImporting(false);
@@ -200,9 +503,8 @@ export default function AdminStudentSection() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `students_export_${
-        new Date().toISOString().split("T")[0]
-      }.xlsx`;
+      a.download = `students_export_${new Date().toISOString().split("T")[0]
+        }.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -217,6 +519,17 @@ export default function AdminStudentSection() {
     }
   };
 
+  // If viewing a student profile, show full page view
+  if (viewMode === "profile" && selectedStudent) {
+    return (
+      <StudentProfileView
+        student={selectedStudent}
+        onBack={handleBackToList}
+      />
+    );
+  }
+
+  // Otherwise show the list view
   return (
     <main className="p-8 bg-slate-50 min-h-screen">
       {/* Page Header */}
@@ -444,13 +757,6 @@ export default function AdminStudentSection() {
           </div>
         )}
       </div>
-
-      {/* Student Profile Sidebar */}
-      <StudentProfileSidebar
-        student={selectedStudent}
-        isOpen={isSidebarOpen}
-        onClose={handleCloseSidebar}
-      />
     </main>
   );
 }

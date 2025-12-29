@@ -158,6 +158,16 @@ export default function StudentProfileSidebar({ student, isOpen, onClose }) {
                     </p>
                   </div>
                 </div>
+
+                {/* ABC ID */}
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 uppercase">
+                    ABC ID
+                  </label>
+                  <p className="text-sm text-slate-800 mt-1 font-mono">
+                    {student.abcId || "N/A"}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -195,6 +205,16 @@ export default function StudentProfileSidebar({ student, isOpen, onClose }) {
                       {student.parentMobileNo || "N/A"}
                     </p>
                   </div>
+                </div>
+
+                {/* Parent Email */}
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 uppercase">
+                    Parent Email
+                  </label>
+                  <p className="text-sm text-slate-800 mt-1 break-all">
+                    {student.parentEmail || "N/A"}
+                  </p>
                 </div>
               </div>
             </div>
