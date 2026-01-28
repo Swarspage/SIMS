@@ -29,8 +29,11 @@ export default function StudentInformation() {
     email: "",
     mobileNo: "",
     parentMobileNo: "",
+    parentEmail: "",
     PRN: "",
     studentID: "",
+    division: "",
+    abcId: "",
   });
 
   useEffect(() => {
@@ -64,8 +67,11 @@ export default function StudentInformation() {
           email: student.email || "",
           mobileNo: student.mobileNo || "",
           parentMobileNo: student.parentMobileNo || "",
+          parentEmail: student.parentEmail || "",
           PRN: student.PRN || "",
           studentID: student.studentID || "",
+          division: student.division || "",
+          abcId: student.abcId || "",
         });
 
         if (student.studentPhoto?.url) {
@@ -113,6 +119,7 @@ export default function StudentInformation() {
         PRN: formData.PRN.trim(),
         branch: formData.branch.trim(),
         year: formData.year.trim(),
+        division: formData.division.trim(),
         dob: formData.dob.trim(),
         bloodGroup: formData.bloodGroup.trim(),
         currentStreet: formData.currentStreet.trim(),
@@ -124,6 +131,8 @@ export default function StudentInformation() {
         category: formData.category.trim(),
         mobileNo: formData.mobileNo.trim(),
         parentMobileNo: formData.parentMobileNo.trim(),
+        parentEmail: formData.parentEmail.trim(),
+        abcId: formData.abcId.trim(),
       };
 
       const emptyFields = Object.entries(requiredFields)
@@ -132,6 +141,18 @@ export default function StudentInformation() {
 
       if (emptyFields.length > 0) {
         setError(`Please fill required fields: ${emptyFields.join(", ")}`);
+        setLoading(false);
+        return;
+      }
+
+      if (formData.PRN.length !== 16) {
+        setError("PRN must be exactly 16 digits.");
+        setLoading(false);
+        return;
+      }
+
+      if (formData.abcId.length !== 12) {
+        setError("ABC ID must be exactly 12 digits.");
         setLoading(false);
         return;
       }
@@ -146,6 +167,10 @@ export default function StudentInformation() {
 
       const formDataToSend = new FormData();
 
+      // Helper to clean mobile numbers (remove spaces, dashes, etc, keep only digits)
+      // Since backend regex expects exactly 10 digits starting with 6-9
+      const cleanMobile = (num) => num.replace(/\D/g, '').slice(-10);
+
       formDataToSend.append("firstName", formData.firstName.trim());
       formDataToSend.append("middleName", formData.middleName.trim());
       formDataToSend.append("lastName", formData.lastName.trim());
@@ -153,11 +178,14 @@ export default function StudentInformation() {
       formDataToSend.append("PRN", formData.PRN.trim());
       formDataToSend.append("branch", formData.branch.trim());
       formDataToSend.append("year", formData.year.trim());
+      formDataToSend.append("division", formData.division.trim());
       formDataToSend.append("dob", formData.dob.trim());
       formDataToSend.append("bloodGroup", formData.bloodGroup.trim());
       formDataToSend.append("category", formData.category.trim());
-      formDataToSend.append("mobileNo", formData.mobileNo.trim());
-      formDataToSend.append("parentMobileNo", formData.parentMobileNo.trim());
+      formDataToSend.append("mobileNo", cleanMobile(formData.mobileNo));
+      formDataToSend.append("parentMobileNo", cleanMobile(formData.parentMobileNo));
+      formDataToSend.append("parentEmail", formData.parentEmail.trim());
+      formDataToSend.append("abcId", formData.abcId.trim());
       formDataToSend.append("currentStreet", formData.currentStreet.trim());
       formDataToSend.append("currentCity", formData.currentCity.trim());
       formDataToSend.append("pincode", formData.currentPincode.trim());
@@ -446,10 +474,34 @@ export default function StudentInformation() {
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                     <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
+                      ABC ID
+                    </p>
+                    <p className="text-base font-bold">
+                      {formData.abcId || "N/A"}
+                    </p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                    <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
+                      Division
+                    </p>
+                    <p className="text-base font-bold">
+                      {formData.division || "N/A"}
+                    </p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                    <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
                       Email Address
                     </p>
                     <p className="text-sm font-medium break-all">
                       {formData.email || "N/A"}
+                    </p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                    <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
+                      Parent Email
+                    </p>
+                    <p className="text-sm font-medium break-all">
+                      {formData.parentEmail || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -875,11 +927,28 @@ export default function StudentInformation() {
                     name="PRN"
                     value={formData.PRN}
                     onChange={handleChange}
-                    placeholder="15-digit PRN (e.g., 123456789012345)"
-                    maxLength="15"
+                    placeholder="16-digit PRN"
+                    maxLength="16"
                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     required
                   />
+                  <p className="text-xs text-slate-500 mt-1">Must be exactly 16 digits</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    ABC ID <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="abcId"
+                    value={formData.abcId}
+                    onChange={handleChange}
+                    placeholder="12-digit ABC ID"
+                    maxLength="12"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    required
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Must be exactly 12 digits</p>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -895,6 +964,44 @@ export default function StudentInformation() {
                   <p className="text-xs text-slate-500 mt-2">
                     Cannot be changed
                   </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Division <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="division"
+                    value={formData.division}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
+                    required
+                  >
+                    <option value="">Select Division</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                  </select>
+                </div>
+
+              </div>
+            </div>
+
+            {/* SECTION: Additional Contact Info */}
+            <div className="mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Parent Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="parentEmail"
+                    value={formData.parentEmail}
+                    onChange={handleChange}
+                    placeholder="Parent's Email Address"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    required
+                  />
                 </div>
               </div>
             </div>

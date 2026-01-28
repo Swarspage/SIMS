@@ -362,6 +362,7 @@ export default function AdminStudentSection() {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState(localStorage.getItem("role") || "");
 
   // View state - changed from sidebar to full page
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -758,61 +759,85 @@ export default function AdminStudentSection() {
           </button>
         </div>
 
-        {/* Division Incharge Actions Row */}
-        <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-slate-100">
-          <h3 className="text-sm font-semibold text-slate-700 flex items-center mr-2">Division Incharge:</h3>
+        {/* Division Incharge Actions Row - ONLY FOR ADMIN */}
+        {userRole === "admin" && (
+          <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-700 flex items-center mr-2">
+              Division Incharge Data:
+            </h3>
 
-          {/* ✅ EXPORT DIVISION INCHARGE BUTTON */}
-          <button
-            onClick={handleExportDivisionIncharge}
-            disabled={exportingDivision}
-            className="px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {exportingDivision ? (
-              <>
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                Exporting...
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export Incharges
-              </>
-            )}
-          </button>
+            {/* ✅ EXPORT DIVISION INCHARGE BUTTON */}
+            <button
+              onClick={handleExportDivisionIncharge}
+              disabled={exportingDivision}
+              className="px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {exportingDivision ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  Export Incharges
+                </>
+              )}
+            </button>
 
-          {/* ✅ IMPORT DIVISION INCHARGE BUTTON */}
-          <button
-            onClick={handleImportDivisionInchargeClick}
-            disabled={importingDivision}
-            className="px-5 py-2.5 rounded-lg bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {importingDivision ? (
-              <>
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                Importing...
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Import Incharges
-              </>
-            )}
-          </button>
+            {/* ✅ IMPORT DIVISION INCHARGE BUTTON */}
+            <button
+              onClick={handleImportDivisionInchargeClick}
+              disabled={importingDivision}
+              className="px-5 py-2.5 rounded-lg bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {importingDivision ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
+                  </svg>
+                  Import Incharges
+                </>
+              )}
+            </button>
 
-          {/* Hidden File Input for Division Incharge */}
-          <input
-            ref={divisionFileInputRef}
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleDivisionFileChange}
-            className="hidden"
-          />
-        </div>
+            {/* Hidden File Input for Division Incharge */}
+            <input
+              ref={divisionFileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleDivisionFileChange}
+              className="hidden"
+            />
+          </div>
+        )}
       </div>
 
       {/* Cards Container */}
