@@ -11,22 +11,22 @@ const validateAndUploadFiles = async (filesObj, fileConfigs) => {
     try {
         //  VALIDATION 
         for (let config of fileConfigs) {
-        const { fieldName, allowedTypes, maxSize, friendlyName } = config;
+            const { fieldName, allowedTypes, maxSize, friendlyName } = config;
 
-        const file = filesObj?.[fieldName]?.[0];
-        if (!file) throw new Error(`${friendlyName} is required`);
+            const file = filesObj?.[fieldName]?.[0];
+            if (!file) throw new Error(`${friendlyName} is required`);
 
-        if (!allowedTypes.includes(file.mimetype)) {
-            throw new Error(
-            `${friendlyName} must be one of: ${allowedTypes.join(", ")}`
-            );
-        }
+            if (!allowedTypes.includes(file.mimetype)) {
+                throw new Error(
+                    `${friendlyName} must be one of: ${allowedTypes.join(", ")}`
+                );
+            }
 
-        if (file.size > maxSize) {
-            throw new Error(
-            `${friendlyName} exceeds max size.`
-            );
-        }
+            if (file.size > maxSize) {
+                throw new Error(
+                    `${friendlyName} exceeds max size.`
+                );
+            }
         }
 
         //  PARALLEL UPLOAD 
@@ -36,18 +36,18 @@ const validateAndUploadFiles = async (filesObj, fileConfigs) => {
 
             try {
                 const result = await cloudinary.uploader.upload(file.path, {
-                folder: "studentWebsite",
+                    folder: "studentWebsite",
                 });
 
                 uploadedFiles[fieldName] = {
-                url: result.secure_url,
-                publicId: result.public_id,
+                    url: result.secure_url,
+                    publicId: result.public_id,
                 };
 
                 uploadedPublicIds.push(result.public_id);
 
                 // delete temp file
-                await fs.unlink(file.path).catch(() => {});
+                await fs.unlink(file.path).catch(() => { });
 
             } catch (err) {
                 throw new Error(`Failed to upload ${fieldName}`);
@@ -59,9 +59,9 @@ const validateAndUploadFiles = async (filesObj, fileConfigs) => {
         return uploadedFiles;
 
     } catch (err) {
-            //  ROLLBACK 
-            await deleteMultipleFromCloudinary(uploadedPublicIds);
-            throw err;
+        //  ROLLBACK 
+        await deleteMultipleFromCloudinary(uploadedPublicIds);
+        throw err;
     }
 };
 

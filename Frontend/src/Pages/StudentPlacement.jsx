@@ -185,16 +185,22 @@ export default function StudentPlacement() {
     companyName: "",
     role: "",
     placementType: "",
+    package: "",
+    placementYear: "",
+    passoutYear: "",
+    joiningYear: "",
     placementProof: null,
   });
   const [higherStudiesData, setHigherStudiesData] = useState({
     examName: "",
     score: "",
     marksheet: null,
+    idCardPhoto: null,
   });
 
   const [placementProofPreview, setPlacementProofPreview] = useState("");
   const [marksheetPreview, setMarksheetPreview] = useState("");
+  const [idCardPhotoPreview, setIdCardPhotoPreview] = useState("");
 
   useEffect(() => {
     fetchPlacements();
@@ -265,11 +271,27 @@ export default function StudentPlacement() {
     setError(''); // Clear any previous errors
   };
 
+  const handleIdCardPhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setHigherStudiesData((prev) => ({
+      ...prev,
+      idCardPhoto: file,
+    }));
+    setIdCardPhotoPreview(URL.createObjectURL(file));
+    setError('');
+  };
+
   const resetPlacementForm = () => {
     setPlacementData({
       companyName: "",
       role: "",
       placementType: "",
+      package: "",
+      placementYear: "",
+      passoutYear: "",
+      joiningYear: "",
       placementProof: null,
     });
     setPlacementProofPreview("");
@@ -281,8 +303,10 @@ export default function StudentPlacement() {
       examName: "",
       score: "",
       marksheet: null,
+      idCardPhoto: null,
     });
     setMarksheetPreview("");
+    setIdCardPhotoPreview("");
     setEditingId(null);
   };
 
@@ -304,6 +328,10 @@ export default function StudentPlacement() {
       companyName: placement.companyName || "",
       role: placement.role || "",
       placementType: placement.placementType || "",
+      package: placement.package || "",
+      placementYear: placement.placementYear || "",
+      passoutYear: placement.passoutYear || "",
+      joiningYear: placement.joiningYear || "",
       placementProof: null,
     });
     // Set preview URL from existing placement proof
@@ -322,12 +350,19 @@ export default function StudentPlacement() {
       examName: study.examName || "",
       score: study.score || "",
       marksheet: null,
+      idCardPhoto: null,
     });
     // Set preview URL from existing marksheet
     if (study.marksheet?.url) {
       setMarksheetPreview(study.marksheet.url);
     } else {
       setMarksheetPreview("");
+    }
+    // Set preview URL from existing ID card photo
+    if (study.idCardPhoto?.url) {
+      setIdCardPhotoPreview(study.idCardPhoto.url);
+    } else {
+      setIdCardPhotoPreview("");
     }
     setActiveTab("higherStudies");
     setView("form");
@@ -350,6 +385,10 @@ export default function StudentPlacement() {
         formData.append("companyName", placementData.companyName);
         formData.append("role", placementData.role);
         formData.append("placementType", placementData.placementType);
+        formData.append("package", placementData.package);
+        formData.append("placementYear", placementData.placementYear);
+        formData.append("passoutYear", placementData.passoutYear);
+        formData.append("joiningYear", placementData.joiningYear);
         if (placementData.placementProof) {
           formData.append("placementProof", placementData.placementProof);
         }
@@ -368,6 +407,9 @@ export default function StudentPlacement() {
         formData.append("score", higherStudiesData.score);
         if (higherStudiesData.marksheet) {
           formData.append("marksheet", higherStudiesData.marksheet);
+        }
+        if (higherStudiesData.idCardPhoto) {
+          formData.append("idCardPhoto", higherStudiesData.idCardPhoto);
         }
         if (editingId) {
           await higherStudiesService.updateHigherStudy(editingId, formData);
@@ -530,6 +572,74 @@ export default function StudentPlacement() {
                         <option value="Campus">Campus</option>
                         <option value="Off-Campus">Off-Campus</option>
                       </select>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          Package (LPA) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          name="package"
+                          placeholder="e.g. 12"
+                          value={placementData.package}
+                          onChange={handlePlacementChange}
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                          required
+                          min="1"
+                          max="100"
+                          step="0.01"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          Placement Year <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="placementYear"
+                          placeholder="YYYY-YY"
+                          value={placementData.placementYear}
+                          onChange={handlePlacementChange}
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                          required
+                          pattern="\d{4}-\d{2}"
+                          title="Format: YYYY-YY (e.g., 2023-24)"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          Passout Year <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="passoutYear"
+                          placeholder="YYYY-YY"
+                          value={placementData.passoutYear}
+                          onChange={handlePlacementChange}
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                          required
+                          pattern="\d{4}-\d{2}"
+                          title="Format: YYYY-YY (e.g., 2023-24)"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          Joining Year <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="joiningYear"
+                          placeholder="YYYY-YY"
+                          value={placementData.joiningYear}
+                          onChange={handlePlacementChange}
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                          required
+                          pattern="\d{4}-\d{2}"
+                          title="Format: YYYY-YY (e.g., 2023-24)"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="mb-8">
@@ -722,6 +832,67 @@ export default function StudentPlacement() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                               </svg>
                               View Full Certificate
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <label className="block text-sm font-semibold text-slate-700 mb-2 mt-6">
+                      ID Card Photo (Image)
+                    </label>
+                    <div className="flex gap-3 items-end">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={
+                            higherStudiesData.idCardPhoto
+                              ? higherStudiesData.idCardPhoto.name
+                              : "No file chosen"
+                          }
+                          placeholder="Upload ID Card Photo (JPG/PNG)"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-slate-50 text-slate-700 placeholder-slate-400 text-sm"
+                          readOnly
+                        />
+                      </div>
+                      <label className="px-5 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition cursor-pointer shadow-sm">
+                        UPLOAD
+                        <input
+                          type="file"
+                          name="idCardPhoto"
+                          accept="image/jpeg,image/png,image/jpg"
+                          onChange={handleIdCardPhotoChange}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* ID Card Preview */}
+                    {idCardPhotoPreview && (
+                      <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex gap-4 items-start">
+                          <img
+                            src={idCardPhotoPreview}
+                            alt="ID Card Photo Preview"
+                            className="w-24 h-24 object-cover rounded border-2 border-green-500"
+                          />
+                          <div className="flex-1">
+                            <p className="text-xs text-green-600 mb-2 flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              ID Card Photo ready to submit
+                            </p>
+                            <a
+                              href={idCardPhotoPreview}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-medium text-green-600 hover:text-green-700 underline"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              View Full Image
                             </a>
                           </div>
                         </div>
