@@ -13,7 +13,7 @@ const nodemailer = require("nodemailer");
 
 require("dotenv").config();
 
-const { importExcelSchema, addStudentDetailsSchema, updateStudentSchema, getStudentsValidation} = require("../validators/studentValidation");
+const { importExcelSchema, addStudentDetailsSchema, updateStudentSchema, getStudentsValidation } = require("../validators/studentValidation");
 
 const cascadeDeleteStudent = require("../helpers/cascadeDeleteStudent");
 
@@ -45,13 +45,13 @@ const generateRandomPassword = (length = 14) => {
 
 
 // for studentPhoto
-const fileConfigs =[
-	{
-		fieldName: "studentPhoto",
-		allowedTypes: ["image/jpeg", "image/png", "image/jpg"],
-		maxSize: 500 * 1024, // 500KB
-		friendlyName: "Student Photo"
-	},
+const fileConfigs = [
+  {
+    fieldName: "studentPhoto",
+    allowedTypes: ["image/jpeg", "image/png", "image/jpg"],
+    maxSize: 500 * 1024, // 500KB
+    friendlyName: "Student Photo"
+  },
 ];
 
 // for excel import
@@ -84,7 +84,7 @@ const importExcelDataWithPasswords = async (req, res) => {
     }
 
     if (!allowedTypes.includes(req.file.mimetype)) {
-      return res.status(400).json({success : false, message : ""});
+      return res.status(400).json({ success: false, message: "" });
     }
 
     if (req.file.size > MAX_FILE_SIZE) {
@@ -259,7 +259,7 @@ const exportAllStudentsToExcel = async (req, res) => {
 
     const filter = {};
 
-    if(req.user.role === "divisionIncharge"){
+    if (req.user.role === "divisionIncharge") {
       filter.division = req.user.division;
       filter.year = req.user.year;
     }
@@ -274,99 +274,99 @@ const exportAllStudentsToExcel = async (req, res) => {
     const worksheet = workbook.addWorksheet("Students");
 
     worksheet.columns = [
-  { header: "StudentID", key: "StudentID", width: 20 },
-  { header: "PRN", key: "PRN", width: 20 },
+      { header: "StudentID", key: "StudentID", width: 20 },
+      { header: "PRN", key: "PRN", width: 20 },
 
-  { header: "First Name", key: "FirstName", width: 20 },
-  { header: "Middle Name", key: "MiddleName", width: 20 },
-  { header: "Last Name", key: "LastName", width: 20 },
-  { header: "Mother Name", key: "MotherName", width: 20 },
+      { header: "First Name", key: "FirstName", width: 20 },
+      { header: "Middle Name", key: "MiddleName", width: 20 },
+      { header: "Last Name", key: "LastName", width: 20 },
+      { header: "Mother Name", key: "MotherName", width: 20 },
 
-  { header: "Email", key: "Email", width: 30 },
-  { header: "Parent Email", key: "ParentEmail", width: 30 },
+      { header: "Email", key: "Email", width: 30 },
+      { header: "Parent Email", key: "ParentEmail", width: 30 },
 
-  { header: "Mobile No", key: "MobileNo", width: 15 },
-  { header: "Parent Mobile No", key: "ParentMobileNo", width: 15 },
+      { header: "Mobile No", key: "MobileNo", width: 15 },
+      { header: "Parent Mobile No", key: "ParentMobileNo", width: 15 },
 
-  { header: "ABC ID", key: "ABCID", width: 25 },
+      { header: "ABC ID", key: "ABCID", width: 25 },
 
-  { header: "Branch", key: "Branch", width: 20 },
-  { header: "Year", key: "Year", width: 10 },
-  { header: "Division", key: "Division", width: 10 },
+      { header: "Branch", key: "Branch", width: 20 },
+      { header: "Year", key: "Year", width: 10 },
+      { header: "Division", key: "Division", width: 10 },
 
-  { header: "DOB", key: "DOB", width: 15 },
-  { header: "Blood Group", key: "BloodGroup", width: 10 },
-  { header: "Category", key: "Category", width: 15 },
+      { header: "DOB", key: "DOB", width: 15 },
+      { header: "Blood Group", key: "BloodGroup", width: 10 },
+      { header: "Category", key: "Category", width: 15 },
 
-  // Current Address
-  { header: "Current Street", key: "CurrentStreet", width: 30 },
-  { header: "Current City", key: "CurrentCity", width: 20 },
-  { header: "Current Pincode", key: "CurrentPincode", width: 15 },
+      // Current Address
+      { header: "Current Street", key: "CurrentStreet", width: 30 },
+      { header: "Current City", key: "CurrentCity", width: 20 },
+      { header: "Current Pincode", key: "CurrentPincode", width: 15 },
 
-  // Native Address
-  { header: "Native Street", key: "NativeStreet", width: 30 },
-  { header: "Native City", key: "NativeCity", width: 20 },
-  { header: "Native Pincode", key: "NativePincode", width: 15 },
+      // Native Address
+      { header: "Native Street", key: "NativeStreet", width: 30 },
+      { header: "Native City", key: "NativeCity", width: 20 },
+      { header: "Native Pincode", key: "NativePincode", width: 15 },
 
-  // Photo
-  { header: "Student Photo URL", key: "StudentPhotoURL", width: 50 },
+      // Photo
+      { header: "Student Photo URL", key: "StudentPhotoURL", width: 50 },
 
-  // Timestamps
-  { header: "Created At", key: "CreatedAt", width: 30 },
-  { header: "Updated At", key: "UpdatedAt", width: 30 },
-];
+      // Timestamps
+      { header: "Created At", key: "CreatedAt", width: 30 },
+      { header: "Updated At", key: "UpdatedAt", width: 30 },
+    ];
 
 
-  // Add rows
-  const formattedData = students.map((student) => ({
-  StudentID: student.studentID || "",
-  PRN: student.PRN || "",
+    // Add rows
+    const formattedData = students.map((student) => ({
+      StudentID: student.studentID || "",
+      PRN: student.PRN || "",
 
-  FirstName: student.name?.firstName || "",
-  MiddleName: student.name?.middleName || "",
-  LastName: student.name?.lastName || "",
-  MotherName: student.name?.motherName || "",
+      FirstName: student.name?.firstName || "",
+      MiddleName: student.name?.middleName || "",
+      LastName: student.name?.lastName || "",
+      MotherName: student.name?.motherName || "",
 
-  Email: student.email || "",
-  ParentEmail: student.parentEmail || "",
+      Email: student.email || "",
+      ParentEmail: student.parentEmail || "",
 
-  MobileNo: student.mobileNo || "",
-  ParentMobileNo: student.parentMobileNo || "",
+      MobileNo: student.mobileNo || "",
+      ParentMobileNo: student.parentMobileNo || "",
 
-  ABCID: student.abcId || "",
+      ABCID: student.abcId || "",
 
-  Branch: student.branch || "",
-  Year: student.year || "",
-  Division : student.division || "",
+      Branch: student.branch || "",
+      Year: student.year || "",
+      Division: student.division || "",
 
-  DOB: student.dob
-    ? new Date(student.dob).toLocaleDateString("en-GB")
-    : "",
+      DOB: student.dob
+        ? new Date(student.dob).toLocaleDateString("en-GB")
+        : "",
 
-  BloodGroup: student.bloodGroup || "",
-  Category: student.category || "",
+      BloodGroup: student.bloodGroup || "",
+      Category: student.category || "",
 
-  // Current Address
-  CurrentStreet: student.currentAddress?.street || "",
-  CurrentCity: student.currentAddress?.city || "",
-  CurrentPincode: student.currentAddress?.pincode || "",
+      // Current Address
+      CurrentStreet: student.currentAddress?.street || "",
+      CurrentCity: student.currentAddress?.city || "",
+      CurrentPincode: student.currentAddress?.pincode || "",
 
-  // Native Address
-  NativeStreet: student.nativeAddress?.street || "",
-  NativeCity: student.nativeAddress?.city || "",
-  NativePincode: student.nativeAddress?.nativePincode || "",
+      // Native Address
+      NativeStreet: student.nativeAddress?.street || "",
+      NativeCity: student.nativeAddress?.city || "",
+      NativePincode: student.nativeAddress?.nativePincode || "",
 
-  // Photo
-  StudentPhotoURL: student.studentPhoto?.url || "",
+      // Photo
+      StudentPhotoURL: student.studentPhoto?.url || "",
 
-  // Timestamps
-  CreatedAt: student.createdAt
-    ? new Date(student.createdAt).toLocaleString()
-    : "",
-  UpdatedAt: student.updatedAt
-    ? new Date(student.updatedAt).toLocaleString()
-    : "",
-}));
+      // Timestamps
+      CreatedAt: student.createdAt
+        ? new Date(student.createdAt).toLocaleString()
+        : "",
+      UpdatedAt: student.updatedAt
+        ? new Date(student.updatedAt).toLocaleString()
+        : "",
+    }));
 
 
     worksheet.addRows(formattedData);
@@ -396,352 +396,352 @@ const exportAllStudentsToExcel = async (req, res) => {
 
 // Add remaining Details from schema --for student or admin or divisionIncharge
 const addStudentDetails = async (req, res) => {
-    let uploadedFiles = null;
-    let dbSaved = false;
+  let uploadedFiles = null;
+  let dbSaved = false;
 
-    try {
-        let studentId;
+  try {
+    let studentId;
 
-        if (req.user.role === "student") {
+    if (req.user.role === "student") {
 
-            studentId = req.user.id;
+      studentId = req.user.id;
 
-			//added this check so that, one studnet cannot manipulate other student's data.
-			if (req.body.studentId && req.body.studentId !== req.user.id) {
-				return res.status(403).json({ success: false, message: "Students cannot modify other profiles" });
-			}
+      //added this check so that, one studnet cannot manipulate other student's data.
+      if (req.body.studentId && req.body.studentId !== req.user.id) {
+        return res.status(403).json({ success: false, message: "Students cannot modify other profiles" });
+      }
 
-        } else if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
+    } else if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
 
-            studentId = req.body.studentId;
-			if (!studentId) {
-                return res.status(400).json({ success: false, message: "Student ID is required for admin" });
-            }
+      studentId = req.body.studentId;
+      if (!studentId) {
+        return res.status(400).json({ success: false, message: "Student ID is required for admin" });
+      }
 
-			if (!mongoose.Types.ObjectId.isValid(studentId)) {
-                return res.status(400).json({ success: false, message: "Invalid Student ID format" });
-            }
-
-
-		}else{
-			return res.status(401).json({ success: false, message: "Unauthorized access" });
-		}
+      if (!mongoose.Types.ObjectId.isValid(studentId)) {
+        return res.status(400).json({ success: false, message: "Invalid Student ID format" });
+      }
 
 
-        // Validate input using Joi
-        const { error, value } = addStudentDetailsSchema.validate(req.body, {
-            abortEarly: false,
-            stripUnknown: true,
-            convert: true
-        });
-
-        if (error) {
-            const validationErrors = error.details.map(err => ({
-                field: err.path[0],
-                message: err.message
-            }));
-
-            return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
-        }
-
-        // Check if file is uploaded
-        if (!req.files || Object.keys(req.files).length === 0) {
-			return res.status(400).json({ success: false, message: "Student Photo is required" });
-		}
-
-        // Upload & validate file using helper
-        uploadedFiles = await validateAndUploadFiles(req.files, fileConfigs);
-
-        const studentPhoto = {
-            url: uploadedFiles.studentPhoto.url,
-            publicId: uploadedFiles.studentPhoto.publicId
-        };
-
-        // Build nested objects
-        const name = {
-            firstName: value.firstName,
-            middleName: value.middleName,
-            lastName: value.lastName,
-            motherName: value.motherName
-        };
-
-        const currentAddress = {
-            street: value.currentStreet,
-            city: value.currentCity,
-            pincode: value.pincode
-        };
-
-        const nativeAddress = {
-            street: value.nativeStreet,
-            city: value.nativeCity,
-            nativePincode: value.nativePincode
-        };
-
-        // Update student in DB
-        const updatedStudent = await Student.findByIdAndUpdate(
-            studentId,
-            {
-                name,
-                PRN: value.PRN,
-                branch: value.branch,
-                year: value.year,
-				division: value.division,
-                dob: value.dob,
-                bloodGroup: value.bloodGroup,
-                currentAddress,
-                nativeAddress,
-                category: value.category,
-                mobileNo: value.mobileNo,
-                parentMobileNo: value.parentMobileNo,
-                parentEmail: value.parentEmail,
-                abcId: value.abcId,
-                studentPhoto
-            },
-            { new: true }
-        );
-
-		if (!updatedStudent) {
-			return res.status(404).json({ success: false, message: "Student not found" });
-		}
-
-        dbSaved = true;
-
-		
-
-        return res.status(200).json({ success: true, message: "Student details added successfully", data: updatedStudent });
-
-    } catch (err) {
-        console.error("Error in addStudentDetails:", err);
-
-        // Rollback uploaded file if DB save fails
-        if (!dbSaved && uploadedFiles) {
-            const publicIds = Object.values(uploadedFiles).map(file => file.publicId);
-            await deleteMultipleFromCloudinary(publicIds);
-        }
-
-        return res.status(500).json({ success: false, message: err.message || "Internal Server Error" });
+    } else {
+      return res.status(401).json({ success: false, message: "Unauthorized access" });
     }
+
+
+    // Validate input using Joi
+    const { error, value } = addStudentDetailsSchema.validate(req.body, {
+      abortEarly: false,
+      stripUnknown: true,
+      convert: true
+    });
+
+    if (error) {
+      const validationErrors = error.details.map(err => ({
+        field: err.path[0],
+        message: err.message
+      }));
+
+      return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
+    }
+
+    // Check if file is uploaded
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).json({ success: false, message: "Student Photo is required" });
+    }
+
+    // Upload & validate file using helper
+    uploadedFiles = await validateAndUploadFiles(req.files, fileConfigs);
+
+    const studentPhoto = {
+      url: uploadedFiles.studentPhoto.url,
+      publicId: uploadedFiles.studentPhoto.publicId
+    };
+
+    // Build nested objects
+    const name = {
+      firstName: value.firstName,
+      middleName: value.middleName,
+      lastName: value.lastName,
+      motherName: value.motherName
+    };
+
+    const currentAddress = {
+      street: value.currentStreet,
+      city: value.currentCity,
+      pincode: value.pincode
+    };
+
+    const nativeAddress = {
+      street: value.nativeStreet,
+      city: value.nativeCity,
+      nativePincode: value.nativePincode
+    };
+
+    // Update student in DB
+    const updatedStudent = await Student.findByIdAndUpdate(
+      studentId,
+      {
+        name,
+        PRN: value.PRN,
+        branch: value.branch,
+        year: value.year,
+        division: value.division,
+        dob: value.dob,
+        bloodGroup: value.bloodGroup,
+        currentAddress,
+        nativeAddress,
+        category: value.category,
+        mobileNo: value.mobileNo,
+        parentMobileNo: value.parentMobileNo,
+        parentEmail: value.parentEmail,
+        abcId: value.abcId,
+        studentPhoto
+      },
+      { new: true }
+    );
+
+    if (!updatedStudent) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    dbSaved = true;
+
+
+
+    return res.status(200).json({ success: true, message: "Student details added successfully", data: updatedStudent });
+
+  } catch (err) {
+    console.error("Error in addStudentDetails:", err);
+
+    // Rollback uploaded file if DB save fails
+    if (!dbSaved && uploadedFiles) {
+      const publicIds = Object.values(uploadedFiles).map(file => file.publicId);
+      await deleteMultipleFromCloudinary(publicIds);
+    }
+
+    return res.status(500).json({ success: false, message: err.message || "Internal Server Error" });
+  }
 };
 
 // UPDATE STUDENT -- student or admin or divisionIncharge
 const updateStudent = async (req, res) => {
-    let dbSaved = false;
-    let uploadedFiles = null;
-    let studentId;
+  let dbSaved = false;
+  let uploadedFiles = null;
+  let studentId;
 
-    try {
-		
-        // Determine studentId based on role
-        if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
-            studentId = req.params.studentId;
-			if (!studentId) {
-                return res.status(400).json({ success: false, message: "Student ID is required for admin" });
-            }
+  try {
 
-			if (!mongoose.Types.ObjectId.isValid(studentId)) {
-                return res.status(400).json({ success: false, message: "Invalid Student ID format" });
-            }
+    // Determine studentId based on role
+    if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
+      studentId = req.params.studentId;
+      if (!studentId) {
+        return res.status(400).json({ success: false, message: "Student ID is required for admin" });
+      }
 
-        } else if (req.user.role === "student") {
-            studentId = req.user.id;
-        }else{
-			return res.status(401).json({ success: false, message: "Unauthorized access" });
-		}
+      if (!mongoose.Types.ObjectId.isValid(studentId)) {
+        return res.status(400).json({ success: false, message: "Invalid Student ID format" });
+      }
 
-        if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
-            return res.status(400).json({ success: false, message: "Student ID required in valid format." });
-        }
-
-        const student = await Student.findById(studentId);
-        if (!student) {
-            return res.status(404).json({ success: false, message: "Student not found" });
-        }
-
-        // Verify requester-resource relation
-        if (req.user.role === "student" && student._id.toString() !== req.user.id.toString()) {
-            return res.status(403).json({ success: false, message: "Resource does not belong to logged-in student" });
-        }
-
-		// Verify for division Incharge
-		if(req.user.role === "divisionIncharge"){
-
-			if (student.division !== req.user.division) {
-				return res.status(403).json({ success: false, message: "You can only update your division's student details." });
-			}
-		}
-
-        // Ensure student already has a photo
-        if (!student.studentPhoto || !student.studentPhoto.publicId) {
-            return res.status(400).json({
-                success: false,
-                message: "Please fill the details first. You cannot update without uploading a profile photo initially."
-            });
-        }
-
-        const oldPublicId = student.studentPhoto.publicId;
-
-        // Validate input
-        const { error, value } = updateStudentSchema.validate(req.body, { abortEarly: false, stripUnknown: true, convert: true });
-        if (error) {
-            const validationErrors = error.details.map(err => ({
-                field: err.path[0],
-                message: err.message
-            }));
-            return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
-        }
-
-        // Prepare updated data
-        const updatedData = {};
-
-        // Name fields
-        if (value.firstName) updatedData["name.firstName"] = value.firstName;
-        if (value.middleName) updatedData["name.middleName"] = value.middleName;
-        if (value.lastName) updatedData["name.lastName"] = value.lastName;
-        if (value.motherName) updatedData["name.motherName"] = value.motherName;
-
-        // Current Address
-        if (value.currentStreet) updatedData["currentAddress.street"] = value.currentStreet;
-        if (value.currentCity) updatedData["currentAddress.city"] = value.currentCity;
-        if (value.pincode) updatedData["currentAddress.pincode"] = value.pincode;
-
-        // Native Address
-        if (value.nativeStreet) updatedData["nativeAddress.street"] = value.nativeStreet;
-        if (value.nativeCity) updatedData["nativeAddress.city"] = value.nativeCity;
-        if (value.nativePincode) updatedData["nativeAddress.nativePincode"] = value.nativePincode;
-
-        // Other fields
-        if (value.PRN) updatedData.PRN = value.PRN;
-        if (value.branch) updatedData.branch = value.branch;
-        if (value.year) updatedData.year = value.year;
-		if (value.division) updatedData.division=value.division;
-        if (value.dob) updatedData.dob = new Date(value.dob);
-        if (value.bloodGroup) updatedData.bloodGroup = value.bloodGroup;
-        if (value.category) updatedData.category = value.category;
-        if (value.mobileNo) updatedData.mobileNo = value.mobileNo;
-        if (value.parentMobileNo) updatedData.parentMobileNo = value.parentMobileNo;
-		if (value.abcId) updatedData.abcId=value.abcId;
-		if (value.parentEmail) updatedData.parentEmail=value.parentEmail;
-
-        // Handle student photo upload using validateAndUploadFiles
-        if (req.files && Object.keys(req.files).length > 0) {
-            uploadedFiles = await validateAndUploadFiles(req.files, fileConfigs);
-
-            if (!uploadedFiles.studentPhoto) {
-                return res.status(500).json({ success: false, message: "Failed to upload photo. Please try again." });
-            }
-
-            updatedData.studentPhoto = {
-                url: uploadedFiles.studentPhoto.url,
-                publicId: uploadedFiles.studentPhoto.publicId
-            };
-        }
-
-        // Update student in DB
-        const updatedStudent = await Student.findByIdAndUpdate(
-            studentId,
-            { $set: updatedData },
-            { new: true, runValidators: true, select: "-password" }
-        );
-
-		if (!updatedStudent) {
-			return res.status(404).json({ success: false, message: "Student not found" });
-		}
-
-        dbSaved = true;
-
-        // Delete old photo if a new one was uploaded
-        if (uploadedFiles && uploadedFiles.studentPhoto && oldPublicId) {
-            try {
-                await cloudinary.uploader.destroy(oldPublicId);
-            } catch (err) {
-                console.error("Old photo deletion failed:", err.message);
-            }
-        }
-
-        return res.status(200).json({ success: true, message: "Student updated successfully", data: updatedStudent });
-
-    } catch (err) {
-        console.error("Error in updateStudent:", err);
-
-        // Rollback uploaded file if DB save fails
-        if (!dbSaved && uploadedFiles) {
-            const publicIds = Object.values(uploadedFiles).map(file => file.publicId);
-            await deleteMultipleFromCloudinary(publicIds);
-        }
-
-        return res.status(500).json({ success: false, message: "Internal Server Error" });
+    } else if (req.user.role === "student") {
+      studentId = req.user.id;
+    } else {
+      return res.status(401).json({ success: false, message: "Unauthorized access" });
     }
+
+    if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ success: false, message: "Student ID required in valid format." });
+    }
+
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    // Verify requester-resource relation
+    if (req.user.role === "student" && student._id.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ success: false, message: "Resource does not belong to logged-in student" });
+    }
+
+    // Verify for division Incharge
+    if (req.user.role === "divisionIncharge") {
+
+      if (student.division !== req.user.division) {
+        return res.status(403).json({ success: false, message: "You can only update your division's student details." });
+      }
+    }
+
+    // Ensure student already has a photo
+    if (!student.studentPhoto || !student.studentPhoto.publicId) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill the details first. You cannot update without uploading a profile photo initially."
+      });
+    }
+
+    const oldPublicId = student.studentPhoto.publicId;
+
+    // Validate input
+    const { error, value } = updateStudentSchema.validate(req.body, { abortEarly: false, stripUnknown: true, convert: true });
+    if (error) {
+      const validationErrors = error.details.map(err => ({
+        field: err.path[0],
+        message: err.message
+      }));
+      return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
+    }
+
+    // Prepare updated data
+    const updatedData = {};
+
+    // Name fields
+    if (value.firstName) updatedData["name.firstName"] = value.firstName;
+    if (value.middleName) updatedData["name.middleName"] = value.middleName;
+    if (value.lastName) updatedData["name.lastName"] = value.lastName;
+    if (value.motherName) updatedData["name.motherName"] = value.motherName;
+
+    // Current Address
+    if (value.currentStreet) updatedData["currentAddress.street"] = value.currentStreet;
+    if (value.currentCity) updatedData["currentAddress.city"] = value.currentCity;
+    if (value.pincode) updatedData["currentAddress.pincode"] = value.pincode;
+
+    // Native Address
+    if (value.nativeStreet) updatedData["nativeAddress.street"] = value.nativeStreet;
+    if (value.nativeCity) updatedData["nativeAddress.city"] = value.nativeCity;
+    if (value.nativePincode) updatedData["nativeAddress.nativePincode"] = value.nativePincode;
+
+    // Other fields
+    if (value.PRN) updatedData.PRN = value.PRN;
+    if (value.branch) updatedData.branch = value.branch;
+    if (value.year) updatedData.year = value.year;
+    if (value.division) updatedData.division = value.division;
+    if (value.dob) updatedData.dob = new Date(value.dob);
+    if (value.bloodGroup) updatedData.bloodGroup = value.bloodGroup;
+    if (value.category) updatedData.category = value.category;
+    if (value.mobileNo) updatedData.mobileNo = value.mobileNo;
+    if (value.parentMobileNo) updatedData.parentMobileNo = value.parentMobileNo;
+    if (value.abcId) updatedData.abcId = value.abcId;
+    if (value.parentEmail) updatedData.parentEmail = value.parentEmail;
+
+    // Handle student photo upload using validateAndUploadFiles
+    if (req.files && Object.keys(req.files).length > 0) {
+      uploadedFiles = await validateAndUploadFiles(req.files, fileConfigs);
+
+      if (!uploadedFiles.studentPhoto) {
+        return res.status(500).json({ success: false, message: "Failed to upload photo. Please try again." });
+      }
+
+      updatedData.studentPhoto = {
+        url: uploadedFiles.studentPhoto.url,
+        publicId: uploadedFiles.studentPhoto.publicId
+      };
+    }
+
+    // Update student in DB
+    const updatedStudent = await Student.findByIdAndUpdate(
+      studentId,
+      { $set: updatedData },
+      { new: true, runValidators: true, select: "-password" }
+    );
+
+    if (!updatedStudent) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    dbSaved = true;
+
+    // Delete old photo if a new one was uploaded
+    if (uploadedFiles && uploadedFiles.studentPhoto && oldPublicId) {
+      try {
+        await cloudinary.uploader.destroy(oldPublicId);
+      } catch (err) {
+        console.error("Old photo deletion failed:", err.message);
+      }
+    }
+
+    return res.status(200).json({ success: true, message: "Student updated successfully", data: updatedStudent });
+
+  } catch (err) {
+    console.error("Error in updateStudent:", err);
+
+    // Rollback uploaded file if DB save fails
+    if (!dbSaved && uploadedFiles) {
+      const publicIds = Object.values(uploadedFiles).map(file => file.publicId);
+      await deleteMultipleFromCloudinary(publicIds);
+    }
+
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
 };
 
 
 
 // DELETE STUDENT --student or admin
 const deleteStudent = async (req, res) => {
-	try {
-		let studentId;
+  try {
+    let studentId;
 
 
-		// Verify requester
-		if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
+    // Verify requester
+    if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
 
-			studentId=req.params.studentId;
+      studentId = req.params.studentId;
 
-			if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
-				return res.status(400).json({ success:false, message: "Student ID required in valid format." });
-			}
-			
-
-			// Verify for division Incharge
-			if(req.user.role === "divisionIncharge"){
-
-				const student = await Student.findById(studentId);
-				if (!student) {
-					return res.status(404).json({ success: false, message: "Student not found" });
-				}
-
-				if (student.division !== req.user.division) {
-					return res.status(403).json({ success: false, message: "You can only delete your division's student details." });
-				}
-			}
-
-			
-		} else if (req.user.role === "student") {
-
-			studentId = req.user.id;
-	
-		}else{
-			return res.status(403).json({success:false, message: "Unauthorized role"});
-		}
-
-		const student = await Student.findByIdAndDelete(studentId);
-
-		if (!student) {
-			return res.status(404).json({ success: false, message: "Student not found" });
-		}
-
-		// Delete student photo only if details deleted from cloudinary
-		if (student.studentPhoto && student.studentPhoto.publicId) {
-			try {
-				await deleteFromCloudinary(student.studentPhoto.publicId);
-			} catch (err) {
-				console.error("Cloudinary cleanup failed:", err);
-			}
-		}
+      if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
+        return res.status(400).json({ success: false, message: "Student ID required in valid format." });
+      }
 
 
-		// delete other documents in other schemas referencing to this student --only if studdent is first successfully deleted from Student.js
-		   try {
-				await cascadeDeleteStudent(studentId);
-			} catch (err) {
-				console.error("Cascade failed:", err);
-			}
-		
+      // Verify for division Incharge
+      if (req.user.role === "divisionIncharge") {
 
-		return res.status(200).json({ success: true, message: "Student deleted successfully" });
-	} catch (err) {
-		console.error("Error in deleteStudent:", err);
-		return res.status(500).json({ success: false, message: "Internal Server Error" });
-	}
+        const student = await Student.findById(studentId);
+        if (!student) {
+          return res.status(404).json({ success: false, message: "Student not found" });
+        }
+
+        if (student.division !== req.user.division) {
+          return res.status(403).json({ success: false, message: "You can only delete your division's student details." });
+        }
+      }
+
+
+    } else if (req.user.role === "student") {
+
+      studentId = req.user.id;
+
+    } else {
+      return res.status(403).json({ success: false, message: "Unauthorized role" });
+    }
+
+    const student = await Student.findByIdAndDelete(studentId);
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    // Delete student photo only if details deleted from cloudinary
+    if (student.studentPhoto && student.studentPhoto.publicId) {
+      try {
+        await deleteFromCloudinary(student.studentPhoto.publicId);
+      } catch (err) {
+        console.error("Cloudinary cleanup failed:", err);
+      }
+    }
+
+
+    // delete other documents in other schemas referencing to this student --only if studdent is first successfully deleted from Student.js
+    try {
+      await cascadeDeleteStudent(studentId);
+    } catch (err) {
+      console.error("Cascade failed:", err);
+    }
+
+
+    return res.status(200).json({ success: true, message: "Student deleted successfully" });
+  } catch (err) {
+    console.error("Error in deleteStudent:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
 };
 
 
@@ -752,61 +752,69 @@ const getStudents = async (req, res) => {
     // Get query params
     const { year, division, search, page, limit } = req.query;
 
-	
 
 
-	// Validate input using Joi
-	const { error, value } = getStudentsValidation.validate({ year, division, search, page, limit }, { abortEarly: false });
-	if (error) {
-		const validationErrors = error.details.map(err => ({
-			field: err.path[0],
-			message: err.message
-		}));
 
-		return res.status(400).json({
-			success: false,
-			message: "Validation failed",
-			errors: validationErrors
-		});
-	}
+    // Validate input using Joi
+    const { error, value } = getStudentsValidation.validate(req.query, { abortEarly: false, stripUnknown: true });
+    if (error) {
+      const validationErrors = error.details.map(err => ({
+        field: err.path[0],
+        message: err.message
+      }));
+
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationErrors
+      });
+    }
 
     // Use defaults
-	const pageNum = value.page || 1;
-	const limitNum = Math.min(value.limit || 10, 50);
-	const skip = (pageNum - 1) * limitNum;
+    const pageNum = value.page || 1;
+    const limitNum = Math.min(value.limit || 10, 50);
+    const skip = (pageNum - 1) * limitNum;
 
-	const filter = {};
+    const filter = {};
 
 
-	// If divisionIncharge, restrict by their division & year
-	if (req.user.role === "divisionIncharge") {
+    // If divisionIncharge, restrict by their division & year
+    if (req.user.role === "divisionIncharge") {
+      filter.division = req.user.division;
+      filter.year = req.user.year;
+    } else if (req.user.role === "admin") {
+      // Admin can filter by query params
+      if (value.division) filter.division = value.division;
+      if (value.year) filter.year = value.year;
+      if (value.branch) filter.branch = value.branch;
+    } else {
+      return res.status(403).json({ success: false, message: "Unauthorized role." });
+    }
 
-		// if( value.division !== req.user.division ||  value.year !== req.user.year) {
-		// 	return res.status(403).json({ success: false, message: "You can only access your own division's students." });
-		// }
+    // --- NEW FILTERS ---
+    if (value.firstName) filter['name.firstName'] = { $regex: value.firstName, $options: 'i' };
+    if (value.middleName) filter['name.middleName'] = { $regex: value.middleName, $options: 'i' }; // Maps to Father's Name in UI
+    if (value.lastName) filter['name.lastName'] = { $regex: value.lastName, $options: 'i' };
+    if (value.motherName) filter['name.motherName'] = { $regex: value.motherName, $options: 'i' };
 
-		filter.division = req.user.division;
-		filter.year = req.user.year;
+    if (value.city) filter['currentAddress.city'] = { $regex: value.city, $options: 'i' };
 
-	} else if(req.user.role === "admin") {
-		// Admin can filter by query params
-		if (value.division) filter.division = value.division;
-		if (value.year) filter.year = value.year;
-	}else{
-		return res.status(403).json({success: false, message: "Unauthorized role."});
-	}
+    if (value.bloodGroup) filter.bloodGroup = value.bloodGroup;
+    if (value.category) filter.category = value.category;
 
-	if (value.search) {
-		//regex safety
-		const safeSearch = value.search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
-		filter.$or = [
-			{ 'name.firstName': { $regex: safeSearch, $options: 'i' } },
-			{ 'name.middleName': { $regex: safeSearch, $options: 'i' } },
-			{ 'name.lastName': { $regex: safeSearch, $options: 'i' } },
-			{ 'name.motherName': { $regex: safeSearch, $options: 'i' } },
-		];
-	}
+
+    if (value.search) {
+      //regex safety
+      const safeSearch = value.search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+
+      filter.$or = [
+        { 'name.firstName': { $regex: safeSearch, $options: 'i' } },
+        { 'name.middleName': { $regex: safeSearch, $options: 'i' } },
+        { 'name.lastName': { $regex: safeSearch, $options: 'i' } },
+        { 'name.motherName': { $regex: safeSearch, $options: 'i' } },
+      ];
+    }
 
 
 
@@ -838,58 +846,58 @@ const getStudents = async (req, res) => {
 
 // GET SINGLE STUDENT BY ID Admin or DivisionIncharge
 const getSingleStudent = async (req, res) => {
-	try {
+  try {
 
-		const { studentId } = req.params;
+    const { studentId } = req.params;
 
-		//check studentId
-		if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
-			return res.status(400).json({ success:false, message: "Student ID required in valid format." });
-		}
+    //check studentId
+    if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ success: false, message: "Student ID required in valid format." });
+    }
 
 
-		const student = await Student.findById(studentId).select("-password -__v");
-		if (!student) {
-			return res.status(404).json({ success: false, message: "Student not found" });
-		}
+    const student = await Student.findById(studentId).select("-password -__v");
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
 
-		if (req.user.role === "divisionIncharge") {
+    if (req.user.role === "divisionIncharge") {
 
-			if( student.division !== req.user.division ||  student.year !== req.user.year) {
-				return res.status(403).json({ success: false, message: "You can only access your own division's students." });
-			}
+      if (student.division !== req.user.division || student.year !== req.user.year) {
+        return res.status(403).json({ success: false, message: "You can only access your own division's students." });
+      }
 
-		} 
+    }
 
-		return res.status(200).json({ success: true, data: student });
-	} catch (error) {
-		console.error("Error in getSingleStudent:", error);
-		return res.status(500).json({ success: false, message: "Server Error" });
-	}
+    return res.status(200).json({ success: true, data: student });
+  } catch (error) {
+    console.error("Error in getSingleStudent:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
 };
 
 // Get single Student from req.user.id ( for student )
-const getStudentById= async (req,res)=>{
+const getStudentById = async (req, res) => {
 
-	try{
-		const studentId=req.user.id;
+  try {
+    const studentId = req.user.id;
 
-		if(!studentId){
-			return res.status(400).json({ success: false, message: "Student ID is required, Please Login first" });
-		}
+    if (!studentId) {
+      return res.status(400).json({ success: false, message: "Student ID is required, Please Login first" });
+    }
 
-		const student = await Student.findById(studentId).select("-password -__v");
-		if (!student) {
-			return res.status(404).json({ success: false, message: "Student not found" });
-		}
+    const student = await Student.findById(studentId).select("-password -__v");
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
 
-		return res.status(200).json({ success: true, data: student });
-	}catch(error){
-		console.error("Error in getStudentById : ", error);
-		return res.status(500).json({success: false, message: "Server Error"});
-	}
+    return res.status(200).json({ success: true, data: student });
+  } catch (error) {
+    console.error("Error in getStudentById : ", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
 
-}; 
+};
 
 
-module.exports = {addStudentDetails, getStudentById ,getStudents, getSingleStudent, updateStudent, deleteStudent, importExcelDataWithPasswords, exportAllStudentsToExcel };
+module.exports = { addStudentDetails, getStudentById, getStudents, getSingleStudent, updateStudent, deleteStudent, importExcelDataWithPasswords, exportAllStudentsToExcel };

@@ -373,6 +373,15 @@ export default function AdminStudentSection() {
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("");
 
+  // New Extended Filters
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState(""); // Mapped to Father's Name in UI
+  const [lastName, setLastName] = useState("");
+  const [motherName, setMotherName] = useState("");
+  const [city, setCity] = useState("");
+  const [bloodGroup, setBloodGroup] = useState("");
+  const [category, setCategory] = useState("");
+
   // Import/Export state (Students)
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -383,57 +392,52 @@ export default function AdminStudentSection() {
   const [exportingDivision, setExportingDivision] = useState(false);
   const divisionFileInputRef = useRef(null);
 
-  // Fetch students from backend when component loads
+  // Fetch students from backend when filters change
   useEffect(() => {
-    fetchStudents();
-  }, []);
+    // Debounce search query to avoid too many API calls
+    const delayDebounceFn = setTimeout(() => {
+      fetchStudents();
+    }, 500);
 
-  // Apply filters when students or filters change
-  useEffect(() => {
-    applyFilters();
-  }, [students, searchQuery, selectedYear, selectedBranch]);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, selectedYear, selectedBranch, firstName, middleName, lastName, motherName, city, bloodGroup, category]);
 
   const fetchStudents = async () => {
     try {
-      const response = await studentService.getAllStudents();
-      const data = response.data || response;
+      setLoading(true); // Ensure loading state is shown during refetch
+
+      const params = {
+        limit: 100, // Reasonable limit
+        search: searchQuery || undefined,
+        year: selectedYear || undefined,
+        branch: selectedBranch || undefined,
+        firstName: firstName || undefined,
+        middleName: middleName || undefined, // Father's Name
+        lastName: lastName || undefined,
+        motherName: motherName || undefined,
+        city: city || undefined,
+        bloodGroup: bloodGroup || undefined,
+        category: category || undefined,
+      };
+
+      // Use getStudents for server-side filtering instead of getAllStudents
+      const response = await studentService.getStudents(params);
+
+      // response.data contains the array of students
+      const data = response.data || [];
+
       setStudents(data);
       setFilteredStudents(data);
     } catch (err) {
       console.error("Error fetching students:", err);
-      setError("Failed to load students. Backend might not be running!");
+      // setError("Failed to load students. Backend might not be running!"); 
+      // Don't show critical error on every filter change, maybe just log it or show simplified error
     } finally {
       setLoading(false);
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...students];
-
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (s) =>
-          s.name?.firstName?.toLowerCase().includes(query) ||
-          s.name?.lastName?.toLowerCase().includes(query) ||
-          s.studentID?.toLowerCase().includes(query) ||
-          s.email?.toLowerCase().includes(query)
-      );
-    }
-
-    // Year filter
-    if (selectedYear) {
-      filtered = filtered.filter((s) => s.year === selectedYear);
-    }
-
-    // Branch filter
-    if (selectedBranch) {
-      filtered = filtered.filter((s) => s.branch === selectedBranch);
-    }
-
-    setFilteredStudents(filtered);
-  };
+  // Removed applyFilters as valid filters are now applied on backend
 
   // Handle view profile - changed to full page view
   const handleViewProfile = (student) => {
@@ -627,137 +631,136 @@ export default function AdminStudentSection() {
 
       {/* Filter / Buttons Row */}
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-8">
-        <div className="flex flex-wrap gap-3">
-          {/* Search Input */}
-          <input
-            type="text"
-            placeholder="Search by name, ID, email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white flex-1 min-w-[250px] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-          />
 
-          {/* Year Filter */}
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
-          >
-            <option value="">All Years</option>
-            <option value="SE">SE</option>
-            <option value="TE">TE</option>
-            <option value="BE">BE</option>
-          </select>
-
-          {/* Branch Filter */}
-          <select
-            value={selectedBranch}
-            onChange={(e) => setSelectedBranch(e.target.value)}
-            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
-          >
-            <option value="">All Branches</option>
-            <option value="Computer">Computer</option>
-            <option value="IT">IT</option>
-            <option value="AIDS">AIDS</option>
-            <option value="Mechanical">Mechanical</option>
-            <option value="Civil">Civil</option>
-            <option value="Chemical">Chemical</option>
-          </select>
-
-          {/* Clear Filters */}
-          {(searchQuery || selectedYear || selectedBranch) && (
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedYear("");
-                setSelectedBranch("");
-              }}
-              className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition"
-            >
-              Clear Filters
-            </button>
-          )}
-
-          {/* Spacer */}
-          <div className="flex-1 min-w-[20px]"></div>
-
-          {/* ✅ EXPORT BUTTON */}
-          <button
-            onClick={handleExport}
-            disabled={exporting || students.length === 0}
-            className="px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {exporting ? (
-              <>
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                Exporting...
-              </>
-            ) : (
-              <>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                Export Students
-              </>
-            )}
-          </button>
-
-          {/* ✅ IMPORT BUTTON */}
-          <button
-            onClick={handleImportClick}
-            disabled={importing}
-            className="px-5 py-2.5 rounded-lg bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {importing ? (
-              <>
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                Importing...
-              </>
-            ) : (
-              <>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
-                Import Students
-              </>
-            )}
-          </button>
-
-          {/* Hidden File Input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-
-
-          {/* Add Student Button */}
-          <button className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm">
-            + Add Student
-          </button>
+        {/* 1. Main Search Bar */}
+        <div className="mb-5">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">Search Students</h3>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by full string (ID, Email, Name)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm"
+            />
+            <svg className="w-5 h-5 text-slate-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
         </div>
+
+        {/* 2. Advanced Filters Grid */}
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">Advanced Filters</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+            {/* Names */}
+            <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="px-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+
+            <input type="text" placeholder="Father's Name (Middle)" value={middleName} onChange={(e) => setMiddleName(e.target.value)} className="px-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+
+            <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} className="px-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+
+            <input type="text" placeholder="Mother's Name" value={motherName} onChange={(e) => setMotherName(e.target.value)} className="px-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+
+            {/* Location & Details */}
+            <input type="text" placeholder="City (Current Address)" value={city} onChange={(e) => setCity(e.target.value)} className="px-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+
+            <select value={bloodGroup} onChange={(e) => setBloodGroup(e.target.value)} className="px-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none cursor-pointer">
+              <option value="">Blood Group</option>
+              <option value="A+">A+</option> <option value="A-">A-</option>
+              <option value="B+">B+</option> <option value="B-">B-</option>
+              <option value="AB+">AB+</option> <option value="AB-">AB-</option>
+              <option value="O+">O+</option> <option value="O-">O-</option>
+            </select>
+
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className="px-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none cursor-pointer">
+              <option value="">Category</option>
+              <option value="Open">Open</option> <option value="OBC">OBC</option>
+              <option value="SC">SC</option> <option value="ST">ST</option>
+              <option value="EWS">EWS</option> <option value="EBC">EBC</option>
+              <option value="Other">Other</option>
+            </select>
+
+            {/* Year & Branch */}
+            <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="px-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none cursor-pointer">
+              <option value="">Year (All)</option>
+              <option value="SE">SE</option>
+              <option value="TE">TE</option>
+              <option value="BE">BE</option>
+            </select>
+
+            <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} className="px-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none cursor-pointer">
+              <option value="">Branch (All)</option>
+              <option value="Computer">Computer</option>
+              <option value="IT">IT</option>
+              <option value="AIDS">AIDS</option>
+              <option value="Mechanical">Mechanical</option>
+              <option value="Civil">Civil</option>
+              <option value="Chemical">Chemical</option>
+            </select>
+          </div>
+        </div>
+
+        {/* 3. Actions & Buttons */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
+
+          {/* Clear Filters Button */}
+          <div>
+            {(searchQuery || selectedYear || selectedBranch || firstName || middleName || lastName || motherName || city || bloodGroup || category) && (
+              <button
+                onClick={() => {
+                  setSearchQuery(""); setSelectedYear(""); setSelectedBranch("");
+                  setFirstName(""); setMiddleName(""); setLastName(""); setMotherName("");
+                  setCity(""); setBloodGroup(""); setCategory("");
+                }}
+                className="px-4 py-2.5 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                Clear All Filters
+              </button>
+            )}
+          </div>
+
+          {/* Action Buttons Group */}
+          <div className="flex flex-wrap gap-3">
+            {/* Export Button */}
+            <button
+              onClick={handleExport}
+              disabled={exporting || students.length === 0}
+              className="px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {exporting ? (
+                <> <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> Exporting... </>
+              ) : (
+                <> <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Export </>
+              )}
+            </button>
+
+            {/* Import Button */}
+            <button
+              onClick={handleImportClick}
+              disabled={importing}
+              className="px-4 py-2.5 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {importing ? (
+                <> <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> Importing... </>
+              ) : (
+                <> <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg> Import </>
+              )}
+            </button>
+
+            {/* Hidden Input for Import */}
+            <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleFileChange} className="hidden" />
+
+            {/* Add Student Button */}
+            <button className="px-4 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              Add Student
+            </button>
+          </div>
+        </div>
+
 
         {/* Division Incharge Actions Row - ONLY FOR ADMIN */}
         {userRole === "admin" && (
@@ -915,6 +918,6 @@ export default function AdminStudentSection() {
           </div>
         )}
       </div>
-    </main>
+    </main >
   );
 }

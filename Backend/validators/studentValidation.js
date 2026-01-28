@@ -2,7 +2,7 @@ const Joi = require("joi");
 
 const importExcelSchema = Joi.object({
     studentID: Joi.string().pattern(/^[0-9]{4}[A-Z]{4}[0-9]{3}$/).required(),
-    email : Joi.string().email({ tlds: { allow: false } }).trim().lowercase().required(),
+    email: Joi.string().email({ tlds: { allow: false } }).trim().lowercase().required(),
 });
 
 const addStudentDetailsSchema = Joi.object({
@@ -14,7 +14,7 @@ const addStudentDetailsSchema = Joi.object({
     PRN: Joi.string().pattern(/^[1-9]\d{15}$/).trim().required(),
     branch: Joi.string().valid("Computer", "IT", "AIDS", "Civil", "Chemical", "Mechanical").required(),
     year: Joi.string().valid("SE", "TE", "BE").required(),
-    
+
     dob: Joi.date().required(),
     bloodGroup: Joi.string().valid("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-").required(),
 
@@ -27,7 +27,7 @@ const addStudentDetailsSchema = Joi.object({
     nativePincode: Joi.string().pattern(/^[1-9][0-9]{5}$/).trim().required(),
 
     category: Joi.string().valid("Open", "EWS", "EBC", "OBC", "SC", "ST", "Other").required(),
-    
+
     mobileNo: Joi.string().pattern(/^[6-9]\d{9}$/).trim().required(),
     parentMobileNo: Joi.string().pattern(/^[6-9]\d{9}$/).trim().required(),
 
@@ -35,9 +35,9 @@ const addStudentDetailsSchema = Joi.object({
     parentEmail: Joi.string().email({ tlds: { allow: false } }).trim().lowercase().required(),
     abcId: Joi.string().pattern(/^\d{12}$/).trim().required(), // exactly 12 digits
 
-    division : Joi.string().valid("A", "B", "C").required(),
+    division: Joi.string().valid("A", "B", "C").required(),
 
-}).options({ 
+}).options({
     abortEarly: false,  // return all errors at once
     stripUnknown: true, // remove any extra fields
     convert: true        // convert types if possible (e.g., dob string -> Date)
@@ -52,7 +52,7 @@ const updateStudentSchema2 = Joi.object({
     PRN: Joi.string().pattern(/^[1-9]\d{15}$/),
     branch: Joi.string().valid("Computer", "IT", "AIDS", "Civil", "Chemical", "Mechanical"),
     year: Joi.string().valid("SE", "TE", "BE"),
-    
+
     dob: Joi.date(),
     bloodGroup: Joi.string().valid("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"),
 
@@ -66,11 +66,11 @@ const updateStudentSchema2 = Joi.object({
     nativePincode: Joi.string().pattern(/^[1-9][0-9]{5}$/),
 
     category: Joi.string().valid("Open", "EWS", "EBC", "OBC", "SC", "ST", "Other"),
-    
+
     mobileNo: Joi.string().pattern(/^[6-9]\d{9}$/),
     parentMobileNo: Joi.string().pattern(/^[6-9]\d{9}$/),
 
-    
+
 
 });
 
@@ -83,7 +83,7 @@ const updateStudentSchema = Joi.object({
     PRN: Joi.string().pattern(/^[1-9]\d{15}$/).trim(),
     branch: Joi.string().valid("Computer", "IT", "AIDS", "Civil", "Chemical", "Mechanical"),
     year: Joi.string().valid("SE", "TE", "BE"),
-    
+
     dob: Joi.date(),
     bloodGroup: Joi.string().valid("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"),
 
@@ -96,7 +96,7 @@ const updateStudentSchema = Joi.object({
     nativePincode: Joi.string().pattern(/^[1-9][0-9]{5}$/).trim(),
 
     category: Joi.string().valid("Open", "EWS", "EBC", "OBC", "SC", "ST", "Other"),
-    
+
     mobileNo: Joi.string().pattern(/^[6-9]\d{9}$/).trim(),
     parentMobileNo: Joi.string().pattern(/^[6-9]\d{9}$/).trim(),
 
@@ -104,9 +104,9 @@ const updateStudentSchema = Joi.object({
     parentEmail: Joi.string().email({ tlds: { allow: false } }).trim().lowercase(),
     abcId: Joi.string().pattern(/^\d{12}$/).trim(), // exactly 12 digits
 
-    division : Joi.string().valid("A", "B", "C").required(),
-}).min(1).options({ 
-    abortEarly: false,  
+    division: Joi.string().valid("A", "B", "C").required(),
+}).min(1).options({
+    abortEarly: false,
     stripUnknown: true,
     convert: true
 });
@@ -114,10 +114,20 @@ const updateStudentSchema = Joi.object({
 
 const getStudentsValidation = Joi.object({
     year: Joi.string().valid("SE", "TE", "BE").optional(),
+    branch: Joi.string().valid("Computer", "IT", "AIDS", "Civil", "Chemical", "Mechanical").optional(),
     division: Joi.string().valid("A", "B", "C").optional(),
     search: Joi.string().max(100).optional(),
     page: Joi.number().integer().min(1).optional(),
-    limit: Joi.number().integer().min(1).max(20).optional()
+    limit: Joi.number().integer().min(1).max(100).optional(), // Increased limit slightly to allow more flexibility
+
+    // New Filter Fields
+    firstName: Joi.string().pattern(/^[A-Za-z]+$/).trim().optional(),
+    middleName: Joi.string().pattern(/^[A-Za-z]+$/).trim().optional(),
+    lastName: Joi.string().pattern(/^[A-Za-z]+$/).trim().optional(),
+    motherName: Joi.string().pattern(/^[A-Za-z]+$/).trim().optional(),
+    city: Joi.string().trim().optional(),
+    bloodGroup: Joi.string().valid("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-").optional(),
+    category: Joi.string().valid("Open", "EWS", "EBC", "OBC", "SC", "ST", "Other").optional()
 });
 
 module.exports = {
