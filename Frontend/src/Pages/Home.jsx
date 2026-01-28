@@ -141,6 +141,14 @@ const Home = () => {
               >
                 Admin Login
               </button>
+
+              {/* ✅ NEW: Division Incharge Login Button */}
+              <button
+                onClick={() => navigate("/division/login")}
+                className="bg-white text-[#1D3EA1] border border-[#1D3EA1] px-6 py-2 rounded-lg font-medium hover:bg-blue-50 transition duration-200"
+              >
+                Division Login
+              </button>
             </div>
           </div>
         </div>

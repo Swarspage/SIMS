@@ -98,9 +98,19 @@ export default function Header({ showSearch = false }) {
 
   const fetchStudentInfo = async () => {
     try {
-      const response = await studentService.getMyData();
-      const student = response.data || response.student || response;
-      setStudentData(student);
+      const role = localStorage.getItem("role");
+
+      // Only fetch student data if the user is a student
+      if (role === "student") {
+        const response = await studentService.getMyData();
+        const student = response.data || response.student || response;
+        setStudentData(student);
+      } else if (role === "admin") {
+        setStudentData({ name: { firstName: "Admin" }, studentID: "ADMIN" });
+      } else if (role === "division" || role === "divisionIncharge") {
+        setStudentData({ name: { firstName: "Division Incharge" }, studentID: "DIV-INC" });
+        // Optionally fetch specific incharge details here if an endpoint exists
+      }
     } catch (err) {
       console.error("Error fetching student data:", err);
     } finally {
@@ -109,8 +119,7 @@ export default function Header({ showSearch = false }) {
   };
 
   const studentName = studentData?.name
-    ? `${studentData.name.firstName || ""} ${
-        studentData.name.lastName || ""
+    ? `${studentData.name.firstName || ""} ${studentData.name.lastName || ""
       }`.trim()
     : "Student";
   const studentID = studentData?.studentID || "DMCE";

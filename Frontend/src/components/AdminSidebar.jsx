@@ -136,7 +136,9 @@ export default function AdminSidebar() {
           )}
           {!collapsed && (
             <div className="text-xs font-medium text-slate-500 mt-2 bg-blue-50 px-3 py-1 rounded-full">
-              Admin Portal
+              {localStorage.getItem("role") === "division" || localStorage.getItem("role") === "division_incharge"
+                ? "Division Incharge Portal"
+                : "Admin Portal"}
             </div>
           )}
         </div>

@@ -5,7 +5,6 @@ export const authService = {
   login: async (studentID, password) => {
     const response = await API.post("/auth/login", { studentID, password });
 
-    // ✅ ADDED: Save token to localStorage
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
       console.log("✅ Token saved to localStorage");
@@ -18,7 +17,6 @@ export const authService = {
   adminLogin: async (email, password) => {
     const response = await API.post("/auth/admin-login", { email, password });
 
-    // ✅ ADDED: Save token to localStorage
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
       console.log("✅ Token saved to localStorage");
@@ -27,13 +25,32 @@ export const authService = {
     return response.data;
   },
 
-  // Logout (works for both student and admin)
+  // Division Incharge Login (New)
+  divisionLogin: async (email, password, division) => {
+    // Sending email, password, and selected division to backend
+    const response = await API.post("/divisionIncharge/login", {
+      email,
+      password,
+      division
+    });
+
+    if (response.data.token) {
+      localStorage.setItem("token", response.data.token);
+      console.log("✅ Token saved to localStorage");
+    }
+
+    return response.data;
+  },
+
+  // Logout
   logout: async () => {
     const response = await API.get("/auth/logout");
 
-    // ✅ ADDED: Clear token from localStorage
     localStorage.removeItem("token");
-    console.log("🗑️ Token removed from localStorage");
+    localStorage.removeItem("role"); // Ensure role is cleared too
+    localStorage.removeItem("adminId");
+    localStorage.removeItem("adminEmail");
+    console.log("🗑️ Token and credentials removed from localStorage");
 
     return response.data;
   },

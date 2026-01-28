@@ -50,7 +50,7 @@ const importDivisionInchargeFromExcel = async (req, res) => {
 
     const nameCol = headers.findIndex(h => h.includes("name")) + 1;
     const yearCol = headers.findIndex(h => h.includes("year")) + 1;
-    const divisionCol  = headers.findIndex(h => h.includes("division")) + 1;
+    const divisionCol = headers.findIndex(h => h.includes("division")) + 1;
     const emailCol = headers.findIndex(h => h.includes("email")) + 1;
 
     if (!nameCol || !yearCol || !divisionCol || !emailCol) {
@@ -193,6 +193,66 @@ Password: ${job.password}`
   }
 };
 
+const loginDivisionIncharge = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email and password"
+      });
+    }
+
+    // Find division incharge
+    const divisionIncharge = await DivisionIncharge.findOne({ email });
+    if (!divisionIncharge) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials"
+      });
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, divisionIncharge.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials"
+      });
+    }
+
+    // Create Token
+    const jwt = require("jsonwebtoken");
+    const token = jwt.sign(
+      { id: divisionIncharge._id, role: "divisionIncharge", division: divisionIncharge.division },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: divisionIncharge._id,
+        name: divisionIncharge.name,
+        email: divisionIncharge.email,
+        role: "divisionIncharge",
+        division: divisionIncharge.division
+      }
+    });
+
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error logging in",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
-  importDivisionInchargeFromExcel
+  importDivisionInchargeFromExcel,
+  loginDivisionIncharge
 };

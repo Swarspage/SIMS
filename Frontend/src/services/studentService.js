@@ -43,7 +43,7 @@ export const studentService = {
 
   // Get all students (Admin only)
   getAllStudents: async () => {
-    const response = await API.get("/student/all");
+    const response = await API.get("/student", { params: { limit: 20 } });
     return response.data;
   },
 

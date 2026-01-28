@@ -13,8 +13,13 @@ export default function ProtectedRoute({ children, requiredRole }) {
   }
 
   // If logged in but wrong role, redirect to their correct dashboard
-  if (requiredRole && userRole !== requiredRole) {
-    if (userRole === "admin") {
+  const hasPermission = Array.isArray(requiredRole)
+    ? requiredRole.includes(userRole)
+    : userRole === requiredRole;
+
+  if (requiredRole && !hasPermission) {
+    if (userRole === "admin" || userRole === "division" || userRole === "division_incharge") {
+      // Handle both "division" (used in user's Login component) and "division_incharge" (used in backend/plan)
       return <Navigate to="/admin/dashboard" replace />;
     } else {
       return <Navigate to="/student/dashboard" replace />;
