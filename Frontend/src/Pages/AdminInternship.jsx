@@ -53,16 +53,16 @@ function InternshipCard({ internship, onView, onDelete }) {
         <p className="text-xs text-slate-500 mb-3">
           {internship?.startDate
             ? new Date(internship.startDate).toLocaleDateString("en-IN", {
-                month: "short",
-                day: "numeric",
-              })
+              month: "short",
+              day: "numeric",
+            })
             : "N/A"}{" "}
           -{" "}
           {internship?.endDate
             ? new Date(internship.endDate).toLocaleDateString("en-IN", {
-                month: "short",
-                day: "numeric",
-              })
+              month: "short",
+              day: "numeric",
+            })
             : "N/A"}
         </p>
 
@@ -110,12 +110,162 @@ function InternshipCard({ internship, onView, onDelete }) {
   );
 }
 
+// Detail View Modal Component
+function DetailModal({ internship, onClose }) {
+  if (!internship) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Internship Details</h2>
+            <p className="text-xs text-slate-500 mt-0.5">ID: {internship._id}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Modal Content */}
+        <div className="p-6 space-y-6">
+
+          {/* Main Info Section */}
+          <div className="flex flex-col sm:flex-row gap-6">
+            {/* Image */}
+            <div className="flex-shrink-0">
+              <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
+                <img
+                  src={internship.photoProof?.url || "https://via.placeholder.com/150?text=No+Image"}
+                  alt="Proof"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Basic Details */}
+            <div className="flex-1 space-y-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">{internship.companyName}</h3>
+                <p className="text-sm text-slate-500">
+                  {typeof internship?.stuID === "string" ? internship.stuID : internship?.stuID?.studentID || "Student ID N/A"}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
+                  {internship.internshipType}
+                </span>
+                <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full border border-purple-100">
+                  {internship.durationMonths} Months
+                </span>
+                {internship.stipendInfo?.isPaid && (
+                  <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full border border-green-100">
+                    Paid: ₹{internship.stipendInfo.stipend}/mo
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* Grid Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Start Date</p>
+              <p className="text-sm font-medium text-slate-800">
+                {internship.startDate ? new Date(internship.startDate).toLocaleDateString('en-IN', { dateStyle: 'long' }) : 'N/A'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">End Date</p>
+              <p className="text-sm font-medium text-slate-800">
+                {internship.endDate ? new Date(internship.endDate).toLocaleDateString('en-IN', { dateStyle: 'long' }) : 'N/A'}
+              </p>
+            </div>
+
+            <div className="sm:col-span-2">
+              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Company Address</p>
+              <p className="text-sm font-medium text-slate-800">
+                {internship.companyAddress || 'N/A'}
+              </p>
+            </div>
+
+            <div className="sm:col-span-2">
+              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">HR Email</p>
+              <p className="text-sm font-medium text-slate-800">
+                {internship.hrEmail || 'N/A'}
+              </p>
+            </div>
+          </div>
+
+          {/* Documents Section */}
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+            <h4 className="text-sm font-bold text-slate-900 mb-3">Attached Documents</h4>
+            <div className="flex flex-wrap gap-3">
+              {internship.internshipReport?.url ? (
+                <a
+                  href={internship.internshipReport.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  Internship Report
+                </a>
+              ) : (
+                <span className="text-xs text-slate-400 italic">No report uploaded</span>
+              )}
+
+              {internship.photoProof?.url && (
+                <a
+                  href={internship.photoProof.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  View Photo Proof
+                </a>
+              )}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Modal Footer */}
+        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Main Admin Internships Page Component
 export default function AdminInternship() {
   const [internships, setInternships] = useState([]);
   const [filteredInternships, setFilteredInternships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Modal State
+  const [selectedInternship, setSelectedInternship] = useState(null);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -169,14 +319,13 @@ export default function AdminInternship() {
 
     setFilteredInternships(filtered);
   };
+
   const handleView = (internship) => {
-    alert(
-      `🏢 INTERNSHIP DETAILS\n\nCompany: ${internship.companyName}\nDuration: ${
-        internship.durationMonths || "N/A"
-      } months\nType: ${internship.internshipType || "N/A"}\nStipend: ₹${
-        internship.stipendInfo?.stipend || 0
-      }/month`
-    );
+    setSelectedInternship(internship);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedInternship(null);
   };
 
   const handleDelete = async (id) => {
@@ -312,6 +461,14 @@ export default function AdminInternship() {
           </div>
         )}
       </div>
+
+      {/* Detail Modal */}
+      {selectedInternship && (
+        <DetailModal
+          internship={selectedInternship}
+          onClose={handleCloseModal}
+        />
+      )}
     </main>
   );
 }

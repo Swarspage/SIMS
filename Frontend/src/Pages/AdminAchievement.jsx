@@ -56,15 +56,15 @@ function AchievementCard({ achievement, onView, onDelete }) {
         <p className="text-xs text-slate-500 mb-3">
           {achievement?.date?.from
             ? new Date(achievement.date.from).toLocaleDateString("en-IN", {
-                month: "short",
-                day: "numeric",
-              })
+              month: "short",
+              day: "numeric",
+            })
             : achievement?.createdAt
-            ? new Date(achievement.createdAt).toLocaleDateString("en-IN", {
+              ? new Date(achievement.createdAt).toLocaleDateString("en-IN", {
                 month: "short",
                 day: "numeric",
               })
-            : "No Date"}
+              : "No Date"}
         </p>
 
         {/* Action Buttons */}
@@ -87,6 +87,158 @@ function AchievementCard({ achievement, onView, onDelete }) {
   );
 }
 
+// Detail View Modal Component
+function DetailModal({ achievement, onClose }) {
+  if (!achievement) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Achievement Details</h2>
+            <p className="text-xs text-slate-500 mt-0.5">ID: {achievement._id}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Modal Content */}
+        <div className="p-6 space-y-6">
+
+          {/* Main Info Section */}
+          <div className="flex flex-col sm:flex-row gap-6">
+            {/* Image */}
+            <div className="flex-shrink-0">
+              <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 flex items-center justify-center">
+                <img
+                  src={achievement.photographs?.eventPhoto?.url || "https://via.placeholder.com/300x200?text=No+Image"}
+                  alt="Proof"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Basic Details */}
+            <div className="flex-1 space-y-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">{achievement.title}</h3>
+                <p className="text-sm text-slate-500">
+                  {typeof achievement?.stuID === "string" ? achievement.stuID : achievement?.stuID?.studentID || "Student ID N/A"}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
+                  {achievement.category}
+                </span>
+                <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full border border-purple-100">
+                  {achievement.achievementType}
+                </span>
+                {achievement.level && (
+                  <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full border border-green-100">
+                    {achievement.level} Level
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* Grid Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Date</p>
+              <p className="text-sm font-medium text-slate-800">
+                {achievement?.date?.from
+                  ? new Date(achievement.date.from).toLocaleDateString("en-IN", { dateStyle: 'long' })
+                  : "N/A"
+                }
+                {achievement?.date?.to && ` - ${new Date(achievement.date.to).toLocaleDateString("en-IN", { dateStyle: 'long' })}`}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Rank/Position</p>
+              <p className="text-sm font-medium text-slate-800">
+                {achievement.rank || 'N/A'}
+              </p>
+            </div>
+
+            <div className="sm:col-span-2">
+              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Organizing Body</p>
+              <p className="text-sm font-medium text-slate-800">
+                {achievement.org || 'N/A'}
+              </p>
+            </div>
+
+            {achievement.description && (
+              <div className="sm:col-span-2">
+                <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Description</p>
+                <p className="text-sm font-medium text-slate-800">{achievement.description}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Documents Section */}
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+            <h4 className="text-sm font-bold text-slate-900 mb-3">Attached Documents</h4>
+            <div className="flex flex-wrap gap-3">
+              {achievement.certificateURL?.url ? (
+                <a
+                  href={achievement.certificateURL.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  Certificate
+                </a>
+              ) : (
+                <span className="text-xs text-slate-400 italic">No certificate uploaded</span>
+              )}
+
+              {achievement.photographs?.eventPhoto?.url && (
+                <a
+                  href={achievement.photographs.eventPhoto.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  View Photo
+                </a>
+              )}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Modal Footer */}
+        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Main Admin Achievements Page Component
 export default function AdminAchievements() {
   const [achievements, setAchievements] = useState([]);
@@ -96,6 +248,9 @@ export default function AdminAchievements() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedType, setSelectedType] = useState("");
+
+  // Modal State
+  const [selectedAchievement, setSelectedAchievement] = useState(null);
 
   // Fetch achievements from backend when component loads
   useEffect(() => {
@@ -152,9 +307,11 @@ export default function AdminAchievements() {
   };
 
   const handleView = (achievement) => {
-    alert(
-      `🏆 ACHIEVEMENT DETAILS\n\nTitle: ${achievement.title}\nCategory: ${achievement.category}\nType: ${achievement.achievementType}\nDescription: ${achievement.description}`
-    );
+    setSelectedAchievement(achievement);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedAchievement(null);
   };
 
   const handleDelete = async (id) => {
@@ -306,6 +463,14 @@ export default function AdminAchievements() {
           </div>
         )}
       </div>
+
+      {/* Detail Modal */}
+      {selectedAchievement && (
+        <DetailModal
+          achievement={selectedAchievement}
+          onClose={handleCloseModal}
+        />
+      )}
     </main>
   );
 }

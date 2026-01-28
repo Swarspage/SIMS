@@ -67,9 +67,9 @@ function ActivityCard({ activity, onView, onDelete }) {
         <p className="text-xs text-slate-500 mb-3">
           {activity?.date
             ? new Date(activity.date).toLocaleDateString("en-IN", {
-                month: "short",
-                day: "numeric",
-              })
+              month: "short",
+              day: "numeric",
+            })
             : "No Date"}
         </p>
 
@@ -103,6 +103,114 @@ function ActivityCard({ activity, onView, onDelete }) {
   );
 }
 
+// Detail View Modal Component
+function DetailModal({ activity, onClose }) {
+  if (!activity) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Activity Details</h2>
+            <p className="text-xs text-slate-500 mt-0.5">ID: {activity._id}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Modal Content */}
+        <div className="p-6 space-y-6">
+
+          {/* Main Info Section */}
+          <div className="flex flex-col sm:flex-row gap-6">
+            {/* Image */}
+            <div className="flex-shrink-0">
+              <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 flex items-center justify-center">
+                <img
+                  src={activity.certificateURL?.url || "https://via.placeholder.com/300x200?text=No+Certificate"}
+                  alt="Certificate"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Basic Details */}
+            <div className="flex-1 space-y-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">{activity.title}</h3>
+                <p className="text-sm text-slate-500">
+                  {typeof activity?.stuID === "string" ? activity.stuID : activity?.stuID?.studentID || "Student ID N/A"}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
+                  {activity.type}
+                </span>
+                <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full border border-green-100">
+                  {activity.date ? new Date(activity.date).toLocaleDateString("en-IN", { dateStyle: 'long' }) : "No Date"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* Details */}
+          <div>
+            <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-2">Description</p>
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 text-sm text-slate-700 leading-relaxed">
+              {activity.description || "No description provided."}
+            </div>
+          </div>
+
+          {/* Documents Section */}
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+            <h4 className="text-sm font-bold text-slate-900 mb-3">Attached Documents</h4>
+            <div className="flex flex-wrap gap-3">
+              {activity.certificateURL?.url ? (
+                <a
+                  href={activity.certificateURL.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  Download Certificate
+                </a>
+              ) : (
+                <span className="text-xs text-slate-400 italic">No certificate uploaded</span>
+              )}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Modal Footer */}
+        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Main Admin Activity Component
 export default function AdminActivity() {
   const [activities, setActivities] = useState([]);
@@ -111,6 +219,9 @@ export default function AdminActivity() {
   const [error, setError] = useState(null);
   const [selectedType, setSelectedType] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Modal State
+  const [selectedActivity, setSelectedActivity] = useState(null);
 
   // Fetch activities from backend
   useEffect(() => {
@@ -162,9 +273,11 @@ export default function AdminActivity() {
   };
 
   const handleView = (activity) => {
-    alert(
-      `📋 ACTIVITY DETAILS\n\nTitle: ${activity.title}\nType: ${activity.type}\nDescription: ${activity.description}`
-    );
+    setSelectedActivity(activity);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedActivity(null);
   };
 
   const handleDelete = async (id) => {
@@ -298,6 +411,14 @@ export default function AdminActivity() {
           </div>
         )}
       </div>
+
+      {/* Detail Modal */}
+      {selectedActivity && (
+        <DetailModal
+          activity={selectedActivity}
+          onClose={handleCloseModal}
+        />
+      )}
     </main>
   );
 }

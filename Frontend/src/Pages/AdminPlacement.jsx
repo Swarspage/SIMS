@@ -61,10 +61,10 @@ function PlacementCard({ placement, onView, onDelete }) {
         <p className="text-xs text-slate-500 mb-3">
           {placement?.placementDate
             ? new Date(placement.placementDate).toLocaleDateString("en-IN", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "N/A"}
         </p>
 
@@ -189,6 +189,174 @@ function HigherStudyCard({ higherStudy, onView, onDelete }) {
   );
 }
 
+// Detail View Modal Component
+function DetailModal({ item, type, onClose }) {
+  if (!item) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">
+              {type === "placement" ? "Placement Details" : "Higher Study Details"}
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">ID: {item._id}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Modal Content */}
+        <div className="p-6 space-y-6">
+
+          {/* Main Info Section */}
+          <div className="flex flex-col sm:flex-row gap-6">
+            {/* Image */}
+            <div className="flex-shrink-0">
+              <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 flex items-center justify-center">
+                {(type === "placement" ? item.placementProof?.url : item.marksheet?.url) ? (
+                  <img
+                    src={type === "placement" ? item.placementProof.url : item.marksheet.url}
+                    alt="Proof"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-4xl">🎓</span>
+                )}
+              </div>
+            </div>
+
+            {/* Basic Details */}
+            <div className="flex-1 space-y-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  {type === "placement" ? item.companyName : item.universityName}
+                </h3>
+                <p className="text-sm text-slate-500">
+                  {typeof item?.stuID === "string" ? item.stuID : item?.stuID?.studentID || "Student ID N/A"}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {type === "placement" ? (
+                  <>
+                    <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
+                      {item.jobRole}
+                    </span>
+                    <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full border border-green-100">
+                      ₹{item.ctc} LPA
+                    </span>
+                    <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full border border-purple-100">
+                      {item.placementType}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
+                      {item.degree}
+                    </span>
+                    <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full border border-purple-100">
+                      {item.country}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* Grid Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+            {type === "placement" ? (
+              <>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Company Address</p>
+                  <p className="text-sm font-medium text-slate-800">{item.companyAddress || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">HR Email</p>
+                  <p className="text-sm font-medium text-slate-800">{item.hrEmail || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Placement Date</p>
+                  <p className="text-sm font-medium text-slate-800">
+                    {item.placementDate ? new Date(item.placementDate).toLocaleDateString('en-IN', { dateStyle: 'long' }) : 'N/A'}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Specialization</p>
+                  <p className="text-sm font-medium text-slate-800">{item.specialization || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Duration</p>
+                  <p className="text-sm font-medium text-slate-800">{item.duration || 'N/A'}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">University Address</p>
+                  <p className="text-sm font-medium text-slate-800">{item.universityAddress || 'N/A'}</p>
+                </div>
+              </>
+            )}
+
+            {item.description && (
+              <div className="sm:col-span-2">
+                <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Description</p>
+                <p className="text-sm font-medium text-slate-800">{item.description}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Documents Section */}
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+            <h4 className="text-sm font-bold text-slate-900 mb-3">Attached Documents</h4>
+            <div className="flex flex-wrap gap-3">
+              {(type === "placement" ? item.placementProof?.url : item.marksheet?.url) ? (
+                <a
+                  href={type === "placement" ? item.placementProof.url : item.marksheet.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  {type === "placement" ? "Placement Proof" : "Marksheet/Proof"}
+                </a>
+              ) : (
+                <span className="text-xs text-slate-400 italic">No proof uploaded</span>
+              )}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Modal Footer */}
+        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Main Admin Placement Component
 export default function AdminPlacement() {
   const [activeTab, setActiveTab] = useState("placements");
@@ -197,6 +365,10 @@ export default function AdminPlacement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Modal State
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [modalType, setModalType] = useState(null); // "placement" or "higherStudy"
 
   useEffect(() => {
     if (activeTab === "placements") {
@@ -239,19 +411,18 @@ export default function AdminPlacement() {
   };
 
   const handleViewPlacement = (placement) => {
-    alert(
-      `📊 PLACEMENT DETAILS\n\nCompany: ${placement.companyName}\nRole: ${
-        placement.jobRole
-      }\nCTC: ₹${placement.ctc} LPA\nDate: ${new Date(
-        placement.placementDate
-      ).toLocaleDateString()}`
-    );
+    setSelectedItem(placement);
+    setModalType("placement");
   };
 
   const handleViewHigherStudy = (higherStudy) => {
-    alert(
-      `🎓 HIGHER STUDIES DETAILS\n\nUniversity: ${higherStudy.universityName}\nDegree: ${higherStudy.degree}\nSpecialization: ${higherStudy.specialization}\nCountry: ${higherStudy.country}`
-    );
+    setSelectedItem(higherStudy);
+    setModalType("higherStudy");
+  };
+
+  const handleCloseModal = () => {
+    setSelectedItem(null);
+    setModalType(null);
   };
 
   const handleDeletePlacement = async (id) => {
@@ -333,11 +504,10 @@ export default function AdminPlacement() {
           {/* Search */}
           <input
             type="text"
-            placeholder={`Search by ${
-              activeTab === "placements"
-                ? "company, role, ID"
-                : "university, degree"
-            }...`}
+            placeholder={`Search by ${activeTab === "placements"
+              ? "company, role, ID"
+              : "university, degree"
+              }...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white flex-1 min-w-[250px] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
@@ -347,22 +517,20 @@ export default function AdminPlacement() {
           <div className="flex gap-3 ml-auto">
             <button
               onClick={() => setActiveTab("placements")}
-              className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-                activeTab === "placements"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
+              className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${activeTab === "placements"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
             >
               📊 Placements
             </button>
 
             <button
               onClick={() => setActiveTab("higherStudies")}
-              className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-                activeTab === "higherStudies"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
+              className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${activeTab === "higherStudies"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
             >
               🎓 Higher Studies
             </button>
@@ -411,12 +579,10 @@ export default function AdminPlacement() {
             </svg>
             <p className="text-slate-600 text-lg font-medium">
               {searchQuery
-                ? `No ${
-                    activeTab === "placements" ? "placements" : "higher studies"
-                  } match your search.`
-                : `No ${
-                    activeTab === "placements" ? "placements" : "higher studies"
-                  } found!`}
+                ? `No ${activeTab === "placements" ? "placements" : "higher studies"
+                } match your search.`
+                : `No ${activeTab === "placements" ? "placements" : "higher studies"
+                } found!`}
             </p>
           </div>
         )}
@@ -426,24 +592,33 @@ export default function AdminPlacement() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {activeTab === "placements"
               ? filteredPlacements.map((p) => (
-                  <PlacementCard
-                    key={p._id}
-                    placement={p}
-                    onView={handleViewPlacement}
-                    onDelete={handleDeletePlacement}
-                  />
-                ))
+                <PlacementCard
+                  key={p._id}
+                  placement={p}
+                  onView={handleViewPlacement}
+                  onDelete={handleDeletePlacement}
+                />
+              ))
               : filteredHigherStudies.map((h) => (
-                  <HigherStudyCard
-                    key={h._id}
-                    higherStudy={h}
-                    onView={handleViewHigherStudy}
-                    onDelete={handleDeleteHigherStudy}
-                  />
-                ))}
+                <HigherStudyCard
+                  key={h._id}
+                  higherStudy={h}
+                  onView={handleViewHigherStudy}
+                  onDelete={handleDeleteHigherStudy}
+                />
+              ))}
           </div>
         )}
       </div>
+
+      {/* Detail Modal */}
+      {selectedItem && (
+        <DetailModal
+          item={selectedItem}
+          type={modalType}
+          onClose={handleCloseModal}
+        />
+      )}
     </main>
   );
 }
