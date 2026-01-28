@@ -225,7 +225,7 @@ const loginDivisionIncharge = async (req, res) => {
     // Create Token
     const jwt = require("jsonwebtoken");
     const token = jwt.sign(
-      { id: divisionIncharge._id, role: "divisionIncharge", division: divisionIncharge.division },
+      { id: divisionIncharge._id, role: "divisionIncharge", division: divisionIncharge.division, year: divisionIncharge.year },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -238,7 +238,8 @@ const loginDivisionIncharge = async (req, res) => {
         name: divisionIncharge.name,
         email: divisionIncharge.email,
         role: "divisionIncharge",
-        division: divisionIncharge.division
+        division: divisionIncharge.division,
+        year: divisionIncharge.year
       }
     });
 
