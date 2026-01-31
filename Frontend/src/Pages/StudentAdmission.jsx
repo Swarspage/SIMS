@@ -72,12 +72,22 @@ export default function StudentAdmission() {
     setError("");
     setSuccess("");
     try {
-      const { admissionDate, ...dataToSend } = formData;
+      // Filter out fields not allowed by backend validation
+      const {
+        admissionDate,
+        year,
+        div,
+        isFeesPaid,
+        ...baseData
+      } = formData;
+
       if (admission) {
-        await admissionService.updateAdmission(admission._id, dataToSend);
+        // Update schema doesn't allow academicYear, so remove it
+        const { academicYear, ...updateData } = baseData;
+        await admissionService.updateAdmission(admission._id, updateData);
         setSuccess("Admission updated successfully!");
       } else {
-        await admissionService.createAdmission(dataToSend);
+        await admissionService.createAdmission(baseData);
         setSuccess("Admission created successfully!");
       }
       setIsEditMode(false);
@@ -565,8 +575,8 @@ export default function StudentAdmission() {
             </div>
           </div>
 
-          {isEditMode && (
-            <div className="flex flex-col sm:flex-row justify-end gap-4 px-4 sm:px-8 py-6 bg-slate-50 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row justify-end gap-4 px-4 sm:px-8 py-6 bg-slate-50 border-t border-slate-200">
+            {admission && (
               <button
                 type="button"
                 onClick={() => {
@@ -579,15 +589,15 @@ export default function StudentAdmission() {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-              >
-                {loading ? "Submitting..." : "Submit"}
-              </button>
-            </div>
-          )}
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              {loading ? "Submitting..." : "Submit"}
+            </button>
+          </div>
         </div>
       </form>
     </main>
