@@ -330,8 +330,6 @@ export default function AdminActivity() {
           >
             <option value="">All Types</option>
             <option value="Committee">Committee</option>
-            <option value="Sports">Sports</option>
-            <option value="Hackathon">Hackathon</option>
           </select>
 
           {/* Clear Filters */}

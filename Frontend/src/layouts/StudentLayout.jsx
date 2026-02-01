@@ -5,7 +5,7 @@ import Header from "../components/Header";
 
 export default function StudentLayout() {
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen bg-gray-100 md:flex">
       <StudentSidebar />
       <div className="flex-1">
         <Header showSearch={false} />

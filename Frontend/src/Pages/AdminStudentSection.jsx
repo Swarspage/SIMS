@@ -685,19 +685,15 @@ export default function AdminStudentSection() {
             {/* Year & Branch */}
             <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="px-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none cursor-pointer">
               <option value="">Year (All)</option>
+              <option value="FE">FE</option>
               <option value="SE">SE</option>
               <option value="TE">TE</option>
               <option value="BE">BE</option>
             </select>
 
             <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} className="px-4 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none cursor-pointer">
-              <option value="">Branch (All)</option>
               <option value="Computer">Computer</option>
-              <option value="IT">IT</option>
-              <option value="AIDS">AIDS</option>
-              <option value="Mechanical">Mechanical</option>
-              <option value="Civil">Civil</option>
-              <option value="Chemical">Chemical</option>
+
             </select>
           </div>
         </div>

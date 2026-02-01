@@ -434,12 +434,6 @@ export default function StudentAdmission() {
                   >
                     <option value="">Select Course</option>
                     <option value="computer">Computer Engineering</option>
-                    <option value="mechanical">Mechanical Engineering</option>
-                    <option value="civil">Civil Engineering</option>
-                    <option value="electrical">Electrical Engineering</option>
-                    <option value="electronics">Electronics Engineering</option>
-                    <option value="it">Information Technology</option>
-                    <option value="aids">AI and Data Science</option>
                   </select>
                 </div>
               </div>

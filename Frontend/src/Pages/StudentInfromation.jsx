@@ -77,9 +77,14 @@ export default function StudentInformation() {
         if (student.studentPhoto?.url) {
           setPhotoPreview(student.studentPhoto.url);
         }
+      } else {
+        // If no student data, enable edit mode for creation
+        setIsEditMode(true);
       }
     } catch (err) {
       console.error("Error fetching student data:", err);
+      // If error (e.g. 404), assume new user and enable edit mode so buttons appear
+      setIsEditMode(true);
     }
   };
 
@@ -720,11 +725,7 @@ export default function StudentInformation() {
                   >
                     <option value="">Select Branch</option>
                     <option value="Computer">Computer</option>
-                    <option value="IT">IT</option>
-                    <option value="AIDS">AIDS</option>
-                    <option value="Mechanical">Mechanical</option>
-                    <option value="Civil">Civil</option>
-                    <option value="Chemical">Chemical</option>
+
                   </select>
                 </div>
                 <div>

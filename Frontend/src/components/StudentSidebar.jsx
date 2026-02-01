@@ -93,94 +93,125 @@ export default function StudentSidebar() {
   };
 
   return (
-    <aside
-      className={`bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800 flex flex-col justify-between h-screen sticky top-0 p-4 shadow-lg border-r border-slate-200 transition-all duration-300
-        ${collapsed ? "w-20 min-w-[80px]" : "w-64 min-w-[256px]"}`}
-      style={{ zIndex: 50 }}
-    >
-      {/* Collapse Button */}
+    <>
+      {/* Mobile Toggle Button */}
       <button
-        className="absolute -right-4 top-6 z-10 bg-blue-500 text-white rounded-full p-1 shadow transition-all duration-300 group"
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
         onClick={() => setCollapsed(!collapsed)}
-        title={collapsed ? "Expand" : "Collapse"}
       >
-        {collapsed ? (
-          <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
-            <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="2" />
-          </svg>
-        ) : (
-          <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
-            <path d="M13 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" />
-          </svg>
-        )}
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
       </button>
-      {/* Top Section */}
-      <div className="flex flex-col">
-        {/* Logo Section */}
+
+      {/* Mobile Overlay */}
+      {!collapsed && (
         <div
-          className={`flex flex-col items-center mb-12 pb-8 border-b-2 border-slate-200 ${
-            collapsed ? "gap-2" : ""
-          }`}
+          className="md:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+          onClick={() => setCollapsed(true)}
+        />
+      )}
+
+      {/* Sidebar Container */}
+      <aside
+        className={`bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800 flex flex-col justify-between h-screen top-0 p-4 shadow-lg border-r border-slate-200 transition-all duration-300 z-50
+          fixed md:sticky left-0
+          ${collapsed ? "-translate-x-full md:translate-x-0 md:w-20 md:min-w-[80px]" : "translate-x-0 w-64 min-w-[256px]"}
+        `}
+      >
+        {/* Collapse Button (Desktop Only) */}
+        <button
+          className="hidden md:block absolute -right-4 top-6 z-10 bg-blue-500 text-white rounded-full p-1 shadow transition-all duration-300 group"
+          onClick={() => setCollapsed(!collapsed)}
+          title={collapsed ? "Expand" : "Collapse"}
         >
-          <div className="relative mb-3">
-            <img
-              src={logo}
-              alt="logo"
-              className={`relative ${
-                collapsed ? "w-10 h-10" : "w-20 h-20"
-              } object-contain transition-all`}
-            />
-          </div>
-          {!collapsed && (
-            <div className="text-xs font-semibold text-center text-slate-700 leading-tight">
-              Datta Meghe College Of Engineering
-            </div>
+          {collapsed ? (
+            <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
+              <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="2" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
+              <path d="M13 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" />
+            </svg>
           )}
-        </div>
-        {/* Navigation */}
-        <nav className="flex flex-col gap-2">
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`group px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 text-sm font-medium
-                  ${
-                    isActive
+        </button>
+
+        {/* Close Button (Mobile Only) */}
+        <button
+          className="md:hidden absolute right-4 top-4 text-slate-500 hover:text-slate-800"
+          onClick={() => setCollapsed(true)}
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Top Section */}
+        <div className="flex flex-col">
+          {/* Logo Section */}
+          <div
+            className={`flex flex-col items-center mb-12 pb-8 border-b-2 border-slate-200 ${collapsed ? "md:gap-2" : ""
+              }`}
+          >
+            <div className="relative mb-3">
+              <img
+                src={logo}
+                alt="logo"
+                className={`relative ${collapsed ? "md:w-10 md:h-10 w-20 h-20" : "w-20 h-20"
+                  } object-contain transition-all`}
+              />
+            </div>
+            {(!collapsed || window.innerWidth < 768) && (
+              <div className={`text-xs font-semibold text-center text-slate-700 leading-tight ${collapsed ? "md:hidden" : "block"}`}>
+                Datta Meghe College Of Engineering
+              </div>
+            )}
+          </div>
+          {/* Navigation */}
+          <nav className="flex flex-col gap-2">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  onClick={() => window.innerWidth < 768 && setCollapsed(true)}
+                  className={`group px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 text-sm font-medium
+                    ${isActive
                       ? "bg-blue-500 text-white shadow-md"
                       : "text-slate-700 hover:bg-slate-200 hover:text-slate-900"
-                  }
-                `}
-              >
-                <span className="flex-shrink-0 flex items-center justify-center">
-                  {getIcon(item.name, isActive)}
-                </span>
-                {!collapsed && <span>{item.name}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-      {/* Bottom Section - Logout */}
-      <div className="flex flex-col gap-3 pt-6 border-t-2 border-slate-200">
-        <button
-          onClick={handleLogout}
-          className="px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 text-sm font-medium w-full
-            bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
-        >
-          <svg
-            className="w-5 h-5 flex-shrink-0"
-            stroke="currentColor"
-            fill="none"
-            strokeWidth="1.5"
-            viewBox="0 0 24 24"
+                    }
+                  `}
+                >
+                  <span className="flex-shrink-0 flex items-center justify-center">
+                    {getIcon(item.name, isActive)}
+                  </span>
+                  <span className={`${collapsed ? "md:hidden" : "block"}`}>{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+        {/* Bottom Section - Logout */}
+        <div className="flex flex-col gap-3 pt-6 border-t-2 border-slate-200">
+          <button
+            onClick={handleLogout}
+            className="px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 text-sm font-medium w-full
+              bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
           >
-            <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-          </svg>
-          {!collapsed && <span>Logout</span>}
-        </button>
-      </div>
-    </aside>
+            <svg
+              className="w-5 h-5 flex-shrink-0"
+              stroke="currentColor"
+              fill="none"
+              strokeWidth="1.5"
+              viewBox="0 0 24 24"
+            >
+              <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            <span className={`${collapsed ? "md:hidden" : "block"}`}>Logout</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
