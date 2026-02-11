@@ -1,31 +1,106 @@
 const { cloudinary } = require("../config/cloudinaryConfig");
-const Internship = require("../models/Internship");
-const Placement = require("../models/Placement");
-const HigherStudies = require("../models/HigherStudies");
 const { deleteFromCloudinary } = require("./DeleteFromCloudinary");
 
-// Main cascade delete utility
-const cascadeDeleteStudent = async (studentId) => {
-	const relatedModels = [
-		{ model: Internship, fields: ["internshipReport.publicId", "photoProof.publicId"] },
-		{ model: Placement, fields: ["placementProof.publicId"] },
-		{ model: HigherStudies, fields: ["marksheet.publicId"] },
-	];
+const Student = require("../models/Student");
+const Achievement = require("../models/Achievement");
+const Activity = require("../models/Activity");
+const Admission = require("../models/Admission");
+const HigherStudies = require("../models/HigherStudies");
+const Internship = require("../models/Internship");
+const Placement = require("../models/Placement");
+const SemesterInfo = require("../models/SemesterInfo");
 
-	for (const { model, fields } of relatedModels) {
-		const docs = await model.find({ stuID: studentId });
 
-		for (const doc of docs) {
-			// Delete all Cloudinary files for each document
-			for (const fieldPath of fields) {
-				const publicId = fieldPath.split(".").reduce((obj, key) => obj?.[key], doc);
-				if (publicId) await deleteFromCloudinary(publicId);
-			}
+// Helper → Safely read nested field path (e.g., "photoProof.publicId")
+const getNestedValue = (obj, path) =>
+    path.split(".").reduce((acc, key) => acc?.[key], obj);
 
-			// Delete the document itself
-			await model.findByIdAndDelete(doc._id);
-		}
-	}
+
+// Universal Cloudinary file deletion
+const deleteCloudinaryFiles = async (documents, fieldPaths) => {
+    for (const doc of documents) {
+        for (const fieldPath of fieldPaths) {
+            const publicId = getNestedValue(doc, fieldPath);
+            if (publicId) await deleteFromCloudinary(publicId);
+        }
+    }
 };
+
+
+// Main CASCADE DELETE function
+const cascadeDeleteStudent = async (studentId) => {
+    try {
+        // STUDENT: Delete Photo
+        const student = await Student.findById(studentId);
+        if (student?.studentPhoto?.publicId) {
+            await deleteFromCloudinary(student.studentPhoto.publicId);
+        }
+
+
+        // ACHIEVEMENTS
+        const achievements = await Achievement.find({ stuID: studentId });
+        await deleteCloudinaryFiles(achievements, [
+            "photographs.eventPhoto.publicId",
+            "photographs.certificate.publicId",
+            "course_certificate.publicId",
+        ]);
+        await Achievement.deleteMany({ stuID: studentId });
+
+
+        // ACTIVITIES
+        const activities = await Activity.find({ stuID: studentId });
+        await deleteCloudinaryFiles(activities, [
+            "certificateURL.publicId",
+        ]);
+        await Activity.deleteMany({ stuID: studentId });
+
+
+        // ADMISSIONS
+        await Admission.deleteMany({ stuID: studentId });
+
+
+        // HIGHER STUDIES
+        const higherStudies = await HigherStudies.find({ stuID: studentId });
+        await deleteCloudinaryFiles(higherStudies, [
+            "marksheet.publicId",
+            "idCardPhoto.publicId",
+        ]);
+        await HigherStudies.deleteMany({ stuID: studentId });
+
+
+        // INTERNSHIP
+        const internships = await Internship.find({ stuID: studentId });
+        await deleteCloudinaryFiles(internships, [
+            "internshipReport.publicId",
+            "photoProof.publicId",
+        ]);
+        await Internship.deleteMany({ stuID: studentId });
+
+
+        // PLACEMENTS
+        const placements = await Placement.find({ stuID: studentId });
+        await deleteCloudinaryFiles(placements, [
+            "placementProof.publicId",
+        ]);
+        await Placement.deleteMany({ stuID: studentId });
+
+
+        // SEMESTER INFO
+        await SemesterInfo.deleteMany({ stuID: studentId });
+
+
+        // FINALLY DELETE STUDENT
+        await Student.findByIdAndDelete(studentId);
+
+
+        console.log("Cascade delete completed for student:", studentId);
+        return true;
+
+    } catch (err) {
+        console.error("Cascade delete failed:", err);
+        return false;
+    }
+};
+
 
 module.exports = cascadeDeleteStudent;
