@@ -1,6 +1,6 @@
 const DivisionIncharge = require("../models/DivisionIncharge");
 const ExcelJS = require("exceljs");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const sgMail = require("@sendgrid/mail");
 

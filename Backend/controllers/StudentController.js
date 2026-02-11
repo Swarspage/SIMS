@@ -8,7 +8,7 @@ const fs = require("fs");
 const path = require("path");
 
 const crypto = require("crypto");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 
 require("dotenv").config();
@@ -33,8 +33,8 @@ const ExcelJS = require("exceljs"); // replaced xlsx
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.emailUser,       // your email
-    pass: process.env.emailPassword,          // app password if 2FA enabled
+    user: process.env.EMAIL_USER || process.env.emailUser,       // your email
+    pass: process.env.EMAIL_PASSWORD || process.env.emailPassword,          // app password if 2FA enabled
   },
 });
 

@@ -16,7 +16,8 @@ console.log(
   process.env.ADMIN_EMAIL ? "✅ YES" : "❌ NO"
 );
 
-const PORT = 5000;
+// ✅ ADDED PORT CONFIG
+const PORT = process.env.PORT || 5000;
 const app = express();
 
 connectDB();
@@ -24,7 +25,11 @@ connectDB();
 // ✅ FIXED CORS - More permissive for dev
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://student-website-seven.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://student-website-seven.vercel.app",
+      process.env.FRONTEND_URL // Support env-based URL
+    ].filter(Boolean), // Remove undefined/null if env var is missing
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
