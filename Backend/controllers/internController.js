@@ -13,13 +13,13 @@ const fileConfigs = [
   {
     fieldName: "internshipReport",
     allowedTypes: ["application/pdf"],
-    maxSize: 5 * 1024 * 1024,
+    maxSize: 500 * 1024, // 500KB
     friendlyName: "Internship Report"
   },
   {
     fieldName: "photoProof",
     allowedTypes: ["image/jpeg", "image/jpg", "image/png"],
-    maxSize: 5 * 1024 * 1024,
+    maxSize: 500 * 1024, // 500KB
     friendlyName: "Photo Proof"
   }
 ];

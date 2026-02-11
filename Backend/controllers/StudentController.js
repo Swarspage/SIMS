@@ -60,6 +60,7 @@ const allowedTypes = [
   "application/vnd.ms-excel", // .xls
 ];
 
+// for excel import
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
 
 // Helper to safely get cell value as string

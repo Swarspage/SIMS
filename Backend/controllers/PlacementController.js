@@ -10,7 +10,7 @@ const fileConfigs = [
   {
     fieldName: "placementProof",
     allowedTypes: ["application/pdf"],
-    maxSize: 5 * 1024 * 1024,
+    maxSize: 500 * 1024, // 500KB
     friendlyName: "Placement Proof"
   }
 ];

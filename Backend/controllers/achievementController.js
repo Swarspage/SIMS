@@ -15,19 +15,19 @@ const fileConfigs = [
   {
     fieldName: "eventPhoto",
     allowedTypes: ["image/jpeg", "image/png", "image/jpg"],
-    maxSize: 5 * 1024 * 1024,
+    maxSize: 500 * 1024, // 500KB
     friendlyName: "Event Photo",
   },
   {
     fieldName: "certificate",
     allowedTypes: ["image/jpeg", "image/png", "image/jpg", "application/pdf"],
-    maxSize: 5 * 1024 * 1024,
+    maxSize: 500 * 1024, // 500KB
     friendlyName: "Certificate",
   },
   {
     fieldName: "course_certificate",
     allowedTypes: ["image/jpeg", "image/png", "image/jpg", "application/pdf"],
-    maxSize: 5 * 1024 * 1024,
+    maxSize: 500 * 1024, // 500KB
     friendlyName: "Course Certificate",
   },
 ];

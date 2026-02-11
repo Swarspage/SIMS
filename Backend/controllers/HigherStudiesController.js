@@ -13,13 +13,13 @@ const fileConfigs = [
   {
     fieldName: "marksheet",
     allowedTypes: ["application/pdf"],
-    maxSize: 5 * 1024 * 1024,
+    maxSize: 500 * 1024, // 500KB
     friendlyName: "Marksheet"
   },
   {
     fieldName: "idCardPhoto",
     allowedTypes: ["image/jpeg", "image/jpg", "image/png"],
-    maxSize: 5 * 1024 * 1024,
+    maxSize: 500 * 1024, // 500KB
     friendlyName: "ID Card Photo"
   }
 ];
