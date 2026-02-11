@@ -1,3 +1,5 @@
+// Division Incharge Login Schema Validation is in validators/DivisionInchargeValidation.js
+
 const Joi = require("joi");
 
 const signupSchema = Joi.object({
@@ -22,5 +24,11 @@ const loginSchema = Joi.object({
 });
 
 
+const adminLoginSchema = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().required()
+});
 
-module.exports = { signupSchema, loginSchema };
+
+
+module.exports = { signupSchema, loginSchema, adminLoginSchema };

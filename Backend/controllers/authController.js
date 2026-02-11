@@ -4,7 +4,7 @@ const DivisionIncharge = require("../models/DivisionIncharge");
 
 const Student = require("../models/Student.js")
 const Admin = require('../models/Admin.js');
-const { signupSchema, loginSchema } = require('../validators/authValidation.js');
+const { signupSchema, loginSchema, adminLoginSchema } = require('../validators/authValidation.js');
 
 const { divisionInchargeLoginSchema } = require("../validators/divisionInchargeValidation.js");
 
@@ -159,6 +159,22 @@ exports.login = async (req, res) => {
 exports.adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    // Joi validation
+    const { error } = adminLoginSchema.validate(req.body, { abortEarly: false });
+    if (error) {
+      const validationErrors = error.details.map(err => ({
+          field: err.path[0],
+          message: err.message
+      }));
+
+      return res.status(400).json({
+          success: false,
+          message: "Validation failed",
+          errors: validationErrors
+      });
+    }
+
 
     const admin = await Admin.findOne({ email });
     if (!admin) return res.status(400).json({ success: false, message: 'Invalid credentials' });
