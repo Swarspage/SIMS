@@ -253,7 +253,50 @@ const loginDivisionIncharge = async (req, res) => {
   }
 };
 
+const getAllDivisionIncharges = async (req, res) => {
+  try {
+    const incharges = await DivisionIncharge.find().sort({ createdAt: -1 });
+    res.status(200).json({
+      success: true,
+      data: incharges
+    });
+  } catch (error) {
+    console.error("Error fetching division incharges:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching division incharges"
+    });
+  }
+};
+
+const deleteDivisionIncharge = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedIncharge = await DivisionIncharge.findByIdAndDelete(id);
+
+    if (!deletedIncharge) {
+      return res.status(404).json({
+        success: false,
+        message: "Division Incharge not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Division Incharge deleted successfully"
+    });
+  } catch (error) {
+    console.error("Error deleting division incharge:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting division incharge"
+    });
+  }
+};
+
 module.exports = {
   importDivisionInchargeFromExcel,
-  loginDivisionIncharge
+  loginDivisionIncharge,
+  getAllDivisionIncharges,
+  deleteDivisionIncharge
 };

@@ -21,6 +21,23 @@ export const divisionInchargeService = {
         // This is a placeholder structure in case the route is added later.
         // const response = await API.get("/divisionIncharge/export", { responseType: 'blob' });
         // return response.data;
+        // return response.data;
         throw new Error("Export feature not supported by backend yet.");
+    },
+
+    // Get All Division Incharges
+    getAll: async () => {
+        const response = await API.get("/divisionIncharge", {
+            withCredentials: true,
+        });
+        return response.data;
+    },
+
+    // Delete Division Incharge
+    delete: async (id) => {
+        const response = await API.delete(`/divisionIncharge/${id}`, {
+            withCredentials: true,
+        });
+        return response.data;
     }
 };

@@ -256,17 +256,50 @@ Password: ${job.password}`
 // --- exportAllStudentsToExcel ---
 const exportAllStudentsToExcel = async (req, res) => {
   try {
+    const { year, branch, division, search, firstName, middleName, lastName, motherName, city, bloodGroup, category } = req.query;
 
     const filter = {};
 
+    // 1. Role-based base filter
     if (req.user.role === "divisionIncharge") {
       filter.division = req.user.division;
       filter.year = req.user.year;
+    } else if (req.user.role === "admin") {
+      // Admin explicit filters
+      if (division) filter.division = division;
+      if (year) filter.year = year;
+      if (branch) filter.branch = branch;
+    } else {
+      return res.status(403).json({ success: false, message: "Unauthorized role." });
     }
 
-    const students = await Student.find(filter);
+    // 2. Apply Advanced Filters (Same as getStudents)
+    if (firstName) filter['name.firstName'] = { $regex: firstName, $options: 'i' };
+    if (middleName) filter['name.middleName'] = { $regex: middleName, $options: 'i' };
+    if (lastName) filter['name.lastName'] = { $regex: lastName, $options: 'i' };
+    if (motherName) filter['name.motherName'] = { $regex: motherName, $options: 'i' };
+
+    if (city) filter['currentAddress.city'] = { $regex: city, $options: 'i' };
+    if (bloodGroup) filter.bloodGroup = bloodGroup;
+    if (category) filter.category = category;
+
+    // 3. Apply Search Filter
+    if (search) {
+      const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"); // regex safety
+      filter.$or = [
+        { 'name.firstName': { $regex: safeSearch, $options: 'i' } },
+        { 'name.middleName': { $regex: safeSearch, $options: 'i' } },
+        { 'name.lastName': { $regex: safeSearch, $options: 'i' } },
+        { 'name.motherName': { $regex: safeSearch, $options: 'i' } },
+        { 'studentID': { $regex: safeSearch, $options: 'i' } }, // also search by ID
+        { 'email': { $regex: safeSearch, $options: 'i' } }      // also search by email
+      ];
+    }
+
+    const students = await Student.find(filter).sort({ createdAt: -1 });
+
     if (!students || students.length === 0) {
-      return res.status(404).json({ success: false, message: "No students found in the database." });
+      return res.status(404).json({ success: false, message: "No students found matching criteria." });
     }
 
     // --- Create workbook and sheet using ExcelJS ---

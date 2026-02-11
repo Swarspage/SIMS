@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { addStudentDetails, getStudentById, getStudents, getSingleStudent, updateStudent, deleteStudent, importExcelDataWithPasswords, } = require("../controllers/StudentController");
 
-const { importDivisionInchargeFromExcel } = require("../controllers/divisionInchargeController");
+const { importDivisionInchargeFromExcel, getAllDivisionIncharges, deleteDivisionIncharge } = require("../controllers/divisionInchargeController");
 const uploadExcel = require("../middlewares/excelMulter");
 const verifyToken = require("../middlewares/VerifyToken");
 const upload = require("../middlewares/multer");
@@ -19,5 +19,11 @@ router.post('/import', authenticateToken, authorizeRoles("admin"), uploadMemoryS
 
 // Login Route
 router.post('/login', require("../controllers/divisionInchargeController").loginDivisionIncharge);
+
+// Get All Division Incharges - Admin only
+router.get('/', authenticateToken, authorizeRoles("admin"), getAllDivisionIncharges);
+
+// Delete Division Incharge - Admin only
+router.delete('/:id', authenticateToken, authorizeRoles("admin"), deleteDivisionIncharge);
 
 module.exports = router;
