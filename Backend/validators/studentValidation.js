@@ -43,36 +43,6 @@ const addStudentDetailsSchema = Joi.object({
     convert: true        // convert types if possible (e.g., dob string -> Date)
 });
 
-const updateStudentSchema2 = Joi.object({
-    firstName: Joi.string().pattern(/^[A-Za-z]+$/),
-    middleName: Joi.string().pattern(/^[A-Za-z]+$/),
-    lastName: Joi.string().pattern(/^[A-Za-z]+$/),
-    motherName: Joi.string().pattern(/^[A-Za-z]+$/),
-
-    PRN: Joi.string().pattern(/^[1-9]\d{15}$/),
-    branch: Joi.string().valid("Computer", "IT", "AIDS", "Civil", "Chemical", "Mechanical"),
-    year: Joi.string().valid("SE", "TE", "BE"),
-
-    dob: Joi.date(),
-    bloodGroup: Joi.string().valid("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"),
-
-    currentStreet: Joi.string(),
-    currentCity: Joi.string(),
-    pincode: Joi.string().pattern(/^[1-9][0-9]{5}$/),
-
-
-    nativeStreet: Joi.string(),
-    nativeCity: Joi.string(),
-    nativePincode: Joi.string().pattern(/^[1-9][0-9]{5}$/),
-
-    category: Joi.string().valid("Open", "EWS", "EBC", "OBC", "SC", "ST", "Other"),
-
-    mobileNo: Joi.string().pattern(/^[6-9]\d{9}$/),
-    parentMobileNo: Joi.string().pattern(/^[6-9]\d{9}$/),
-
-
-
-});
 
 const updateStudentSchema = Joi.object({
     firstName: Joi.string().pattern(/^[A-Za-z]+$/).trim(),

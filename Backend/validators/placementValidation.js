@@ -23,7 +23,7 @@ const createPlacementSchema = Joi.object({
 	joiningYear: Joi.string().min(1).pattern(yearPattern).required(),
 }).options({
 	stripUnknown: true,   // removes extra fields
-	convert: true,         // string -> number conversion not allowed
+	convert: true,         // string -> number conversion allowed
 	abortEarly: false
 });
 
