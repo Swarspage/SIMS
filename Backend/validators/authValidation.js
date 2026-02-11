@@ -16,18 +16,49 @@ const signupSchema = Joi.object({
 });
 
 const loginSchema = Joi.object({
-    studentID: Joi.string().pattern(/^[0-9]{4}[A-Z]{4}[0-9]{3}$/).required(),
-    // password: Joi.string().pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,14}$/).required(),
-    // password: Joi.string().pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,14}$/).required(),
-    password: Joi.string().required(), //relaxed password validation
+    studentID: Joi.string()
+        .pattern(/^[0-9]{4}[A-Z]{4}[0-9]{3}$/)
+        .required()
+        .messages({
+            "string.empty": "Student ID is required.",
+            "string.pattern.base": "Student ID must follow the format: 4 digits + 4 uppercase letters + 3 digits.",
+            "any.required": "Student ID is required."
+        }),
 
+    password: Joi.string()
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,14}$/)
+        .required()
+        .messages({
+            "string.empty": "Password is required.",
+            "string.pattern.base":
+                "Password must be 8-14 characters long and include uppercase, lowercase, number, and special character.",
+            "any.required": "Password is required."
+        })
 });
+
 
 
 const adminLoginSchema = Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string().required()
+    email: Joi.string()
+        .email()
+        .required()
+        .messages({
+            "string.empty": "Email is required.",
+            "string.email": "Please enter a valid email address.",
+            "any.required": "Email is required."
+        }),
+
+    password: Joi.string()
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,14}$/)
+        .required()
+        .messages({
+            "string.empty": "Password is required.",
+            "string.pattern.base":
+                "Password must be 8-14 characters long and include uppercase, lowercase, number, and special character.",
+            "any.required": "Password is required."
+        })
 });
+
 
 
 

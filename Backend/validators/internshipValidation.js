@@ -1,25 +1,57 @@
 const Joi = require("joi");
 
 const internshipValidationSchema = Joi.object({
-    companyName: Joi.string().trim().min(2).required(),
+    companyName: Joi.string().trim().min(2).required().messages({
+        "string.base": "Company name must be a string.",
+        "string.min": "Company name must have at least 2 characters.",
+        "any.required": "Company name is required."
+    }),
 
-    role: Joi.string().trim().min(2).required(),
+    role: Joi.string().trim().min(2).required().messages({
+        "string.base": "Role must be a string.",
+        "string.min": "Role must have at least 2 characters.",
+        "any.required": "Role is required."
+    }),
 
-    startDate: Joi.date().required(),
+    startDate: Joi.date().required().messages({
+        "date.base": "Start date must be a valid date.",
+        "any.required": "Start date is required."
+    }),
 
-    endDate: Joi.date().greater(Joi.ref("startDate")).required(),
+    endDate: Joi.date().greater(Joi.ref("startDate")).required().messages({
+        "date.base": "End date must be a valid date.",
+        "date.greater": "End date must be greater than start date.",
+        "any.required": "End date is required."
+    }),
 
-    durationMonths: Joi.number().integer().min(1).max(6).required(),
+    durationMonths: Joi.number().integer().min(1).max(6).required().messages({
+        "number.base": "Duration must be a number.",
+        "number.integer": "Duration must be an integer.",
+        "number.min": "Duration must be at least 1 month.",
+        "number.max": "Duration cannot exceed 6 months.",
+        "any.required": "Duration is required."
+    }),
 
-    isPaid: Joi.boolean().required(),
+    isPaid: Joi.boolean().required().messages({
+        "boolean.base": "isPaid must be true or false.",
+        "any.required": "isPaid field is required."
+    }),
 
     stipend: Joi.when("isPaid", {
         is: true,
-        then: Joi.number().min(1).required(),
+        then: Joi.number().min(1).required().messages({
+            "number.base": "Stipend must be a number.",
+            "number.min": "Stipend must be at least 1.",
+            "any.required": "Stipend is required for paid internships."
+        }),
         otherwise: Joi.forbidden()
     }),
 
-    description: Joi.string().trim().min(10).required()
+    description: Joi.string().trim().min(10).required().messages({
+        "string.base": "Description must be a string.",
+        "string.min": "Description must be at least 10 characters.",
+        "any.required": "Description is required."
+    })
 }).options({
     stripUnknown: true,
     convert: true,        
@@ -28,18 +60,49 @@ const internshipValidationSchema = Joi.object({
 
 
 const updateInternshipValidationSchema = Joi.object({
-    companyName: Joi.string().trim().min(2).empty("").optional(),
-    role: Joi.string().trim().min(2).empty("").optional(),
-    startDate: Joi.date().optional(),
-    endDate: Joi.date().greater(Joi.ref("startDate")).optional(),
-    durationMonths: Joi.number().integer().min(1).max(6).optional(),
-    isPaid: Joi.boolean().optional(),
+    companyName: Joi.string().trim().min(2).empty("").optional().messages({
+        "string.base": "Company name must be a string.",
+        "string.min": "Company name must have at least 2 characters."
+    }),
+
+    role: Joi.string().trim().min(2).empty("").optional().messages({
+        "string.base": "Role must be a string.",
+        "string.min": "Role must have at least 2 characters."
+    }),
+
+    startDate: Joi.date().optional().messages({
+        "date.base": "Start date must be a valid date."
+    }),
+
+    endDate: Joi.date().greater(Joi.ref("startDate")).optional().messages({
+        "date.base": "End date must be a valid date.",
+        "date.greater": "End date must be greater than start date."
+    }),
+
+    durationMonths: Joi.number().integer().min(1).max(6).optional().messages({
+        "number.base": "Duration must be a number.",
+        "number.integer": "Duration must be an integer.",
+        "number.min": "Duration must be at least 1 month.",
+        "number.max": "Duration cannot exceed 6 months."
+    }),
+
+    isPaid: Joi.boolean().optional().messages({
+        "boolean.base": "isPaid must be true or false."
+    }),
+
     stipend: Joi.when("isPaid", {
         is: true,
-        then: Joi.number().min(1).optional(),
+        then: Joi.number().min(1).optional().messages({
+            "number.base": "Stipend must be a number.",
+            "number.min": "Stipend must be at least 1."
+        }),
         otherwise: Joi.forbidden()
     }),
-    description: Joi.string().trim().min(10).empty("").optional()
+
+    description: Joi.string().trim().min(10).empty("").optional().messages({
+        "string.base": "Description must be a string.",
+        "string.min": "Description must be at least 10 characters."
+    })
 })
 .min(1) // At least one field is required
 .options({
@@ -49,12 +112,35 @@ const updateInternshipValidationSchema = Joi.object({
 });
 
 const getInternshipsValidation = Joi.object({
-    year: Joi.string().valid("SE", "TE", "BE").optional(),
-    division: Joi.string().valid("A", "B", "C").optional(),
-    isPaid: Joi.string().valid("true", "false").optional(),
-    search: Joi.string().max(100).optional(),
-    page: Joi.number().integer().min(1).optional(),
-    limit: Joi.number().integer().min(1).max(20).optional()
+    year: Joi.string().valid("SE", "TE", "BE").optional().messages({
+        "any.only": "Year must be SE, TE, or BE."
+    }),
+
+    division: Joi.string().valid("A", "B", "C").optional().messages({
+        "any.only": "Division must be A, B, or C."
+    }),
+
+    isPaid: Joi.string().valid("true", "false").optional().messages({
+        "any.only": "isPaid must be true or false."
+    }),
+
+    search: Joi.string().max(100).optional().messages({
+        "string.base": "Search must be a string.",
+        "string.max": "Search cannot exceed 100 characters."
+    }),
+
+    page: Joi.number().integer().min(1).optional().messages({
+        "number.base": "Page must be a number.",
+        "number.integer": "Page must be an integer.",
+        "number.min": "Page must be at least 1."
+    }),
+
+    limit: Joi.number().integer().min(1).max(20).optional().messages({
+        "number.base": "Limit must be a number.",
+        "number.integer": "Limit must be an integer.",
+        "number.min": "Limit must be at least 1.",
+        "number.max": "Limit cannot exceed 20."
+    })
 });
 
 

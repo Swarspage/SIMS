@@ -19,7 +19,7 @@ router.post('/import', authenticateToken, authorizeRoles("admin", "divisionIncha
 router.get("/export-students", authenticateToken, authorizeRoles("admin", "divisionIncharge"), exportAllStudentsToExcel);
 
 // route to add remaining details --student or admin or divisionIncharge
-router.post('/',
+router.patch('/',
     authenticateToken,
     authorizeRoles("admin", "student", "divisionIncharge"),
     upload.fields([{ name: "studentPhoto", maxCount: 1 }]),
@@ -36,8 +36,8 @@ router.put("/:studentId",
     updateStudent
 );
 
-// route to delete student --student or admin or divisionIncharge
-router.delete("/:studentId", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), deleteStudent);
+// route to delete student --admin or divisionIncharge
+router.delete("/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), deleteStudent);
 
 // GET routes
 router.get("/", authenticateToken, authorizeRoles("admin", "divisionIncharge"), getStudents);  // Admin and DivisionIncharge --with search, filter and pagination
