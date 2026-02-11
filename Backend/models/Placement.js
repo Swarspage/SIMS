@@ -55,4 +55,16 @@ const placementSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
+placementSchema.index({ stuID: 1 });                 // REQUIRED for $lookup
+
+placementSchema.index({ companyName: 1 });
+placementSchema.index({ role: 1 });
+
+placementSchema.index({ placementType: 1 });
+
+placementSchema.index({ package: -1 });              // for sorting highest → lowest
+
+placementSchema.index({ createdAt: -1 });            // sort for pagination
+
+
 module.exports = mongoose.model("Placement", placementSchema);

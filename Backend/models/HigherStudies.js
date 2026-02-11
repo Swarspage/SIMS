@@ -31,4 +31,11 @@ const higherStudiesSchema = new mongoose.Schema({
 },
 { timestamps: true });
 
+higherStudiesSchema.index({ stuID: 1 });             // REQUIRED for $lookup
+
+higherStudiesSchema.index({ examName: 1 });
+
+higherStudiesSchema.index({ createdAt: -1 });        // sorting
+
+
 module.exports = mongoose.model("HigherStudies", higherStudiesSchema);

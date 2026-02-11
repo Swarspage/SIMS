@@ -49,4 +49,13 @@ const internshipSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
+internshipSchema.index({ stuID: 1 });                   // REQUIRED for $lookup
+
+internshipSchema.index({ companyName: 1 });             // name-based search
+internshipSchema.index({ role: 1 });
+internshipSchema.index({ "stipendInfo.isPaid": 1 });
+
+internshipSchema.index({ createdAt: -1 });              // sorting
+
+
 module.exports = mongoose.model("Internship", internshipSchema);

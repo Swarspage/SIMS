@@ -30,4 +30,9 @@ const divisionInchargeSchema = new mongoose.Schema({
 
 }, {timestamps:true});
 
+divisionInchargeSchema.index({ email: 1 }, { unique: true });
+divisionInchargeSchema.index({ year: 1, division: 1 });
+divisionInchargeSchema.index({ createdAt: -1 });
+
+
 module.exports = mongoose.model('DivisionIncharge', divisionInchargeSchema);
