@@ -254,13 +254,15 @@ export default function StudentAchievements() {
       data.append("description", formData.description);
       data.append("issuedBy", formData.issuedBy);
       data.append("achievementType", formData.achievementType);
-      data.append("date[from]", formData.dateFrom);
-      data.append("date[to]", formData.dateTo);
+
+      // Send as simple keys, handled by backend
+      data.append("dateFrom", formData.dateFrom);
+      data.append("dateTo", formData.dateTo);
 
       if (formData.teamMembers) {
-        const members = formData.teamMembers.split(",").map((m) => m.trim());
-        members.forEach((member, index) => {
-          data.append(`teamMembers[${index}]`, member);
+        const members = formData.teamMembers.split(",").map((m) => m.trim()).filter(m => m);
+        members.forEach((member) => {
+          data.append("teamMembers", member);
         });
       }
       if (eventPhoto) data.append("eventPhoto", eventPhoto);
@@ -285,10 +287,15 @@ export default function StudentAchievements() {
       setTimeout(() => setView("list"), 500);
     } catch (err) {
       console.error("Error saving achievement:", err);
-      setError(
-        err.response?.data?.message ||
-        "Failed to save achievement. Check console for details."
-      );
+      const resData = err.response?.data;
+      let errorMsg = resData?.message || "Failed to save achievement.";
+
+      if (resData?.errors && Array.isArray(resData.errors)) {
+        const details = resData.errors.map(e => `${e.field}: ${e.message}`).join(", ");
+        errorMsg += ` (${details})`;
+      }
+
+      setError(errorMsg);
     } finally {
       setFormLoading(false);
     }

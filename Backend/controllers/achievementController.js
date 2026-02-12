@@ -39,9 +39,23 @@ const createAchievement = async (req, res) => {
   let dbSaved = false;
 
   try {
+    // Construct date object from simple keys
+    if (req.body.dateFrom && req.body.dateTo) {
+      req.body.date = {
+        from: req.body.dateFrom,
+        to: req.body.dateTo
+      };
+    }
+
+    // Normalize teamMembers to array if it is a single string
+    if (req.body.teamMembers && typeof req.body.teamMembers === 'string') {
+      req.body.teamMembers = [req.body.teamMembers];
+    }
+
     /* Joi Validation */
     const { error, value } = createAchievementSchema.validate(req.body, {
       abortEarly: false,
+      stripUnknown: true,
     });
 
     if (error) {
@@ -91,7 +105,11 @@ const createAchievement = async (req, res) => {
       });
     }
 
-    uploadedFiles = await validateAndUploadFiles(req.files, fileConfigs);
+    const activeFileConfigs = fileConfigs.filter(
+      (config) => req.files?.[config.fieldName]
+    );
+
+    uploadedFiles = await validateAndUploadFiles(req.files, activeFileConfigs);
 
     const achievement = new Achievement({
       stuID,
@@ -235,9 +253,23 @@ const updateAchievement = async (req, res) => {
   let dbSaved = false;
 
   try {
+    // Construct date object from simple keys
+    if (req.body.dateFrom && req.body.dateTo) {
+      req.body.date = {
+        from: req.body.dateFrom,
+        to: req.body.dateTo
+      };
+    }
+
+    // Normalize teamMembers to array if it is a single string
+    if (req.body.teamMembers && typeof req.body.teamMembers === 'string') {
+      req.body.teamMembers = [req.body.teamMembers];
+    }
+
     /* Joi Validation */
     const { error, value } = updateAchievementSchema.validate(req.body, {
       abortEarly: false,
+      stripUnknown: true,
     });
 
     if (error) {
@@ -278,9 +310,15 @@ const updateAchievement = async (req, res) => {
       return res.status(403).json({ success: false, message: "Division access denied" });
     }
 
-    const uploaded = req.files
-      ? await validateAndUploadFiles(req.files, fileConfigs)
-      : {};
+    const uploaded = {};
+    if (req.files) {
+      const activeFileConfigs = fileConfigs.filter(
+        (config) => req.files[config.fieldName]
+      );
+      if (activeFileConfigs.length > 0) {
+        Object.assign(uploaded, await validateAndUploadFiles(req.files, activeFileConfigs));
+      }
+    }
 
     const oldIds = [];
 
