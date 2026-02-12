@@ -14,6 +14,7 @@ const createAdmission = async (req, res) => {
   try {
     const { error, value } = admissionCreateSchema.validate(req.body, {
       abortEarly: false,
+      stripUnknown: true,
     });
 
     if (error) {
@@ -32,14 +33,14 @@ const createAdmission = async (req, res) => {
     // Role-based ownership
     if (req.user.role === "student") {
       stuID = req.user.id;
-    } 
+    }
     else if (["admin", "divisionIncharge"].includes(req.user.role)) {
       stuID = req.body.studentId;
 
       if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
         return res.status(400).json({ success: false, message: "Invalid student ID" });
       }
-    } 
+    }
     else {
       return res.status(403).json({ success: false, message: "Unauthorized role" });
     }
@@ -117,6 +118,7 @@ const updateAdmission = async (req, res) => {
   try {
     const { error, value } = admissionUpdateSchema.validate(req.body, {
       abortEarly: false,
+      stripUnknown: true,
     });
 
     if (error) {
