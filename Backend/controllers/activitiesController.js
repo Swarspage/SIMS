@@ -395,7 +395,11 @@ const createActivity = async (req, res) => {
     }
 
     console.error("Create Activity Error:", err);
-    return res.status(500).json({ success: false, message: "Server Error" });
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: err.message
+    });
   }
 };
 
