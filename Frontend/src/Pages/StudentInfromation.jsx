@@ -94,6 +94,7 @@ export default function StudentInformation() {
   };
 
   const handlePhotoChange = (e) => {
+    e.preventDefault();
     const file = e.target.files[0];
     if (file) {
       setStudentPhoto(file);
@@ -513,6 +514,7 @@ export default function StudentInformation() {
 
                 {/* Edit Button */}
                 <button
+                  type="button"
                   onClick={handleEdit}
                   className="w-full px-6 py-3 bg-white text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
                 >
@@ -651,8 +653,11 @@ export default function StudentInformation() {
                         readOnly
                       />
                     </div>
-                    <label className="px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg cursor-pointer hover:bg-blue-700 transition">
-                      UPLOAD
+                    <label className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg cursor-pointer hover:bg-blue-700 transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      UPLOAD PHOTO
                       <input
                         type="file"
                         accept="image/*"
@@ -1007,20 +1012,22 @@ export default function StudentInformation() {
               </div>
             </div>
           </div>
-          {isEditMode && (
+          {(isEditMode || !photoPreview) && (
             <div className="flex flex-col sm:flex-row justify-end gap-4 px-4 sm:px-8 py-6 bg-slate-50 border-t border-slate-200">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsEditMode(false);
-                  fetchStudentData();
-                  setError("");
-                  setSuccess("");
-                }}
-                className="px-6 py-2.5 rounded-lg bg-slate-300 text-slate-900 text-sm font-semibold hover:bg-slate-400 transition-colors"
-              >
-                Cancel
-              </button>
+              {photoPreview && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditMode(false);
+                    fetchStudentData();
+                    setError("");
+                    setSuccess("");
+                  }}
+                  className="px-6 py-2.5 rounded-lg bg-slate-300 text-slate-900 text-sm font-semibold hover:bg-slate-400 transition-colors"
+                >
+                  Cancel
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={loading}

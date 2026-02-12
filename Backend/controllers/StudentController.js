@@ -545,7 +545,7 @@ const addStudentDetails = async (req, res) => {
   } catch (err) {
 
     if (err.code === 11000) { // Duplicate PRN
-        return res.status(400).json({ success: false, message: "This PRN already already exists." });
+      return res.status(400).json({ success: false, message: "This PRN already already exists." });
     }
 
     console.error("Error in addStudentDetails:", err);

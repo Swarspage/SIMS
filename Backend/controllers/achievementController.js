@@ -6,7 +6,7 @@ const { uploadToCloudinary } = require("../helpers/UploadToCloudinary");
 const cloudinary = require("../config/cloudinaryConfig");
 const { deleteMultipleFromCloudinary } = require("../helpers/DeleteMultipleFromCloudinary");
 const { validateAndUploadFiles } = require("../helpers/ValidateAndUploadFiles");
-const { createAchievementSchema , updateAchievementSchema } = require("../validators/achievementValidation");
+const { createAchievementSchema, updateAchievementSchema } = require("../validators/achievementValidation");
 
 
 /* FILE CONFIG */

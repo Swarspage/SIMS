@@ -51,11 +51,21 @@ export default function LoginPage() {
       navigate("/student/dashboard");
     } catch (err) {
       console.log("Login error:", err);
-      setError(
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        "Login failed. Please try again."
-      );
+
+      let errorMessage = "Login failed. Please try again.";
+
+      if (err.response?.data) {
+        if (err.response.data.errors && Array.isArray(err.response.data.errors) && err.response.data.errors.length > 0) {
+          // Use the message from the first validation error
+          errorMessage = err.response.data.errors[0].message;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
