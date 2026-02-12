@@ -1,40 +1,46 @@
-
 import React, { useState, useEffect } from "react";
 import { studentService } from "../services/studentService";
 
 export default function StudentInformation() {
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
-  const [studentPhoto, setStudentPhoto] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
+  const [isEditMode, setIsEditMode] = useState(true); // Default to true, switch to false if data exists
+  const [hasData, setHasData] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
     middleName: "",
     lastName: "",
     motherName: "",
-    dob: "",
-    bloodGroup: "",
+    PRN: "",
     branch: "",
     year: "",
+    division: "",
+    dob: "",
+    bloodGroup: "",
     currentStreet: "",
     currentCity: "",
-    currentPincode: "",
+    pincode: "",
     nativeStreet: "",
     nativeCity: "",
     nativePincode: "",
     category: "",
-    email: "",
     mobileNo: "",
     parentMobileNo: "",
     parentEmail: "",
-    PRN: "",
-    studentID: "",
-    division: "",
     abcId: "",
   });
+
+  const [studentPhoto, setStudentPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState("");
+
+  // Pre-defined options based on validators
+  const branches = ["Computer", "IT", "AIDS", "Civil", "Chemical", "Mechanical"];
+  const years = ["SE", "TE", "BE"];
+  const divisions = ["A", "B", "C"];
+  const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+  const categories = ["Open", "EWS", "EBC", "OBC", "SC", "ST", "Other"];
 
   useEffect(() => {
     fetchStudentData();
@@ -42,49 +48,51 @@ export default function StudentInformation() {
 
   const fetchStudentData = async () => {
     try {
-      const response = await studentService.getMyData();
-      const student = response.data || response.student || response;
+      setLoading(true);
+      const data = await studentService.getMyData();
+      if (data && data.success && data.data) {
+        const s = data.data;
 
-      if (student) {
-        setFormData({
-          firstName: student.name?.firstName || "",
-          middleName: student.name?.middleName || "",
-          lastName: student.name?.lastName || "",
-          motherName: student.name?.motherName || "",
-          dob: student.dob
-            ? new Date(student.dob).toISOString().split("T")[0]
-            : "",
-          bloodGroup: student.bloodGroup || "",
-          branch: student.branch || "",
-          year: student.year || "",
-          currentStreet: student.currentAddress?.street || "",
-          currentCity: student.currentAddress?.city || "",
-          currentPincode: student.currentAddress?.pincode || "",
-          nativeStreet: student.nativeAddress?.street || "",
-          nativeCity: student.nativeAddress?.city || "",
-          nativePincode: student.nativeAddress?.nativePincode || "",
-          category: student.category || "",
-          email: student.email || "",
-          mobileNo: student.mobileNo || "",
-          parentMobileNo: student.parentMobileNo || "",
-          parentEmail: student.parentEmail || "",
-          PRN: student.PRN || "",
-          studentID: student.studentID || "",
-          division: student.division || "",
-          abcId: student.abcId || "",
-        });
-
-        if (student.studentPhoto?.url) {
-          setPhotoPreview(student.studentPhoto.url);
+        // Define what constitutes "having data" - e.g. check if PRN exists
+        // If data exists, show view mode by default
+        if (s.PRN) {
+          setHasData(true);
+          setIsEditMode(false);
         }
-      } else {
-        // If no student data, enable edit mode for creation
-        setIsEditMode(true);
+
+        // Map backend data structure to flat form state
+        setFormData({
+          firstName: s.name?.firstName || "",
+          middleName: s.name?.middleName || "",
+          lastName: s.name?.lastName || "",
+          motherName: s.name?.motherName || "",
+          PRN: s.PRN || "",
+          branch: s.branch || "",
+          year: s.year || "",
+          division: s.division || "",
+          dob: s.dob ? new Date(s.dob).toISOString().split("T")[0] : "",
+          bloodGroup: s.bloodGroup || "",
+          currentStreet: s.currentAddress?.street || "",
+          currentCity: s.currentAddress?.city || "",
+          pincode: s.currentAddress?.pincode || "",
+          nativeStreet: s.nativeAddress?.street || "",
+          nativeCity: s.nativeAddress?.city || "",
+          nativePincode: s.nativeAddress?.nativePincode || "",
+          category: s.category || "",
+          mobileNo: s.mobileNo || "",
+          parentMobileNo: s.parentMobileNo || "",
+          parentEmail: s.parentEmail || "",
+          abcId: s.abcId || "",
+        });
+        if (s.studentPhoto?.url) {
+          setPhotoPreview(s.studentPhoto.url);
+        }
       }
     } catch (err) {
       console.error("Error fetching student data:", err);
-      // If error (e.g. 404), assume new user and enable edit mode so buttons appear
-      setIsEditMode(true);
+      // It's possible data doesn't exist yet, which is fine
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -93,8 +101,7 @@ export default function StudentInformation() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePhotoChange = (e) => {
-    e.preventDefault();
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setStudentPhoto(file);
@@ -102,943 +109,433 @@ export default function StudentInformation() {
     }
   };
 
-  const handleEdit = () => {
-    setIsEditMode(true);
-    setError("");
-    setSuccess("");
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess("");
+    setSubmitting(true);
+    setMessage({ type: "", text: "" });
 
     try {
-      const studentId = localStorage.getItem("studentId");
+      const data = new FormData();
 
-      const requiredFields = {
-        firstName: formData.firstName.trim(),
-        middleName: formData.middleName.trim(),
-        lastName: formData.lastName.trim(),
-        motherName: formData.motherName.trim(),
-        PRN: formData.PRN.trim(),
-        branch: formData.branch.trim(),
-        year: formData.year.trim(),
-        division: formData.division.trim(),
-        dob: formData.dob.trim(),
-        bloodGroup: formData.bloodGroup.trim(),
-        currentStreet: formData.currentStreet.trim(),
-        currentCity: formData.currentCity.trim(),
-        currentPincode: formData.currentPincode.trim(),
-        nativeStreet: formData.nativeStreet.trim(),
-        nativeCity: formData.nativeCity.trim(),
-        nativePincode: formData.nativePincode.trim(),
-        category: formData.category.trim(),
-        mobileNo: formData.mobileNo.trim(),
-        parentMobileNo: formData.parentMobileNo.trim(),
-        parentEmail: formData.parentEmail.trim(),
-        abcId: formData.abcId.trim(),
-      };
+      // Append all text fields
+      Object.keys(formData).forEach(key => {
+        data.append(key, formData[key]);
+      });
 
-      const emptyFields = Object.entries(requiredFields)
-        .filter(([key, value]) => !value || value === "")
-        .map(([key]) => key);
-
-      if (emptyFields.length > 0) {
-        setError(`Please fill required fields: ${emptyFields.join(", ")}`);
-        setLoading(false);
-        return;
-      }
-
-      if (formData.PRN.length !== 16) {
-        setError("PRN must be exactly 16 digits.");
-        setLoading(false);
-        return;
-      }
-
-      if (formData.abcId.length !== 12) {
-        setError("ABC ID must be exactly 12 digits.");
-        setLoading(false);
-        return;
-      }
-
-      if (!studentPhoto && !photoPreview) {
-        setError(
-          "❌ Student photo is REQUIRED! Please upload a photo to continue."
-        );
-        setLoading(false);
-        return;
-      }
-
-      const formDataToSend = new FormData();
-
-      // Helper to clean mobile numbers (remove spaces, dashes, etc, keep only digits)
-      // Since backend regex expects exactly 10 digits starting with 6-9
-      const cleanMobile = (num) => num.replace(/\D/g, '').slice(-10);
-
-      formDataToSend.append("firstName", formData.firstName.trim());
-      formDataToSend.append("middleName", formData.middleName.trim());
-      formDataToSend.append("lastName", formData.lastName.trim());
-      formDataToSend.append("motherName", formData.motherName.trim());
-      formDataToSend.append("PRN", formData.PRN.trim());
-      formDataToSend.append("branch", formData.branch.trim());
-      formDataToSend.append("year", formData.year.trim());
-      formDataToSend.append("division", formData.division.trim());
-      formDataToSend.append("dob", formData.dob.trim());
-      formDataToSend.append("bloodGroup", formData.bloodGroup.trim());
-      formDataToSend.append("category", formData.category.trim());
-      formDataToSend.append("mobileNo", cleanMobile(formData.mobileNo));
-      formDataToSend.append("parentMobileNo", cleanMobile(formData.parentMobileNo));
-      formDataToSend.append("parentEmail", formData.parentEmail.trim());
-      formDataToSend.append("abcId", formData.abcId.trim());
-      formDataToSend.append("currentStreet", formData.currentStreet.trim());
-      formDataToSend.append("currentCity", formData.currentCity.trim());
-      formDataToSend.append("pincode", formData.currentPincode.trim());
-      formDataToSend.append("nativeStreet", formData.nativeStreet.trim());
-      formDataToSend.append("nativeCity", formData.nativeCity.trim());
-      formDataToSend.append("nativePincode", formData.nativePincode.trim());
-
+      // Append photo if selected
       if (studentPhoto) {
-        formDataToSend.append("studentPhoto", studentPhoto);
+        data.append("studentPhoto", studentPhoto);
       }
 
-      if (!studentId) {
-        const response = await studentService.addStudent(formDataToSend);
-        setSuccess("Student information added successfully!");
+      await studentService.addStudent(data);
 
-        if (response.data?._id) {
-          localStorage.setItem("studentId", response.data._id);
-        }
-      } else {
-        await studentService.updateStudent(studentId, formDataToSend);
-        setSuccess("Student information updated successfully!");
-      }
+      setMessage({ type: "success", text: "Student information saved successfully!" });
+      setHasData(true);
 
+      // Delay switching to view mode slightly to let user see success message, or switch immediately
+      // Let's re-fetch to ensure data consistency
+      await fetchStudentData();
       setIsEditMode(false);
-      fetchStudentData();
+      window.scrollTo(0, 0);
+
     } catch (err) {
-      console.error("Error saving student data:", err);
-      console.error("Backend response:", err.response?.data);
-      setError(
-        err.response?.data?.message ||
-        err.response?.data?.errors?.[0]?.message ||
-        "Failed to save student information. Check console for details."
-      );
+      console.error("Error saving student info:", err);
+      const resData = err.response?.data;
+      let errorMsg = resData?.message || err.message || "Failed to save information.";
+
+      if (resData?.errors && Array.isArray(resData.errors)) {
+        // Joi validation errors usually come as { field: "name", message: "..." }
+        const details = resData.errors.map(e => e.message).join(" ");
+        errorMsg += ` ${details}`;
+      }
+
+      setMessage({ type: "error", text: errorMsg });
+      window.scrollTo(0, 0);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  // ================= PROFILE VIEW =================
-  if (!isEditMode && photoPreview) {
+  const handleEditCancel = () => {
+    // Re-fetch data to reset form to saved state
+    fetchStudentData();
+    setIsEditMode(false);
+    setMessage({ type: "", text: "" });
+  };
+
+  if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 sm:p-8">
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl flex items-center gap-3 max-w-7xl mx-auto shadow-sm">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>{success}</span>
-          </div>
-        )}
+      <main className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading student details...</p>
+        </div>
+      </main>
+    );
+  }
 
-        {/* Two-Column Layout Container */}
+  // =============== VIEW MODE (CARDS) ===============
+  if (!isEditMode && hasData) {
+    return (
+      <main className="min-h-screen bg-slate-50 p-4 sm:p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Success Message */}
+          {message.text && message.type === "success" && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>{message.text}</span>
+            </div>
+          )}
 
-            {/* LEFT COLUMN - Main Content (2/3 width on desktop) */}
-            <div className="lg:col-span-2 space-y-6 order-2 lg:order-1">
-
-              {/* Personal Information Card */}
-              <div className="bg-white rounded-2xl shadow-md border border-slate-200 p-6 sm:p-8 hover:shadow-lg transition-shadow">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-3 border-b-2 border-blue-500">
-                  Personal Information
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Left Column: Photo & Basic Info */}
+            <div className="w-full md:w-1/3 space-y-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center">
+                <div className="w-32 h-32 rounded-full overflow-hidden bg-slate-100 border-4 border-slate-50 mx-auto mb-4 shadow-md">
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="Student" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400">
+                      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <h2 className="text-xl font-bold text-slate-900">
+                  {formData.firstName} {formData.lastName}
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                <p className="text-slate-500 font-medium  mt-1">{formData.branch}</p>
+                <p className="text-sm text-slate-400 mt-1">{formData.year} - {formData.division}</p>
+
+                <button
+                  onClick={() => setIsEditMode(true)}
+                  className="mt-6 w-full py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition shadow-sm hover:shadow-md"
+                >
+                  Edit Information
+                </button>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">Academic IDs</h3>
+                <div className="space-y-4">
                   <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                      First Name
-                    </p>
-                    <p className="text-base text-slate-800 font-medium">
-                      {formData.firstName || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                      Last Name
-                    </p>
-                    <p className="text-base text-slate-800 font-medium">
-                      {formData.lastName || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                      Middle Name
-                    </p>
-                    <p className="text-base text-slate-800 font-medium">
-                      {formData.middleName || "N/A"}
-                    </p>
+                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wide">PRN</p>
+                    <p className="text-base font-medium text-slate-800">{formData.PRN}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                      Mother's Name
-                    </p>
-                    <p className="text-base text-slate-800 font-medium">
-                      {formData.motherName || "N/A"}
-                    </p>
+                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wide">ABC ID</p>
+                    <p className="text-base font-medium text-slate-800">{formData.abcId}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                      Date of Birth
-                    </p>
-                    <p className="text-base text-slate-800 font-medium">
-                      {formData.dob
-                        ? new Date(formData.dob).toLocaleDateString("en-IN")
-                        : "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                      Blood Group
-                    </p>
-                    <p className="text-base text-slate-800 font-medium">
-                      {formData.bloodGroup || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                      Category
-                    </p>
-                    <p className="text-base text-slate-800 font-medium">
-                      {formData.category || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                      Branch
-                    </p>
-                    <p className="text-base text-slate-800 font-medium">
-                      {formData.branch || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                      Year
-                    </p>
-                    <p className="text-base text-slate-800 font-medium">
-                      {formData.year || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                      Phone
-                    </p>
-                    <p className="text-base text-slate-800 font-medium">
-                      {formData.mobileNo || "N/A"}
-                    </p>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                      Parent's Mobile
-                    </p>
-                    <p className="text-base text-slate-800 font-medium">
-                      {formData.parentMobileNo || "N/A"}
-                    </p>
-                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right Column: Detailed Info */}
+            <div className="w-full md:w-2/3 space-y-6">
+
+              {/* Personal Details Card */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                  <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                  Personal Details
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
+                  <InfoItem label="Full Name" value={`${formData.firstName} ${formData.middleName} ${formData.lastName}`} />
+                  <InfoItem label="Mother's Name" value={formData.motherName} />
+                  <InfoItem label="Date of Birth" value={formData.dob} />
+                  <InfoItem label="Blood Group" value={formData.bloodGroup} />
+                  <InfoItem label="Category" value={formData.category} />
+                </div>
+              </div>
+
+              {/* Contact Details Card */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                  <span className="w-1.5 h-6 bg-green-500 rounded-full"></span>
+                  Contact Details
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
+                  <InfoItem label="Mobile Number" value={formData.mobileNo} />
+                  <InfoItem label="Parent Mobile" value={formData.parentMobileNo} />
+                  <InfoItem label="Parent Email" value={formData.parentEmail} fullWidth />
                 </div>
               </div>
 
               {/* Address Card */}
-              <div className="bg-white rounded-2xl shadow-md border border-slate-200 p-6 sm:p-8 hover:shadow-lg transition-shadow">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-3 border-b-2 border-blue-500">
-                  Address Information
-                </h2>
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                  <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
+                  Address Details
+                </h3>
                 <div className="space-y-6">
-                  {/* Current Address */}
                   <div>
-                    <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-4">
-                      Current Address
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                      <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                          Street
-                        </p>
-                        <p className="text-base text-slate-800 font-medium">
-                          {formData.currentStreet || "N/A"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                          City
-                        </p>
-                        <p className="text-base text-slate-800 font-medium">
-                          {formData.currentCity || "N/A"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                          Pincode
-                        </p>
-                        <p className="text-base text-slate-800 font-medium">
-                          {formData.currentPincode || "N/A"}
-                        </p>
-                      </div>
-                    </div>
+                    <p className="text-sm font-semibold text-slate-500 mb-1">Current Address</p>
+                    <p className="text-base text-slate-800">{formData.currentStreet}, {formData.currentCity} - {formData.pincode}</p>
                   </div>
-
-                  {/* Divider */}
-                  <div className="border-t border-slate-200"></div>
-
-                  {/* Native Address */}
-                  <div>
-                    <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-4">
-                      Native Address
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                      <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                          Street
-                        </p>
-                        <p className="text-base text-slate-800 font-medium">
-                          {formData.nativeStreet || "N/A"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                          City
-                        </p>
-                        <p className="text-base text-slate-800 font-medium">
-                          {formData.nativeCity || "N/A"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
-                          Pincode
-                        </p>
-                        <p className="text-base text-slate-800 font-medium">
-                          {formData.nativePincode || "N/A"}
-                        </p>
-                      </div>
-                    </div>
+                  <div className="border-t border-slate-100 pt-4">
+                    <p className="text-sm font-semibold text-slate-500 mb-1">Native Address</p>
+                    <p className="text-base text-slate-800">{formData.nativeStreet}, {formData.nativeCity} - {formData.nativePincode}</p>
                   </div>
                 </div>
               </div>
+
             </div>
-
-            {/* RIGHT COLUMN - Profile Card (1/3 width on desktop, appears first on mobile) */}
-            <div className="lg:col-span-1 order-1 lg:order-2">
-              <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl shadow-xl p-8 text-white sticky top-8 hover:shadow-2xl transition-all">
-                {/* Profile Photo - Large and Prominent */}
-                <div className="flex justify-center mb-6">
-                  <div className="relative">
-                    <img
-                      src={photoPreview}
-                      alt="Student"
-                      className="w-40 h-40 sm:w-44 sm:h-44 lg:w-52 lg:h-52 rounded-full object-cover border-4 border-white shadow-2xl ring-4 ring-slate-500"
-                    />
-                    <div className="absolute -bottom-2 -right-2 bg-green-400 w-10 h-10 rounded-full border-4 border-white flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Student Name */}
-                <div className="text-center mb-6">
-                  <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-                    {formData.firstName} {formData.middleName} {formData.lastName}
-                  </h1>
-                  <p className="text-slate-300 text-base">
-                    {formData.branch} - {formData.year}
-                  </p>
-                </div>
-
-                {/* Info Cards */}
-                <div className="space-y-3 mb-6">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                    <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
-                      Student ID
-                    </p>
-                    <p className="text-base font-bold">
-                      {formData.studentID || "N/A"}
-                    </p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                    <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
-                      PRN Number
-                    </p>
-                    <p className="text-base font-bold">
-                      {formData.PRN || "N/A"}
-                    </p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                    <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
-                      ABC ID
-                    </p>
-                    <p className="text-base font-bold">
-                      {formData.abcId || "N/A"}
-                    </p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                    <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
-                      Division
-                    </p>
-                    <p className="text-base font-bold">
-                      {formData.division || "N/A"}
-                    </p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                    <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
-                      Email Address
-                    </p>
-                    <p className="text-sm font-medium break-all">
-                      {formData.email || "N/A"}
-                    </p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                    <p className="text-xs text-slate-300 uppercase tracking-wide mb-1">
-                      Parent Email
-                    </p>
-                    <p className="text-sm font-medium break-all">
-                      {formData.parentEmail || "N/A"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Edit Button */}
-                <button
-                  type="button"
-                  onClick={handleEdit}
-                  className="w-full px-6 py-3 bg-white text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
-                >
-                  Edit Profile
-                </button>
-              </div>
-            </div>
-
           </div>
         </div>
       </main>
     );
   }
 
-  // ================ FORM VIEW (EDIT MODE) ====================
+  // =============== EDIT/FORM MODE ===============
   return (
-    <main className="p-4 sm:p-8 bg-slate-50 min-h-screen">
-      {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>{success}</span>
-        </div>
-      )}
-
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>{error}</span>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">
-            Student Information
-          </h1>
-          <p className="text-slate-600 mt-1">
-            Complete and manage your profile details
-          </p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit}>
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-4 sm:p-8">
-            {/* SECTION: Personal Information */}
-            <div className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
-                Personal Information
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    First Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Middle Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="middleName"
-                    value={formData.middleName}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Mother's Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="motherName"
-                    value={formData.motherName}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-                {/* Photo Upload */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Student Photo
-                  </label>
-                  <div className="flex gap-4 items-end">
-                    <div className="flex-1 relative">
-                      <input
-                        type="text"
-                        value={
-                          studentPhoto
-                            ? studentPhoto.name
-                            : photoPreview
-                              ? "Current photo uploaded"
-                              : "Upload Photo"
-                        }
-                        placeholder="Upload Photo (Recent With White Background)"
-                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-slate-50 text-slate-700 placeholder-slate-400 text-sm"
-                        readOnly
-                      />
-                    </div>
-                    <label className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg cursor-pointer hover:bg-blue-700 transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                      </svg>
-                      UPLOAD PHOTO
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoChange}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                  {photoPreview && (
-                    <img
-                      src={photoPreview}
-                      alt="Student Preview"
-                      className="mt-3 w-20 h-20 object-cover rounded-lg border-2 border-blue-500"
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-            {/* SECTION: Academic Information */}
-            <div className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
-                Academic Information
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Date of Birth <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="dob"
-                    value={formData.dob}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Blood Group <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="bloodGroup"
-                    value={formData.bloodGroup}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
-                    required
-                  >
-                    <option value="">Select Blood Group</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Branch <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="branch"
-                    value={formData.branch}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
-                    required
-                  >
-                    <option value="">Select Branch</option>
-                    <option value="Computer">Computer</option>
-
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Year <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="year"
-                    value={formData.year}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
-                    required
-                  >
-                    <option value="">Select Year</option>
-                    <option value="SE">SE</option>
-                    <option value="TE">TE</option>
-                    <option value="BE">BE</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            {/* SECTION: Current Address */}
-            <div className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
-                Current Address
-              </h2>
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Street Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="currentStreet"
-                  value={formData.currentStreet}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    City <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="currentCity"
-                    value={formData.currentCity}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Pincode <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="currentPincode"
-                    value={formData.currentPincode}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-            {/* SECTION: Native Address */}
-            <div className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
-                Native Address
-              </h2>
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Street Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="nativeStreet"
-                  value={formData.nativeStreet}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    City <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="nativeCity"
-                    value={formData.nativeCity}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Pincode <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="nativePincode"
-                    value={formData.nativePincode}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-            {/* SECTION: Contact & Category */}
-            <div className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
-                Contact Information
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Mobile No. <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    name="mobileNo"
-                    value={formData.mobileNo}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Parents Mobile No. <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    name="parentMobileNo"
-                    value={formData.parentMobileNo}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    disabled
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-slate-100 text-slate-600 text-sm cursor-not-allowed"
-                  />
-                  <p className="text-xs text-slate-500 mt-2">
-                    Cannot be changed
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
-                    required
-                  >
-                    <option value="">Select Category</option>
-                    <option value="Open">Open</option>
-                    <option value="EWS">EWS</option>
-                    <option value="EBC">EBC</option>
-                    <option value="OBC">OBC</option>
-                    <option value="SC">SC</option>
-                    <option value="ST">ST</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            {/* SECTION: Identifiers */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-4 border-b-2 border-blue-500">
-                Identifiers
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    PRN Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="PRN"
-                    value={formData.PRN}
-                    onChange={handleChange}
-                    placeholder="16-digit PRN"
-                    maxLength="16"
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                  <p className="text-xs text-slate-500 mt-1">Must be exactly 16 digits</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    ABC ID <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="abcId"
-                    value={formData.abcId}
-                    onChange={handleChange}
-                    placeholder="12-digit ABC ID"
-                    maxLength="12"
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                  <p className="text-xs text-slate-500 mt-1">Must be exactly 12 digits</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Student ID
-                  </label>
-                  <input
-                    type="text"
-                    name="studentID"
-                    value={formData.studentID}
-                    disabled
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-slate-100 text-slate-600 text-sm cursor-not-allowed"
-                  />
-                  <p className="text-xs text-slate-500 mt-2">
-                    Cannot be changed
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Division <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="division"
-                    value={formData.division}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
-                    required
-                  >
-                    <option value="">Select Division</option>
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
-                  </select>
-                </div>
-
-              </div>
-            </div>
-
-            {/* SECTION: Additional Contact Info */}
-            <div className="mb-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Parent Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    name="parentEmail"
-                    value={formData.parentEmail}
-                    onChange={handleChange}
-                    placeholder="Parent's Email Address"
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
+    <main className="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+              {hasData ? "Edit Information" : "Student Information"}
+            </h1>
+            <p className="mt-2 text-slate-600">
+              {hasData ? "Update your personal and academic details." : "Please fill in your personal and academic details accurately."}
+            </p>
           </div>
-          {(isEditMode || !photoPreview) && (
-            <div className="flex flex-col sm:flex-row justify-end gap-4 px-4 sm:px-8 py-6 bg-slate-50 border-t border-slate-200">
-              {photoPreview && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditMode(false);
-                    fetchStudentData();
-                    setError("");
-                    setSuccess("");
-                  }}
-                  className="px-6 py-2.5 rounded-lg bg-slate-300 text-slate-900 text-sm font-semibold hover:bg-slate-400 transition-colors"
-                >
-                  Cancel
-                </button>
-              )}
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-              >
-                {loading ? "Submitting..." : "Submit"}
-              </button>
-            </div>
+          {hasData && (
+            <button
+              onClick={handleEditCancel}
+              className="px-4 py-2 bg-white text-slate-700 font-semibold rounded-lg border border-slate-300 hover:bg-slate-50 transition"
+            >
+              Cancel Edit
+            </button>
           )}
         </div>
-      </form>
+
+        {/* Message Alert */}
+        {message.text && (
+          <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${message.type === "success"
+            ? "bg-green-50 text-green-700 border border-green-200"
+            : "bg-red-50 text-red-700 border border-red-200"
+            }`}>
+            {message.type === "success" ? (
+              <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            )}
+            <span>{message.text}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+
+          {/* Section 1: Personal Details */}
+          <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
+              <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
+              Personal Details
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+              {/* Photo Upload - Spans 2 cols on small, 1 on large, but let's make it sit nicely */}
+              <div className="md:col-span-2 lg:col-span-4 flex flex-col sm:flex-row items-center gap-6 mb-4">
+                <div className="relative group">
+                  <div className="w-32 h-32 rounded-full overflow-hidden bg-slate-100 border-4 border-white shadow-md">
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="Student" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full shadow-lg cursor-pointer hover:bg-blue-700 transition-transform hover:scale-110">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                  </label>
+                </div>
+                <div className="text-center sm:text-left">
+                  <h3 className="font-medium text-slate-900">Profile Photo</h3>
+                  <p className="text-sm text-slate-500 mt-1">Upload a clear passport size photo.<br />Max size 500KB. Formats: JPG, PNG.</p>
+                </div>
+              </div>
+
+              <InputField label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} required pattern="[A-Za-z]+" title="Only alphabets allowed" />
+              <InputField label="Middle Name" name="middleName" value={formData.middleName} onChange={handleChange} required pattern="[A-Za-z]+" title="Only alphabets allowed" />
+              <InputField label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} required pattern="[A-Za-z]+" title="Only alphabets allowed" />
+              <InputField label="Mother Name" name="motherName" value={formData.motherName} onChange={handleChange} required pattern="[A-Za-z]+" title="Only alphabets allowed" />
+
+              <InputField label="Date of Birth" name="dob" type="date" value={formData.dob} onChange={handleChange} required />
+
+              <SelectField label="Blood Group" name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} options={bloodGroups} required />
+              <SelectField label="Category" name="category" value={formData.category} onChange={handleChange} options={categories} required />
+
+            </div>
+          </section>
+
+          {/* Section 2: Academic Details */}
+          <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
+              <span className="w-1 h-6 bg-purple-600 rounded-full"></span>
+              Academic Details
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <InputField label="PRN" name="PRN" value={formData.PRN} onChange={handleChange} required pattern="[1-9][0-9]{15}" title="16 digits, cannot start with 0" maxLength={16} />
+              <InputField label="ABC ID" name="abcId" value={formData.abcId} onChange={handleChange} required pattern="\d{12}" title="Exactly 12 digits" maxLength={12} />
+              <SelectField label="Branch" name="branch" value={formData.branch} onChange={handleChange} options={branches} required />
+              <SelectField label="Year" name="year" value={formData.year} onChange={handleChange} options={years} required />
+              <SelectField label="Division" name="division" value={formData.division} onChange={handleChange} options={divisions} required />
+            </div>
+          </section>
+
+          {/* Section 3: Contact Details */}
+          <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
+              <span className="w-1 h-6 bg-green-600 rounded-full"></span>
+              Contact Details
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <InputField label="Mobile Number" name="mobileNo" value={formData.mobileNo} onChange={handleChange} required pattern="[6-9]\d{9}" title="10 digit Indian mobile number" maxLength={10} />
+              <InputField label="Parent Mobile No" name="parentMobileNo" value={formData.parentMobileNo} onChange={handleChange} required pattern="[6-9]\d{9}" title="10 digit Indian mobile number" maxLength={10} />
+              <InputField label="Parent Email" name="parentEmail" type="email" value={formData.parentEmail} onChange={handleChange} required />
+            </div>
+          </section>
+
+          {/* Section 4: Address Details */}
+          <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
+              <span className="w-1 h-6 bg-orange-600 rounded-full"></span>
+              Address Details
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Current Address */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-slate-700 bg-slate-50 p-2 rounded">Current Address</h3>
+                <InputField label="Street / Building" name="currentStreet" value={formData.currentStreet} onChange={handleChange} required />
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="City" name="currentCity" value={formData.currentCity} onChange={handleChange} required />
+                  <InputField label="Pincode" name="pincode" value={formData.pincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6 digit pincode" maxLength={6} />
+                </div>
+              </div>
+
+              {/* Native Address */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-slate-700 bg-slate-50 p-2 rounded">Native Address</h3>
+                <InputField label="Street / Building" name="nativeStreet" value={formData.nativeStreet} onChange={handleChange} required />
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="City" name="nativeCity" value={formData.nativeCity} onChange={handleChange} required />
+                  <InputField label="Pincode" name="nativePincode" value={formData.nativePincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6 digit pincode" maxLength={6} />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Submit Button */}
+          <div className="flex justify-end pt-4 gap-4">
+            {hasData && (
+              <button
+                type="button"
+                onClick={handleEditCancel}
+                className="px-6 py-3 bg-slate-200 text-slate-800 font-semibold rounded-lg hover:bg-slate-300 transition"
+              >
+                Cancel
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {submitting ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                "Save Information"
+              )}
+            </button>
+          </div>
+
+        </form>
+      </div>
     </main>
+  );
+}
+
+// Reusable Components to keep code clean
+
+function InfoItem({ label, value, fullWidth = false }) {
+  return (
+    <div className={fullWidth ? "col-span-1 sm:col-span-2" : ""}>
+      <p className="text-xs text-slate-500 uppercase font-bold tracking-wide mb-1">{label}</p>
+      <p className="text-base font-medium text-slate-800">{value || "N/A"}</p>
+    </div>
+  )
+}
+
+function InputField({ label, name, type = "text", value, onChange, required = false, ...props }) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-slate-700 mb-2">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        required={required}
+        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-blue-300"
+        {...props}
+      />
+    </div>
+  );
+}
+
+function SelectField({ label, name, value, onChange, options, required = false }) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-slate-700 mb-2">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        <select
+          name={name}
+          value={value}
+          onChange={onChange}
+          required={required}
+          className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-blue-300 appearance-none cursor-pointer"
+        >
+          <option value="">Select {label}</option>
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+    </div>
   );
 }

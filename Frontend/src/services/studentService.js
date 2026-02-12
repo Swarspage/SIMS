@@ -14,7 +14,7 @@ export const studentService = {
   // Add student details (Student)
   addStudent: async (formData) => {
     // ✅ FIXED: formData is already a FormData object from component, just send it
-    const response = await API.post("/student", formData, {
+    const response = await API.patch("/student", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;

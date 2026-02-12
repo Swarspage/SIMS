@@ -31,7 +31,7 @@ app.use(
       process.env.FRONTEND_URL // Support env-based URL
     ].filter(Boolean), // Remove undefined/null if env var is missing
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
