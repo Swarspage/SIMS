@@ -305,6 +305,7 @@ const createActivity = async (req, res) => {
     /* Joi Validation */
     const { error, value } = activityCreateSchema.validate(req.body, {
       abortEarly: false,
+      stripUnknown: true,
     });
 
     if (error) {
@@ -323,7 +324,7 @@ const createActivity = async (req, res) => {
     /* Role-based ownership */
     if (req.user.role === "student") {
       stuID = req.user.id;
-    } 
+    }
     else if (["admin", "divisionIncharge"].includes(req.user.role)) {
       stuID = req.body.studentId;
 
@@ -352,7 +353,7 @@ const createActivity = async (req, res) => {
           message: "You can access students only from your division",
         });
       }
-    } 
+    }
     else {
       return res.status(403).json({
         success: false,
@@ -363,9 +364,9 @@ const createActivity = async (req, res) => {
     /* File upload */
     uploadedFiles = req.file
       ? await validateAndUploadFiles(
-          { certificate: [req.file] },
-          fileConfigs
-        )
+        { certificate: [req.file] },
+        fileConfigs
+      )
       : {};
 
     const activity = new Activity({
@@ -506,6 +507,7 @@ const updateActivity = async (req, res) => {
   try {
     const { error, value } = activityUpdateSchema.validate(req.body, {
       abortEarly: false,
+      stripUnknown: true,
     });
 
     if (error) {

@@ -114,7 +114,6 @@ export default function StudentActivity() {
 
   // Form state
   const [formData, setFormData] = useState({
-    type: "",
     title: "",
     description: "",
     date: "",
@@ -168,7 +167,6 @@ export default function StudentActivity() {
 
   const resetForm = () => {
     setFormData({
-      type: "",
       title: "",
       description: "",
       date: "",
@@ -189,7 +187,6 @@ export default function StudentActivity() {
 
     setEditingId(activity._id);
     setFormData({
-      type: activity.type,
       title: activity.title,
       description: activity.description,
       date: activity.date.split("T")[0],
@@ -225,7 +222,7 @@ export default function StudentActivity() {
       }
 
       const data = new FormData();
-      data.append("type", formData.type);
+      // Type is handled by backend (forced to Committee)
       data.append("title", formData.title);
       data.append("description", formData.description);
       data.append("date", formData.date);
@@ -247,10 +244,15 @@ export default function StudentActivity() {
       setTimeout(() => setView("list"), 500);
     } catch (err) {
       console.error("Error saving activity:", err);
-      setError(
-        err.response?.data?.message ||
-        "Failed to save activity. Check console for details."
-      );
+      const resData = err.response?.data;
+      let errorMsg = resData?.message || "Failed to save activity.";
+
+      if (resData?.errors && Array.isArray(resData.errors)) {
+        const details = resData.errors.map(e => `${e.field}: ${e.message}`).join(", ");
+        errorMsg += ` (${details})`;
+      }
+
+      setError(errorMsg);
     } finally {
       setFormLoading(false);
     }
@@ -344,44 +346,21 @@ export default function StudentActivity() {
                   Activity Information
                 </h2>
 
-                {/* Row: Type and Title */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
-                  {/* Type */}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Type
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    <select
-                      name="type"
-                      value={formData.type}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
-                      required
-                    >
-                      <option value="">Select Type</option>
-                      <option value="Committee">Committee</option>
-                      <option value="Sports">Sports</option>
-                      <option value="Hackathon">Hackathon</option>
-                    </select>
-                  </div>
-
-                  {/* Title */}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Title
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      placeholder="Enter activity title"
-                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      required
-                    />
-                  </div>
+                {/* Title */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Title
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    placeholder="Enter activity title"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    required
+                  />
                 </div>
 
                 {/* Description */}
