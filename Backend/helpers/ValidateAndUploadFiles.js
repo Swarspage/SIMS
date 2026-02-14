@@ -35,8 +35,11 @@ const validateAndUploadFiles = async (filesObj, fileConfigs) => {
             const file = filesObj?.[fieldName]?.[0];
 
             try {
+                
                 const result = await cloudinary.uploader.upload(file.path, {
                     folder: "studentWebsite",
+                    resource_type : "image",
+                    access_mode: "public"
                 });
 
                 uploadedFiles[fieldName] = {
