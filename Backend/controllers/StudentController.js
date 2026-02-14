@@ -76,181 +76,230 @@ const getCellValue = (cell) => {
 
 
 const importExcelDataWithPasswords = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "No file uploaded"
-      });
-    }
+	try {
+		if (!req.file) {
+			return res.status(400).json({
+				success: false,
+				message: "No file uploaded"
+			});
+		}
 
-    if (!allowedTypes.includes(req.file.mimetype)) {
-      return res.status(400).json({ success: false, message: "" });
-    }
+		if (!allowedTypes.includes(req.file.mimetype)) {
+			return res.status(400).json({ success: false, message: "" });
+		}
 
-    if (req.file.size > MAX_FILE_SIZE) {
-      return res.status(400).json({
-        success: false,
-        message: "Excel file size must be less than or equal to 1MB"
-      });
-    }
+		if (req.file.size > MAX_FILE_SIZE) {
+			return res.status(400).json({
+				success: false,
+				message: "Excel file size must be less than or equal to 1MB"
+			});
+		}
 
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(req.file.buffer);
+		const workbook = new ExcelJS.Workbook();
+		await workbook.xlsx.load(req.file.buffer);
 
-    const worksheet = workbook.worksheets[0];
-    if (!worksheet) {
-      return res.status(400).json({
-        success: false,
-        message: "Excel file is empty"
-      });
-    }
+		const worksheet = workbook.worksheets[0];
+		if (!worksheet) {
+			return res.status(400).json({
+				success: false,
+				message: "Excel file is empty"
+			});
+		}
 
-    const headerRow = worksheet.getRow(1);
-    const headers = headerRow.values
-      .slice(1)
-      .map(h => h?.toString().trim().toLowerCase());
+		const headerRow = worksheet.getRow(1);
+		const headers = headerRow.values
+		.slice(1)
+		.map(h => h?.toString().trim().toLowerCase());
 
-    const studentIDColIndex = headers.findIndex(h => h.includes("studentid")) + 1;
-    const emailColIndex = headers.findIndex(h => h.includes("email")) + 1;
+		const studentIDColIndex = headers.findIndex(h => h.includes("studentid")) + 1;
+		const emailColIndex = headers.findIndex(h => h.includes("email")) + 1;
 
-    if (studentIDColIndex === 0 || emailColIndex === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Excel must contain 'studentID' and 'email' columns"
-      });
-    }
+		if (studentIDColIndex === 0 || emailColIndex === 0) {
+			return res.status(400).json({
+				success: false,
+				message: "Excel must contain 'studentID' and 'email' columns"
+			});
+		}
 
-    const rawData = [];
+		const rawData = [];
 
-    worksheet.eachRow((row, rowNumber) => {
-      if (rowNumber === 1) return;
+		worksheet.eachRow((row, rowNumber) => {
+			if (rowNumber === 1) return;
 
-      rawData.push({
-        studentID: getCellValue(row.getCell(studentIDColIndex)),
-        email: getCellValue(row.getCell(emailColIndex))
-      });
-    });
+			rawData.push({
+				studentID: getCellValue(row.getCell(studentIDColIndex)),
+				email: getCellValue(row.getCell(emailColIndex))
+			});
+		});
 
-    const filteredData = rawData.filter(i => i.studentID && i.email);
+		const filteredData = rawData.filter(i => i.studentID && i.email);
 
-    if (filteredData.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No valid studentID or email fields found"
-      });
-    }
+		const receivedStudents = filteredData.map(s => ({
+			studentID: s.studentID,
+			email: s.email
+		}));
 
-    if (filteredData.length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: "Excel file can contain max 100 students due to email limits."
-      });
-    }
+		if (filteredData.length === 0) {
+			return res.status(400).json({
+				success: false,
+				message: "No valid studentID or email fields found"
+			});
+		}
 
-    const studentsToSave = [];
-    const emailJobs = [];
-    const failedStudents = [];
+		if (filteredData.length > 100) {
+			return res.status(400).json({
+				success: false,
+				message: "Excel file can contain max 100 students due to email limits."
+			});
+		}
 
-    for (const data of filteredData) {
-      const { error } = importExcelSchema.validate(data, { abortEarly: false });
+		const studentsToSave = [];
+		const emailJobs = [];
+		const failedStudents = [];
 
-      if (error) {
-        failedStudents.push({
-          studentID: data.studentID,
-          email: data.email,
-          error: error.details.map(e => ({
-            field: e.path[0],
-            message: e.message
-          }))
-        });
-        continue;
-      }
+		for (const data of filteredData) {
+			const { error } = importExcelSchema.validate(data, { abortEarly: false });
 
-      const randomPassword = generateRandomPassword(14);
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+			if (error) {
+				failedStudents.push({
+				studentID: data.studentID,
+				email: data.email,
+				error: error.details.map(e => ({
+					field: e.path[0],
+					message: e.message
+				}))
+				});
+				continue;
+			}
 
-      studentsToSave.push({
-        studentID: data.studentID,
-        email: data.email,
-        password: hashedPassword
-      });
+			const randomPassword = generateRandomPassword(14);
+			const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-      emailJobs.push({
-        studentID: data.studentID,
-        email: data.email,
-        password: randomPassword
-      });
-    }
+			studentsToSave.push({
+				studentID: data.studentID,
+				email: data.email,
+				password: hashedPassword
+			});
 
-    // -------- Save all students in one DB call --------
-    let insertedStudents = [];
+			emailJobs.push({
+				studentID: data.studentID,
+				email: data.email,
+				password: randomPassword
+			});
+		}
 
-    if (studentsToSave.length > 0) {
-      try {
-        insertedStudents = await Student.insertMany(studentsToSave, { ordered: false });
-      } catch (err) {
-        console.error("Insert many error:", err.message);
-      }
-    }
+		// ---------------- CHECK EXISTING EMAILS ----------------
+		const existingStudents = await Student.find({
+			email: { $in: studentsToSave.map(s => s.email) }
+		}).select("email");
 
-    // -------- Send email in batches: 5 emails, 3s delay --------
-    const BATCH_SIZE = 5;
-    const DELAY = 3000;
+		const existingEmailSet = new Set(existingStudents.map(s => s.email));
 
-    const sendWithDelay = (ms) => new Promise(res => setTimeout(res, ms));
+		// Mark duplicates as failed
+		studentsToSave.forEach(student => {
+			if (existingEmailSet.has(student.email)) {
+				failedStudents.push({
+					studentID: student.studentID,
+					email: student.email,
+					error: "Email already exists in database"
+				});
+			}
+		});
 
-    for (let i = 0; i < emailJobs.length; i += BATCH_SIZE) {
-      const batch = emailJobs.slice(i, i + BATCH_SIZE);
+		// Filter only new students
+		const newStudents = studentsToSave.filter(
+			s => !existingEmailSet.has(s.email)
+		);
 
-      await Promise.all(
-        batch.map(job =>
-          sgMail.send({
-            to: job.email,
-            from: process.env.SENDGRID_VERIFIED_SENDER,
-            subject: "Your Account Password",
-            text: `Hello ${job.studentID},
+		// ---------------- INSERT NEW STUDENTS ----------------
+		let insertedStudents = [];
 
-Your account has been created.
+		if (newStudents.length > 0) {
+			insertedStudents = await Student.insertMany(newStudents);
+		}
 
-Email: ${job.email}
-Password: ${job.password}`
-          }).catch(err => {
-            console.error(`❌ Email failed for ${job.studentID}:`, err.message);
+		const insertedEmailSet = new Set(insertedStudents.map(s => s.email));
 
-            failedStudents.push({
-              studentID: job.studentID,
-              email: job.email,
-              error: "Email failed to send"
-            });
-          })
-        )
-      );
+		const insertedStudentsList = insertedStudents.map(s => ({
+			studentID: s.studentID,
+			email: s.email
+		}));
 
-      if (i + BATCH_SIZE < emailJobs.length) {
-        await sendWithDelay(DELAY);
-      }
-    }
+		// Send email only to inserted students
+		const validEmailJobs = emailJobs.filter(job =>
+			insertedEmailSet.has(job.email)
+		);
 
-    return res.status(200).json({
-      success: true,
-      message: `Import completed`,
-      summary: {
-        received: filteredData.length,
-        inserted: insertedStudents.length,
-        emailed: emailJobs.length - failedStudents.length,
-        failed: failedStudents.length
-      },
-      failedStudents
-    });
+		let emailedStudents = [];
 
-  } catch (error) {
-    console.error("Import error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error importing Excel data"
-    });
-  }
+
+		// -------- Send email in batches: 5 emails, 3s delay --------
+		const BATCH_SIZE = 5;
+		const DELAY = 3000;
+
+		const sendWithDelay = (ms) => new Promise(res => setTimeout(res, ms));
+
+		for (let i = 0; i < validEmailJobs.length; i += BATCH_SIZE) {
+			const batch = validEmailJobs.slice(i, i + BATCH_SIZE);
+
+			await Promise.all(
+				batch.map(async (job) => {
+					try {
+						await sgMail.send({
+							to: job.email,
+							from: process.env.SENDGRID_VERIFIED_SENDER,
+							subject: "Your Account Password",
+							text: `Hello ${job.studentID},
+
+								Your account has been created.
+
+								Email: ${job.email}
+								Password: ${job.password}`
+							});
+
+						// Push to array only after successful send
+						emailedStudents.push({
+							studentID: job.studentID,
+							email: job.email
+						});
+
+					} catch (err) {
+						console.error(`Email failed for ${job.studentID}:`, err.message);
+
+						failedStudents.push({
+							studentID: job.studentID,
+							email: job.email,
+							error: "Email failed to send"
+						});
+					}
+				})
+			);
+
+
+			if (i + BATCH_SIZE < validEmailJobs.length) {
+				await sendWithDelay(DELAY);
+			}
+		}
+
+		return res.status(200).json({
+			success: true,
+			message: `Import completed`,
+			summary: {
+				received: filteredData.length,
+				inserted: insertedStudents.length,
+				emailed: emailedStudents.length,
+				failed: failedStudents.length
+			},
+			receivedStudents,
+			insertedStudents: insertedStudentsList,
+			emailedStudents,
+			failedStudents
+		});
+
+	} catch (error) {
+		console.error("Import error:", error);
+		return res.status(500).json({ success: false, message: "Error importing Excel data" });
+	}
 };
 
 
