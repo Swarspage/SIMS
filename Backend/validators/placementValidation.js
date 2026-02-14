@@ -1,5 +1,6 @@
 const Joi = require("joi");
 
+///Note :- placementYear, passoutYear, and joiningYear can be same or greater oor smaller than each other --so no need for logical dates check on this...as checking is kindof impossible
 
 //Common reusable year pattern: 2023-24
 const yearPattern = /^\d{4}-\d{2}$/;
