@@ -1,5 +1,7 @@
 const Joi = require("joi");
 
+const addressPattern = /^[a-zA-Z0-9\s,./#()'-]+$/;
+
 const importExcelSchema = Joi.object({
     studentID: Joi.string()
         .pattern(/^[0-9]{4}[A-Z]{4}[0-9]{3}$/)
@@ -11,7 +13,7 @@ const importExcelSchema = Joi.object({
         }),
 
     email: Joi.string()
-        .email({ tlds: { allow: false } })
+        .email()
         .trim()
         .lowercase()
         .required()
@@ -65,7 +67,7 @@ const addStudentDetailsSchema = Joi.object({
         "any.required": "Year is required."
     }),
 
-    dob: Joi.date().required().messages({
+    dob: Joi.date().max('now').required().messages({
         "date.base": "Date of Birth must be a valid date.",
         "any.required": "Date of Birth is required."
     }),
@@ -77,14 +79,18 @@ const addStudentDetailsSchema = Joi.object({
             "any.required": "Blood Group is required."
         }),
 
-    currentStreet: Joi.string().trim().required().messages({
+    currentStreet: Joi.string().max(300).trim().pattern(addressPattern).required().messages({
+        "string.pattern.base" : "Current Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
+        "string.max" : "Current Street must not exceed 300 characters.",
         "string.empty": "Current Street is required.",
         "any.required": "Current Street is required."
     }),
 
-    currentCity: Joi.string().trim().required().messages({
-        "string.empty": "Current City is required.",
-        "any.required": "Current City is required."
+    currentCity: Joi.string().max(200).trim().pattern(addressPattern).required().messages({
+        "string.pattern.base" : "Current City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
+        "string.max" : "Current City must not exceed 200 characters.",
+        "string.empty": "Current Street is required.",
+        "any.required": "Current Street is required."
     }),
 
     pincode: Joi.string().pattern(/^[1-9][0-9]{5}$/).trim().required().messages({
@@ -93,14 +99,18 @@ const addStudentDetailsSchema = Joi.object({
         "any.required": "Pincode is required."
     }),
 
-    nativeStreet: Joi.string().trim().required().messages({
-        "string.empty": "Native Street is required.",
-        "any.required": "Native Street is required."
+    nativeStreet: Joi.string().max(300).trim().pattern(addressPattern).required().messages({
+        "string.pattern.base" : "Native Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
+        "string.max" : "Native Street must not exceed 300 characters.",
+        "string.empty": "Current Street is required.",
+        "any.required": "Current Street is required."
     }),
 
-    nativeCity: Joi.string().trim().required().messages({
-        "string.empty": "Native City is required.",
-        "any.required": "Native City is required."
+    nativeCity: Joi.string().max(200).trim().pattern(addressPattern).required().messages({
+        "string.pattern.base" : "Native City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
+        "string.max" : "Native City must not exceed 200 characters.",
+        "string.empty": "Current Street is required.",
+        "any.required": "Current Street is required."
     }),
 
     nativePincode: Joi.string().pattern(/^[1-9][0-9]{5}$/).trim().required().messages({
@@ -128,7 +138,7 @@ const addStudentDetailsSchema = Joi.object({
         "any.required": "Parent Mobile number is required."
     }),
 
-    parentEmail: Joi.string().email({ tlds: { allow: false } }).trim().lowercase().required().messages({
+    parentEmail: Joi.string().email().trim().lowercase().required().messages({
         "string.email": "Parent Email must be a valid email address.",
         "string.empty": "Parent Email is required.",
         "any.required": "Parent Email is required."
@@ -181,7 +191,7 @@ const updateStudentSchema = Joi.object({
         "any.only": "Year must be SE, TE, or BE."
     }),
 
-    dob: Joi.date().messages({
+    dob: Joi.date().max('now').messages({
         "date.base": "Date of Birth must be a valid date."
     }),
 
@@ -191,17 +201,29 @@ const updateStudentSchema = Joi.object({
             "any.only": "Blood Group must be a valid type."
         }),
 
-    currentStreet: Joi.string().trim(),
+    currentStreet: Joi.string().max(300).trim().pattern(addressPattern).messages({
+        "string.pattern.base" : "Current Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
+        "string.max" : "Current Street must not exceed 300 characters.",
+    }),
 
-    currentCity: Joi.string().trim(),
+    currentCity: Joi.string().max(200).trim().pattern(addressPattern).messages({
+        "string.pattern.base" : "Current City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
+        "string.max" : "Current City must not exceed 200 characters.",
+    }),
 
     pincode: Joi.string().pattern(/^[1-9][0-9]{5}$/).trim().messages({
         "string.pattern.base": "Pincode must be a 6-digit number and cannot start with 0."
     }),
 
-    nativeStreet: Joi.string().trim(),
+    nativeStreet: Joi.string().max(300).trim().pattern(addressPattern).messages({
+        "string.pattern.base" : "Native Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
+        "string.max" : "Native Street must not exceed 300 characters.",
+    }),
 
-    nativeCity: Joi.string().trim(),
+    nativeCity: Joi.string().max(200).trim().pattern(addressPattern).messages({
+        "string.pattern.base" : "Native City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
+        "string.max" : "Native City must not exceed 200 characters.",
+    }),
 
     nativePincode: Joi.string().pattern(/^[1-9][0-9]{5}$/).trim().messages({
         "string.pattern.base": "Native Pincode must be a 6-digit number and cannot start with 0."
@@ -219,7 +241,7 @@ const updateStudentSchema = Joi.object({
         "string.pattern.base": "Parent Mobile number must be a 10-digit Indian number starting with 6-9."
     }),
 
-    parentEmail: Joi.string().email({ tlds: { allow: false } }).trim().lowercase().messages({
+    parentEmail: Joi.string().email().trim().lowercase().messages({
         "string.email": "Parent Email must be a valid email address."
     }),
 
@@ -227,9 +249,8 @@ const updateStudentSchema = Joi.object({
         "string.pattern.base": "ABC ID must be exactly 12 digits."
     }),
 
-    division: Joi.string().valid("A", "B", "C").required().messages({
-        "any.only": "Division must be A, B, or C.",
-        "any.required": "Division is required."
+    division: Joi.string().valid("A", "B", "C").messages({
+        "any.only": "Division must be A, B, or C."
     }),
 
 }).min(1).options({

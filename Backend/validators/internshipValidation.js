@@ -1,24 +1,26 @@
 const Joi = require("joi");
 
 const internshipValidationSchema = Joi.object({
-    companyName: Joi.string().trim().min(2).required().messages({
+    companyName: Joi.string().trim().min(2).max(200).required().messages({
         "string.base": "Company name must be a string.",
         "string.min": "Company name must have at least 2 characters.",
+        "string.max" : "Company Name can have a maximum of 200 characters.",
         "any.required": "Company name is required."
     }),
 
-    role: Joi.string().trim().min(2).required().messages({
+    role: Joi.string().trim().min(2).max(200).required().messages({
         "string.base": "Role must be a string.",
         "string.min": "Role must have at least 2 characters.",
+        "string.max" : "Role can have a maximum of 200 characters.",
         "any.required": "Role is required."
     }),
 
-    startDate: Joi.date().required().messages({
+    startDate: Joi.date().max("now").required().messages({
         "date.base": "Start date must be a valid date.",
         "any.required": "Start date is required."
     }),
 
-    endDate: Joi.date().greater(Joi.ref("startDate")).required().messages({
+    endDate: Joi.date().max("now").greater(Joi.ref("startDate")).required().messages({
         "date.base": "End date must be a valid date.",
         "date.greater": "End date must be greater than start date.",
         "any.required": "End date is required."
@@ -47,9 +49,10 @@ const internshipValidationSchema = Joi.object({
         otherwise: Joi.forbidden()
     }),
 
-    description: Joi.string().trim().min(10).required().messages({
+    description: Joi.string().trim().min(10).max(300).required().messages({
         "string.base": "Description must be a string.",
         "string.min": "Description must be at least 10 characters.",
+        "string.max" : "Description can have a maximum of 300 characters.",
         "any.required": "Description is required."
     })
 }).options({
@@ -60,21 +63,23 @@ const internshipValidationSchema = Joi.object({
 
 
 const updateInternshipValidationSchema = Joi.object({
-    companyName: Joi.string().trim().min(2).empty("").optional().messages({
+    companyName: Joi.string().trim().min(2).max(200).empty("").optional().messages({
         "string.base": "Company name must be a string.",
-        "string.min": "Company name must have at least 2 characters."
+        "string.min": "Company name must have at least 2 characters.",
+        "string.max" : "Company name can have a maximum of 200 characters."
     }),
 
-    role: Joi.string().trim().min(2).empty("").optional().messages({
+    role: Joi.string().trim().min(2).max(200).empty("").optional().messages({
         "string.base": "Role must be a string.",
-        "string.min": "Role must have at least 2 characters."
+        "string.min": "Role must have at least 2 characters.",
+        "string.max" : "Role can have a maximum of 200 characters."
     }),
 
-    startDate: Joi.date().optional().messages({
+    startDate: Joi.date().max("now").optional().messages({
         "date.base": "Start date must be a valid date."
     }),
 
-    endDate: Joi.date().greater(Joi.ref("startDate")).optional().messages({
+    endDate: Joi.date().max("now").greater(Joi.ref("startDate")).optional().messages({
         "date.base": "End date must be a valid date.",
         "date.greater": "End date must be greater than start date."
     }),
@@ -99,9 +104,10 @@ const updateInternshipValidationSchema = Joi.object({
         otherwise: Joi.forbidden()
     }),
 
-    description: Joi.string().trim().min(10).empty("").optional().messages({
+    description: Joi.string().trim().min(10).max(300).empty("").optional().messages({
         "string.base": "Description must be a string.",
-        "string.min": "Description must be at least 10 characters."
+        "string.min": "Description must be at least 10 characters.",
+        "string.max" : "Description can have a maximum of 300 characters."
     })
 })
 .min(1) // At least one field is required

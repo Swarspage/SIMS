@@ -12,17 +12,19 @@ const yearPattern = /^\d{4}-\d{2}$/;
 // CREATE
 const createPlacementSchema = Joi.object({
 
-	companyName: Joi.string().trim().min(1).required().messages({
+	companyName: Joi.string().trim().min(1).max(200).required().messages({
 		"string.base": "Company name must be a string",
 		"string.empty": "Company name cannot be empty",
 		"string.min": "Company name cannot be empty",
+		"string.max" : "Company name can have maximum of 200 characters.",
 		"any.required": "Company name is required"
 	}),
 
-	role: Joi.string().trim().min(1).required().messages({
+	role: Joi.string().trim().min(1).max(200).required().messages({
 		"string.base": "Role must be a string",
 		"string.empty": "Role cannot be empty",
 		"string.min": "Role cannot be empty",
+		"string.max" : "Role can have maximum of 200 characters.",
 		"any.required": "Role is required"
 	}),
 
@@ -42,21 +44,21 @@ const createPlacementSchema = Joi.object({
 	placementYear: Joi.string().min(1).pattern(yearPattern).required().messages({
 		"string.base": "Placement year must be a string",
 		"string.empty": "Placement year cannot be empty",
-		"string.pattern.base": "Placement year must be a valid year",
+		"string.pattern.base": "Placement year must be a valid year like 2023-24.",
 		"any.required": "Placement year is required"
 	}),
 
 	passoutYear: Joi.string().min(1).pattern(yearPattern).required().messages({
 		"string.base": "Passout year must be a string",
 		"string.empty": "Passout year cannot be empty",
-		"string.pattern.base": "Passout year must be a valid year",
+		"string.pattern.base": "Passout year must be a valid year like 2023-24.",
 		"any.required": "Passout year is required"
 	}),
 
 	joiningYear: Joi.string().min(1).pattern(yearPattern).required().messages({
 		"string.base": "Joining year must be a string",
 		"string.empty": "Joining year cannot be empty",
-		"string.pattern.base": "Joining year must be a valid year",
+		"string.pattern.base": "Joining year must be a valid year like 2023-24.",
 		"any.required": "Joining year is required"
 	}),
 }).options({
@@ -70,14 +72,16 @@ const createPlacementSchema = Joi.object({
 // UPDATE
 const updatePlacementSchema = Joi.object({
 
-	companyName: Joi.string().trim().min(1).empty("").optional().messages({
+	companyName: Joi.string().trim().min(1).max(200).empty("").optional().messages({
 		"string.base": "Company name must be a string",
 		"string.min": "Company name cannot be empty",
+		"string.max" : "Company name can have maximum of 200 characters.",
 	}),
 
-	role: Joi.string().trim().min(1).empty("").optional().messages({
+	role: Joi.string().trim().min(1).max(200).empty("").optional().messages({
 		"string.base": "Role must be a string",
 		"string.min": "Role cannot be empty",
+		"string.max" : "Role can have maximum of 200 characters.",
 	}),
 
 	placementType: Joi.string().valid("Campus", "Off-Campus").empty("").optional().messages({
@@ -93,17 +97,17 @@ const updatePlacementSchema = Joi.object({
 
 	placementYear: Joi.string().pattern(yearPattern).empty("").optional().messages({
 		"string.base": "Placement year must be a string",
-		"string.pattern.base": "Placement year must be a valid year",
+		"string.pattern.base": "Placement year must be a valid year like 2023-24.",
 	}),
 
 	passoutYear: Joi.string().pattern(yearPattern).empty("").optional().messages({
 		"string.base": "Passout year must be a string",
-		"string.pattern.base": "Passout year must be a valid year",
+		"string.pattern.base": "Passout year must be a valid year like 2023-24.",
 	}),
 
 	joiningYear: Joi.string().pattern(yearPattern).empty("").optional().messages({
 		"string.base": "Joining year must be a string",
-		"string.pattern.base": "Joining year must be a valid year",
+		"string.pattern.base": "Joining year must be a valid year like 2023-24.",
 	}),
 
 }).min(1)	// at least one field is required to update
