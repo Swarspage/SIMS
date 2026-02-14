@@ -26,7 +26,7 @@ const loginSchema = Joi.object({
         }),
 
     password: Joi.string()
-        // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,14}$/)
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&/])[A-Za-z\d@$!%*?&]{8,14}$/)
         .required()
         .messages({
             "string.empty": "Password is required.",
@@ -59,7 +59,28 @@ const adminLoginSchema = Joi.object({
         })
 });
 
+const divisionInchargeLoginSchema = Joi.object({
+   email: Joi.string()
+        .email()
+        .required()
+        .messages({
+            "string.empty": "Email is required.",
+            "string.email": "Please enter a valid email address.",
+            "any.required": "Email is required."
+        }),
+
+    password: Joi.string()
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,14}$/)
+        .required()
+        .messages({
+            "string.empty": "Password is required.",
+            "string.pattern.base":
+                "Password must be 8-14 characters long and include uppercase, lowercase, number, and special character.",
+            "any.required": "Password is required."
+        })
+});
 
 
 
-module.exports = { signupSchema, loginSchema, adminLoginSchema };
+
+module.exports = { signupSchema, loginSchema, adminLoginSchema, divisionInchargeLoginSchema };

@@ -1,17 +1,5 @@
 const Joi = require("joi");
 
-const divisionInchargeLoginSchema = Joi.object({
-  email: Joi.string().email().required().messages({
-    "string.base": "Email must be a string.",
-    "string.email": "Please enter a valid email address.",
-    "any.required": "Email is required."
-  }),
-
-  password: Joi.string().required().messages({
-    "string.base": "Password must be a string.",
-    "any.required": "Password is required."
-  }),
-});
 
 
 const importDivisionInchargeSchema = Joi.object({
@@ -55,5 +43,5 @@ const importDivisionInchargeSchema = Joi.object({
 });
 
 module.exports = {
-  importDivisionInchargeSchema, divisionInchargeLoginSchema
+  importDivisionInchargeSchema
 };

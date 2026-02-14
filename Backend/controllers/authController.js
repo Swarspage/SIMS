@@ -4,9 +4,8 @@ const DivisionIncharge = require("../models/DivisionIncharge");
 
 const Student = require("../models/Student.js")
 const Admin = require('../models/Admin.js');
-const { signupSchema, loginSchema, adminLoginSchema } = require('../validators/authValidation.js');
+const { signupSchema, loginSchema, adminLoginSchema, divisionInchargeLoginSchema } = require('../validators/authValidation.js');
 
-const { divisionInchargeLoginSchema } = require("../validators/divisionInchargeValidation.js");
 
 const { uploadToCloudinary } = require("../helpers/UploadToCloudinary.js");
 
