@@ -85,4 +85,18 @@ const achievementSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+achievementSchema.index({ stuID: 1 });
+achievementSchema.index({ category: 1 });
+achievementSchema.index({ achievementType: 1 });
+achievementSchema.index({ "date.from": -1 });
+achievementSchema.index({ createdAt: -1 });
+
+achievementSchema.index({ stuID: 1, category: 1 });
+
+achievementSchema.index({
+  title: "text",
+  description: "text",
+  issuedBy: "text"
+});
+
 module.exports = mongoose.model("Achievement", achievementSchema);

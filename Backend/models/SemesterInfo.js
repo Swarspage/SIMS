@@ -28,4 +28,16 @@ const semesterInfoSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
+semesterInfoSchema.index({ stuID: 1 });
+
+semesterInfoSchema.index(
+  { stuID: 1, semester: 1 },
+  { unique: true }
+);
+
+semesterInfoSchema.index({ isDefaulter: 1 });
+semesterInfoSchema.index({ semester: 1 });
+
+semesterInfoSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model("SemesterInfo", semesterInfoSchema);

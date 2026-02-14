@@ -34,4 +34,16 @@ const activitySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+activitySchema.index({ stuID: 1 });
+activitySchema.index({ type: 1 });
+activitySchema.index({ date: -1 });
+activitySchema.index({ createdAt: -1 });
+
+activitySchema.index({ stuID: 1, date: -1 });
+
+activitySchema.index({
+  title: "text",
+  description: "text"
+});
+
 module.exports = mongoose.model("Activity", activitySchema);
