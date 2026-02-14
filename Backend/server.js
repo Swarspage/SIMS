@@ -3,6 +3,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 require("dotenv").config();
+const errorHandler = require("./middlewares/errorHandler");
 
 // ✅ ADD THIS DEBUG CHECK
 console.log("🔍 ENVIRONMENT VARIABLES CHECK:");
@@ -36,8 +37,8 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
 
 // Routes
@@ -51,6 +52,9 @@ app.use("/api/placement", require("./routes/PlacementRoutes"));
 app.use("/api/higherStudies", require("./routes/HigherStudiesRoutes"));
 app.use("/api/student", require("./routes/StudentRoutes"));
 app.use("/api/divisionIncharge", require("./routes/divisionInchargeRoutes"));
+
+// after all routes
+app.use(errorHandler);
 
 app.get("/", (req, res) => {
   res.send("API is running...");

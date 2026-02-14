@@ -1,36 +1,62 @@
-//this middleware handles file uploads(mostly cloudinary) to our server from client side or postman etc
-// const multer= require("multer");
-
-// const storage= multer.diskStorage({
-//     filename: function (req,file,cb){
-//         cb(null, Date.now() + "-" + file.originalname)
-//     }
-// });
-
-
-// const upload = multer({storage:storage});
-
-
-// module.exports = upload;
-
-
-// made this middleware beter fit for deploying  on render and railway
 const multer = require("multer");
 const os = require("os");
 const path = require("path");
+const crypto = require("crypto");
 
+// Allowed MIME types
+const allowedMimeTypes = [
+  "image/png",
+  "image/jpg",
+  "image/jpeg",
+  "application/pdf",
+];
+
+// Allowed file extensions (extra safety)
+const allowedExtensions = [".png", ".jpg", ".jpeg", ".pdf"];
+
+// Storage config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, os.tmpdir());
+    cb(null, os.tmpdir()); // Safe for Render / Railway
   },
+
+  // -----------------Random filename using crypto---------------------
+  // Prevents: File overwrite attacks, Predictable filenames, Security guessing, etc 
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+    const uniqueName =
+      crypto.randomBytes(16).toString("hex") +
+      "-" +
+      Date.now() +
+      path.extname(file.originalname).toLowerCase();
+
+    cb(null, uniqueName);
   },
 });
 
+  // ----------------MIME + Extension double Validation-------------------
+  // Prevents: Renamed .exe files, Spoofed content type, etc
+
+const fileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return cb(new Error("Only PNG, JPG, JPEG, or PDF files are allowed depending on the field."));
+  }
+
+  if (!allowedExtensions.includes(ext)) {
+    return cb(new Error("Invalid file extension"));
+  }
+
+  cb(null, true);
+};
+
+// Multer instance
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter,
+  limits: {
+    fileSize: 500 * 1024, // 500 KB
+  },
 });
 
 module.exports = upload;

@@ -1,5 +1,14 @@
-NO need to use the following middlewares:
+1) NO need to use the following middlewares:
 VerifyToken.js
 excelMulter.js
 
 BOth of them have some or the other issue
+
+
+2) We have used memoryStorage for multerImportExcel.js
+because we want to process the excel file by doing some actions on multerImportExcel
+
+
+3) we have use diskStorage + os.tmpdir() in multer.js
+because eventually we just want to store the photos and pdfs in cloudinary (no processing) 
+and also for production this is the specified approach
