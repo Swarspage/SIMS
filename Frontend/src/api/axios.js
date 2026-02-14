@@ -19,15 +19,8 @@ API.interceptors.request.use(
     // ✅ CHANGED: Get token from localStorage instead of cookie
     const token = localStorage.getItem("token");
 
-    // Debug logs
-    console.log("🔍 REQUEST INTERCEPTOR RUNNING");
-    console.log("📦 Token from localStorage:", token);
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("✅ Authorization header added");
-    } else {
-      console.log("❌ No token found in localStorage!");
     }
 
     return config;
