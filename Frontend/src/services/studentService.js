@@ -58,4 +58,12 @@ export const studentService = {
     const response = await API.get(`/student/${studentId}`);
     return response.data;
   },
+  // Export all students (Admin only)
+  exportStudents: async (params) => {
+    const response = await API.get("/student/export-students", {
+      params,
+      responseType: "blob",
+    });
+    return response.data;
+  },
 };

@@ -620,34 +620,26 @@ export default function AdminStudentSection() {
     try {
       setExporting(true);
 
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("⚠️ You are not authenticated. Please login again.");
-        setExporting(false);
-        return;
-      }
+      const params = {
+        search: searchQuery || undefined,
+        year: selectedYear || undefined,
+        branch: selectedBranch || undefined,
+        firstName: firstName || undefined,
+        middleName: middleName || undefined, // Father's Name
+        lastName: lastName || undefined,
+        motherName: motherName || undefined,
+        city: city || undefined,
+        bloodGroup: bloodGroup || undefined,
+        category: category || undefined,
+      };
 
-      const response = await fetch(
-        "https://student-website-backend.onrender.com/api/student/export-students",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const blob = await studentService.exportStudents(params);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([blob]));
       const a = document.createElement("a");
       a.href = url;
-      a.download = `students_export_${new Date().toISOString().split("T")[0]
-        }.xlsx`;
+      a.download = `students_export_${new Date().toISOString().split("T")[0]}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -656,7 +648,11 @@ export default function AdminStudentSection() {
       alert("✅ Students exported successfully!");
     } catch (err) {
       console.error("Export error:", err);
-      alert("Failed to export students. Please try again.");
+      if (err.response?.status === 401) {
+        alert("⚠️ Session expired. Please login again.");
+      } else {
+        alert("Failed to export students. Please try again.");
+      }
     } finally {
       setExporting(false);
     }
