@@ -51,11 +51,14 @@ export default function AdminLoginPage() {
       navigate("/admin/dashboard");
     } catch (err) {
       console.log("Admin login error:", err);
-      setError(
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        "Admin login failed. Please try again."
-      );
+      let errorMessage = err.response?.data?.error || err.response?.data?.message || "Admin login failed. Please try again.";
+
+      // MASK PASSWORD POLICY ERROR
+      if (errorMessage && errorMessage.includes("Password must be")) {
+        errorMessage = "Invalid credentials";
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -65,6 +65,11 @@ export default function LoginPage() {
         }
       }
 
+      // MASK SENSITIVE ERRORS (Password Policy, Student ID Format)
+      if (errorMessage && (errorMessage.includes("Password must be") || errorMessage.includes("Student ID must follow"))) {
+        errorMessage = "Invalid credentials";
+      }
+
       setError(errorMessage);
     } finally {
       setLoading(false);

@@ -43,11 +43,14 @@ export default function DivisionInchargeLogin() {
             navigate("/admin/dashboard");
         } catch (err) {
             console.log("Login error:", err);
-            setError(
-                err.response?.data?.error ||
-                err.response?.data?.message ||
-                "Login failed. Please verify credentials and division."
-            );
+            let errorMessage = err.response?.data?.error || err.response?.data?.message || "Login failed. Please verify credentials and division.";
+
+            // MASK PASSWORD POLICY ERROR
+            if (errorMessage && errorMessage.includes("Password must be")) {
+                errorMessage = "Invalid credentials";
+            }
+
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
