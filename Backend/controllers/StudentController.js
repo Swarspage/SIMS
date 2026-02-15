@@ -276,11 +276,14 @@ const importExcelDataWithPasswords = async (req, res) => {
 			await Promise.all(
 				batch.map(async (job) => {
 					try {
-						await sgMail.send({
+
+
+						const response = await sgMail.send({
 							to: job.email,
 							from: process.env.SENDGRID_VERIFIED_SENDER,
 							subject: "Your Account Password",
-							text: `Hello ${job.studentID},
+							text: 
+                `Hello ${job.studentID},
 
 								Your account has been created.
 
@@ -288,11 +291,16 @@ const importExcelDataWithPasswords = async (req, res) => {
 								Password: ${job.password}`
 							});
 
+              console.log("SendGrid response:", response[0].statusCode);
+
 						// Push to array only after successful send
 						emailedStudents.push({
 							studentID: job.studentID,
 							email: job.email
 						});
+
+            // small delay between each email
+    await new Promise(res => setTimeout(res, 1000));
 
 					} catch (err) {
 						console.error(`Email failed for ${job.studentID}:`, err.message);
