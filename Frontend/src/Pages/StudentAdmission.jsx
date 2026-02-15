@@ -208,7 +208,7 @@ export default function StudentAdmission() {
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
                 <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                   <span className="w-1.5 h-6 bg-green-500 rounded-full"></span>
-                  Financial Information
+                  Fees and Scholarship Information
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
                   <InfoItem label="Total Fees" value={`₹ ${formData.fees}`} />
@@ -299,7 +299,7 @@ export default function StudentAdmission() {
           <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
               <span className="w-1 h-6 bg-green-500 rounded-full"></span>
-              Financial Information
+              Fees and Scholarship Information
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

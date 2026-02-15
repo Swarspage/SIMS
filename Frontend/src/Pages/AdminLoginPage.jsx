@@ -22,17 +22,13 @@ export default function AdminLoginPage() {
 
     try {
       const response = await authService.adminLogin(form.email, form.password);
-      console.log("Admin login response:", response);
-
       localStorage.setItem("role", "admin");
 
       const token =
         response.token || response.data?.token || response.accessToken;
       if (token) {
         localStorage.setItem("token", token);
-        console.log("Token stored:", token);
       } else {
-        console.warn("No token found in response");
         localStorage.setItem("token", "logged-in");
       }
 
@@ -41,7 +37,6 @@ export default function AdminLoginPage() {
         const adminId = admin._id || admin.id;
         if (adminId) {
           localStorage.setItem("adminId", adminId);
-          console.log("Admin ID stored:", adminId);
         }
         if (admin.email) {
           localStorage.setItem("adminEmail", admin.email);
@@ -50,7 +45,6 @@ export default function AdminLoginPage() {
 
       navigate("/admin/dashboard");
     } catch (err) {
-      console.log("Admin login error:", err);
       let errorMessage = err.response?.data?.error || err.response?.data?.message || "Admin login failed. Please try again.";
 
       // MASK PASSWORD POLICY ERROR

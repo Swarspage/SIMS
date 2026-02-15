@@ -22,15 +22,12 @@ export default function LoginPage() {
 
     try {
       const response = await authService.login(form.studentId, form.password);
-      console.log("Login response:", response);
-
       localStorage.setItem("role", "student");
 
       const token =
         response.token || response.data?.token || response.accessToken;
       if (token) {
         localStorage.setItem("token", token);
-        console.log("Token stored:", token);
       } else {
         localStorage.setItem("token", "logged-in");
       }
@@ -41,7 +38,6 @@ export default function LoginPage() {
         const studentId = student._id || student.id;
         if (studentId) {
           localStorage.setItem("studentId", studentId);
-          console.log("Student ID stored:", studentId);
         }
         if (student.name) {
           localStorage.setItem("studentName", student.name);
@@ -50,7 +46,6 @@ export default function LoginPage() {
 
       navigate("/student/dashboard");
     } catch (err) {
-      console.log("Login error:", err);
 
       let errorMessage = "Login failed. Please try again.";
 
