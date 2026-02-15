@@ -10,6 +10,7 @@ import csiLogo from "../assets/csi_logo_new.png";
 
 const Home = () => {
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   // Scroll to top on mount
   useEffect(() => {
@@ -35,7 +36,7 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Navigation Use standard anchor for home to refresh/reset or Link if preferred, sticking to original anchor style for now but added scroll behavior */}
+            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#" className="text-sm font-bold text-[#1D3EA1] transition-colors">HOME</a>
               <a href="#about" className="text-sm font-medium text-gray-600 hover:text-[#1D3EA1] transition-colors">DEPARTMENT</a>
@@ -44,8 +45,8 @@ const Home = () => {
               <a href="#contact" className="text-sm font-medium text-gray-600 hover:text-[#1D3EA1] transition-colors">CONTACT</a>
             </nav>
 
-            {/* Login Buttons */}
-            <div className="flex items-center space-x-3">
+            {/* Desktop Login Buttons */}
+            <div className="hidden md:flex items-center space-x-3">
               <button
                 onClick={() => navigate("/login")}
                 className="px-5 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full shadow-md hover:bg-blue-800 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
@@ -65,7 +66,54 @@ const Home = () => {
                 Division Login
               </button>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden text-gray-600 hover:text-[#1D3EA1] focus:outline-none"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {isMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+            <div className="md:hidden mt-4 pb-4 border-t border-gray-100 animate-fadeIn">
+              <nav className="flex flex-col space-y-4 mt-4">
+                <a href="#" className="text-sm font-bold text-[#1D3EA1] transition-colors" onClick={() => setIsMenuOpen(false)}>HOME</a>
+                <a href="#about" className="text-sm font-medium text-gray-600 hover:text-[#1D3EA1] transition-colors" onClick={() => setIsMenuOpen(false)}>DEPARTMENT</a>
+                <a href="#vision" className="text-sm font-medium text-gray-600 hover:text-[#1D3EA1] transition-colors" onClick={() => setIsMenuOpen(false)}>VISION</a>
+                <a href="#faculty" className="text-sm font-medium text-gray-600 hover:text-[#1D3EA1] transition-colors" onClick={() => setIsMenuOpen(false)}>FACULTY</a>
+                <a href="#contact" className="text-sm font-medium text-gray-600 hover:text-[#1D3EA1] transition-colors" onClick={() => setIsMenuOpen(false)}>CONTACT</a>
+              </nav>
+              <div className="flex flex-col space-y-3 mt-6 border-t border-gray-100 pt-6">
+                <button
+                  onClick={() => navigate("/login")}
+                  className="px-5 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full shadow-md hover:bg-blue-800 text-center"
+                >
+                  Student Login
+                </button>
+                <button
+                  onClick={() => navigate("/admin/login")}
+                  className="px-5 py-2 text-sm font-bold text-[#1D3EA1] bg-white border-2 border-[#1D3EA1] rounded-full hover:bg-blue-50 text-center"
+                >
+                  Admin Login
+                </button>
+                <button
+                  onClick={() => navigate("/division/login")}
+                  className="px-5 py-2 text-sm font-medium text-gray-600 hover:text-[#1D3EA1] text-center border border-gray-200 rounded-full"
+                >
+                  Division Login
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
