@@ -7,6 +7,7 @@ export default function StudentInformation() {
   const [message, setMessage] = useState({ type: "", text: "" });
   const [isEditMode, setIsEditMode] = useState(true); // Default to true, switch to false if data exists
   const [hasData, setHasData] = useState(false);
+  const [studentId, setStudentId] = useState(null);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -53,10 +54,11 @@ export default function StudentInformation() {
       if (data && data.success && data.data) {
         const s = data.data;
 
-        // Define what constitutes "having data" - e.g. check if PRN exists
+        // Define what constitutes "having data" - e.g. check if PRN or ID exists
         // If data exists, show view mode by default
-        if (s.PRN) {
+        if (s._id || s.id || s.PRN) {
           setHasData(true);
+          setStudentId(s._id || s.id);
           setIsEditMode(false);
         }
 
@@ -97,7 +99,13 @@ export default function StudentInformation() {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+
+    // Enforce Capitalization for Name Fields
+    if (["firstName", "middleName", "lastName", "motherName"].includes(name) && value.length > 0) {
+      value = value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -127,9 +135,14 @@ export default function StudentInformation() {
         data.append("studentPhoto", studentPhoto);
       }
 
-      await studentService.addStudent(data);
+      if (hasData && studentId) {
+        await studentService.updateStudent(studentId, data);
+        setMessage({ type: "success", text: "Student information updated successfully!" });
+      } else {
+        await studentService.addStudent(data);
+        setMessage({ type: "success", text: "Student information saved successfully!" });
+      }
 
-      setMessage({ type: "success", text: "Student information saved successfully!" });
       setHasData(true);
 
       // Delay switching to view mode slightly to let user see success message, or switch immediately
@@ -161,6 +174,12 @@ export default function StudentInformation() {
     fetchStudentData();
     setIsEditMode(false);
     setMessage({ type: "", text: "" });
+  };
+
+  // Helper function to capitalize first letter
+  const capitalize = (str) => {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
   };
 
   if (loading) {
@@ -205,7 +224,7 @@ export default function StudentInformation() {
                   )}
                 </div>
                 <h2 className="text-xl font-bold text-slate-900">
-                  {formData.firstName} {formData.lastName}
+                  {capitalize(formData.firstName)} {capitalize(formData.lastName)}
                 </h2>
                 <p className="text-slate-500 font-medium  mt-1">{formData.branch}</p>
                 <p className="text-sm text-slate-400 mt-1">{formData.year} - {formData.division}</p>
@@ -244,8 +263,8 @@ export default function StudentInformation() {
                   Personal Details
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
-                  <InfoItem label="Full Name" value={`${formData.firstName} ${formData.middleName} ${formData.lastName}`} />
-                  <InfoItem label="Mother's Name" value={formData.motherName} />
+                  <InfoItem label="Full Name" value={`${capitalize(formData.firstName)} ${capitalize(formData.middleName)} ${capitalize(formData.lastName)}`} />
+                  <InfoItem label="Mother's Name" value={capitalize(formData.motherName)} />
                   <InfoItem label="Date of Birth" value={formData.dob} />
                   <InfoItem label="Blood Group" value={formData.bloodGroup} />
                   <InfoItem label="Category" value={formData.category} />
@@ -273,12 +292,12 @@ export default function StudentInformation() {
                 </h3>
                 <div className="space-y-6">
                   <div>
-                    <p className="text-sm font-semibold text-slate-500 mb-1">Current Address</p>
-                    <p className="text-base text-slate-800">{formData.currentStreet}, {formData.currentCity} - {formData.pincode}</p>
+                    <h3 className="text-md font-bold text-orange-900 bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm inline-block mb-2">Current Address</h3>
+                    <p className="text-base text-slate-800 ml-1 mt-1">{formData.currentStreet}, {formData.currentCity} - {formData.pincode}</p>
                   </div>
                   <div className="border-t border-slate-100 pt-4">
-                    <p className="text-sm font-semibold text-slate-500 mb-1">Native Address</p>
-                    <p className="text-base text-slate-800">{formData.nativeStreet}, {formData.nativeCity} - {formData.nativePincode}</p>
+                    <h3 className="text-md font-bold text-orange-900 bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm inline-block mb-2">Native Address</h3>
+                    <p className="text-base text-slate-800 ml-1 mt-1">{formData.nativeStreet}, {formData.nativeCity} - {formData.nativePincode}</p>
                   </div>
                 </div>
               </div>
@@ -423,7 +442,7 @@ export default function StudentInformation() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Current Address */}
               <div className="space-y-4">
-                <h3 className="font-medium text-slate-700 bg-slate-50 p-2 rounded">Current Address</h3>
+                <h3 className="text-md font-bold text-orange-900 bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">Current Address</h3>
                 <InputField label="Street / Building" name="currentStreet" value={formData.currentStreet} onChange={handleChange} required />
                 <div className="grid grid-cols-2 gap-4">
                   <InputField label="City" name="currentCity" value={formData.currentCity} onChange={handleChange} required />
@@ -433,7 +452,7 @@ export default function StudentInformation() {
 
               {/* Native Address */}
               <div className="space-y-4">
-                <h3 className="font-medium text-slate-700 bg-slate-50 p-2 rounded">Native Address</h3>
+                <h3 className="text-md font-bold text-orange-900 bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">Native Address</h3>
                 <InputField label="Street / Building" name="nativeStreet" value={formData.nativeStreet} onChange={handleChange} required />
                 <div className="grid grid-cols-2 gap-4">
                   <InputField label="City" name="nativeCity" value={formData.nativeCity} onChange={handleChange} required />
