@@ -108,7 +108,7 @@ exports.login = async (req, res) => {
     }
 
     // Validate input
-    const { error } = loginSchema.validate(req.body, { abortEarly: false });
+    const { value, error } = loginSchema.validate(req.body, { abortEarly: false });
     if (error) {
       const validationErrors = error.details.map(err => ({
         field: err.path[0],
@@ -123,10 +123,10 @@ exports.login = async (req, res) => {
     }
 
     // Find student by studentID
-    const student = await Student.findOne({ studentID: studentID });
+    const student = await Student.findOne({ studentID: value.studentID });
     if (!student) return res.status(400).json({ error: 'Invalid credentials' });
 
-    const match = await bcrypt.compare(password, student.password);
+    const match = await bcrypt.compare(value.password, student.password);
     if (!match) return res.status(400).json({ error: 'Invalid credentials' });
 
     const studentObj = student.toObject();
@@ -160,7 +160,7 @@ exports.adminLogin = async (req, res) => {
     const { email, password } = req.body;
 
     // Joi validation
-    const { error } = adminLoginSchema.validate(req.body, { abortEarly: false });
+    const { value, error } = adminLoginSchema.validate(req.body, { abortEarly: false });
     if (error) {
       const validationErrors = error.details.map(err => ({
           field: err.path[0],
@@ -175,10 +175,10 @@ exports.adminLogin = async (req, res) => {
     }
 
 
-    const admin = await Admin.findOne({ email });
+    const admin = await Admin.findOne({ email : value.email });
     if (!admin) return res.status(400).json({ success: false, message: 'Invalid credentials' });
 
-    const match = await bcrypt.compare(password, admin.password);
+    const match = await bcrypt.compare(value.password, admin.password);
     if (!match) return res.status(400).json({ success: false, message: 'Invalid credentials' });
 
     const adminObj = admin.toObject();
@@ -214,7 +214,7 @@ exports.divisionInchargeLogin = async (req, res) => {
     const { email, password } = req.body;
 
     // Joi Validation
-    const { error } = divisionInchargeLoginSchema.validate({ email, password });
+    const { value, error } = divisionInchargeLoginSchema.validate({ email, password });
     if (error) {
       return res.status(400).json({
         success: false,
@@ -224,13 +224,13 @@ exports.divisionInchargeLogin = async (req, res) => {
 
 
     // Find User
-    const divisionIncharge = await DivisionIncharge.findOne({ email });
+    const divisionIncharge = await DivisionIncharge.findOne({ email : value.email });
     if (!divisionIncharge) {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
 
     // Password Check
-    const match = await bcrypt.compare(password, divisionIncharge.password);
+    const match = await bcrypt.compare(value.password, divisionIncharge.password);
     if (!match) {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
