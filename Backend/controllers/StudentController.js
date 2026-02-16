@@ -291,7 +291,7 @@ const importExcelDataWithPasswords = async (req, res) => {
 								Password: ${job.password}`
 							});
 
-              console.log("SendGrid response:", response[0].statusCode);
+              console.log("SendGrid response(just for testing, once everything is confirmed remove this console log):", response, "\n\n");
 
 						// Push to array only after successful send
 						emailedStudents.push({
@@ -300,7 +300,7 @@ const importExcelDataWithPasswords = async (req, res) => {
 						});
 
             // small delay between each email
-    await new Promise(res => setTimeout(res, 1000));
+            await new Promise(res => setTimeout(res, 5000));
 
 					} catch (err) {
 						console.error(`Email failed for ${job.studentID}:`, err.message);
