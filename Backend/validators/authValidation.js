@@ -16,7 +16,7 @@ const signupSchema = Joi.object({
 });
 
 const loginSchema = Joi.object({
-    studentID: Joi.string()
+    studentID: Joi.string().trim()
         .pattern(/^[0-9]{4}[A-Z]{4}[0-9]{3}$/)
         .required()
         .messages({
@@ -25,7 +25,7 @@ const loginSchema = Joi.object({
             "any.required": "Student ID is required."
         }),
 
-    password: Joi.string()
+    password: Joi.string().trim()
         .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&/])[A-Za-z\d@$!%*?&]{8,14}$/)
         .required()
         .messages({
@@ -39,7 +39,7 @@ const loginSchema = Joi.object({
 
 
 const adminLoginSchema = Joi.object({
-    email: Joi.string()
+    email: Joi.string().trim()
         .email()
         .required()
         .messages({
@@ -48,7 +48,7 @@ const adminLoginSchema = Joi.object({
             "any.required": "Email is required."
         }),
 
-    password: Joi.string()
+    password: Joi.string().trim()
         .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,14}$/)
         .required()
         .messages({
@@ -60,7 +60,7 @@ const adminLoginSchema = Joi.object({
 });
 
 const divisionInchargeLoginSchema = Joi.object({
-   email: Joi.string()
+   email: Joi.string().trim()
         .email()
         .required()
         .messages({
@@ -69,7 +69,7 @@ const divisionInchargeLoginSchema = Joi.object({
             "any.required": "Email is required."
         }),
 
-    password: Joi.string()
+    password: Joi.string().trim()
         .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,14}$/)
         .required()
         .messages({
