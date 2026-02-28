@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
 
 const baseAchievementSchema = {
   category: Joi.string()
@@ -17,25 +18,28 @@ const baseAchievementSchema = {
       "any.only" : "Please select a valid category."
     }),
 
-  title: Joi.string().min(3).max(100).required()
+  title: Joi.string().trim().pattern(textWithNumberRegex).min(3).max(100).required()
   .messages({
     "string.empty" : "Title is required.",
+    "string.pattern.base" : "Title must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
     "string.min" : "Title must be at least 3 characters long.",
     "string.max" : "Title cannot exceed 100 characters." , 
     "any.required" : "Title is required."
   }),
 
-  description: Joi.string().min(10).max(500).required()
+  description: Joi.string().trim().pattern(textWithNumberRegex).min(10).max(500).required()
   .messages({
     "string.empty" : "Description is required.",
+    "string.pattern.base" : "Description must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
     "string.min" : "Description must be at least 10 characters long.",
     "string.max" : "Description cannot exceed 500 characters." , 
     "any.required" : "Description is required."
   }),
 
-  issuedBy: Joi.string().min(3).max(100).required()
+  issuedBy: Joi.string().trim().pattern(textWithNumberRegex).min(3).max(100).required()
   .messages({
     "string.empty" : "Issued by is required.",
+    "string.pattern.base" : "Issued by must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
     "string.min" : "Issued by must be at least 3 characters long.",
     "string.max" : "Issued by cannot exceed 100 characters." , 
     "any.required" : "Issued by is required."
@@ -67,7 +71,8 @@ const baseAchievementSchema = {
       "any.only" : "Please select a valid achievement type."
     }),
 
-  teamMembers: Joi.array().items(Joi.string().messages({"string.base" : "Each team member name must be a string."})).default([]).messages({"array.base" : "Team members must be an array."}),
+  teamMembers: Joi.array().items(Joi.string().trim().pattern(textWithNumberRegex)
+  .messages({"string.pattern.base" : "Each team member name must contain only letters and special characters like commas, periods, exclamation marks, question marks, and hyphens."})).default([]).messages({"array.base" : "Team members must be an array."}),
 
   certification_course: Joi.string()
     .trim()

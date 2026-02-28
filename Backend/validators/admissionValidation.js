@@ -1,15 +1,18 @@
 const Joi = require("joi");
+const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
 
 //create admission => student
 const admissionCreateSchema = Joi.object({
-  rollno: Joi.string().min(1).max(20).optional()
+  rollno: Joi.string().trim().pattern(textWithNumberRegex).min(1).max(20).optional()
   .messages({
     "string.min" : "Roll number must be at least 1 character long.",
-    "string.max" : "Roll number cannot exceed 20 characters."
+    "string.max" : "Roll number cannot exceed 20 characters.",
+    "string.pattern.base" : "Roll number must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens."
   }),
 
   course: Joi.string()
     .trim()
+    .pattern(textWithNumberRegex)
     .min(2)
     .max(100)
     .required()
@@ -17,6 +20,7 @@ const admissionCreateSchema = Joi.object({
       "string.empty" : "Course name is required.",
       "string.min" : "Course name must be at least 2 characters long.",
       "string.max" : "Course name cannot exceed 100 characters.",
+      "string.pattern.base" : "Course name must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
       "any.required" : "Course name is required."
     }),
 
@@ -46,21 +50,24 @@ const admissionCreateSchema = Joi.object({
 
 //update admission => student | pending only
 const admissionUpdateSchema = Joi.object({
-  rollno: Joi.string().min(1).max(20).optional()
+  rollno: Joi.string().trim().pattern(textWithNumberRegex).min(1).max(20).optional()
   .messages({
     "string.min" : "Roll number must be at least 1 character long.",
-    "string.max" : "Roll number cannot exceed 20 characters."
+    "string.max" : "Roll number cannot exceed 20 characters.",
+    "string.pattern.base" : "Roll number must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens."
   }),
 
   course: Joi.string()
     .trim()
+    .pattern(textWithNumberRegex)
     .min(2)
     .max(100)
     .optional()
     .messages({
       "string.empty" : "Course name cannot be empty.",
       "string.min" : "Course name must be at least 2 characters long.",
-      "string.max" : "Course name cannot exceed 100 characters."
+      "string.max" : "Course name cannot exceed 100 characters.",
+      "string.pattern.base" : "Course name must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens."
     }),
 
   fees: Joi.number()
@@ -105,9 +112,10 @@ const getAdmissionsValidation = Joi.object({
       "string.pattern.base" : "Academic year must be in the format YYYY-YYYY.",
     }),
 
-  search: Joi.string().max(100).optional()
+  search: Joi.string().trim().pattern(textWithNumberRegex).max(100).optional()
   .messages({
-    "string.max" : "Search cannot exceed 100 characters."
+    "string.max" : "Search cannot exceed 100 characters.",
+    "string.pattern.base" : "Search must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens."
   }),
 
   page: Joi.number().integer().min(1).optional().messages({

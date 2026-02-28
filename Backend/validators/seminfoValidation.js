@@ -1,14 +1,17 @@
 const Joi = require("joi");
+const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
 
 //mark schema
 const markSchema = Joi.object({
   subject: Joi.string()
     .trim()
+    .pattern(textWithNumberRegex)
     .min(1)
     .required()
     .messages({
       "string.empty" : "Subject name is required.",
       "string.min" : "Subject name must be at least 1 character long.",
+      "string.pattern.base" : "Subject name must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens." ,
       "any.required" : "Subject name is required."
     }),
 
