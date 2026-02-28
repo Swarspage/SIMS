@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/TechMe103/Student_Website_Backend#readme",
   "dependencies": {
+    "@getbrevo/brevo": "^4.0.1",
     "@sendgrid/mail": "^8.1.6",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",

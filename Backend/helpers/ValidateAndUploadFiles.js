@@ -33,14 +33,16 @@ const validateAndUploadFiles = async (filesObj, fileConfigs) => {
         const uploadPromises = fileConfigs.map(async (config) => {
             const { fieldName } = config;
             const file = filesObj?.[fieldName]?.[0];
+            const uploadOptions = {
+                folder: "studentWebsite",
+                resource_type: "auto",
+                access_mode: "public",
+                ...(config.cloudinaryOptions || {}) // merge extra options if provided
+            };
 
             try {
                 
-                const result = await cloudinary.uploader.upload(file.path, {
-                    folder: "studentWebsite",
-                    resource_type : "image",
-                    access_mode: "public"
-                });
+                const result = await cloudinary.uploader.upload(file.path, uploadOptions);
 
                 uploadedFiles[fieldName] = {
                     url: result.secure_url,
@@ -49,11 +51,13 @@ const validateAndUploadFiles = async (filesObj, fileConfigs) => {
 
                 uploadedPublicIds.push(result.public_id);
 
-                // delete temp file
-                await fs.unlink(file.path).catch(() => { });
-
             } catch (err) {
-                throw new Error(`Failed to upload ${fieldName}`);
+                throw new Error(`Failed to upload ${fieldName}: ${err.message}`);
+            }finally {
+                //delete temp file in every case whether upload was successful or not.
+                await fs.unlink(file.path).catch((err) => {
+                    console.error("Error Deleting temp file on server : ", err);
+                });
             }
         });
 

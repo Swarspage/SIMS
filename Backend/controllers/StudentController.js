@@ -22,6 +22,10 @@ const { validateAndUploadFiles } = require("../helpers/ValidateAndUploadFiles");
 const mongoose = require("mongoose");
 const { deleteMultipleFromCloudinary } = require("../helpers/DeleteMultipleFromCloudinary");
 
+const generateRandomPassword = require("../helpers/generateRandomPassword");
+
+const sendEmailBrevo = require("../services/sendEmailBrevo");
+
 
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -37,42 +41,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD || process.env.emailPassword,          // app password if 2FA enabled
   },
 });
-
-// Function to generate strong random password
-const generateRandomPassword = (length = 14) => {
-  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const lowercase = "abcdefghijklmnopqrstuvwxyz";
-  const numbers = "0123456789";
-  const special = "@$!%*?&";
-
-  const allChars = uppercase + lowercase + numbers + special;
-
-  // Ensure minimum 8 and max 14
-  if (length < 8) length = 8;
-  if (length > 14) length = 14;
-
-  let password = "";
-
-  // 🔹 Guarantee at least one of each required type
-  password += uppercase[Math.floor(Math.random() * uppercase.length)];
-  password += lowercase[Math.floor(Math.random() * lowercase.length)];
-  password += numbers[Math.floor(Math.random() * numbers.length)];
-  password += special[Math.floor(Math.random() * special.length)];
-
-  // 🔹 Fill remaining characters randomly
-  for (let i = password.length; i < length; i++) {
-    password += allChars[Math.floor(Math.random() * allChars.length)];
-  }
-
-  // 🔹 Shuffle password to avoid predictable order
-  password = password
-    .split("")
-    .sort(() => 0.5 - Math.random())
-    .join("");
-
-  return password;
-};
-
 
 
 // for studentPhoto
@@ -277,30 +245,24 @@ const importExcelDataWithPasswords = async (req, res) => {
 				batch.map(async (job) => {
 					try {
 
+            await sendEmailBrevo({
+                toEmail: job.email,
+                subject: "Student Account Created",
+                htmlContent: `
+                  <h2>Hello ${job.studentID},</h2>
+                  <p>Your Student account has been created. Please save this email so that even if you forget password, you can get back to this email. As currently we dont have a way to reset password in the system yet.</p>
+                  <p><b>Email:</b> ${job.email}</p>
+                  <p><b>Password:</b> ${job.password}</p>
+                `
+              });
 
-						const response = await sgMail.send({
-							to: job.email,
-							from: process.env.SENDGRID_VERIFIED_SENDER,
-							subject: "Your Account Password",
-							text: 
-                `Hello ${job.studentID},
-
-								Your account has been created.
-
-								Email: ${job.email}
-								Password: ${job.password}`
-							});
-
-              console.log("SendGrid response(just for testing, once everything is confirmed remove this console log):", response, "\n\n");
+              
 
 						// Push to array only after successful send
 						emailedStudents.push({
 							studentID: job.studentID,
 							email: job.email
 						});
-
-            // small delay between each email
-            await new Promise(res => setTimeout(res, 5000));
 
 					} catch (err) {
 						console.error(`Email failed for ${job.studentID}:`, err.message);

@@ -6,12 +6,13 @@ const sgMail = require("@sendgrid/mail");
 
 const { importDivisionInchargeSchema } = require("../validators/divisionInchargeValidation");
 
+const sendEmailBrevo = require("../services/sendEmailBrevo");
+
+const generateRandomPassword = require("../helpers/generateRandomPassword");
+
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Random password generator
-const generateRandomPassword = (length = 14) => {
-  return crypto.randomBytes(length).toString("base64").slice(0, length);
-};
 
 // Helper to read Excel cell safely
 const getCellValue = (cell) => {
@@ -193,6 +194,104 @@ Password: ${job.password}`
   }
 };
 
+const addSingleDivisionIncharge = async (req, res) => {
+  try {
+    const { name, year, division, email } = req.body;
+
+    if (!name || !year || !division || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields (name, year, division, email) are required"
+      });
+    }
+
+    // Check if already exists
+    const existing = await DivisionIncharge.findOne({ email });
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: "Division Incharge with this email already exists"
+      });
+    }
+
+    // Generate password
+    const plainPassword = generateRandomPassword(14);
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+    const newIncharge = await DivisionIncharge.create({
+      name,
+      year,
+      division,
+      email,
+      password: hashedPassword
+    });
+
+    // Send Email
+    await sendEmailBrevo({
+      toEmail: email,
+      subject: "Division Incharge Account Created",
+      htmlContent: `
+        <h2>Hello ${name},</h2>
+        <p>Your Division Incharge account has been created. Please save this email so that even if you forget password, you can get back to this email. As currently we dont have a way to reset password in the system yet.</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Password:</b> ${plainPassword}</p>
+      `
+    });
+
+
+
+
+    return res.status(201).json({
+      success: true,
+      message: "Division Incharge added successfully and email sent",
+      data: newIncharge
+    });
+
+  } catch (error) {
+    console.error("Add Division Incharge Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error adding Division Incharge"
+    });
+  }
+};
+
+
+const getSingleDivisionInchargeById = async (req, res) => {
+	try {
+		const { id } = req.params;
+
+		// If divisionIncharge trying to access someone else's profile --error should go
+		if ( req.user.role === "divisionIncharge" && req.user.id !== id ) {
+			return res.status(403).json({ success: false, message: "You are not allowed to access other Division Incharge's profile" });
+		}
+
+		let divisionInchargeId;
+
+		if(req.user.role === "divisionIncharge"){
+			divisionInchargeId = req.user.id;
+		}else if(req.user.role === "admin"){
+			divisionInchargeId = id;
+		}else{
+			return res.status(403).json({success : false, message: "You are not allowed to access this profile."});
+		}
+
+		const incharge = await DivisionIncharge.findById(divisionInchargeId).select("-password");
+
+		if (!incharge) {
+			return res.status(404).json({ success: false, message: "Division Incharge not found" });
+		}
+
+		return res.status(200).json({ success: true, data: incharge });
+
+	} catch (error) {
+		console.error("Get Single Error:", error);
+		return res.status(500).json({ success: false, message: "Error fetching Division Incharge" });
+	}
+};
+
+
+// yeh hatane wala controller yaha se hatane waali baat karo swar se
 const loginDivisionIncharge = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -256,18 +355,123 @@ const loginDivisionIncharge = async (req, res) => {
 const getAllDivisionIncharges = async (req, res) => {
   try {
     const incharges = await DivisionIncharge.find().sort({ createdAt: -1 });
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: incharges
     });
   } catch (error) {
     console.error("Error fetching division incharges:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Error fetching division incharges"
     });
   }
 };
+
+// add joi validation to this adn then use value returned by joi
+// admin has compulsorily assing some year and division, i they dont want to assign anything then just delete that Division Incharge
+const updateDivisionIncharge = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, year, division } = req.body;
+
+    const incharge = await DivisionIncharge.findById(id);
+
+    if (!incharge) {
+      return res.status(404).json({
+        success: false,
+        message: "Division Incharge not found"
+      });
+    }
+
+    if (name) incharge.name = name;
+    if (year) incharge.year = year;
+    if (division) incharge.division = division;
+
+    await incharge.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Division Incharge updated successfully",
+      data: incharge
+    });
+
+  } catch (error) {
+    console.error("Update Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error updating Division Incharge"
+    });
+  }
+};
+
+// if we rebuild the auth system then this will not be required.
+const changeEmailOfDivisionIncharge = async (req, res) => {
+  try {
+    const { id, newEmail } = req.body;
+
+    if (!id || !newEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "id and newEmail are required"
+      });
+    }
+
+    const incharge = await DivisionIncharge.findById(id);
+
+    if (!incharge) {
+      return res.status(404).json({
+        success: false,
+        message: "Division Incharge not found"
+      });
+    }
+
+    // Check if new email already exists
+    const emailExists = await DivisionIncharge.findOne({ email: newEmail });
+    if (emailExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already in use"
+      });
+    }
+
+    // Generate new password
+    const plainPassword = generateRandomPassword(14);
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+    incharge.email = newEmail;
+    incharge.password = hashedPassword;
+
+    await incharge.save();
+
+    // Send Email
+    await sgMail.send({
+      to: newEmail,
+      from: process.env.SENDGRID_VERIFIED_SENDER,
+      subject: "Division Incharge Email Updated",
+      text: `Hello ${incharge.name},
+
+Your email has been updated.
+
+New Email: ${newEmail}
+New Password: ${plainPassword}`
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Email changed successfully and new credentials sent"
+    });
+
+  } catch (error) {
+    console.error("Change Email Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error changing email"
+    });
+  }
+};
+
+
 
 const deleteDivisionIncharge = async (req, res) => {
   try {
@@ -281,13 +485,13 @@ const deleteDivisionIncharge = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Division Incharge deleted successfully"
     });
   } catch (error) {
     console.error("Error deleting division incharge:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Error deleting division incharge"
     });
@@ -296,7 +500,11 @@ const deleteDivisionIncharge = async (req, res) => {
 
 module.exports = {
   importDivisionInchargeFromExcel,
+  addSingleDivisionIncharge,
   loginDivisionIncharge,
+  getSingleDivisionInchargeById,
   getAllDivisionIncharges,
+  changeEmailOfDivisionIncharge,
+  updateDivisionIncharge,
   deleteDivisionIncharge
 };
