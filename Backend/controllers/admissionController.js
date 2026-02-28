@@ -62,17 +62,17 @@ const createAdmission = async (req, res) => {
     }
 
     // Prevent duplicate admission per academic year
-    const existing = await Admission.findOne({
-      stuID,
-      academicYear: value.academicYear,
-    });
+    // const existing = await Admission.findOne({
+    //   stuID,
+    //   academicYear: value.academicYear,
+    // });
 
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: "Admission already exists for this academic year",
-      });
-    }
+    // if (existing) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Admission already exists for this academic year",
+    //   });
+    // }
 
     const admission = new Admission({
       stuID,
@@ -80,6 +80,7 @@ const createAdmission = async (req, res) => {
       course: value.course,
       fees: value.fees,
       isScholarshipApplied: value.isScholarshipApplied,
+      scholarshipNotAppliedReason: value.scholarshipNotAppliedReason,
       academicYear: value.academicYear,
 
       // Server-controlled fields
@@ -96,6 +97,13 @@ const createAdmission = async (req, res) => {
     });
 
   } catch (err) {
+    //duplicates academic yr protection (unique indx)
+    if(err.code === 11000) {
+      return res.status(400).json({
+        success: false ,
+        message: "Admission already exists for this academic year for the student."
+      });
+    }
     console.error("Create Admission Error:", err);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
@@ -104,11 +112,13 @@ const createAdmission = async (req, res) => {
 //get student their own admissions
 const getAdmissionsByStudent = async (req, res) => {
   try {
-    const admissions = await Admission.find({ stuID: req.user.id })
-      .sort({ createdAt: -1 });
+    if(req.user.role !== "student") {
+      return res.status(403).json({ success : false , message : "Only students can access their admissions." });
+    }
 
+    const admissions = await Admission.find({ stuID : req.user.id }).sort({ createdAt : -1 });
     return res.status(200).json({ success: true, data: admissions });
-  } catch {
+  } catch (err) {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -116,6 +126,11 @@ const getAdmissionsByStudent = async (req, res) => {
 //update admission => student | pending only
 const updateAdmission = async (req, res) => {
   try {
+
+    if (!["student", "divisionIncharge"].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
     const { error, value } = admissionUpdateSchema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
@@ -224,6 +239,11 @@ const deleteAdmission = async (req, res) => {
 //get all admissions => admin | DI
 const getAllAdmissions = async (req, res) => {
   try {
+
+    if (!["admin" , "divisionIncharge"].includes(req.user.role)) {
+      return res.status(403).json( { success : false , message : "Unauthorized" } );
+    }
+
     const { error, value } = getAdmissionsValidation.validate(req.query);
     if (error) {
       return res.status(400).json({ success: false, message: error.details[0].message });
@@ -235,17 +255,20 @@ const getAllAdmissions = async (req, res) => {
 
     const query = {};
 
-    if (value.year) query.year = value.year;
-    if (value.academicYear) query.academicYear = value.academicYear;
-    if (value.filterPaid)
-      query.isFeesPaid = value.filterPaid === "paid";
-
+    
     // Division Incharge scope
     if (req.user.role === "divisionIncharge") {
       query.year = req.user.year;
       query.div = req.user.division;
+    } else{
+      if (value.year) query.year = value.year;
     }
 
+    if (value.academicYear) query.academicYear = value.academicYear;
+    if (value.filterPaid)
+      query.isFeesPaid = value.filterPaid === "paid";
+
+    //search across rollno, course, academic year
     if (value.search) {
       const regex = new RegExp(value.search, "i");
       query.$or = [
@@ -280,20 +303,39 @@ const getAllAdmissions = async (req, res) => {
 //update admission status => admin | DI
 const updateAdmissionStatus = async (req, res) => {
   try {
+    if(!["admin" , "divisionIncharge"].includes(req.user.role)) {
+      return res.status(403).json({ success : false , message : "Unauthorized" });
+    }
+
     const { error } = admissionStatusSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ success: false, message: error.details[0].message });
     }
 
-    const admission = await Admission.findByIdAndUpdate(
-      req.params.id,
-      { status: req.body.status },
-      { new: true }
-    );
+    // const admission = await Admission.findByIdAndUpdate(
+    //   req.params.id,
+    //   { status: req.body.status },
+    //   { new: true }
+    // );
+    const admission = await Admission.findById(req.params.id);
 
     if (!admission) {
       return res.status(404).json({ success: false, message: "Admission not found" });
     }
+
+
+    if(admission.status !== "pending") {
+      return res.status(400).json({
+        success : false ,
+        message : "Cannot change status after approval or rejection"
+      });
+    }
+
+    if(req.user.role === "divisionIncharge"  &&  (admission.year !== req.user.year  ||  admission.div !== req.user.division )) {
+      return res.status(403).json({ success: false, message: "Unauthorized access to admission" });
+    }
+    admission.status = req.body.status;
+    await admission.save();
 
     return res.status(200).json({
       success: true,
@@ -308,6 +350,9 @@ const updateAdmissionStatus = async (req, res) => {
 //get unpaid students => admin | DI
 const getUnpaidStudents = async (req, res) => {
   try {
+    if(!["admin" , "divisionIncharge"].includes(req.user.role)) {
+      return res.status(403).json({success : false , message: "Unauthorized"});
+    }
     const filter = { isFeesPaid: false };
 
     if (req.user.role === "divisionIncharge") {
