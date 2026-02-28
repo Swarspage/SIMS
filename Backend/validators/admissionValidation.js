@@ -3,12 +3,14 @@ const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
 
 //create admission => student
 const admissionCreateSchema = Joi.object({
-  rollno: Joi.string().trim().pattern(textWithNumberRegex).min(1).max(20).optional()
-  .messages({
-    "string.min" : "Roll number must be at least 1 character long.",
-    "string.max" : "Roll number cannot exceed 20 characters.",
-    "string.pattern.base" : "Roll number must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens."
-  }),
+  rollno: Joi.string()
+    .trim()
+    .pattern(/^\d+$/)
+    .required()
+    .messages({
+      "string.pattern.base": "Roll number must contain only digits.",
+      "any.required": "Roll number is required."
+    }),
 
   course: Joi.string()
     .trim()
@@ -50,12 +52,13 @@ const admissionCreateSchema = Joi.object({
 
 //update admission => student | pending only
 const admissionUpdateSchema = Joi.object({
-  rollno: Joi.string().trim().pattern(textWithNumberRegex).min(1).max(20).optional()
-  .messages({
-    "string.min" : "Roll number must be at least 1 character long.",
-    "string.max" : "Roll number cannot exceed 20 characters.",
-    "string.pattern.base" : "Roll number must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens."
-  }),
+  rollno: Joi.string()
+    .trim()
+    .pattern(/^\d+$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "Roll number must contain only digits."
+    }),
 
   course: Joi.string()
     .trim()

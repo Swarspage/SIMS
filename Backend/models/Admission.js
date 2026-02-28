@@ -1,3 +1,4 @@
+const { required } = require("joi");
 const mongoose = require("mongoose");
 
 const admissionSchema = new mongoose.Schema({
@@ -26,13 +27,58 @@ const admissionSchema = new mongoose.Schema({
         default: false
     } , 
 
+    //if yes then do nothing, if yes then ask for reason
+    scholarshipNotAppliedReason: {
+        type: String,
+        required: function () {
+            return this.isScholarshipApplied === false;
+        }
+    },
+
     //academic yr => 2023-2024
     academicYear: {
         type: String,
         required: true
-    } 
-    
+    } ,
+
+    //mahadbt form
+    isMahadbtFormSubmitted: {
+        type: Boolean,
+        default: false
+    } ,
+
+    mahadbtFilledDate: {
+        type: Date ,
+        required : function() { return this.isMahadbtFormSubmitted == true ; }
+    } ,
+
+    mahadbtNotFilledReason: {
+        type : String ,
+        required : function() { return this.isMahadbtFormSubmitted == false ; }
+    },
+
+//migration certificate
+    hasMigrationCertificate: {
+        type: Boolean,
+        default: false
+    },
+
+    migrationExpectedDate: {
+        type: Date,
+        required: function () {
+            return this.hasMigrationCertificate === true;
+        }
+    },
+
+    migrationNotAvailableReason: {
+        type: String,
+        required: function () {
+            return this.hasMigrationCertificate === false;
+        }
+    }
+
 }, { timestamps: true });
+
 
 // Static helper: get unpaid students
 
@@ -44,6 +90,9 @@ admissionSchema.index({ stuID: 1 });
 admissionSchema.index({ academicYear: 1 });
 admissionSchema.index({ status: 1 });
 admissionSchema.index({ isFeesPaid: 1 });
+admissionSchema.index({ isMahadbtFormSubmitted: 1 });
+admissionSchema.index({ hasMigrationCertificate: 1 });
+
 
 admissionSchema.index({ academicYear: 1, status: 1 });
 admissionSchema.index({ academicYear: 1, isFeesPaid: 1 });

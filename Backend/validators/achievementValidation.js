@@ -6,6 +6,7 @@ const baseAchievementSchema = {
   category: Joi.string()
     .valid(
       "Coding competitions",
+      "Academic Topper",
       "Committee",
       "Hackathon",
       "Sports",

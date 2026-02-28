@@ -12,6 +12,7 @@ const achievementSchema = new mongoose.Schema(
       type: String,
       enum: [
         "Coding competitions",
+        "Academic Topper" ,
         "Committee",
         "Hackathon",
         "Sports",
