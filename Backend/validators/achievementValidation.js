@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
+const textOnlyRegex = /^[A-Za-z\s'-]+$/;
 
 const baseAchievementSchema = {
   category: Joi.string()
@@ -71,8 +72,24 @@ const baseAchievementSchema = {
       "any.only" : "Please select a valid achievement type."
     }),
 
-  teamMembers: Joi.array().items(Joi.string().trim().pattern(textWithNumberRegex)
-  .messages({"string.pattern.base" : "Each team member name must contain only letters and special characters like commas, periods, exclamation marks, question marks, and hyphens."})).default([]).messages({"array.base" : "Team members must be an array."}),
+  
+  teamMembers: Joi.array()
+  .items(
+    Joi.string()
+      .trim()
+      .pattern(textOnlyRegex)
+      .min(2)
+      .messages({
+        "string.pattern.base":
+          "Each team member name must contain only letters.",
+        "string.min":
+          "Each team member name must be at least 2 characters long.",
+      })
+  )
+  .default([])
+  .messages({
+    "array.base": "Team members must be an array."
+  }),
 
   certification_course: Joi.string()
     .trim()
