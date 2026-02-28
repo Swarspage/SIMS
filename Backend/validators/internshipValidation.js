@@ -1,4 +1,5 @@
-const Joi = require("joi");
+// const Joi = require("joi");
+const Joi = require("../helpers/profanity/joiWithProfanity");
 
 const internshipValidationSchema = Joi.object({
     companyName: Joi.string().trim().min(2).max(200).required().messages({
@@ -49,11 +50,12 @@ const internshipValidationSchema = Joi.object({
         otherwise: Joi.forbidden()
     }),
 
-    description: Joi.string().trim().min(10).max(300).required().messages({
+    description: Joi.string().trim().min(10).max(300).noProfanity().required().messages({
         "string.base": "Description must be a string.",
         "string.min": "Description must be at least 10 characters.",
         "string.max" : "Description can have a maximum of 300 characters.",
-        "any.required": "Description is required."
+        "any.required": "Description is required.",
+        "string.profanity": "Description contains inappropriate language."
     })
 }).options({
     stripUnknown: true,
