@@ -5,7 +5,7 @@ const baseAchievementSchema = {
     .valid(
       "Coding competitions",
       "Committee",
-      "Hackathons",
+      "Hackathon",
       "Sports",
       "Cultural",
       "Technical",
