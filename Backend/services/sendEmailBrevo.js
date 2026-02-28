@@ -1,42 +1,29 @@
-const brevo = require("@getbrevo/brevo");
+const { BrevoClient } = require("@getbrevo/brevo");
 
-// Initialize API instance ONCE (not inside function)
-const apiInstance = new brevo.TransactionalEmailsApi();
-
-// Safety check
 if (!process.env.BREVO_API_KEY) {
-  throw new Error("BREVO_API_KEY is missing in environment variables");
+  throw new Error("BREVO_API_KEY is missing");
 }
 
-apiInstance.setApiKey(
-  brevo.TransactionalEmailsApiApiKeys.apiKey,
-  process.env.BREVO_API_KEY
-);
+const brevo = new BrevoClient({
+  apiKey: process.env.BREVO_API_KEY,
+});
 
 const sendEmailBrevo = async ({ toEmail, subject, htmlContent }) => {
   try {
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    const response = await brevo.transactionalEmails.sendTransacEmail({
+      sender: {
+        name: process.env.BREVO_SENDER_NAME,
+        email: process.env.BREVO_SENDER_EMAIL,
+      },
+      to: [{ email: toEmail }],
+      subject,
+      htmlContent,
+    });
 
-    sendSmtpEmail.subject = subject;
-    sendSmtpEmail.htmlContent = htmlContent;
-
-    sendSmtpEmail.sender = {
-      name: process.env.BREVO_SENDER_NAME,
-      email: process.env.BREVO_SENDER_EMAIL,
-    };
-
-    sendSmtpEmail.to = [{ email: toEmail }];
-
-    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
-
-    console.log("Email sent successfully:", response.messageId);
-
+    console.log("Email sent:", response);
     return response;
   } catch (error) {
-    console.error(
-      "Brevo Email Error:",
-      error.response?.body || error.message
-    );
+    console.error("Brevo Email Error:", error?.message || error);
     throw error;
   }
 };
