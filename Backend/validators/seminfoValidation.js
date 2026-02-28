@@ -16,6 +16,8 @@ const markSchema = Joi.object({
     }),
 
   score: Joi.number()
+    .strict()
+    .integer()
     .min(0)
     .required()
     .messages({
@@ -25,6 +27,8 @@ const markSchema = Joi.object({
     }),
 
   outOf: Joi.number()
+    .strict()
+    .integer()
     .min(1)
     .required()
     .messages({
@@ -37,6 +41,7 @@ const markSchema = Joi.object({
 //create sem info
 const semInfoCreateSchema = Joi.object({
   semester: Joi.number()
+    .strict()
     .integer()
     .min(1)
     .max(8)
@@ -50,6 +55,7 @@ const semInfoCreateSchema = Joi.object({
     }),
 
   attendance: Joi.number()
+    .strict()
     .min(0)
     .max(100)
     .required()
@@ -78,6 +84,7 @@ const semInfoCreateSchema = Joi.object({
 //update sem info
 const semInfoUpdateSchema = Joi.object({
   semester: Joi.number()
+    .strict()
     .integer()
     .min(1)
     .max(8)
@@ -90,6 +97,7 @@ const semInfoUpdateSchema = Joi.object({
     }),
 
   attendance: Joi.number()
+    .strict()
     .min(0)
     .max(100)
     .optional()

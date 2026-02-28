@@ -35,20 +35,40 @@ const admissionCreateSchema = Joi.object({
       "any.required" : "Fees are required."
     }),
 
-  isScholarshipApplied: Joi.boolean().optional()
+  isScholarshipApplied: Joi.boolean().default(false)
   .messages({
     "boolean.base" : "Scholarship status must be true or false."
   }),
 
+  scholarshipNotAppliedReason : Joi.when("isScholarshipApplied" , {
+    is : false,
+    then : Joi.string()
+      .trim()
+      .min(5)
+      .required()
+      .messages({
+        "any.required" : "Reason for not applying for scholarship is required when scholarship is not applied.",
+        "string.min" : "Reason for not applying for scholarship must be at least 5 characters long."
+      }),
+    otherwise : Joi.forbidden()
+      }),
+
   academicYear: Joi.string()
     .pattern(/^\d{4}-\d{4}$/)
+    .custom((value , helpers) => {
+      const [start , end] = value.split("-").map(Number);
+      if(end !== start + 1) {
+        return helpers.message("Academic year must be in the format YYYY-YYYY with consecutive years.");
+      }
+      return value;
+    })
     .required()
     .messages({
       "string.empty" : "Academic year is required.",
       "string.pattern.base" : "Academic year must be in the format YYYY-YYYY.",
       "any.required" : "Academic year is required."
     }),
-});
+}).unknown(false);
 
 //update admission => student | pending only
 const admissionUpdateSchema = Joi.object({
@@ -85,10 +105,24 @@ const admissionUpdateSchema = Joi.object({
   .messages({
     "boolean.base" : "Scholarship status must be true or false."
   }),
+
+  scholarshipNotAppliedReason: Joi.when("isScholarshipApplied", {
+    is: false,
+    then: Joi.string()
+      .trim()
+      .min(5)
+      .required()
+      .messages({
+        "any.required": "Reason is required if scholarship is not applied.",
+        "string.min": "Reason must be at least 5 characters long."
+      }),
+    otherwise: Joi.optional()
+  })
+
 }).min(1)
 .messages({
   "object.min" : "At least one field must be provided for update."
-});
+}).unknown(false);
 
 //update admission status => admin | DI
 const admissionStatusSchema = Joi.object({
@@ -99,7 +133,7 @@ const admissionStatusSchema = Joi.object({
       "any.required" : "Status is required.",
       "any.only" : "Please select a valid status."
     }),
-});
+}).unknown(false);
 
 //get all admissions => admin | DI
 const getAdmissionsValidation = Joi.object({
@@ -141,7 +175,7 @@ const getAdmissionsValidation = Joi.object({
     .messages({
       "any.only" : "Filter paid must be either 'paid' or 'unpaid'."
     }),
-});
+}).unknown(false);
 
 module.exports = {
   admissionCreateSchema,
