@@ -6,6 +6,9 @@ const cloudinary = require("../config/cloudinaryConfig");
 const {deleteMultipleFromCloudinary} = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
 const {validateAndUploadFiles} = require("../helpers/cloudinary/ValidateAndUploadFiles");
 const mongoose=require("mongoose");
+const exportToExcel = require('../helpers/excel/exportToExcel');
+const { transformInternship, internshipColumnMap } = require('../helpers/excel/exportTransformers');
+
 
 const { internshipValidationSchema, updateInternshipValidationSchema, getInternshipsValidation } = require("../validators/internshipValidation");
 
@@ -136,9 +139,188 @@ const createInternship = async (req, res) => {
 };
 
 
+const getInternships = async (req, res) => {
+    try {
+        const { year, division, search, page, limit, isPaid } = req.query;
+        const isExport = req.query.export === 'true';
+
+        const { error, value } = getInternshipsValidation.validate(
+            { year, search, page, limit, isPaid },
+            { abortEarly: false }
+        );
+        if (error) {
+            const validationErrors = error.details.map(err => ({
+                field: err.path[0],
+                message: err.message
+            }));
+            return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
+        }
+
+        if (req.user.role === "divisionIncharge") {
+            if ((year && year !== req.user.year) || (division && division !== req.user.division)) {
+                return res.status(403).json({ success: false, message: "You can only access students of your division." });
+            }
+        }
+
+        const pageNum = value.page || 1;
+        const limitNum = Math.min(value.limit || 10, 20);
+        const skip = (pageNum - 1) * limitNum;
+
+        // Shared pipeline
+        const pipeline = [];
+
+        pipeline.push({
+            $lookup: {
+                from: "students",
+                localField: "stuID",
+                foreignField: "_id",
+                as: "student"
+            }
+        });
+
+        pipeline.push({
+            $unwind: {
+                path: "$student",
+                preserveNullAndEmptyArrays: true
+            }
+        });
+
+        const match = {};
+
+        if (req.user.role === "divisionIncharge") {
+            match["student.year"] = req.user.year;
+            match["student.division"] = req.user.division;
+        } else if (req.user.role === "admin") {
+            if (year) match["student.year"] = year.trim();
+            if (division) match["student.division"] = division.trim();
+        } else {
+            return res.status(403).json({ success: false, message: "Unauthorized role." });
+        }
+
+        if (search) {
+            const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+            match.$or = [
+                { companyName: { $regex: safeSearch, $options: "i" } },
+                { role: { $regex: safeSearch, $options: "i" } },
+                { description: { $regex: safeSearch, $options: "i" } },
+                { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
+                { "student.name.middleName": { $regex: safeSearch, $options: "i" } },
+                { "student.name.lastName": { $regex: safeSearch, $options: "i" } },
+            ];
+        }
+
+        if (isPaid === "true") match["stipendInfo.isPaid"] = true;
+        else if (isPaid === "false") match["stipendInfo.isPaid"] = false;
+
+        if (Object.keys(match).length) pipeline.push({ $match: match });
+
+        // Shared $project — includes everything both branches need
+        const exportFields = {
+            companyName:      1,
+            role:             1,
+            startDate:        1,
+            endDate:          1,
+            durationMonths:   1,
+            stipendInfo:      1,
+            description:      1,
+            internshipReport: 1,
+            photoProof:       1,
+            // Student fields — all of them
+            stuID:            "$student._id",
+            studentID:        "$student.studentID",
+            PRN:              "$student.PRN",
+            studentName:      "$student.name",
+            studentYear:      "$student.year",
+            studentDivision:  "$student.division",
+            studentBranch:    "$student.branch",
+            studentDob:       "$student.dob",
+            studentBloodGroup:"$student.bloodGroup",
+            studentCategory:  "$student.category",
+            studentAbcId:     "$student.abcId",
+            studentMobileNo:  "$student.mobileNo",
+            studentParentMobileNo: "$student.parentMobileNo",
+            studentEmail:     "$student.email",
+            studentParentEmail: "$student.parentEmail",
+            studentCurrentAddress: "$student.currentAddress",
+            studentNativeAddress:  "$student.nativeAddress",
+        };
+
+        const leanFields = {
+            companyName:      1,
+            role:             1,
+            startDate:        1,
+            endDate:          1,
+            durationMonths:   1,
+            stipendInfo:      1,
+            description:      1,
+            internshipReport: 1,
+            photoProof:       1,
+            // Student fields — all of them
+            stuID:            "$student._id",
+            studentID:        "$student.studentID",
+            studentName:      "$student.name",
+            studentYear:      "$student.year",
+            studentDivision:  "$student.division",
+            studentBranch:    "$student.branch",
+            studentMobileNo:  "$student.mobileNo",
+            studentEmail:     "$student.email",
+            
+        };
+
+        // Export branch
+        if (isExport) {
+            const internships = await Internship.aggregate([
+                ...pipeline,
+                { $sort: { createdAt: -1 } },
+                { $project: exportFields },
+            ]);
+            
+
+            const rows = internships.map(transformInternship);
+            const buffer = await exportToExcel(rows, 'Internships', internshipColumnMap);
+
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename="internships.xlsx"');
+            return res.send(buffer);
+        }
+
+        // Paginated branch 
+        const results = await Internship.aggregate([
+            ...pipeline,
+            {
+                $facet: {
+                    data: [
+                        { $sort: { createdAt: -1 } },
+                        { $skip: skip },
+                        { $limit: limitNum },
+                        { $project: leanFields }
+                    ],
+                    totalCount: [{ $count: "total" }]
+                }
+            }
+        ]);
+
+        const internships = results[0]?.data || [];
+        const total = results[0]?.totalCount[0]?.total || 0;
+
+        return res.json({
+            success: true,
+            data: internships,
+            total,
+            page: pageNum,
+            totalPages: Math.ceil(total / limitNum),
+        });
+
+    } catch (err) {
+        console.error("Error in getInternships controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+        return res.status(500).json({ success: false, message: err.message || "Some Error Occurred. Please Try Again Later." });
+    }
+};
+
+
 
 // GET INTERNSHIPS (with optional pagination, search, year filter, and paid/unpaid filter) --admin or division incharge
-const getInternships = async (req, res) => {
+const getInternships2 = async (req, res) => {
     try {
 
         // Get query params

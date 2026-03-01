@@ -132,6 +132,10 @@ const getInternshipsValidation = Joi.object({
         "any.only": "isPaid must be true or false."
     }),
 
+    export: Joi.string().valid("true", "false").optional().messages({
+        "any.only": "export must be true or false."
+    }),
+
     search: Joi.string().max(100).optional().messages({
         "string.base": "Search must be a string.",
         "string.max": "Search cannot exceed 100 characters."
