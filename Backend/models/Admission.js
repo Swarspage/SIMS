@@ -7,7 +7,7 @@ const admissionSchema = new mongoose.Schema({
     rollno: String,
     year: String,     // fy/sy/ty
     div: String,
-    course: { type: String, required: true },
+    course: { type: String, required: true , default : "Computer Engineering" },
     admissionDate: { type: Date, default: Date.now },
     
     status: { 

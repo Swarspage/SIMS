@@ -17,6 +17,7 @@ const admissionCreateSchema = Joi.object({
     .pattern(textWithNumberRegex)
     .min(2)
     .max(100)
+    .default("Computer Engineering")
     .required()
     .messages({
       "string.empty" : "Course name is required.",
