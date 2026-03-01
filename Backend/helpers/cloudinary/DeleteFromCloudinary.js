@@ -1,11 +1,10 @@
-const dotenv=require("dotenv");
+
 const fs = require("fs").promises;
 
-dotenv.config();
 
-const upload=require("../middlewares/multer.js");
+const upload=require("../../middlewares/multer.js");
 
-const cloudinary=require("../config/cloudinaryConfig.js");
+const cloudinary=require("../../config/cloudinaryConfig.js");
 
 
 

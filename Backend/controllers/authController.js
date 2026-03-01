@@ -7,9 +7,8 @@ const Admin = require('../models/Admin.js');
 const { signupSchema, loginSchema, adminLoginSchema, divisionInchargeLoginSchema } = require('../validators/authValidation.js');
 
 
-const { uploadToCloudinary } = require("../helpers/UploadToCloudinary.js");
+const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary.js");
 
-require("dotenv").config();
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
 

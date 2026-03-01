@@ -1,4 +1,4 @@
-const cloudinary = require("../config/cloudinaryConfig");
+const cloudinary = require("../../config/cloudinaryConfig");
 
 const deleteMultipleFromCloudinary = async (publicIds = []) => {
 

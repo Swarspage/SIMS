@@ -6,16 +6,16 @@ require("dotenv").config();
 const errorHandler = require("./middlewares/errorHandler");
 
 // ✅ ADD THIS DEBUG CHECK
-console.log("🔍 ENVIRONMENT VARIABLES CHECK:");
-console.log("EMAIL_USER loaded:", process.env.EMAIL_USER ? "✅ YES" : "❌ NO");
-console.log(
-  "EMAIL_PASSWORD loaded:",
-  process.env.EMAIL_PASSWORD ? "✅ YES" : "❌ NO"
-);
-console.log(
-  "ADMIN_EMAIL loaded:",
-  process.env.ADMIN_EMAIL ? "✅ YES" : "❌ NO"
-);
+// console.log("🔍 ENVIRONMENT VARIABLES CHECK:");
+// console.log("EMAIL_USER loaded:", process.env.EMAIL_USER ? "✅ YES" : "❌ NO");
+// console.log(
+//   "EMAIL_PASSWORD loaded:",
+//   process.env.EMAIL_PASSWORD ? "✅ YES" : "❌ NO"
+// );
+// console.log(
+//   "ADMIN_EMAIL loaded:",
+//   process.env.ADMIN_EMAIL ? "✅ YES" : "❌ NO"
+// );
 
 // ✅ ADDED PORT CONFIG
 const PORT = process.env.PORT || 5000;

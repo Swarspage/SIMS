@@ -1,5 +1,5 @@
 const fs = require("fs").promises;
-const cloudinary = require("../config/cloudinaryConfig");
+const cloudinary = require("../../config/cloudinaryConfig");
 const { deleteMultipleFromCloudinary } = require("./DeleteMultipleFromCloudinary");
 
 

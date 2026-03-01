@@ -1,7 +1,7 @@
 const Student = require("../models/Student");
 const Admin = require("../models/Admin");
 const cloudinary = require("../config/cloudinaryConfig");
-const { uploadToCloudinary } = require("../helpers/UploadToCloudinary");
+const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary");
 
 
 const fs = require("fs");
@@ -11,16 +11,16 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 
-require("dotenv").config();
+
 
 const { importExcelSchema, addStudentDetailsSchema, updateStudentSchema, getStudentsValidation } = require("../validators/studentValidation");
 
 const cascadeDeleteStudent = require("../helpers/cascadeDeleteStudent");
 
-const { validateAndUploadFiles } = require("../helpers/ValidateAndUploadFiles");
+const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
 
 const mongoose = require("mongoose");
-const { deleteMultipleFromCloudinary } = require("../helpers/DeleteMultipleFromCloudinary");
+const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
 
 const generateRandomPassword = require("../helpers/generateRandomPassword");
 
@@ -62,7 +62,7 @@ const allowedTypes = [
 // for excel import
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
 
-// Helper to safely get cell value as string
+// Helper to safely get cell value as string --used in import excel controller
 const getCellValue = (cell) => {
   if (!cell) return "";
   if (typeof cell === "string") return cell.trim();

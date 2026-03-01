@@ -79,8 +79,6 @@ const studentSchema = new mongoose.Schema({
 studentSchema.index({ year: 1, division: 1 });              // MOST used filter
 studentSchema.index({ branch: 1 });                         // admin filter
 
-studentSchema.index({ email: 1 }, { unique: true });        // login, unique
-studentSchema.index({ studentID: 1 }, { unique: true });    // unique UID
 studentSchema.index({ PRN: 1 });                            // optional lookup
 
 studentSchema.index({ bloodGroup: 1 });

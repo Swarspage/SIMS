@@ -1,5 +1,5 @@
 const { cloudinary } = require("../config/cloudinaryConfig");
-const { deleteFromCloudinary } = require("./DeleteFromCloudinary");
+const { deleteFromCloudinary } = require("./cloudinary/DeleteFromCloudinary");
 
 const Student = require("../models/Student");
 const Achievement = require("../models/Achievement");

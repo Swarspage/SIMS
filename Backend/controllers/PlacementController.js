@@ -2,8 +2,8 @@ const Placement = require("../models/Placement");
 const Student = require("../models/Student");
 const cloudinary = require("../config/cloudinaryConfig");
 const {createPlacementSchema, updatePlacementSchema, getPlacementsValidation} = require("../validators/placementValidation");
-const { deleteMultipleFromCloudinary } = require("../helpers/DeleteMultipleFromCloudinary");
-const { validateAndUploadFiles } = require("../helpers/ValidateAndUploadFiles");
+const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
+const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
 const mongoose= require("mongoose");
 
 const fileConfigs = [

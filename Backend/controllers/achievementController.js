@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 const Achievement = require("../models/Achievement");
 const Student = require("../models/Student");
 const Admin = require("../models/Admin");
-const { uploadToCloudinary } = require("../helpers/UploadToCloudinary");
+const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary");
 const cloudinary = require("../config/cloudinaryConfig");
-const { deleteMultipleFromCloudinary } = require("../helpers/DeleteMultipleFromCloudinary");
-const { validateAndUploadFiles } = require("../helpers/ValidateAndUploadFiles");
+const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
+const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
 const { createAchievementSchema, updateAchievementSchema } = require("../validators/achievementValidation");
 
 

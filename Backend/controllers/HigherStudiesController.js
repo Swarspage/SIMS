@@ -2,9 +2,9 @@ const HigherStudies = require("../models/HigherStudies");
 const Student = require("../models/Student");
 const Admin = require("../models/Admin");
 const cloudinary = require("../config/cloudinaryConfig");
-const { uploadToCloudinary } = require("../helpers/UploadToCloudinary");
-const { deleteMultipleFromCloudinary } = require("../helpers/DeleteMultipleFromCloudinary");
-const { validateAndUploadFiles } = require("../helpers/ValidateAndUploadFiles");
+const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary");
+const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
+const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
 const mongoose = require("mongoose");
 
 const { createHigherStudySchema, updateHigherStudySchema, getHigherStudiesValidation } = require("../validators/higherStudiesValidation");

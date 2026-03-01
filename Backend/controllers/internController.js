@@ -1,10 +1,10 @@
 const Internship = require("../models/Internship");
 const Student = require("../models/Student");
-const  {uploadToCloudinary}=require("../helpers/UploadToCloudinary");
+const  {uploadToCloudinary}=require("../helpers/cloudinary/UploadToCloudinary");
 const Admin = require("../models/Admin");
 const cloudinary = require("../config/cloudinaryConfig");
-const {deleteMultipleFromCloudinary} = require("../helpers/DeleteMultipleFromCloudinary");
-const {validateAndUploadFiles} = require("../helpers/ValidateAndUploadFiles");
+const {deleteMultipleFromCloudinary} = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
+const {validateAndUploadFiles} = require("../helpers/cloudinary/ValidateAndUploadFiles");
 const mongoose=require("mongoose");
 
 const { internshipValidationSchema, updateInternshipValidationSchema, getInternshipsValidation } = require("../validators/internshipValidation");
