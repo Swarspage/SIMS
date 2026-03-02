@@ -7,6 +7,9 @@ const cloudinary = require("../config/cloudinaryConfig");
 const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
 const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
 const { createAchievementSchema, updateAchievementSchema } = require("../validators/achievementValidation");
+const exportToExcel = require('../helpers/excel/exportToExcel');
+const { transformInternship, internshipColumnMap } = require('../helpers/excel/exportTransformers');
+
 
 
 /* FILE CONFIG */
@@ -157,9 +160,74 @@ const getOwnAchievements = async (req, res) => {
 };
 /* --------------------------- GET ALL (ADMIN / DI) ------------------------------ */
 
+// const getAllAchievements = async (req, res) => {
+//   try {
+//     const { year, division, category, search, page = 1, limit = 10 } = req.query;
+//     const skip = (page - 1) * Math.min(limit, 20);
+
+//     const pipeline = [
+//       {
+//         $lookup: {
+//           from: "students",
+//           localField: "stuID",
+//           foreignField: "_id",
+//           as: "student",
+//         },
+//       },
+//       { $unwind: "$student" },
+//     ];
+
+//     const match = {};
+
+//     if (req.user.role === "divisionIncharge") {
+//       match["student.year"] = req.user.year;
+//       match["student.division"] = req.user.division;
+//     } else if (req.user.role === "admin") {
+//       if (year) match["student.year"] = year;
+//       if (division) match["student.division"] = division;
+//     }
+
+//     if (category) match.category = category;
+
+//     if (search) {
+//       match.$or = [
+//         { title: { $regex: search, $options: "i" } },
+//         { issuedBy: { $regex: search, $options: "i" } },
+//         { "student.name.firstName": { $regex: search, $options: "i" } },
+//         { "student.name.lastName": { $regex: search, $options: "i" } },
+//       ];
+//     }
+
+//     pipeline.push({ $match: match });
+
+//     const result = await Achievement.aggregate([
+//       ...pipeline,
+//       {
+//         $facet: {
+//           data: [{ $sort: { createdAt: -1 } }, { $skip: skip }, { $limit: Number(limit) }],
+//           total: [{ $count: "count" }],
+//         },
+//       },
+//     ]);
+
+//     return res.status(200).json({
+//       success: true,
+//       data: result[0].data,
+//       total: result[0].total[0]?.count || 0,
+//       page: Number(page),
+//       totalPages: Math.ceil((result[0].total[0]?.count || 0) / limit),
+//     });
+//   } catch {
+//     return res.status(500).json({ success: false, message: "Server Error" });
+//   }
+// };
+
+//getall achievements with export option
 const getAllAchievements = async (req, res) => {
   try {
     const { year, division, category, search, page = 1, limit = 10 } = req.query;
+    const isExport = req.query.export === "true";
+
     const skip = (page - 1) * Math.min(limit, 20);
 
     const pipeline = [
@@ -182,42 +250,106 @@ const getAllAchievements = async (req, res) => {
     } else if (req.user.role === "admin") {
       if (year) match["student.year"] = year;
       if (division) match["student.division"] = division;
+    } else {
+      return res.status(403).json({ success: false, message: "Unauthorized role" });
     }
 
     if (category) match.category = category;
 
     if (search) {
+      const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+
       match.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { issuedBy: { $regex: search, $options: "i" } },
-        { "student.name.firstName": { $regex: search, $options: "i" } },
-        { "student.name.lastName": { $regex: search, $options: "i" } },
+        { title: { $regex: safeSearch, $options: "i" } },
+        { issuedBy: { $regex: safeSearch, $options: "i" } },
+        { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
+        { "student.name.lastName": { $regex: safeSearch, $options: "i" } },
       ];
     }
 
     pipeline.push({ $match: match });
 
+    //export branch 
+    if (isExport) {
+      const achievements = await Achievement.aggregate([
+        ...pipeline,
+        {
+          $project: {
+            category: 1,
+            title: 1,
+            description: 1,
+            issuedBy: 1,
+            achievementType: 1,
+            date: 1,
+            teamMembers: 1,
+            certification_course: 1,
+            photographs: 1,
+            course_certificate: 1,
+
+            stuID: "$student._id",
+            studentID: "$student.studentID",
+            PRN: "$student.PRN",
+            studentName: "$student.name",
+            studentYear: "$student.year",
+            studentDivision: "$student.division",
+            studentBranch: "$student.branch",
+            studentEmail: "$student.email",
+            studentMobileNo: "$student.mobileNo",
+          },
+        },
+        { $sort: { createdAt: -1 } },
+      ]);
+
+      const rows = achievements.map(transformAchievement);
+
+      const buffer = await exportToExcel(
+        rows,
+        "Achievements",
+        achievementColumnMap
+      );
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="achievements.xlsx"'
+      );
+
+      return res.send(buffer);
+    }
+
+    //pagination branch
     const result = await Achievement.aggregate([
       ...pipeline,
       {
         $facet: {
-          data: [{ $sort: { createdAt: -1 } }, { $skip: skip }, { $limit: Number(limit) }],
+          data: [
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: Number(limit) },
+          ],
           total: [{ $count: "count" }],
         },
       },
     ]);
 
+    const total = result[0].total[0]?.count || 0;
+
     return res.status(200).json({
       success: true,
       data: result[0].data,
-      total: result[0].total[0]?.count || 0,
+      total,
       page: Number(page),
-      totalPages: Math.ceil((result[0].total[0]?.count || 0) / limit),
+      totalPages: Math.ceil(total / limit),
     });
-  } catch {
+  } catch (err) {
+    console.error("GetAllAchievements Error:", err);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
 
 /* -------------------- GET ACHIEVEMENTS BY STUDENT (ADMIN/DI) ------------------- */
 

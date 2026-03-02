@@ -158,4 +158,142 @@ const studentColumnMap = {
     nativePincode:      'Native Pincode',
 };
 
-module.exports = { transformInternship, transformStudent,studentColumnMap, internshipColumnMap };
+//transform achievement 
+const transformAchievement = (a) => ({
+    /* Achievement Info */
+  category: a.category || "",
+  title: a.title || "",
+  description: a.description || "",
+  issuedBy: a.issuedBy || "",
+  achievementType: a.achievementType || "",
+
+  dateFrom: a.date?.from
+    ? new Date(a.date.from).toLocaleDateString()
+    : "",
+  dateTo: a.date?.to
+    ? new Date(a.date.to).toLocaleDateString()
+    : "",
+
+  teamMembers: a.teamMembers?.join(", ") || "",
+
+  certificationCourse: a.certification_course || "",
+
+  eventPhoto: a.photographs?.eventPhoto?.url || "",
+  certificate: a.photographs?.certificate?.url || "",
+  courseCertificate: a.course_certificate?.url || "",
+
+  /* Student Info */
+  stuID: a.stuID?.toString() || "",
+  studentID: a.studentID || "",
+  PRN: a.PRN || "",
+
+  firstName: a.studentName?.firstName || "",
+  fathersName: a.studentName?.middleName || "",
+  lastName: a.studentName?.lastName || "",
+
+  year: a.studentYear || "",
+  division: a.studentDivision || "",
+  branch: a.studentBranch || "",
+
+  email: a.studentEmail || "",
+  mobileNo: a.studentMobileNo || "",
+});
+
+
+//column mapping for achievements export
+
+const achievementColumnMap = {
+  category: "Category",
+  title: "Title",
+  description: "Description",
+  issuedBy: "Issued By",
+  achievementType: "Achievement Type",
+
+  dateFrom: "Date From",
+  dateTo: "Date To",
+
+  teamMembers: "Team Members",
+  certificationCourse: "Certification Course",
+
+  eventPhoto: "Event Photo URL",
+  certificate: "Certificate URL",
+  courseCertificate: "Course Certificate URL",
+
+  stuID: "Student DB ID",
+  studentID: "Student ID",
+  PRN: "PRN",
+
+  firstName: "First Name",
+  fathersName: "Father's Name",
+  lastName: "Last Name",
+
+  year: "Year",
+  division: "Division",
+  branch: "Branch",
+
+  email: "Email",
+  mobileNo: "Mobile No",
+};
+
+//transform activities
+const transformActivity = (a) => ({
+  /* Activity Info */
+  type: a.type || "",
+  title: a.title || "",
+  description: a.description || "",
+
+  dateFrom: a.date?.from
+    ? new Date(a.date.from).toLocaleDateString()
+    : "",
+  dateTo: a.date?.to
+    ? new Date(a.date.to).toLocaleDateString()
+    : "",
+
+  certificateURL: a.certificateURL?.url || "",
+
+  /* Student Info */
+  stuID: a.stuID?.toString() || "",
+  studentID: a.studentID || "",
+  PRN: a.PRN || "",
+
+  firstName: a.studentName?.firstName || "",
+  fathersName: a.studentName?.middleName || "",
+  lastName: a.studentName?.lastName || "",
+
+  year: a.studentYear || "",
+  division: a.studentDivision || "",
+  branch: a.studentBranch || "",
+
+  email: a.studentEmail || "",
+  mobileNo: a.studentMobileNo || "",
+});
+
+
+//column mapping for activities export
+const activityColumnMap = {
+  type: "Activity Type",
+  title: "Title",
+  description: "Description",
+
+  dateFrom: "Date From",
+  dateTo: "Date To",
+
+  certificateURL: "Certificate URL",
+
+  stuID: "Student DB ID",
+  studentID: "Student ID",
+  PRN: "PRN",
+
+  firstName: "First Name",
+  fathersName: "Father's Name",
+  lastName: "Last Name",
+
+  year: "Year",
+  division: "Division",
+  branch: "Branch",
+
+  email: "Email",
+  mobileNo: "Mobile No",
+};
+
+module.exports = { transformInternship, transformStudent,studentColumnMap, internshipColumnMap , transformAchievement , achievementColumnMap , transformActivity , activityColumnMap};

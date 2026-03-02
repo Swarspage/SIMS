@@ -7,6 +7,9 @@ const Student = require("../models/Student");
 const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
 const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
 const { activityCreateSchema, activityUpdateSchema } = require("../validators/activitiesValidation");
+const exportToExcel = require('../helpers/excel/exportToExcel');
+const { transformInternship, internshipColumnMap } = require('../helpers/excel/exportTransformers');
+
 
 /* FILE CONFIG */
 
@@ -205,31 +208,162 @@ const getActivities = async (req, res) => {
 
 /* ------------------------- GET ALL ACTIVITIES ------------------------- */
 
+// const getAllActivities = async (req, res) => {
+//   try {
+//     const match = { type: "Committee" };
+
+//     if (req.user.role === "divisionIncharge") {
+//       const students = await Student.find({
+//         year: req.user.year,
+//         division: req.user.division,
+//       }).select("_id");
+
+//       match.stuID = { $in: students.map(s => s._id) };
+//     }
+
+//     const activities = await Activity.find(match)
+//       .populate("stuID", "name roll year division")
+//       .sort({ createdAt: -1 });
+
+//     return res.status(200).json({
+//       success: true,
+//       data: activities,
+//     });
+//   } catch {
+//     return res.status(500).json({ success: false, message: "Server Error" });
+//   }
+// };
+
+//get all activities with export option
 const getAllActivities = async (req, res) => {
   try {
+    const { year, division, search, page = 1, limit = 10 } = req.query;
+    const isExport = req.query.export === "true";
+
+    const skip = (page - 1) * Math.min(limit, 20);
+
+    const pipeline = [
+      {
+        $lookup: {
+          from: "students",
+          localField: "stuID",
+          foreignField: "_id",
+          as: "student",
+        },
+      },
+      { $unwind: "$student" },
+    ];
+
     const match = { type: "Committee" };
 
+    //role filter
     if (req.user.role === "divisionIncharge") {
-      const students = await Student.find({
-        year: req.user.year,
-        division: req.user.division,
-      }).select("_id");
-
-      match.stuID = { $in: students.map(s => s._id) };
+      match["student.year"] = req.user.year;
+      match["student.division"] = req.user.division;
     }
 
-    const activities = await Activity.find(match)
-      .populate("stuID", "name roll year division")
-      .sort({ createdAt: -1 });
+    if (req.user.role === "admin") {
+      if (year) match["student.year"] = year;
+      if (division) match["student.division"] = division;
+    }
+
+    //search filter
+    if (search) {
+      const safeSearch = search.replace(
+        /[-[\]{}()*+?.,\\^$|#\s]/g,
+        "\\$&"
+      );
+
+      match.$or = [
+        { title: { $regex: safeSearch, $options: "i" } },
+        { description: { $regex: safeSearch, $options: "i" } },
+        { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
+        { "student.name.lastName": { $regex: safeSearch, $options: "i" } },
+      ];
+    }
+
+    pipeline.push({ $match: match });
+
+    //export branch
+    if (isExport) {
+      const activities = await Activity.aggregate([
+        ...pipeline,
+        {
+          $project: {
+            type: 1,
+            title: 1,
+            description: 1,
+            date: 1,
+            certificateURL: 1,
+
+            stuID: "$student._id",
+            studentID: "$student.studentID",
+            PRN: "$student.PRN",
+            studentName: "$student.name",
+            studentYear: "$student.year",
+            studentDivision: "$student.division",
+            studentBranch: "$student.branch",
+            studentEmail: "$student.email",
+            studentMobileNo: "$student.mobileNo",
+          },
+        },
+        { $sort: { createdAt: -1 } },
+      ]);
+
+      const rows = activities.map(transformActivity);
+
+      const buffer = await exportToExcel(
+        rows,
+        "Activities",
+        activityColumnMap
+      );
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="activities.xlsx"'
+      );
+
+      return res.send(buffer);
+    }
+
+    //pagination branch
+    const result = await Activity.aggregate([
+      ...pipeline,
+      {
+        $facet: {
+          data: [
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: Number(limit) },
+          ],
+          total: [{ $count: "count" }],
+        },
+      },
+    ]);
+
+    const total = result[0].total[0]?.count || 0;
 
     return res.status(200).json({
       success: true,
-      data: activities,
+      data: result[0].data,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
     });
-  } catch {
-    return res.status(500).json({ success: false, message: "Server Error" });
+
+  } catch (err) {
+    console.error("GetAllActivities Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 };
+
 
 /* ----------------------------- UPDATE ACTIVITY ----------------------------- */
 
