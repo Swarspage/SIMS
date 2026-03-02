@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { activityService } from "../services/activityService";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // ActivityCard Component - COMPACT & BEAUTIFUL & RESPONSIVE
-function ActivityCard({ activity, onEdit, onDelete }) {
+function ActivityCard({ activity, onEdit, onDelete, isDeleting }) {
   const [imageError, setImageError] = React.useState(false);
-  const certificateUrl = activity?.certificate?.url;
+  const certificateUrl = activity?.certificateURL?.url || activity?.certificate?.url;
   const isPDF = certificateUrl?.toLowerCase()?.endsWith('.pdf');
 
   return (
@@ -58,12 +60,16 @@ function ActivityCard({ activity, onEdit, onDelete }) {
 
         {/* Date */}
         <p className="text-xs sm:text-sm text-slate-500 mb-3">
-          {activity?.date
-            ? new Date(activity.date).toLocaleDateString("en-IN", {
+          {activity?.date?.from && activity?.date?.to
+            ? `${new Date(activity.date.from).toLocaleDateString("en-IN", {
               month: "short",
               day: "numeric",
               year: "numeric",
-            })
+            })} - ${new Date(activity.date.to).toLocaleDateString("en-IN", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}`
             : "N/A"}
         </p>
 
@@ -89,9 +95,13 @@ function ActivityCard({ activity, onEdit, onDelete }) {
             </button>
             <button
               onClick={() => onDelete(activity._id)}
-              className="px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+              disabled={isDeleting}
+              className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${isDeleting
+                ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                : "bg-red-50 text-red-700 hover:bg-red-100"
+                }`}
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </button>
           </div>
         </div>
@@ -104,8 +114,7 @@ function ActivityCard({ activity, onEdit, onDelete }) {
 export default function StudentActivity() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   // View state
   const [view, setView] = useState("list"); // "list" or "form"
@@ -116,7 +125,8 @@ export default function StudentActivity() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    date: "",
+    dateFrom: "",
+    dateTo: "",
   });
 
   const [certificate, setCertificate] = useState(null);
@@ -132,10 +142,9 @@ export default function StudentActivity() {
       const response = await activityService.getActivityByStu();
       const data = response.data || response.activities || response;
       setActivities(Array.isArray(data) ? data : []);
-      setError("");
     } catch (err) {
       console.error("Error fetching activities:", err);
-      setError("Failed to load activities");
+      toast.error("Failed to load activities");
       setActivities([]);
     } finally {
       setLoading(false);
@@ -154,13 +163,11 @@ export default function StudentActivity() {
     // Validate file type - only allow PNG and JPEG images
     const validTypes = ['image/png', 'image/jpeg'];
     if (!validTypes.includes(file.type)) {
-      setError('Please upload a PNG or JPG image file only.');
+      toast.error('Please upload a PNG or JPG image file only.');
       e.target.value = ''; // Clear the file input
       return;
     }
 
-    // Clear any previous error
-    setError('');
     setCertificate(file);
     setCertificatePreview(URL.createObjectURL(file));
   };
@@ -169,7 +176,8 @@ export default function StudentActivity() {
     setFormData({
       title: "",
       description: "",
-      date: "",
+      dateFrom: "",
+      dateTo: "",
     });
     setCertificate(null);
     setCertificatePreview("");
@@ -183,19 +191,21 @@ export default function StudentActivity() {
 
   const openFormForEdit = (activity) => {
     console.log("📝 Opening edit form for activity:", activity);
-    console.log("🖼️ Certificate data:", activity.certificate);
+    console.log("🖼️ Certificate data:", activity.certificateURL || activity.certificate);
 
     setEditingId(activity._id);
     setFormData({
       title: activity.title,
       description: activity.description,
-      date: activity.date.split("T")[0],
+      dateFrom: activity.date?.from ? activity.date.from.split("T")[0] : "",
+      dateTo: activity.date?.to ? activity.date.to.split("T")[0] : "",
     });
 
     // Set certificate preview if it exists
-    if (activity.certificate?.url) {
-      console.log("✅ Setting certificate preview URL:", activity.certificate.url);
-      setCertificatePreview(activity.certificate.url);
+    const certUrl = activity.certificateURL?.url || activity.certificate?.url;
+    if (certUrl) {
+      console.log("✅ Setting certificate preview URL:", certUrl);
+      setCertificatePreview(certUrl);
     } else {
       console.log("⚠️ No certificate URL found in activity");
     }
@@ -211,21 +221,14 @@ export default function StudentActivity() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
-    setSuccess("");
-    setError("");
 
     try {
-      if (!certificate && !editingId) {
-        setError("Certificate is required!");
-        setFormLoading(false);
-        return;
-      }
-
       const data = new FormData();
       // Type is handled by backend (forced to Committee)
       data.append("title", formData.title);
       data.append("description", formData.description);
-      data.append("date", formData.date);
+      data.append("date[from]", formData.dateFrom);
+      data.append("date[to]", formData.dateTo);
 
       if (certificate) {
         data.append("certificate", certificate);
@@ -233,10 +236,10 @@ export default function StudentActivity() {
 
       if (editingId) {
         await activityService.updateActivity(editingId, data);
-        setSuccess("Activity updated successfully!");
+        toast.success("Activity updated successfully!");
       } else {
         await activityService.createActivity(data);
-        setSuccess("Activity created successfully!");
+        toast.success("Activity created successfully!");
       }
 
       resetForm();
@@ -252,7 +255,7 @@ export default function StudentActivity() {
         errorMsg += ` (${details})`;
       }
 
-      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setFormLoading(false);
     }
@@ -261,13 +264,17 @@ export default function StudentActivity() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this activity?"))
       return;
+
+    setDeletingId(id);
     try {
       await activityService.deleteActivity(id);
-      setSuccess("Activity deleted successfully!");
+      toast.success("Activity deleted successfully!");
       fetchActivities();
     } catch (err) {
       console.error("Error deleting activity:", err);
-      setError("Failed to delete activity");
+      toast.error("Failed to delete activity");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -275,33 +282,7 @@ export default function StudentActivity() {
   if (view === "form") {
     return (
       <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
-        {/* Success Message */}
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>{success}</span>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
 
         {/* Back Button */}
         <button
@@ -381,19 +362,36 @@ export default function StudentActivity() {
                 </div>
 
                 {/* Date */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Date
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Start Date
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="dateFrom"
+                      value={formData.dateFrom}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      End Date
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="dateTo"
+                      value={formData.dateTo}
+                      onChange={handleChange}
+                      min={formData.dateFrom}
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -405,8 +403,7 @@ export default function StudentActivity() {
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Upload Certificate
-                    {!editingId && <span className="text-red-500 ml-1">*</span>}
+                    Upload Certificate (optional)
                   </label>
                   <div className="flex flex-col sm:flex-row gap-3 items-end">
                     <div className="flex-1 w-full">
@@ -428,10 +425,9 @@ export default function StudentActivity() {
                       UPLOAD
                       <input
                         type="file"
-                        accept="image/png,image/jpeg"
+                        accept="image/png,image/jpeg,application/pdf"
                         onChange={handleFileChange}
                         className="hidden"
-                        required={!editingId}
                       />
                     </label>
                   </div>
@@ -439,12 +435,26 @@ export default function StudentActivity() {
                   {/* Certificate Preview */}
                   {certificatePreview && (
                     <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex gap-4 items-start">
-                        <img
-                          src={certificatePreview}
-                          alt="Certificate Preview"
-                          className="w-24 h-24 object-cover rounded border-2 border-blue-500"
-                        />
+                      <div className="flex gap-4 items-start w-full">
+                        {certificatePreview.toLowerCase().endsWith('.pdf') || (certificate && certificate.type === 'application/pdf') ? (
+                          <div className="w-full h-96 bg-slate-100 rounded-lg border-2 border-slate-200 overflow-hidden mb-2">
+                            <object
+                              data={certificatePreview}
+                              type="application/pdf"
+                              className="w-full h-full"
+                            >
+                              <div className="flex items-center justify-center h-full text-slate-500">
+                                <p className="text-sm">Unable to display PDF preview. <a href={certificatePreview} target="_blank" rel="noreferrer" className="text-blue-600 underline">Download instead</a>.</p>
+                              </div>
+                            </object>
+                          </div>
+                        ) : (
+                          <img
+                            src={certificatePreview}
+                            alt="Certificate Preview"
+                            className="w-24 h-24 object-cover rounded border-2 border-blue-500 mr-2"
+                          />
+                        )}
                         <div className="flex-1">
                           <p className="text-xs text-green-600 mb-2 flex items-center gap-2">
                             <svg
@@ -509,33 +519,7 @@ export default function StudentActivity() {
   // =============== LIST VIEW ===============
   return (
     <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
-      {/* Success Message */}
-      {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>{success}</span>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>{error}</span>
-        </div>
-      )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
 
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
@@ -573,15 +557,8 @@ export default function StudentActivity() {
           </div>
         )}
 
-        {/* Error State */}
-        {error && !loading && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg">
-            {error}
-          </div>
-        )}
-
         {/* Empty State */}
-        {!loading && !error && activities.length === 0 && (
+        {!loading && activities.length === 0 && (
           <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-10 sm:p-16 text-center">
             <svg
               className="w-16 h-16 text-slate-300 mx-auto mb-4"
@@ -603,7 +580,7 @@ export default function StudentActivity() {
         )}
 
         {/* Activities Grid */}
-        {!loading && !error && activities.length > 0 && (
+        {!loading && activities.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {activities.map((activity) => (
               <ActivityCard
@@ -611,6 +588,7 @@ export default function StudentActivity() {
                 activity={activity}
                 onEdit={openFormForEdit}
                 onDelete={handleDelete}
+                isDeleting={deletingId === activity._id}
               />
             ))}
           </div>

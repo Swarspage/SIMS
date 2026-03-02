@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from "react";
 import { internshipService } from "../services/internshipService";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // InternshipCard Component - COMPACT, BEAUTIFUL & RESPONSIVE
-function InternshipCard({ internship, onEdit, onDelete }) {
+function InternshipCard({ internship, onEdit, onDelete, isDeleting }) {
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
       {/* Image Section */}
@@ -97,9 +99,20 @@ function InternshipCard({ internship, onEdit, onDelete }) {
             </button>
             <button
               onClick={() => onDelete(internship._id)}
-              className="px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+              disabled={isDeleting}
+              className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${isDeleting
+                ? "bg-red-200 text-red-500 cursor-not-allowed"
+                : "bg-red-50 text-red-700 hover:bg-red-100"
+                }`}
             >
-              Delete
+              {isDeleting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  Deleting...
+                </span>
+              ) : (
+                "Delete"
+              )}
             </button>
           </div>
         </div>
@@ -112,10 +125,9 @@ function InternshipCard({ internship, onEdit, onDelete }) {
 export default function StudentInternship() {
   const [internships, setInternships] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
   const [view, setView] = useState("list"); // "list" or "form"
   const [editingId, setEditingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -133,6 +145,8 @@ export default function StudentInternship() {
   const [internshipReport, setInternshipReport] = useState(null);
   const [photoFileName, setPhotoFileName] = useState("");
   const [reportFileName, setReportFileName] = useState("");
+  const [photoPreview, setPhotoPreview] = useState("");
+  const [reportPreview, setReportPreview] = useState("");
 
   useEffect(() => {
     fetchInternships();
@@ -143,10 +157,9 @@ export default function StudentInternship() {
       const response = await internshipService.getOwnInternships();
       const data = response.data || response.internships || response;
       setInternships(Array.isArray(data) ? data : []);
-      setError("");
     } catch (err) {
       console.error("Error fetching internships:", err);
-      setError("Failed to load internships");
+      toast.error("Failed to load internships");
       setInternships([]);
     } finally {
       setLoading(false);
@@ -166,6 +179,7 @@ export default function StudentInternship() {
     if (file) {
       setPhotoProof(file);
       setPhotoFileName(file.name);
+      setPhotoPreview(URL.createObjectURL(file));
     }
   };
 
@@ -174,6 +188,7 @@ export default function StudentInternship() {
     if (file) {
       setInternshipReport(file);
       setReportFileName(file.name);
+      setReportPreview(URL.createObjectURL(file));
     }
   };
 
@@ -192,6 +207,8 @@ export default function StudentInternship() {
     setInternshipReport(null);
     setPhotoFileName("");
     setReportFileName("");
+    setPhotoPreview("");
+    setReportPreview("");
     setEditingId(null);
   };
 
@@ -218,11 +235,15 @@ export default function StudentInternship() {
     });
     setPhotoProof(null);
     setInternshipReport(null);
+    setPhotoPreview("");
+    setReportPreview("");
+    setPhotoFileName(internship.photoProof?.url ? "Current photo uploaded" : "");
     if (internship.photoProof?.url) {
-      setPhotoFileName("Current photo uploaded");
+      setPhotoPreview(internship.photoProof.url);
     }
+    setReportFileName(internship.internshipReport?.url ? "Current report uploaded" : "");
     if (internship.internshipReport?.url) {
-      setReportFileName("Current report uploaded");
+      setReportPreview(internship.internshipReport.url);
     }
     setView("form");
   };
@@ -235,21 +256,19 @@ export default function StudentInternship() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
-    setSuccess("");
-    setError("");
 
     if (formData.description.length < 10) {
-      setError("Description must be at least 10 characters long");
+      toast.error("Description must be at least 10 characters long");
       setFormLoading(false);
       return;
     }
     if (!photoProof && !editingId) {
-      setError("Please upload internship photo");
+      toast.error("Please upload internship photo");
       setFormLoading(false);
       return;
     }
     if (!internshipReport && !editingId) {
-      setError("Please upload internship report PDF");
+      toast.error("Please upload internship report PDF");
       setFormLoading(false);
       return;
     }
@@ -270,10 +289,10 @@ export default function StudentInternship() {
 
       if (editingId) {
         await internshipService.updateInternship(editingId, data);
-        setSuccess("Internship updated successfully!");
+        toast.success("Internship updated successfully!");
       } else {
         await internshipService.createInternship(data);
-        setSuccess("Internship added successfully!");
+        toast.success("Internship added successfully!");
       }
       resetForm();
       await fetchInternships();
@@ -283,9 +302,9 @@ export default function StudentInternship() {
         const errorMessages = err.response.data.errors
           .map((e) => `${e.field}: ${e.message}`)
           .join(", ");
-        setError(errorMessages);
+        toast.error(errorMessages);
       } else {
-        setError(err.response?.data?.message || "Failed to save internship");
+        toast.error(err.response?.data?.message || "Failed to save internship");
       }
       console.error(err);
     } finally {
@@ -296,13 +315,17 @@ export default function StudentInternship() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this internship?"))
       return;
+
+    setDeletingId(id);
     try {
       await internshipService.deleteInternship(id);
-      setSuccess("Internship deleted successfully!");
+      toast.success("Internship deleted successfully!");
       fetchInternships();
     } catch (err) {
       console.error("Error deleting internship:", err);
-      setError("Failed to delete internship");
+      toast.error("Failed to delete internship");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -310,30 +333,7 @@ export default function StudentInternship() {
   if (view === "form") {
     return (
       <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>{success}</span>
-          </div>
-        )}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
         <button
           onClick={backToList}
           className="mb-6 px-4 py-2.5 rounded-lg bg-slate-300 text-slate-900 text-sm font-semibold hover:bg-slate-400 transition-colors flex items-center gap-2"
@@ -551,6 +551,38 @@ export default function StudentInternship() {
                         />
                       </label>
                     </div>
+
+                    {/* Photo Preview */}
+                    {photoPreview && (
+                      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex gap-4 items-start">
+                          <img
+                            src={photoPreview}
+                            alt="Photo Proof Preview"
+                            className="w-24 h-24 object-cover rounded border-2 border-blue-500"
+                          />
+                          <div className="flex-1">
+                            <p className="text-xs text-green-600 mb-2 flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              Photo ready to submit
+                            </p>
+                            <a
+                              href={photoPreview}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 underline"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              View Full Photo
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {/* Report Upload */}
                   <div>
@@ -579,6 +611,36 @@ export default function StudentInternship() {
                         />
                       </label>
                     </div>
+
+                    {/* Report Preview */}
+                    {reportPreview && (
+                      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex gap-4 items-start">
+                          {reportPreview.toLowerCase().endsWith('.pdf') ||
+                            reportFileName?.toLowerCase().endsWith('.pdf') ? (
+                            // PDF Preview
+                            <div className="w-full h-96 bg-slate-100 rounded-lg border-2 border-slate-200 overflow-hidden mb-2">
+                              <object
+                                data={reportPreview}
+                                type="application/pdf"
+                                className="w-full h-full"
+                              >
+                                <div className="flex items-center justify-center h-full text-slate-500">
+                                  <p className="text-sm">Unable to display PDF preview. <a href={reportPreview} target="_blank" rel="noreferrer" className="text-blue-600 underline">Download instead</a>.</p>
+                                </div>
+                              </object>
+                            </div>
+                          ) : (
+                            // Image Preview fallback
+                            <img
+                              src={reportPreview}
+                              alt="Report Preview"
+                              className="w-24 h-24 object-cover rounded border-2 border-blue-500"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -612,30 +674,7 @@ export default function StudentInternship() {
   // =============== LIST VIEW ===============
   return (
     <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
-      {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>{success}</span>
-        </div>
-      )}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>{error}</span>
-        </div>
-      )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
@@ -665,12 +704,7 @@ export default function StudentInternship() {
             </div>
           </div>
         )}
-        {error && !loading && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg">
-            {error}
-          </div>
-        )}
-        {!loading && !error && internships.length === 0 && (
+        {!loading && internships.length === 0 && (
           <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-10 sm:p-16 text-center">
             <svg
               className="w-16 h-16 text-slate-300 mx-auto mb-4"
@@ -682,7 +716,7 @@ export default function StudentInternship() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={1.5}
-                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 0a2 2 0 100 4m0-4a2 2 0 110 4m0 0a9.933 9.933 0 018.828-4.3c2.765.405 5.426 1.494 7.68 3.084M9 20h12a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"
+                d="M21 13v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7m18 0V9a2 2 0 00-2-2H5a2 2 0 00-2 2v4m18 0H3m12-4V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4m10 0H7"
               />
             </svg>
             <p className="text-slate-600 text-base sm:text-lg font-medium">
@@ -691,7 +725,7 @@ export default function StudentInternship() {
             </p>
           </div>
         )}
-        {!loading && !error && internships.length > 0 && (
+        {!loading && internships.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {internships.map((internship) => (
               <InternshipCard
@@ -699,6 +733,7 @@ export default function StudentInternship() {
                 internship={internship}
                 onEdit={openFormForEdit}
                 onDelete={handleDelete}
+                isDeleting={deletingId === internship._id}
               />
             ))}
           </div>

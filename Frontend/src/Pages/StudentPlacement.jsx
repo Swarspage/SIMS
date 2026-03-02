@@ -2,20 +2,22 @@
 import React, { useState, useEffect } from "react";
 import { placementService } from "../services/placementService";
 import { higherStudiesService } from "../services/higherStudiesService";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // PlacementCard Component
-function PlacementCard({ placement, onEdit, onDelete }) {
+function PlacementCard({ placement, onEdit, onDelete, isDeleting }) {
   const [imageError, setImageError] = React.useState(false);
   const certificateUrl = placement?.placementProof?.url;
-  const isPDF = certificateUrl?.toLowerCase()?.endsWith('.pdf');
+  const isPDF = certificateUrl?.toLowerCase()?.endsWith('.pdf') || placement?.placementProof?.name?.toLowerCase()?.endsWith('.pdf');
 
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
       {/* Certificate/Icon Section */}
       <div className="h-32 sm:h-36 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center overflow-hidden relative">
-        {certificateUrl && !isPDF && !imageError ? (
+        {certificateUrl && !imageError ? (
           <img
-            src={certificateUrl}
+            src={certificateUrl.toLowerCase().endsWith('.pdf') ? certificateUrl.replace(/\.pdf$/i, '.jpg') : certificateUrl}
             alt={placement?.companyName || "Placement"}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             onError={() => setImageError(true)}
@@ -79,9 +81,20 @@ function PlacementCard({ placement, onEdit, onDelete }) {
             </button>
             <button
               onClick={() => onDelete(placement._id)}
-              className="px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+              disabled={isDeleting}
+              className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${isDeleting
+                ? "bg-red-200 text-red-500 cursor-not-allowed"
+                : "bg-red-50 text-red-700 hover:bg-red-100"
+                }`}
             >
-              Delete
+              {isDeleting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  Deleting...
+                </span>
+              ) : (
+                "Delete"
+              )}
             </button>
           </div>
         </div>
@@ -91,18 +104,18 @@ function PlacementCard({ placement, onEdit, onDelete }) {
 }
 
 // HigherStudiesCard Component
-function HigherStudiesCard({ study, onEdit, onDelete }) {
+function HigherStudiesCard({ study, onEdit, onDelete, isDeleting }) {
   const [imageError, setImageError] = React.useState(false);
   const certificateUrl = study?.marksheet?.url;
-  const isPDF = certificateUrl?.toLowerCase()?.endsWith('.pdf');
+  const isPDF = certificateUrl?.toLowerCase()?.endsWith('.pdf') || study?.marksheet?.name?.toLowerCase()?.endsWith('.pdf');
 
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
       {/* Certificate/Icon Section */}
       <div className="h-32 sm:h-36 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center overflow-hidden relative">
-        {certificateUrl && !isPDF && !imageError ? (
+        {certificateUrl && !imageError ? (
           <img
-            src={certificateUrl}
+            src={certificateUrl.toLowerCase().endsWith('.pdf') ? certificateUrl.replace(/\.pdf$/i, '.jpg') : certificateUrl}
             alt={study?.examName || "Higher Studies"}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             onError={() => setImageError(true)}
@@ -158,9 +171,20 @@ function HigherStudiesCard({ study, onEdit, onDelete }) {
             </button>
             <button
               onClick={() => onDelete(study._id)}
-              className="px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+              disabled={isDeleting}
+              className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${isDeleting
+                ? "bg-red-200 text-red-500 cursor-not-allowed"
+                : "bg-red-50 text-red-700 hover:bg-red-100"
+                }`}
             >
-              Delete
+              {isDeleting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  Deleting...
+                </span>
+              ) : (
+                "Delete"
+              )}
             </button>
           </div>
         </div>
@@ -174,11 +198,11 @@ export default function StudentPlacement() {
   const [higherStudies, setHigherStudies] = useState([]);
   const [loadingPlacements, setLoadingPlacements] = useState(true);
   const [loadingStudies, setLoadingStudies] = useState(true);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
   const [view, setView] = useState("list");
   const [activeTab, setActiveTab] = useState("placement");
   const [editingId, setEditingId] = useState(null);
+  const [deletingPlacementId, setDeletingPlacementId] = useState(null);
+  const [deletingStudyId, setDeletingStudyId] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
 
   const [placementData, setPlacementData] = useState({
@@ -248,7 +272,6 @@ export default function StudentPlacement() {
       placementProof: file,
     }));
     setPlacementProofPreview(URL.createObjectURL(file));
-    setError(''); // Clear any previous errors
   };
 
   const handleHigherStudiesChange = (e) => {
@@ -268,7 +291,6 @@ export default function StudentPlacement() {
       marksheet: file,
     }));
     setMarksheetPreview(URL.createObjectURL(file));
-    setError(''); // Clear any previous errors
   };
 
   const handleIdCardPhotoChange = (e) => {
@@ -280,7 +302,6 @@ export default function StudentPlacement() {
       idCardPhoto: file,
     }));
     setIdCardPhotoPreview(URL.createObjectURL(file));
-    setError('');
   };
 
   const resetPlacementForm = () => {
@@ -377,8 +398,6 @@ export default function StudentPlacement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
-    setSuccess("");
-    setError("");
     try {
       if (activeTab === "placement") {
         const formData = new FormData();
@@ -394,10 +413,10 @@ export default function StudentPlacement() {
         }
         if (editingId) {
           await placementService.updatePlacement(editingId, formData);
-          setSuccess("Placement updated successfully!");
+          toast.success("Placement updated successfully!");
         } else {
           await placementService.createPlacement(formData);
-          setSuccess("Placement saved successfully!");
+          toast.success("Placement saved successfully!");
         }
         resetPlacementForm();
         await fetchPlacements();
@@ -413,17 +432,17 @@ export default function StudentPlacement() {
         }
         if (editingId) {
           await higherStudiesService.updateHigherStudy(editingId, formData);
-          setSuccess("Higher Studies updated successfully!");
+          toast.success("Higher Studies updated successfully!");
         } else {
           await higherStudiesService.createHigherStudy(formData);
-          setSuccess("Higher Studies saved successfully!");
+          toast.success("Higher Studies saved successfully!");
         }
         resetHigherStudiesForm();
         await fetchHigherStudies();
       }
       setTimeout(() => setView("list"), 500);
     } catch (error) {
-      setError(
+      toast.error(
         error.response?.data?.message ||
         "Failed to save data. Please try again."
       );
@@ -434,23 +453,29 @@ export default function StudentPlacement() {
 
   const handleDeletePlacement = async (id) => {
     if (!window.confirm("Delete this placement?")) return;
+    setDeletingPlacementId(id);
     try {
       await placementService.deletePlacement(id);
-      setSuccess("Placement deleted successfully!");
+      toast.success("Placement deleted successfully!");
       fetchPlacements();
     } catch (err) {
-      setError("Failed to delete placement");
+      toast.error("Failed to delete placement");
+    } finally {
+      setDeletingPlacementId(null);
     }
   };
 
   const handleDeleteHigherStudies = async (id) => {
     if (!window.confirm("Delete this higher studies record?")) return;
+    setDeletingStudyId(id);
     try {
       await higherStudiesService.deleteHigherStudy(id);
-      setSuccess("Higher Studies deleted successfully!");
+      toast.success("Higher Studies deleted successfully!");
       fetchHigherStudies();
     } catch (err) {
-      setError("Failed to delete higher studies");
+      toast.error("Failed to delete higher studies");
+    } finally {
+      setDeletingStudyId(null);
     }
   };
 
@@ -458,31 +483,7 @@ export default function StudentPlacement() {
   if (view === "form") {
     return (
       <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
-        {/* Success/Error/Back */}
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>{success}</span>
-          </div>
-        )}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
         <button
           onClick={backToList}
           className="mb-6 px-4 py-2.5 rounded-lg bg-slate-300 text-slate-900 text-sm font-semibold hover:bg-slate-400 transition-colors flex items-center gap-2"
@@ -647,7 +648,7 @@ export default function StudentPlacement() {
                       Documentation
                     </h2>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      LOI / Joining Letter / Offer Letter
+                      Internship Photo
                     </label>
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">
@@ -682,10 +683,16 @@ export default function StudentPlacement() {
                           {placementProofPreview.toLowerCase().endsWith('.pdf') ||
                             placementData.placementProof?.name?.toLowerCase().endsWith('.pdf') ? (
                             // PDF Preview
-                            <div className="w-24 h-24 bg-white rounded border-2 border-blue-500 flex items-center justify-center">
-                              <svg className="w-12 h-12 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                              </svg>
+                            <div className="w-full h-96 bg-slate-100 rounded-lg border-2 border-slate-200 overflow-hidden mb-2">
+                              <object
+                                data={placementProofPreview}
+                                type="application/pdf"
+                                className="w-full h-full"
+                              >
+                                <div className="flex items-center justify-center h-full text-slate-500">
+                                  <p className="text-sm">Unable to display PDF preview. <a href={placementProofPreview} target="_blank" rel="noreferrer" className="text-blue-600 underline">Download instead</a>.</p>
+                                </div>
+                              </object>
                             </div>
                           ) : (
                             // Image Preview
@@ -802,10 +809,16 @@ export default function StudentPlacement() {
                           {marksheetPreview.toLowerCase().endsWith('.pdf') ||
                             higherStudiesData.marksheet?.name?.toLowerCase().endsWith('.pdf') ? (
                             // PDF Preview
-                            <div className="w-24 h-24 bg-white rounded border-2 border-green-500 flex items-center justify-center">
-                              <svg className="w-12 h-12 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                              </svg>
+                            <div className="w-full h-96 bg-slate-100 rounded-lg border-2 border-slate-200 overflow-hidden mb-2">
+                              <object
+                                data={marksheetPreview}
+                                type="application/pdf"
+                                className="w-full h-full"
+                              >
+                                <div className="flex items-center justify-center h-full text-slate-500">
+                                  <p className="text-sm">Unable to display PDF preview. <a href={marksheetPreview} target="_blank" rel="noreferrer" className="text-blue-600 underline">Download instead</a>.</p>
+                                </div>
+                              </object>
                             </div>
                           ) : (
                             // Image Preview
@@ -931,30 +944,7 @@ export default function StudentPlacement() {
   // =============== LIST VIEW ===============
   return (
     <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
-      {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>{success}</span>
-        </div>
-      )}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>{error}</span>
-        </div>
-      )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
           Career Path
@@ -1003,6 +993,7 @@ export default function StudentPlacement() {
                 placement={placement}
                 onEdit={openFormForEditPlacement}
                 onDelete={handleDeletePlacement}
+                isDeleting={deletingPlacementId === placement._id}
               />
             ))}
           </div>
@@ -1048,6 +1039,7 @@ export default function StudentPlacement() {
                 study={study}
                 onEdit={openFormForEditHigherStudies}
                 onDelete={handleDeleteHigherStudies}
+                isDeleting={deletingStudyId === study._id}
               />
             ))}
           </div>

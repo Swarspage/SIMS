@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { studentService } from "../services/studentService";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function StudentInformation() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
   const [isEditMode, setIsEditMode] = useState(true); // Default to true, switch to false if data exists
   const [hasData, setHasData] = useState(false);
   const [studentId, setStudentId] = useState(null);
@@ -54,11 +55,12 @@ export default function StudentInformation() {
       if (data && data.success && data.data) {
         const s = data.data;
 
-        // Define what constitutes "having data" - e.g. check if PRN or ID exists
+        // Define what constitutes "having data" - e.g. check if PRN exists
         // If data exists, show view mode by default
-        if (s._id || s.id || s.PRN) {
+        setStudentId(s._id || s.id);
+
+        if (s.PRN && s.branch) {
           setHasData(true);
-          setStudentId(s._id || s.id);
           setIsEditMode(false);
         }
 
@@ -120,7 +122,6 @@ export default function StudentInformation() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setMessage({ type: "", text: "" });
 
     try {
       const data = new FormData();
@@ -137,10 +138,10 @@ export default function StudentInformation() {
 
       if (hasData && studentId) {
         await studentService.updateStudent(studentId, data);
-        setMessage({ type: "success", text: "Student information updated successfully!" });
+        toast.success("Student information updated successfully!");
       } else {
         await studentService.addStudent(data);
-        setMessage({ type: "success", text: "Student information saved successfully!" });
+        toast.success("Student information saved successfully!");
       }
 
       setHasData(true);
@@ -162,7 +163,7 @@ export default function StudentInformation() {
         errorMsg += ` ${details}`;
       }
 
-      setMessage({ type: "error", text: errorMsg });
+      toast.error(errorMsg);
       window.scrollTo(0, 0);
     } finally {
       setSubmitting(false);
@@ -173,7 +174,6 @@ export default function StudentInformation() {
     // Re-fetch data to reset form to saved state
     fetchStudentData();
     setIsEditMode(false);
-    setMessage({ type: "", text: "" });
   };
 
   // Helper function to capitalize first letter
@@ -197,16 +197,8 @@ export default function StudentInformation() {
   if (!isEditMode && hasData) {
     return (
       <main className="min-h-screen bg-slate-50 p-4 sm:p-8">
+        <ToastContainer position="top-right" autoClose={5000} theme="light" />
         <div className="max-w-7xl mx-auto">
-          {/* Success Message */}
-          {message.text && message.type === "success" && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span>{message.text}</span>
-            </div>
-          )}
 
           <div className="flex flex-col md:flex-row gap-8">
             {/* Left Column: Photo & Basic Info */}
@@ -312,6 +304,7 @@ export default function StudentInformation() {
   // =============== EDIT/FORM MODE ===============
   return (
     <main className="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+      <ToastContainer position="top-right" autoClose={5000} theme="light" />
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
@@ -332,25 +325,6 @@ export default function StudentInformation() {
             </button>
           )}
         </div>
-
-        {/* Message Alert */}
-        {message.text && (
-          <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${message.type === "success"
-            ? "bg-green-50 text-green-700 border border-green-200"
-            : "bg-red-50 text-red-700 border border-red-200"
-            }`}>
-            {message.type === "success" ? (
-              <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            )}
-            <span>{message.text}</span>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
 

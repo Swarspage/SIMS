@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from "react";
 import { achievementService } from "../services/achievementService";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // AchievementCard Component - COMPACT, BEAUTIFUL & RESPONSIVE
-function AchievementCard({ achievement, onEdit, onDelete }) {
+function AchievementCard({ achievement, onEdit, onDelete, isDeleting }) {
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
       {/* Image Section */}
@@ -106,9 +108,13 @@ function AchievementCard({ achievement, onEdit, onDelete }) {
             </button>
             <button
               onClick={() => onDelete(achievement._id)}
-              className="px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+              disabled={isDeleting}
+              className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${isDeleting
+                ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                : "bg-red-50 text-red-700 hover:bg-red-100"
+                }`}
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </button>
           </div>
         </div>
@@ -120,8 +126,7 @@ function AchievementCard({ achievement, onEdit, onDelete }) {
 export default function StudentAchievements() {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   // View state
   const [view, setView] = useState("list"); // "list" or "form"
@@ -132,6 +137,7 @@ export default function StudentAchievements() {
   const [formData, setFormData] = useState({
     studentID: "",
     category: "",
+    otherCategory: "",
     title: "",
     description: "",
     issuedBy: "",
@@ -158,10 +164,9 @@ export default function StudentAchievements() {
       const data = await achievementService.getAchievementsByStu();
       setAchievements(Array.isArray(data) ? data : []);
       setFormData((prev) => ({ ...prev, studentID: studentId }));
-      setError("");
     } catch (err) {
       console.error("Error fetching achievements:", err);
-      setError("Failed to load achievements");
+      toast.error("Failed to load achievements");
       setAchievements([]);
     } finally {
       setLoading(false);
@@ -190,6 +195,7 @@ export default function StudentAchievements() {
     setFormData({
       studentID: studentId || "",
       category: "",
+      otherCategory: "",
       title: "",
       description: "",
       issuedBy: "",
@@ -211,12 +217,27 @@ export default function StudentAchievements() {
   };
   const openFormForEdit = (achievement) => {
     setEditingId(achievement._id);
+
+    // Parse out custom "Other" category from description if it exists
+    let parsedCategory = achievement.category || "";
+    let parsedOther = "";
+    let parsedDesc = achievement.description || "";
+
+    if (parsedCategory === "Other" && parsedDesc.startsWith("Category ") && parsedDesc.includes(", ")) {
+      const endIdx = parsedDesc.indexOf(", ");
+      if (endIdx !== -1) {
+        parsedOther = parsedDesc.substring(9, endIdx);
+        parsedDesc = parsedDesc.substring(endIdx + 2).trim();
+      }
+    }
+
     setFormData({
       studentID:
         achievement.stuID || achievementService.getStudentIdFromToken(),
-      category: achievement.category || "",
+      category: parsedCategory,
+      otherCategory: parsedOther,
       title: achievement.title || "",
-      description: achievement.description || "",
+      description: parsedDesc,
       issuedBy: achievement.issuedBy || "",
       dateFrom: achievement.date?.from
         ? new Date(achievement.date.from).toISOString().split("T")[0]
@@ -244,14 +265,19 @@ export default function StudentAchievements() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
-    setSuccess("");
-    setError("");
 
     try {
       const data = new FormData();
       data.append("category", formData.category);
       data.append("title", formData.title);
-      data.append("description", formData.description);
+
+      // Handle injecting the "Other" specification into the description safely for regex
+      let finalDescription = formData.description;
+      if (formData.category === "Other" && formData.otherCategory.trim()) {
+        finalDescription = `Category ${formData.otherCategory.trim()}, ${finalDescription}`;
+      }
+      data.append("description", finalDescription);
+
       data.append("issuedBy", formData.issuedBy);
       data.append("achievementType", formData.achievementType);
 
@@ -270,17 +296,17 @@ export default function StudentAchievements() {
 
       if (editingId) {
         await achievementService.updateAchievement(editingId, data);
-        setSuccess("Achievement updated successfully!");
+        toast.success("Achievement updated successfully!");
       } else {
         if (!eventPhoto || !certificate) {
-          setError(
+          toast.error(
             "Both event photo and certificate are required for new achievements."
           );
           setFormLoading(false);
           return;
         }
         await achievementService.createAchievement(data);
-        setSuccess("Achievement created successfully!");
+        toast.success("Achievement created successfully!");
       }
       resetForm();
       await fetchAchievements();
@@ -295,7 +321,7 @@ export default function StudentAchievements() {
         errorMsg += ` (${details})`;
       }
 
-      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setFormLoading(false);
     }
@@ -303,13 +329,17 @@ export default function StudentAchievements() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this achievement?"))
       return;
+
+    setDeletingId(id);
     try {
       await achievementService.deleteAchievement(id);
-      setSuccess("Achievement deleted successfully!");
+      toast.success("Achievement deleted successfully!");
       fetchAchievements();
     } catch (err) {
       console.error("Error deleting achievement:", err);
-      setError("Failed to delete achievement");
+      toast.error("Failed to delete achievement");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -317,33 +347,7 @@ export default function StudentAchievements() {
   if (view === "form") {
     return (
       <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
-        {/* Success Message */}
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>{success}</span>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
 
         {/* Back Button */}
         <button
@@ -395,23 +399,40 @@ export default function StudentAchievements() {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                       Category <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
-                      required
-                    >
-                      <option value="">Select Category</option>
-                      <option value="Coding competitions">
-                        Coding Competitions
-                      </option>
-                      <option value="Committee">Committee</option>
-                      <option value="Hackathons">Hackathons</option>
-                      <option value="Sports">Sports</option>
-                      <option value="Cultural">Cultural</option>
-                      <option value="Technical">Technical</option>
-                    </select>
+                    <div className="flex flex-col gap-3">
+                      <select
+                        name="category"
+                        value={formData.category}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
+                        required
+                      >
+                        <option value="">Select Category</option>
+                        <option value="Coding competitions">
+                          Coding Competitions
+                        </option>
+                        <option value="Committee">Committee</option>
+                        <option value="Hackathon">Hackathon</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Cultural">Cultural</option>
+                        <option value="Technical">Technical</option>
+                        <option value="Academic Topper">Academic Topper</option>
+                        <option value="Other">Other</option>
+                      </select>
+
+                      {/* Please Specify Box */}
+                      {formData.category === "Other" && (
+                        <input
+                          type="text"
+                          name="otherCategory"
+                          value={formData.otherCategory}
+                          onChange={handleChange}
+                          placeholder="Please specify custom category..."
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                          required
+                        />
+                      )}
+                    </div>
                   </div>
                   {/* Title */}
                   <div>
@@ -562,7 +583,6 @@ export default function StudentAchievements() {
                         accept="image/*"
                         onChange={(e) => handleFileChange(e, "eventPhoto")}
                         className="hidden"
-                        required={!editingId}
                       />
                     </label>
                   </div>
@@ -603,16 +623,31 @@ export default function StudentAchievements() {
                         accept="image/*,application/pdf"
                         onChange={(e) => handleFileChange(e, "certificate")}
                         className="hidden"
-                        required={!editingId}
                       />
                     </label>
                   </div>
                   {certificatePreview && (
-                    <img
-                      src={certificatePreview}
-                      alt="Certificate Preview"
-                      className="mt-3 w-24 h-24 object-cover rounded-lg border-2 border-blue-500"
-                    />
+                    <div className="mt-3">
+                      {certificatePreview.toLowerCase().endsWith('.pdf') || (certificate && certificate.type === 'application/pdf') ? (
+                        <div className="w-full h-96 bg-slate-100 rounded-lg border-2 border-slate-200 overflow-hidden mb-2">
+                          <object
+                            data={certificatePreview}
+                            type="application/pdf"
+                            className="w-full h-full"
+                          >
+                            <div className="flex items-center justify-center h-full text-slate-500">
+                              <p className="text-sm">Unable to display PDF preview. <a href={certificatePreview} target="_blank" rel="noreferrer" className="text-blue-600 underline">Download instead</a>.</p>
+                            </div>
+                          </object>
+                        </div>
+                      ) : (
+                        <img
+                          src={certificatePreview}
+                          alt="Certificate Preview"
+                          className="w-24 h-24 object-cover rounded-lg border-2 border-blue-500"
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -647,32 +682,8 @@ export default function StudentAchievements() {
   // =============== LIST VIEW ===============
   return (
     <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
-      {/* Success Message */}
-      {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>{success}</span>
-        </div>
-      )}
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>{error}</span>
-        </div>
-      )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
+
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
@@ -706,14 +717,8 @@ export default function StudentAchievements() {
             </div>
           </div>
         )}
-        {/* Error State */}
-        {error && !loading && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg">
-            {error}
-          </div>
-        )}
         {/* Empty State */}
-        {!loading && !error && achievements.length === 0 && (
+        {!loading && achievements.length === 0 && (
           <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-10 sm:p-16 text-center">
             <svg
               className="w-16 h-16 text-slate-300 mx-auto mb-4"
@@ -725,7 +730,7 @@ export default function StudentAchievements() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={1.5}
-                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
               />
             </svg>
             <p className="text-slate-600 text-base sm:text-lg font-medium">
@@ -735,7 +740,7 @@ export default function StudentAchievements() {
           </div>
         )}
         {/* Achievements Grid */}
-        {!loading && !error && achievements.length > 0 && (
+        {!loading && achievements.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {achievements.map((achievement) => (
               <AchievementCard
@@ -743,6 +748,7 @@ export default function StudentAchievements() {
                 achievement={achievement}
                 onEdit={openFormForEdit}
                 onDelete={handleDelete}
+                isDeleting={deletingId === achievement._id}
               />
             ))}
           </div>

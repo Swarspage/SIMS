@@ -14,7 +14,7 @@ export default function StudentSidebar() {
     { name: "Activities", path: "/student/activity" },
     { name: "Achievements", path: "/student/achievements" },
     { name: "Internships", path: "/student/internship" },
-    { name: "Placements", path: "/student/placement" },
+    { name: "Placements and Higher Studies", path: "/student/placement" },
   ];
 
   // COLORS for icon: normal, active, hover
@@ -73,7 +73,7 @@ export default function StudentSidebar() {
             <path d="M3 11h18"></path>
           </svg>
         );
-      case "Placements":
+      case "Placements and Higher Studies":
         return (
           <svg {...common} viewBox="0 0 24 24">
             <path d="M3 12l2-2 4 4 8-8 4 4"></path>

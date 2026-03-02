@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { admissionService } from "../services/admissionService";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function StudentAdmission() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
   const [isEditMode, setIsEditMode] = useState(true);
   const [hasData, setHasData] = useState(false);
   const [admissionId, setAdmissionId] = useState(null);
@@ -18,7 +19,14 @@ export default function StudentAdmission() {
     fees: "",
     isFeesPaid: false,
     isScholarshipApplied: false,
+    scholarshipNotAppliedReason: "",
     academicYear: "",
+    isMahadbtFormSubmitted: false,
+    mahadbtFilledDate: "",
+    mahadbtNotFilledReason: "",
+    hasMigrationCertificate: false,
+    migrationExpectedDate: "",
+    migrationNotAvailableReason: "",
   });
 
   useEffect(() => {
@@ -48,7 +56,14 @@ export default function StudentAdmission() {
           fees: admissionRecord.fees || "",
           isFeesPaid: admissionRecord.isFeesPaid || false,
           isScholarshipApplied: admissionRecord.isScholarshipApplied || false,
+          scholarshipNotAppliedReason: admissionRecord.scholarshipNotAppliedReason || "",
           academicYear: admissionRecord.academicYear || "",
+          isMahadbtFormSubmitted: admissionRecord.isMahadbtFormSubmitted || false,
+          mahadbtFilledDate: admissionRecord.mahadbtFilledDate ? new Date(admissionRecord.mahadbtFilledDate).toISOString().split("T")[0] : "",
+          mahadbtNotFilledReason: admissionRecord.mahadbtNotFilledReason || "",
+          hasMigrationCertificate: admissionRecord.hasMigrationCertificate || false,
+          migrationExpectedDate: admissionRecord.migrationExpectedDate ? new Date(admissionRecord.migrationExpectedDate).toISOString().split("T")[0] : "",
+          migrationNotAvailableReason: admissionRecord.migrationNotAvailableReason || "",
         });
       }
     } catch (err) {
@@ -66,7 +81,6 @@ export default function StudentAdmission() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setMessage({ type: "", text: "" });
 
     try {
       // Filter out fields not allowed by backend validation
@@ -77,20 +91,25 @@ export default function StudentAdmission() {
       } = formData;
 
       // Prepare payload - include fees/scholarship as per schema requirements
-      const payload = { ...formData };
+      const payload = { ...baseData };
 
-      // Fix boolean conversions if they came from select as strings (though they shouldn't with current logic)
+      // Handle conditional required fields to avoid sending empty strings causing validation errors
+      if (!payload.isMahadbtFormSubmitted) delete payload.mahadbtFilledDate;
+      if (payload.isMahadbtFormSubmitted) delete payload.mahadbtNotFilledReason;
+      if (!payload.hasMigrationCertificate) delete payload.migrationExpectedDate;
+      if (payload.hasMigrationCertificate) delete payload.migrationNotAvailableReason;
+      if (payload.isScholarshipApplied) delete payload.scholarshipNotAppliedReason;
 
       if (hasData && admissionId) {
         // Update
         // Remove academicYear if it's not allowed in update (per previous code analysis)
         const { academicYear, ...updateData } = payload;
         await admissionService.updateAdmission(admissionId, updateData);
-        setMessage({ type: "success", text: "Admission updated successfully!" });
+        toast.success("Admission updated successfully!");
       } else {
         // Create
         await admissionService.createAdmission(payload);
-        setMessage({ type: "success", text: "Admission created successfully!" });
+        toast.success("Admission created successfully!");
         setHasData(true);
       }
 
@@ -107,7 +126,7 @@ export default function StudentAdmission() {
         errorMsg += ` (${details})`;
       }
 
-      setMessage({ type: "error", text: errorMsg });
+      toast.error(errorMsg);
       window.scrollTo(0, 0);
     } finally {
       setSubmitting(false);
@@ -117,7 +136,6 @@ export default function StudentAdmission() {
   const handleEditCancel = () => {
     fetchAdmissionData();
     setIsEditMode(false);
-    setMessage({ type: "", text: "" });
   };
 
   if (loading) {
@@ -135,23 +153,8 @@ export default function StudentAdmission() {
   if (!isEditMode && hasData) {
     return (
       <main className="min-h-screen bg-slate-50 p-4 sm:p-8">
+        <ToastContainer position="top-right" autoClose={5000} theme="light" />
         <div className="max-w-7xl mx-auto">
-          {/* Success Message */}
-          {message.text && (
-            <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${message.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-              }`}>
-              <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                {message.type === "success"
-                  ? <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  : <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                }
-              </svg>
-              <span>{message.text}</span>
-            </div>
-          )}
-
           <div className="flex flex-col md:flex-row gap-8">
             {/* Left Column: Summary Card */}
             <div className="w-full md:w-1/3 space-y-6">
@@ -199,8 +202,10 @@ export default function StudentAdmission() {
                   <InfoItem label="Course" value={formData.course} fullWidth />
                   <InfoItem label="Academic Year" value={formData.academicYear} />
                   <InfoItem label="Admission Date" value={formData.admissionDate} />
-                  <InfoItem label="Year" value={`${formData.year} Year`} />
-                  <InfoItem label="Division" value={`Division ${formData.div}`} />
+                  <InfoItem label="Year" value={`${formData.year}`} />
+                  <InfoItem label="Division" value={`Div ${formData.div}`} />
+                  <InfoItem label="MahaDBT Form" value={formData.isMahadbtFormSubmitted ? `Submitted on ${formData.mahadbtFilledDate}` : `Not Submitted - ${formData.mahadbtNotFilledReason}`} fullWidth />
+                  <InfoItem label="Migration Certificate" value={formData.hasMigrationCertificate ? `Expected on ${formData.migrationExpectedDate}` : `Not Available - ${formData.migrationNotAvailableReason}`} fullWidth />
                 </div>
               </div>
 
@@ -221,7 +226,7 @@ export default function StudentAdmission() {
                       {formData.isFeesPaid ? "Paid" : "Pending / Partial"}
                     </span>
                   </div>
-                  <InfoItem label="Scholarship Applied" value={formData.isScholarshipApplied ? "Yes" : "No"} />
+                  <InfoItem label="Scholarship Applied" value={formData.isScholarshipApplied ? "Yes" : `No - ${formData.scholarshipNotAppliedReason}`} fullWidth />
                 </div>
               </div>
 
@@ -256,21 +261,6 @@ export default function StudentAdmission() {
           )}
         </div>
 
-        {/* Message Alert */}
-        {message.text && (
-          <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${message.type === "success"
-            ? "bg-green-50 text-green-700 border border-green-200"
-            : "bg-red-50 text-red-700 border border-red-200"
-            }`}>
-            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              {message.type === "success"
-                ? <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                : <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              }
-            </svg>
-            <span>{message.text}</span>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -289,7 +279,13 @@ export default function StudentAdmission() {
                 <InputField label="Academic Year" name="academicYear" value={formData.academicYear} onChange={handleChange} required placeholder="2024-2025" disabled={hasData} title={hasData ? "Academic Year cannot be changed once submitted" : ""} />
               </div>
 
-              <div className="md:col-span-4">
+              <div className="md:col-span-2">
+                <SelectField label="Year" name="year" value={formData.year} onChange={handleChange} required options={["FY", "SY", "TY"]} />
+              </div>
+              <div className="md:col-span-1">
+                <InputField label="Division" name="div" value={formData.div} onChange={handleChange} required placeholder="e.g. A" />
+              </div>
+              <div className="md:col-span-1">
                 <InputField label="Roll No" name="rollno" value={formData.rollno} onChange={handleChange} required />
               </div>
             </div>
@@ -325,8 +321,90 @@ export default function StudentAdmission() {
                     </svg>
                   </div>
                 </div>
+
+                {!formData.isScholarshipApplied && (
+                  <div className="mt-4">
+                    <InputField label="Reason for Not Applying Scholarship" name="scholarshipNotAppliedReason" value={formData.scholarshipNotAppliedReason} onChange={handleChange} required />
+                  </div>
+                )}
               </div>
 
+            </div>
+          </section>
+
+          {/* Section 3: MahaDBT Details */}
+          <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
+              <span className="w-1 h-6 bg-orange-500 rounded-full"></span>
+              MahaDBT Form Details
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Is MahaDBT Form Submitted? <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    name="isMahadbtFormSubmitted"
+                    value={formData.isMahadbtFormSubmitted ? "yes" : "no"}
+                    onChange={(e) => setFormData(prev => ({ ...prev, isMahadbtFormSubmitted: e.target.value === "yes" }))}
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-blue-300 appearance-none cursor-pointer"
+                  >
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {formData.isMahadbtFormSubmitted ? (
+                <InputField label="Date Filled" name="mahadbtFilledDate" type="date" value={formData.mahadbtFilledDate} onChange={handleChange} required />
+              ) : (
+                <InputField label="Reason for Not Filling" name="mahadbtNotFilledReason" value={formData.mahadbtNotFilledReason} onChange={handleChange} required />
+              )}
+            </div>
+          </section>
+
+          {/* Section 4: Migration Certificate Details */}
+          <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
+              <span className="w-1 h-6 bg-teal-500 rounded-full"></span>
+              Migration Certificate Details
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Do you have Migration Certificate? <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    name="hasMigrationCertificate"
+                    value={formData.hasMigrationCertificate ? "yes" : "no"}
+                    onChange={(e) => setFormData(prev => ({ ...prev, hasMigrationCertificate: e.target.value === "yes" }))}
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-blue-300 appearance-none cursor-pointer"
+                  >
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {formData.hasMigrationCertificate ? (
+                <InputField label="Expected Date" name="migrationExpectedDate" type="date" value={formData.migrationExpectedDate} onChange={handleChange} required />
+              ) : (
+                <InputField label="Reason for Not Available" name="migrationNotAvailableReason" value={formData.migrationNotAvailableReason} onChange={handleChange} required />
+              )}
             </div>
           </section>
 
