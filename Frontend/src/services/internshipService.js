@@ -50,4 +50,13 @@ export const internshipService = {
     const response = await API.delete(`/internship/${internshipId}`);
     return response.data;
   },
+
+  // Export internships (Admin only)
+  exportInternships: async (params) => {
+    const response = await API.get("/internship", {
+      params: { ...params, export: "true" },
+      responseType: "blob",
+    });
+    return response.data;
+  },
 };
