@@ -8,7 +8,7 @@ const importExcelSchema = Joi.object({
         .required()
         .messages({
             "string.pattern.base": "Student ID must follow the format: 4 digits, 4 uppercase letters, 3 digits.",
-            "string.empty": "Student ID is required.",
+            "string.empty": "Student ID cannot be empty.",
             "any.required": "Student ID is required."
         }),
 
@@ -19,7 +19,7 @@ const importExcelSchema = Joi.object({
         .required()
         .messages({
             "string.email": "Email must be a valid email address.",
-            "string.empty": "Email is required.",
+            "string.empty": "Email cannot be empty.",
             "any.required": "Email is required."
         }),
 });
@@ -27,31 +27,31 @@ const importExcelSchema = Joi.object({
 const addStudentDetailsSchema = Joi.object({
     firstName: Joi.string().pattern(/^[A-Za-z]+$/).trim().required().messages({
         "string.pattern.base": "First Name must contain only alphabets.",
-        "string.empty": "First Name is required.",
+        "string.empty": "First Name cannot be empty.",
         "any.required": "First Name is required."
     }),
 
     middleName: Joi.string().pattern(/^[A-Za-z]+$/).trim().required().messages({
         "string.pattern.base": "Middle Name must contain only alphabets.",
-        "string.empty": "Middle Name is required.",
+        "string.empty": "Middle Name cannot be empty.",
         "any.required": "Middle Name is required."
     }),
 
     lastName: Joi.string().pattern(/^[A-Za-z]+$/).trim().required().messages({
         "string.pattern.base": "Last Name must contain only alphabets.",
-        "string.empty": "Last Name is required.",
+        "string.empty": "Last Name cannot be empty.",
         "any.required": "Last Name is required."
     }),
 
     motherName: Joi.string().pattern(/^[A-Za-z]+$/).trim().required().messages({
         "string.pattern.base": "Mother Name must contain only alphabets.",
-        "string.empty": "Mother Name is required.",
+        "string.empty": "Mother Name cannot be empty.",
         "any.required": "Mother Name is required."
     }),
 
     PRN: Joi.string().pattern(/^[1-9]\d{15}$/).trim().required().messages({
         "string.pattern.base": "PRN must be a 16-digit number and cannot start with 0.",
-        "string.empty": "PRN is required.",
+        "string.empty": "PRN cannot be empty.",
         "any.required": "PRN is required."
     }),
 
@@ -69,7 +69,8 @@ const addStudentDetailsSchema = Joi.object({
 
     dob: Joi.date().max('now').required().messages({
         "date.base": "Date of Birth must be a valid date.",
-        "any.required": "Date of Birth is required."
+        "any.required": "Date of Birth is required.",
+        "string.empty" : "Dob cannot be empty.",
     }),
 
     bloodGroup: Joi.string().valid("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
@@ -82,40 +83,40 @@ const addStudentDetailsSchema = Joi.object({
     currentStreet: Joi.string().max(300).trim().pattern(addressPattern).required().messages({
         "string.pattern.base" : "Current Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Current Street must not exceed 300 characters.",
-        "string.empty": "Current Street is required.",
+        "string.empty": "Current Street cannot be empty",
         "any.required": "Current Street is required."
     }),
 
     currentCity: Joi.string().max(200).trim().pattern(addressPattern).required().messages({
         "string.pattern.base" : "Current City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Current City must not exceed 200 characters.",
-        "string.empty": "Current Street is required.",
+        "string.empty": "Current Street cannot be empty.",
         "any.required": "Current Street is required."
     }),
 
     pincode: Joi.string().pattern(/^[1-9][0-9]{5}$/).trim().required().messages({
         "string.pattern.base": "Pincode must be a 6-digit number and cannot start with 0.",
-        "string.empty": "Pincode is required.",
+        "string.empty": "Pincode cannot be empty.",
         "any.required": "Pincode is required."
     }),
 
     nativeStreet: Joi.string().max(300).trim().pattern(addressPattern).required().messages({
         "string.pattern.base" : "Native Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Native Street must not exceed 300 characters.",
-        "string.empty": "Current Street is required.",
+        "string.empty": "Current Street cannot be empty.",
         "any.required": "Current Street is required."
     }),
 
     nativeCity: Joi.string().max(200).trim().pattern(addressPattern).required().messages({
         "string.pattern.base" : "Native City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Native City must not exceed 200 characters.",
-        "string.empty": "Current Street is required.",
+        "string.empty": "Current Street cannot be empty.",
         "any.required": "Current Street is required."
     }),
 
     nativePincode: Joi.string().pattern(/^[1-9][0-9]{5}$/).trim().required().messages({
         "string.pattern.base": "Native Pincode must be a 6-digit number and cannot start with 0.",
-        "string.empty": "Native Pincode is required.",
+        "string.empty": "Native Pincode cannot be empty.",
         "any.required": "Native Pincode is required."
     }),
 
@@ -128,25 +129,25 @@ const addStudentDetailsSchema = Joi.object({
 
     mobileNo: Joi.string().pattern(/^[6-9]\d{9}$/).trim().required().messages({
         "string.pattern.base": "Mobile number must be a 10-digit Indian number starting with 6-9.",
-        "string.empty": "Mobile number is required.",
+        "string.empty": "Mobile number cannot be empty.",
         "any.required": "Mobile number is required."
     }),
 
     parentMobileNo: Joi.string().pattern(/^[6-9]\d{9}$/).trim().required().messages({
         "string.pattern.base": "Parent Mobile number must be a 10-digit Indian number starting with 6-9.",
-        "string.empty": "Parent Mobile number is required.",
+        "string.empty": "Parent Mobile number cannot be empty.",
         "any.required": "Parent Mobile number is required."
     }),
 
     parentEmail: Joi.string().email().trim().lowercase().required().messages({
         "string.email": "Parent Email must be a valid email address.",
-        "string.empty": "Parent Email is required.",
+        "string.empty": "Parent Email cannot be empty.",
         "any.required": "Parent Email is required."
     }),
 
     abcId: Joi.string().pattern(/^\d{12}$/).trim().required().messages({
         "string.pattern.base": "ABC ID must be exactly 12 digits.",
-        "string.empty": "ABC ID is required.",
+        "string.empty": "ABC ID cannot be empty.",
         "any.required": "ABC ID is required."
     }),
 
@@ -164,93 +165,114 @@ const addStudentDetailsSchema = Joi.object({
 
 const updateStudentSchema = Joi.object({
     firstName: Joi.string().pattern(/^[A-Za-z]+$/).trim().messages({
-        "string.pattern.base": "First Name must contain only alphabets."
+        "string.pattern.base": "First Name must contain only alphabets.",
+        "string.empty" : "First Name cannot be empty.",
     }),
 
     middleName: Joi.string().pattern(/^[A-Za-z]+$/).trim().messages({
-        "string.pattern.base": "Middle Name must contain only alphabets."
+        "string.pattern.base": "Middle Name must contain only alphabets.",
+        "string.empty" : "Middle Name cannot be empty.",
     }),
 
     lastName: Joi.string().pattern(/^[A-Za-z]+$/).trim().messages({
-        "string.pattern.base": "Last Name must contain only alphabets."
+        "string.pattern.base": "Last Name must contain only alphabets.",
+        "string.empty" : "Last Name cannot be empty.",
     }),
 
     motherName: Joi.string().pattern(/^[A-Za-z]+$/).trim().messages({
-        "string.pattern.base": "Mother Name must contain only alphabets."
+        "string.pattern.base": "Mother Name must contain only alphabets.",
+        "string.empty" : "Mother's Name cannot be empty.",
     }),
 
     PRN: Joi.string().pattern(/^[1-9]\d{15}$/).trim().messages({
-        "string.pattern.base": "PRN must be a 16-digit number and cannot start with 0."
+        "string.pattern.base": "PRN must be a 16-digit number and cannot start with 0.",
+        "string.empty" : "PRN cannot be empty.",
     }),
 
     branch: Joi.string().valid("Computer", "IT", "AIDS", "Civil", "Chemical", "Mechanical").messages({
-        "any.only": "Branch must be one of: Computer, IT, AIDS, Civil, Chemical, Mechanical."
+        "any.only": "Branch must be one of: Computer, IT, AIDS, Civil, Chemical, Mechanical.",
+        "string.empty" : "Branch cannot be empty.",
     }),
 
     year: Joi.string().valid("SE", "TE", "BE").messages({
-        "any.only": "Year must be SE, TE, or BE."
+        "any.only": "Year must be SE, TE, or BE.",
+        "string.empty" : "Year cannot be empty.",
     }),
 
     dob: Joi.date().max('now').messages({
-        "date.base": "Date of Birth must be a valid date."
+        "date.base": "Date of Birth must be a valid date.",
+        "string.empty" : "Dob cannot be empty.",
     }),
 
     bloodGroup: Joi.string()
         .valid("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
         .messages({
-            "any.only": "Blood Group must be a valid type."
+            "any.only": "Blood Group must be a valid type.",
+            "string.empty" : "Blood Group cannot be empty.",
         }),
 
     currentStreet: Joi.string().max(300).trim().pattern(addressPattern).messages({
         "string.pattern.base" : "Current Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Current Street must not exceed 300 characters.",
+        "string.empty" : "Current Street cannot be empty.",
     }),
 
     currentCity: Joi.string().max(200).trim().pattern(addressPattern).messages({
         "string.pattern.base" : "Current City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Current City must not exceed 200 characters.",
+        "string.empty" : "Current City cannot be empty.",
     }),
 
     pincode: Joi.string().pattern(/^[1-9][0-9]{5}$/).trim().messages({
-        "string.pattern.base": "Pincode must be a 6-digit number and cannot start with 0."
+        "string.pattern.base": "Pincode must be a 6-digit number and cannot start with 0.",
+        "string.empty" : "Pincode cannot be empty.",
     }),
 
     nativeStreet: Joi.string().max(300).trim().pattern(addressPattern).messages({
         "string.pattern.base" : "Native Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Native Street must not exceed 300 characters.",
+        "string.empty" : "Native Street cannot be empty.",
     }),
 
     nativeCity: Joi.string().max(200).trim().pattern(addressPattern).messages({
         "string.pattern.base" : "Native City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Native City must not exceed 200 characters.",
+        "string.empty" : "Native City cannot be empty.",
     }),
 
     nativePincode: Joi.string().pattern(/^[1-9][0-9]{5}$/).trim().messages({
-        "string.pattern.base": "Native Pincode must be a 6-digit number and cannot start with 0."
+        "string.pattern.base": "Native Pincode must be a 6-digit number and cannot start with 0.",
+        "string.empty" : "Native Pincode cannot be empty.",
     }),
 
     category: Joi.string().valid("Open", "EWS", "EBC", "OBC", "SC", "ST", "Other").messages({
-        "any.only": "Category must be one of: Open, EWS, EBC, OBC, SC, ST, Other."
+        "any.only": "Category must be one of: Open, EWS, EBC, OBC, SC, ST, Other.",
+        "string.empty" : "Category cannot be empty.",
     }),
 
     mobileNo: Joi.string().pattern(/^[6-9]\d{9}$/).trim().messages({
-        "string.pattern.base": "Mobile number must be a 10-digit Indian number starting with 6-9."
+        "string.pattern.base": "Mobile number must be a 10-digit Indian number starting with 6-9.",
+        "string.empty" : "Mobile Number cannot be empty.",
     }),
 
     parentMobileNo: Joi.string().pattern(/^[6-9]\d{9}$/).trim().messages({
-        "string.pattern.base": "Parent Mobile number must be a 10-digit Indian number starting with 6-9."
+        "string.pattern.base": "Parent Mobile number must be a 10-digit Indian number starting with 6-9.",
+        "string.empty" : "Parent Mobile Number cannot be empty.",
     }),
 
     parentEmail: Joi.string().email().trim().lowercase().messages({
-        "string.email": "Parent Email must be a valid email address."
+        "string.email": "Parent Email must be a valid email address.",
+        "string.empty" : "Parent Email cannot be empty.",
     }),
 
     abcId: Joi.string().pattern(/^\d{12}$/).trim().messages({
-        "string.pattern.base": "ABC ID must be exactly 12 digits."
+        "string.pattern.base": "ABC ID must be exactly 12 digits.",
+        "string.empty" : "ABC Id cannot be empty.",
     }),
 
     division: Joi.string().valid("A", "B", "C").messages({
-        "any.only": "Division must be A, B, or C."
+        "any.only": "Division must be A, B, or C.",
+        "string.empty" : "Division cannot be empty.",
     }),
 
 }).min(1).options({
@@ -273,6 +295,14 @@ const getStudentsValidation = Joi.object({
 
     division: Joi.string().valid("A", "B", "C").optional().messages({
         "any.only": "Division must be A, B, or C."
+    }),
+
+    export : Joi.boolean().optional().messages({
+        "any.only" : "export must be either true or false."
+    }),
+
+    detailsFilled : Joi.boolean().optional().messages({
+        "any.only" : "detailsFilled must be either true or false."
     }),
 
     search: Joi.string().max(100).optional().messages({

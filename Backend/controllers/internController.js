@@ -278,6 +278,7 @@ const getInternships = async (req, res) => {
 
             const rows = internships.map(transformInternship);
             const buffer = await exportToExcel(rows, 'Internships', internshipColumnMap);
+            if (!buffer) return res.status(500).json({ success: false, message: 'Export failed.' });
 
             res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             res.setHeader('Content-Disposition', 'attachment; filename="internships.xlsx"');

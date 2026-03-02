@@ -26,6 +26,10 @@ const generateRandomPassword = require("../helpers/generateRandomPassword");
 
 const sendEmailBrevo = require("../services/sendEmailBrevo");
 
+const { transformStudent, studentColumnMap } = require('../helpers/excel/exportTransformers');
+const exportToExcel = require('../helpers/excel/exportToExcel');
+
+
 
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -831,9 +835,120 @@ const deleteStudent = async (req, res) => {
   }
 };
 
+// GET STUDENTS (with optional pagination + export) — admin and divisionIncharge only
+const getStudents = async (req, res) => {
+    try {
+        const isExport = req.query.export === 'true';
+
+        // Validate input using Joi
+        const { error, value } = getStudentsValidation.validate(req.query, {
+            abortEarly: false,
+            stripUnknown: true,
+        });
+        if (error) {
+            const validationErrors = error.details.map(err => ({
+                field: err.path[0],
+                message: err.message,
+            }));
+            return res.status(400).json({ success: false, message: 'Validation failed', errors: validationErrors });
+        }
+
+        // Use defaults
+        const pageNum   = value.page  || 1;
+        const limitNum  = Math.min(value.limit || 10, 50);
+        const skip      = (pageNum - 1) * limitNum;
+
+        // Build filter
+        const filter = {};
+
+        if (req.user.role === 'divisionIncharge') {
+            filter.division = req.user.division;
+            filter.year     = req.user.year;
+        } else if (req.user.role === 'admin') {
+            if (value.division) filter.division = value.division;
+            if (value.year)     filter.year     = value.year;
+            if (value.branch)   filter.branch   = value.branch;
+        } else {
+            return res.status(403).json({ success: false, message: 'Unauthorized role.' });
+        }
+
+        // Name filters
+        if (value.firstName)  filter['name.firstName']  = { $regex: value.firstName,  $options: 'i' };
+        if (value.middleName) filter['name.middleName'] = { $regex: value.middleName, $options: 'i' };
+        if (value.lastName)   filter['name.lastName']   = { $regex: value.lastName,   $options: 'i' };
+        if (value.motherName) filter['name.motherName'] = { $regex: value.motherName, $options: 'i' };
+
+        // Other filters
+        if (value.city)       filter['currentAddress.city'] = { $regex: value.city, $options: 'i' };
+        if (value.bloodGroup) filter.bloodGroup = value.bloodGroup;
+        if (value.category)   filter.category   = value.category;
+
+        // Search
+        if (value.search) {
+            const safeSearch = value.search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+            filter.$or = [
+                { 'name.firstName':  { $regex: safeSearch, $options: 'i' } },
+                { 'name.middleName': { $regex: safeSearch, $options: 'i' } },
+                { 'name.lastName':   { $regex: safeSearch, $options: 'i' } },
+                { 'name.motherName': { $regex: safeSearch, $options: 'i' } },
+            ];
+        }
+
+        // Filter by whether student has filled in their details
+if (value.detailsFilled === true) {
+    filter.PRN = { $exists: true, $ne: null };
+} else if (value.detailsFilled === false) {
+    filter.$and = [
+        ...(filter.$and || []),
+        { $or: [{ PRN: { $exists: false } }, { PRN: null }] }
+    ];
+}
+
+
+        // Export branch
+        if (isExport) {
+            const students = await Student.find(filter)
+                .select('-password')
+                .sort({ createdAt: -1 })
+                .limit(5000) // hard cap - to prevent excessive data being injected in memory which can lead to server crash(or some component of system crashes).
+                .lean();
+
+            const rows   = students.map(transformStudent);
+            const buffer = await exportToExcel(rows, 'Students', studentColumnMap);
+            if (!buffer) return res.status(500).json({ success: false, message: 'Export failed.' });
+
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename="students.xlsx"');
+            return res.send(buffer);
+        }
+
+        // Paginated branch 
+        const [total, students] = await Promise.all([
+            Student.countDocuments(filter),
+            Student.find(filter)
+                .skip(skip)
+                .limit(limitNum)
+                .select('-password')
+                .sort({ createdAt: -1 })
+                .lean(),
+        ]);
+
+        return res.json({
+            success:    true,
+            data:       students,
+            total,
+            page:       pageNum,
+            totalPages: Math.ceil(total / limitNum),
+        });
+
+    } catch (err) {
+        console.error('Error in getStudents controller: ', '\ntime = ', new Date().toISOString(), '\nError: ', err);
+        return res.status(500).json({ success: false, message: 'Some Error Occurred. Please Try Again Later.' });
+    }
+};
 
 // GET STUDENTS (with optional pagination) --admin and divisionIncharge only
-const getStudents = async (req, res) => {
+const getStudents2 = async (req, res) => {
   try {
 
     // Get query params
