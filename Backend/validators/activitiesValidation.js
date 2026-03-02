@@ -1,4 +1,5 @@
-const Joi = require("joi");
+// const Joi = require("joi");
+const Joi = require("../helpers/profanity/joiWithProfanity");
 const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
 
 //create activity validation
@@ -8,6 +9,7 @@ const activityCreateSchema = Joi.object({
     .pattern(textWithNumberRegex)
     .min(3)
     .max(100)
+    .noProfanity()
     .required()
     .messages({
       "string.base": "Title must be a string",
@@ -16,6 +18,7 @@ const activityCreateSchema = Joi.object({
       "string.max": "Title must not exceed 100 characters",
       "any.required": "Title is required",
       "string.pattern.base": "Title must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
+      "string.noProfanity": "Title contains inappropriate language."
     }),
 
   description: Joi.string()
@@ -23,6 +26,7 @@ const activityCreateSchema = Joi.object({
     .pattern(textWithNumberRegex)
     .min(5)
     .max(500)
+    .noProfanity()
     .required()
     .messages({
       "string.empty": "Description is required",
@@ -30,6 +34,7 @@ const activityCreateSchema = Joi.object({
       "string.max": "Description must not exceed 500 characters",
       "any.required": "Description is required",
       "string.pattern.base": "Description must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
+      "string.noProfanity": "Description contains inappropriate language."
     }),
 
   // date: Joi.date()
@@ -65,10 +70,12 @@ const activityUpdateSchema = Joi.object({
     .pattern(textWithNumberRegex)
     .min(3)
     .max(100)
+    .noProfanity()
     .messages({
       "string.min": "Title must be at least 3 characters",
       "string.max": "Title must not exceed 100 characters",
       "string.pattern.base": "Title must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
+      "string.noProfanity": "Title contains inappropriate language.",
     }),
 
   description: Joi.string()
@@ -76,10 +83,12 @@ const activityUpdateSchema = Joi.object({
     .pattern(textWithNumberRegex)
     .min(5)
     .max(500)
+    .noProfanity()
     .messages({
       "string.min": "Description must be at least 5 characters",
       "string.max": "Description must not exceed 500 characters",
       "string.pattern.base": "Description must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
+      "string.noProfanity": "Description contains inappropriate language.",
     }),
 
   date: Joi.object({

@@ -1,4 +1,5 @@
-const Joi = require("joi");
+// const Joi = require("joi");
+const Joi = require("../helpers/profanity/joiWithProfanity");
 const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
 
 //create admission => student
@@ -8,9 +9,11 @@ const admissionCreateSchema = Joi.object({
       "any.only": "Year must be one of FY, SY, or TY."
     }),
 
-  div: Joi.string().trim().pattern(textWithNumberRegex).max(10).optional()
+  div: Joi.string().trim().pattern(textWithNumberRegex).max(10).noProfanity().required()
     .messages({
-      "string.pattern.base": "Division must contain only letters, numbers and allowed characters."
+      "string.pattern.base": "Division must contain only letters, numbers and allowed characters.",
+      "string.noProfanity": "Division contains inappropriate language.",
+      "any.required": "Division is required."
     }),
 
   rollno: Joi.string()
@@ -27,6 +30,7 @@ const admissionCreateSchema = Joi.object({
     .pattern(textWithNumberRegex)
     .min(2)
     .max(100)
+    .noProfanity()
     .default("Computer Engineering")
     .required()
     .messages({
@@ -34,6 +38,7 @@ const admissionCreateSchema = Joi.object({
       "string.min": "Course name must be at least 2 characters long.",
       "string.max": "Course name cannot exceed 100 characters.",
       "string.pattern.base": "Course name must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
+      "string.noProfanity": "Course name contains inappropriate language.",
       "any.required": "Course name is required."
     }),
 
@@ -124,9 +129,10 @@ const admissionUpdateSchema = Joi.object({
       "any.only": "Year must be one of FY, SY, or TY."
     }),
 
-  div: Joi.string().trim().pattern(textWithNumberRegex).max(10).optional()
+  div: Joi.string().trim().pattern(textWithNumberRegex).max(10).noProfanity().optional()
     .messages({
-      "string.pattern.base": "Division must contain only letters, numbers and allowed characters."
+      "string.pattern.base": "Division must contain only letters, numbers and allowed characters.",
+      "string.noProfanity": "Division contains inappropriate language."
     }),
 
   rollno: Joi.string()
@@ -142,12 +148,14 @@ const admissionUpdateSchema = Joi.object({
     .pattern(textWithNumberRegex)
     .min(2)
     .max(100)
+    .noProfanity()
     .optional()
     .messages({
       "string.empty": "Course name cannot be empty.",
       "string.min": "Course name must be at least 2 characters long.",
       "string.max": "Course name cannot exceed 100 characters.",
-      "string.pattern.base": "Course name must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens."
+      "string.pattern.base": "Course name must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
+      "string.noProfanity": "Course name contains inappropriate language."
     }),
 
   fees: Joi.number()
