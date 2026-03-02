@@ -2,6 +2,9 @@ const mongoose = require("mongoose");
 const SemesterInfo = require("../models/SemesterInfo");
 const Student = require("../models/Student");
 const { semInfoCreateSchema , semInfoUpdateSchema } = require("../validators/seminfoValidation");
+const exportToExcel = require('../helpers/excel/exportToExcel');
+const { transformSemesterInfo, semesterInfoColumnMap } = require('../helpers/excel/exportTransformers');
+
 
 // Helper to calculate defaulter
 const calculateDefaulter = (attendance, kts) => {
@@ -199,8 +202,36 @@ const deleteSemInfo = async (req, res) => {
 };
 
 // get all sem infos by admin or di
+// const getAllSemInfos = async (req, res) => {
+//   try {
+//     const query = {};
+
+//     if (req.user.role === "divisionIncharge") {
+//       const students = await Student.find({
+//         year: req.user.year,
+//         division: req.user.division,
+//       }).select("_id");
+
+//       query.stuID = { $in: students.map(s => s._id) };
+//     }
+
+//     const data = await SemesterInfo.find(query)
+//       .populate("stuID", "name roll year division")
+//       .sort({ createdAt: -1 });
+
+//     res.status(200).json({ success: true, data });
+
+//   } catch (err) {
+//     console.error("getAllSemInfos error:", err);
+//     res.status(500).json({ success: false, message: "Server Error" });
+//   }
+// };
+
+
+//get all sem infos by admin or di with export option
 const getAllSemInfos = async (req, res) => {
   try {
+    const isExport = req.query.export === "true";
     const query = {};
 
     if (req.user.role === "divisionIncharge") {
@@ -212,18 +243,41 @@ const getAllSemInfos = async (req, res) => {
       query.stuID = { $in: students.map(s => s._id) };
     }
 
-    const data = await SemesterInfo.find(query)
-      .populate("stuID", "name roll year division")
+    const semInfos = await SemesterInfo.find(query)
+      .populate("stuID", "studentID name year division")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({ success: true, data });
+    //EXPORT BRANCH
+    if (isExport) {
+      const rows = semInfos.map(transformSemesterInfo);
+
+      const buffer = await exportToExcel(
+        rows,
+        "Semester Info",
+        semesterInfoColumnMap
+      );
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="semester-info.xlsx"'
+      );
+
+      return res.send(buffer);
+    }
+
+    //NORMAL JSON RESPONSE
+    res.status(200).json({ success: true, data: semInfos });
 
   } catch (err) {
     console.error("getAllSemInfos error:", err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
 
 //get own sem infos by student
 const getOwnSemInfos = async (req, res) => {

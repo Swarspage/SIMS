@@ -296,4 +296,133 @@ const activityColumnMap = {
   mobileNo: "Mobile No",
 };
 
-module.exports = { transformInternship, transformStudent,studentColumnMap, internshipColumnMap , transformAchievement , achievementColumnMap , transformActivity , activityColumnMap};
+
+//transform admission
+const transformAdmission = (a) => ({
+  /* Admission Info */
+  rollno: a.rollno || "",
+  course: a.course || "",
+  academicYear: a.academicYear || "",
+  admissionDate: a.admissionDate
+    ? new Date(a.admissionDate).toLocaleDateString()
+    : "",
+
+  status: a.status || "",
+  fees: a.fees || 0,
+  isFeesPaid: a.isFeesPaid ? "Yes" : "No",
+
+  isScholarshipApplied: a.isScholarshipApplied ? "Yes" : "No",
+  scholarshipNotAppliedReason: a.scholarshipNotAppliedReason || "",
+
+  isMahadbtFormSubmitted: a.isMahadbtFormSubmitted ? "Yes" : "No",
+  mahadbtFilledDate: a.mahadbtFilledDate
+    ? new Date(a.mahadbtFilledDate).toLocaleDateString()
+    : "",
+  mahadbtNotFilledReason: a.mahadbtNotFilledReason || "",
+
+  hasMigrationCertificate: a.hasMigrationCertificate ? "Yes" : "No",
+  migrationExpectedDate: a.migrationExpectedDate
+    ? new Date(a.migrationExpectedDate).toLocaleDateString()
+    : "",
+  migrationNotAvailableReason: a.migrationNotAvailableReason || "",
+
+  /* Student Info */
+  stuID: a.stuID?._id?.toString() || "",
+  studentID: a.stuID?.studentID || "",
+  firstName: a.stuID?.name?.firstName || "",
+  fathersName: a.stuID?.name?.middleName || "",
+  lastName: a.stuID?.name?.lastName || "",
+  branch: a.stuID?.branch || "",
+  year: a.year || "",
+  division: a.div || "",
+});
+
+
+//column mapping for admission export
+const admissionColumnMap = {
+  rollno: "Roll No",
+  course: "Course",
+  academicYear: "Academic Year",
+  admissionDate: "Admission Date",
+
+  status: "Status",
+  fees: "Fees",
+  isFeesPaid: "Fees Paid",
+
+  isScholarshipApplied: "Scholarship Applied",
+  scholarshipNotAppliedReason: "Scholarship Not Applied Reason",
+
+  isMahadbtFormSubmitted: "Mahadbt Submitted",
+  mahadbtFilledDate: "Mahadbt Filled Date",
+  mahadbtNotFilledReason: "Mahadbt Not Filled Reason",
+
+  hasMigrationCertificate: "Migration Certificate Available",
+  migrationExpectedDate: "Migration Expected Date",
+  migrationNotAvailableReason: "Migration Not Available Reason",
+
+  stuID: "Student DB ID",
+  studentID: "Student ID",
+  firstName: "First Name",
+  fathersName: "Father's Name",
+  lastName: "Last Name",
+  branch: "Branch",
+  year: "Year",
+  division: "Division",
+};
+
+
+// transform semester info
+const transformSemesterInfo = (s) => ({
+  /* Semester Info */
+  semester: s.semester || "",
+  attendance: s.attendance ?? "",
+  kts: s.kts?.join(", ") || "",
+
+  isDefaulter: s.isDefaulter ? "Yes" : "No",
+
+  /* Marks (flattened) */
+  marks: s.marks?.map(m =>
+    `${m.subject} (${m.score}/${m.outOf})`
+  ).join(" | ") || "",
+
+  /* Student Info */
+  stuID: s.stuID?._id?.toString() || "",
+  studentID: s.stuID?.studentID || "",
+  firstName: s.stuID?.name?.firstName || "",
+  fathersName: s.stuID?.name?.middleName || "",
+  lastName: s.stuID?.name?.lastName || "",
+  year: s.stuID?.year || "",
+  division: s.stuID?.division || "",
+});
+
+//column mapping for semester info export
+const semesterInfoColumnMap = {
+  semester: "Semester",
+  attendance: "Attendance (%)",
+  kts: "KTs",
+  isDefaulter: "Defaulter",
+  marks: "Marks",
+
+  stuID: "Student DB ID",
+  studentID: "Student ID",
+  firstName: "First Name",
+  fathersName: "Father's Name",
+  lastName: "Last Name",
+  year: "Year",
+  division: "Division",
+};
+
+module.exports = { 
+    transformInternship, 
+    transformStudent,
+    studentColumnMap, 
+    internshipColumnMap , 
+    transformAchievement , 
+    achievementColumnMap , 
+    transformActivity , 
+    activityColumnMap , 
+    transformAdmission , 
+    admissionColumnMap ,
+    transformSemesterInfo,
+    semesterInfoColumnMap
+};

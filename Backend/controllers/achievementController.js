@@ -8,7 +8,7 @@ const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMu
 const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
 const { createAchievementSchema, updateAchievementSchema } = require("../validators/achievementValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
-const { transformInternship, internshipColumnMap } = require('../helpers/excel/exportTransformers');
+const { transformAchievement, achievementColumnMap } = require('../helpers/excel/exportTransformers');
 
 
 

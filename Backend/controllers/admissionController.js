@@ -9,6 +9,9 @@ const {
   getAdmissionsValidation,
 } = require("../validators/admissionValidation");
 
+const exportToExcel = require('../helpers/excel/exportToExcel');
+const { transformAdmission, admissionColumnMap } = require('../helpers/excel/exportTransformers');
+
 //create admission => student | admin | DI
 const createAdmission = async (req, res) => {
   try {
@@ -237,17 +240,84 @@ const deleteAdmission = async (req, res) => {
 };
 
 //get all admissions => admin | DI
+// const getAllAdmissions = async (req, res) => {
+//   try {
+
+//     if (!["admin" , "divisionIncharge"].includes(req.user.role)) {
+//       return res.status(403).json( { success : false , message : "Unauthorized" } );
+//     }
+
+//     const { error, value } = getAdmissionsValidation.validate(req.query);
+//     if (error) {
+//       return res.status(400).json({ success: false, message: error.details[0].message });
+//     }
+
+//     const page = Number(value.page || 1);
+//     const limit = Math.min(Number(value.limit || 10), 50);
+//     const skip = (page - 1) * limit;
+
+//     const query = {};
+
+    
+//     // Division Incharge scope
+//     if (req.user.role === "divisionIncharge") {
+//       query.year = req.user.year;
+//       query.div = req.user.division;
+//     } else{
+//       if (value.year) query.year = value.year;
+//     }
+
+//     if (value.academicYear) query.academicYear = value.academicYear;
+//     if (value.filterPaid)
+//       query.isFeesPaid = value.filterPaid === "paid";
+
+//     //search across rollno, course, academic year
+//     if (value.search) {
+//       const regex = new RegExp(value.search, "i");
+//       query.$or = [
+//         { rollno: regex },
+//         { course: regex },
+//         { academicYear: regex },
+//       ];
+//     }
+
+//     const [data, total] = await Promise.all([
+//       Admission.find(query)
+//         .populate("stuID", "name branch year")
+//         .sort({ createdAt: -1 })
+//         .skip(skip)
+//         .limit(limit),
+//       Admission.countDocuments(query),
+//     ]);
+
+//     return res.status(200).json({
+//       success: true,
+//       data,
+//       total,
+//       page,
+//       totalPages: Math.ceil(total / limit),
+//     });
+//   } catch {
+//     return res.status(500).json({ success: false, message: "Server Error" });
+//   }
+// };
+
+//get all admissions with export => admin | DI
 const getAllAdmissions = async (req, res) => {
   try {
-
-    if (!["admin" , "divisionIncharge"].includes(req.user.role)) {
-      return res.status(403).json( { success : false , message : "Unauthorized" } );
+    if (!["admin", "divisionIncharge"].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
     const { error, value } = getAdmissionsValidation.validate(req.query);
     if (error) {
-      return res.status(400).json({ success: false, message: error.details[0].message });
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
     }
+
+    const isExport = req.query.export === "true";
 
     const page = Number(value.page || 1);
     const limit = Math.min(Number(value.limit || 10), 50);
@@ -255,20 +325,19 @@ const getAllAdmissions = async (req, res) => {
 
     const query = {};
 
-    
-    // Division Incharge scope
+    /* Role Scope */
     if (req.user.role === "divisionIncharge") {
       query.year = req.user.year;
       query.div = req.user.division;
-    } else{
+    } else {
       if (value.year) query.year = value.year;
     }
 
     if (value.academicYear) query.academicYear = value.academicYear;
+
     if (value.filterPaid)
       query.isFeesPaid = value.filterPaid === "paid";
 
-    //search across rollno, course, academic year
     if (value.search) {
       const regex = new RegExp(value.search, "i");
       query.$or = [
@@ -278,9 +347,36 @@ const getAllAdmissions = async (req, res) => {
       ];
     }
 
+    //export
+    if (isExport) {
+      const admissions = await Admission.find(query)
+        .populate("stuID")
+        .sort({ createdAt: -1 });
+
+      const rows = admissions.map(transformAdmission);
+
+      const buffer = await exportToExcel(
+        rows,
+        "Admissions",
+        admissionColumnMap
+      );
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="admissions.xlsx"'
+      );
+
+      return res.send(buffer);
+    }
+
+    //pagination
     const [data, total] = await Promise.all([
       Admission.find(query)
-        .populate("stuID", "name branch year")
+        .populate("stuID", "name branch studentID")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
@@ -294,8 +390,13 @@ const getAllAdmissions = async (req, res) => {
       page,
       totalPages: Math.ceil(total / limit),
     });
-  } catch {
-    return res.status(500).json({ success: false, message: "Server Error" });
+
+  } catch (err) {
+    console.error("GetAllAdmissions Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 };
 
