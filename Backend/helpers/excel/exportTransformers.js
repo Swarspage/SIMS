@@ -9,9 +9,9 @@ const transformInternship = (i) => ({
     durationMonths:     i.durationMonths                  || '',
     isPaid:             i.stipendInfo?.isPaid ? 'Yes' : 'No',
     stipendAmount:      i.stipendInfo?.amount              || '',
-    description:        i.description                     || '',
-    internshipReport:   i.internshipReport                || '',
-    photoProof:         i.photoProof                      || '',
+    description:        i.description                      || '',
+    internshipReport:   i.internshipReport?.url               || '',
+    photoProof:         i.photoProof?.url                      || '',
 
     // Student identity
     stuID:              i.stuID?.toString()               || '',
@@ -98,6 +98,7 @@ const transformStudent = (s) => ({
     studentID:          s.studentID                        || '',
     email:              s.email                            || '',
     PRN:                s.PRN                              || '',
+    studentPhoto:       s.studentPhoto?.url                || '',
 
     // Name
     firstName:          s.name?.firstName                  || '',
@@ -143,6 +144,7 @@ const studentColumnMap = {
     year:               'Year',
     division:           'Division',
     branch:             'Branch',
+    studentPhoto:       'Student Photo',
     dob:                'Date of Birth',
     bloodGroup:         'Blood Group',
     category:           'Category',
@@ -167,12 +169,12 @@ const transformPlacement = (p) => ({
     placementYear:      p.placementYear                   || '',
     passoutYear:        p.passoutYear                     || '',
     joiningYear:        p.joiningYear                     || '',
-    placementProof:     p.placementProof                  || '',
+    placementProof:     p.placementProof?.url              || '',
 
     // Student identity
     stuID:              p.stuID?.toString()               || '',
     studentID:          p.studentID                       || '',
-	email:              p.studentEmail                    || '',
+	  email:              p.studentEmail                    || '',
     PRN:                p.PRN                             || '',
 
     // Student name
@@ -219,7 +221,7 @@ const placementColumnMap = {
     placementProof:     'Placement Proof',
     stuID:              'Student ID (DB)',
     studentID:          'Student ID',
-	email:              'Email',
+	  email:              'Email',
     PRN:                'PRN',
     firstName:          'First Name',
     fathersName:        "Father's Name",
@@ -248,13 +250,13 @@ const transformHigherStudy = (h) => ({
     // Higher study fields
     examName:           h.examName                        || '',
     score:              h.score                           || '',
-    marksheet:          h.marksheet.url                       || '',
-    idCardPhoto:        h.idCardPhoto.url                     || '',
+    marksheet:          h.marksheet?.url                       || '',
+    idCardPhoto:        h.idCardPhoto?.url                     || '',
 
     // Student identity
     stuID:              h.stuID?.toString()               || '',
     studentID:          h.studentID                       || '',
-	email:              h.studentEmail                    || '',
+	  email:              h.studentEmail                    || '',
     PRN:                h.PRN                             || '',
 
     // Student name
@@ -297,7 +299,7 @@ const higherStudyColumnMap = {
     idCardPhoto:        'ID Card Photo',
     stuID:              'Student ID (DB)',
     studentID:          'Student ID',
-	email:              'Email',
+	  email:              'Email',
     PRN:                'PRN',
     firstName:          'First Name',
     fathersName:        "Father's Name",
