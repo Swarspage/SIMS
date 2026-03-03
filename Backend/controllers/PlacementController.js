@@ -309,9 +309,15 @@ const getPlacements = async (req, res) => {
 		const page = req.query.page;
 		const limit = req.query.limit;
 		const exportFlag = req.query.export;
+		// NEW
+		const placementYear = req.query.placementYear?.trim();
+		const passoutYear   = req.query.passoutYear?.trim();
+		const joiningYear   = req.query.joiningYear?.trim();
+		const packageMin    = req.query.packageMin;
+		const packageMax    = req.query.packageMax;
 
 		const { error, value } = getPlacementsValidation.validate(
-			{ year, search, page, limit, placementType, export: exportFlag },
+			{ year, search, page, limit, placementType, export: exportFlag,placementYear, passoutYear, joiningYear, packageMin, packageMax },
 			{ abortEarly: false }
 		);
 		if (error) {
@@ -357,6 +363,18 @@ const getPlacements = async (req, res) => {
 			if (division) match["student.division"] = division.trim();
 		} else {
 			return res.status(403).json({ success: false, message: "Unauthorized role." });
+		}
+
+		// Exact match on year strings
+		if (value.placementYear) match.placementYear = value.placementYear;
+		if (value.passoutYear)   match.passoutYear   = value.passoutYear;
+		if (value.joiningYear)   match.joiningYear   = value.joiningYear;
+
+		// Range filter on package
+		if (value.packageMin !== undefined || value.packageMax !== undefined) {
+			match.package = {};
+			if (value.packageMin !== undefined) match.package.$gte = value.packageMin;
+			if (value.packageMax !== undefined) match.package.$lte = value.packageMax;
 		}
 
 		if (search) {

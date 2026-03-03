@@ -13,18 +13,18 @@ const { transformInternship, internshipColumnMap } = require('../helpers/excel/e
 const { internshipValidationSchema, updateInternshipValidationSchema, getInternshipsValidation } = require("../validators/internshipValidation");
 
 const fileConfigs = [
-  {
-    fieldName: "internshipReport",
-    allowedTypes: ["application/pdf"],
-    maxSize: 500 * 1024, // 500KB
-    friendlyName: "Internship Report"
-  },
-  {
-    fieldName: "photoProof",
-    allowedTypes: ["image/jpeg", "image/jpg", "image/png"],
-    maxSize: 500 * 1024, // 500KB
-    friendlyName: "Photo Proof"
-  }
+    {
+        fieldName: "internshipReport",
+        allowedTypes: ["application/pdf"],
+        maxSize: 500 * 1024, // 500KB
+        friendlyName: "Internship Report"
+    },
+    {
+        fieldName: "photoProof",
+        allowedTypes: ["image/jpeg", "image/jpg", "image/png"],
+        maxSize: 500 * 1024, // 500KB
+        friendlyName: "Photo Proof"
+    }
 ];
 
 
@@ -141,10 +141,10 @@ const createInternship = async (req, res) => {
 
 const getInternships = async (req, res) => {
     try {
-        const { year, division, search, page, limit, isPaid, export : exportFlag } = req.query;
+        const { year, division, search, page, limit, isPaid, export : exportFlag, startDateFrom, startDateTo, endDateFrom, endDateTo } = req.query;
         
         const { error, value } = getInternshipsValidation.validate(
-            { year, search, page, limit, isPaid, export: exportFlag  },
+            { year, search, page, limit, isPaid, export: exportFlag, startDateFrom, startDateTo, endDateFrom, endDateTo  },
             { abortEarly: false }
         );
         if (error) {
@@ -197,6 +197,21 @@ const getInternships = async (req, res) => {
             if (division) match["student.division"] = division.trim();
         } else {
             return res.status(403).json({ success: false, message: "Unauthorized role." });
+        }
+
+
+        // startDate range filter
+        if (value.startDateFrom || value.startDateTo) {
+            match.startDate = {};
+            if (value.startDateFrom) match.startDate.$gte = value.startDateFrom;
+            if (value.startDateTo)   match.startDate.$lte = value.startDateTo;
+        }
+
+        // endDate range filter
+        if (value.endDateFrom || value.endDateTo) {
+            match.endDate = {};
+            if (value.endDateFrom) match.endDate.$gte = value.endDateFrom;
+            if (value.endDateTo)   match.endDate.$lte = value.endDateTo;
         }
 
         if (search) {

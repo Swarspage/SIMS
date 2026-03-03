@@ -1,6 +1,51 @@
 // const Joi = require("joi");
 const Joi = require("../helpers/profanity/joiWithProfanity");
 
+//CHNAGES TO BE DONE:-
+//make only YYYY-MM-DD type  od date acceptable and not YYYY/MM/DD because mongoose wont accept dates with "/" . the YYYY-MM-DD workds for joi.date and also for mongoose type:Date
+
+
+// we have used JOi.date() for date related stuff
+//What Joi.date() does: It accepts strings like "2024-01-15", "2024/01/15", ISO strings, or Date objects and converts them all to JS Date objects automatically
+
+
+//IMP Notes:-
+/*
+-> The / 30 fractional part accounts for day differences within a month before rounding, making it reasonably accurate without being too strict.
+
+-> Math.round() gives a ±15 day tolerance, so e.g. Jan 1 → Feb 14 would round to 1 month. If you want stricter matching, use Math.floor() instead.
+
+-> The .custom() runs after all individual field validations pass, so startDate, endDate, and durationMonths are already guaranteed to be valid values when this check runs.
+*/
+
+const validateDurationMonths = (value, helpers) => {4
+    const { startDate, endDate, durationMonths } = value;
+
+    if (startDate && endDate && durationMonths !== undefined) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        // Calculate the difference in months (rounded)
+        const diffMonths = Math.round(
+            (end.getFullYear() - start.getFullYear()) * 12 +
+            (end.getMonth() - start.getMonth()) +
+            (end.getDate() - start.getDate()) / 30
+        );
+
+        if (diffMonths !== durationMonths) {
+            return helpers.error("object.durationMismatch");
+        }
+    }
+
+    return value;
+
+};
+
+const durationMismatchMessage = {
+    "object.durationMismatch": "Duration in months does not match the difference between start and end dates."
+};
+
+
 const internshipValidationSchema = Joi.object({
     companyName: Joi.string().trim().min(2).max(200).required().messages({
         "string.base": "Company name must be a string.",
@@ -57,7 +102,10 @@ const internshipValidationSchema = Joi.object({
         "any.required": "Description is required.",
         "string.profanity": "Description contains inappropriate language."
     })
-}).options({
+})
+.custom(validateDurationMonths)
+.messages(durationMismatchMessage)
+.options({
     stripUnknown: true,
     convert: true,        
     abortEarly : false,
@@ -134,6 +182,22 @@ const getInternshipsValidation = Joi.object({
 
     export: Joi.string().valid("true", "false").optional().messages({
         "any.only": "export must be true or false."
+    }),
+
+    // NEW
+    startDateFrom: Joi.date().optional().messages({
+        "date.base": "startDateFrom must be a valid date."
+    }),
+    startDateTo: Joi.date().min(Joi.ref("startDateFrom")).optional().messages({
+        "date.base": "startDateTo must be a valid date.",
+        "date.min": "startDateTo must be after startDateFrom."
+    }),
+    endDateFrom: Joi.date().optional().messages({
+        "date.base": "endDateFrom must be a valid date."
+    }),
+    endDateTo: Joi.date().min(Joi.ref("endDateFrom")).optional().messages({
+        "date.base": "endDateTo must be a valid date.",
+        "date.min": "endDateTo must be after endDateFrom."
     }),
 
     search: Joi.string().max(100).optional().messages({

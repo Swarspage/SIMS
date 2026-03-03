@@ -1,11 +1,9 @@
 const Joi = require("joi");
 
-///Note :- placementYear, passoutYear, and joiningYear can be same or greater oor smaller than each other --so no need for logical dates check on this...as checking is kindof impossible
-
 //Common reusable year pattern: 2023-24
 const yearPattern = /^\d{4}-\d{2}$/;
 // i asked chatgpt just to add messages in every field and not change anything else
-//but still it changes this reusable year regex pattern adn changed it into :- const yearPattern = /^\\d{4}-\\d{2}$/;
+//but still it changes this reusable year regex pattern and changed it into :- const yearPattern = /^\\d{4}-\\d{2}$/;
 //which is wrong
 
 
@@ -142,6 +140,27 @@ const getPlacementsValidation = Joi.object({
 		"any.only": "export must be true or false."
 	}),
 
+	// NEW
+    placementYear:  Joi.string().pattern(yearPattern).optional().messages({
+        "string.pattern.base": "placementYear must be in format like 2023-24."
+    }),
+    passoutYear:    Joi.string().pattern(yearPattern).optional().messages({
+        "string.pattern.base": "passoutYear must be in format like 2023-24."
+    }),
+    joiningYear:    Joi.string().pattern(yearPattern).optional().messages({
+        "string.pattern.base": "joiningYear must be in format like 2023-24."
+    }),
+    packageMin:     Joi.number().min(1).max(100).optional().messages({
+        "number.base": "packageMin must be a number.",
+        "number.min":  "packageMin must be at least 1 LPA.",
+        "number.max":  "packageMin cannot exceed 100 LPA."
+    }),
+    packageMax:     Joi.number().min(Joi.ref("packageMin")).max(100).optional().messages({
+        "number.base": "packageMax must be a number.",
+        "number.min":  "packageMax must be greater than or equal to packageMin.",
+        "number.max":  "packageMax cannot exceed 100 LPA."
+    }),
+
 	search: Joi.string().max(100).optional().messages({
 		"string.base": "Search must be a string",
 		"string.max": "Search cannot exceed 100 characters"
@@ -160,6 +179,15 @@ const getPlacementsValidation = Joi.object({
 		"number.max": "Limit cannot exceed 20"
 	})
 });
+
+
+//How to Call getPlacements API
+/*
+GET /placements?placementYear=2023-24
+GET /placements?passoutYear=2024-25&joiningYear=2024-25
+GET /placements?packageMin=5&packageMax=20
+GET /placements?placementYear=2023-24&packageMin=10&placementType=Campus
+*/
 
 
 module.exports = { createPlacementSchema, updatePlacementSchema, getPlacementsValidation };
