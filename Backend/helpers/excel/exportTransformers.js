@@ -158,6 +158,170 @@ const studentColumnMap = {
     nativePincode:      'Native Pincode',
 };
 
+const transformPlacement = (p) => ({
+    // Placement fields
+    companyName:        p.companyName                     || '',
+    role:               p.role                            || '',
+    placementType:      p.placementType                   || '',
+    package:            p.package                         || '',
+    placementYear:      p.placementYear                   || '',
+    passoutYear:        p.passoutYear                     || '',
+    joiningYear:        p.joiningYear                     || '',
+    placementProof:     p.placementProof                  || '',
+
+    // Student identity
+    stuID:              p.stuID?.toString()               || '',
+    studentID:          p.studentID                       || '',
+	email:              p.studentEmail                    || '',
+    PRN:                p.PRN                             || '',
+
+    // Student name
+    firstName:          p.studentName?.firstName          || '',
+    fathersName:        p.studentName?.middleName         || '',
+    lastName:           p.studentName?.lastName           || '',
+    mothersName:        p.studentName?.motherName         || '',
+
+    // Student academic
+    year:               p.studentYear                     || '',
+    division:           p.studentDivision                 || '',
+    branch:             p.studentBranch                   || '',
+
+    // Student personal
+    dob:                p.studentDob ? new Date(p.studentDob).toLocaleDateString() : '',
+    bloodGroup:         p.studentBloodGroup               || '',
+    category:           p.studentCategory                 || '',
+    abcId:              p.studentAbcId                    || '',
+
+    // Student contact
+    mobileNo:           p.studentMobileNo                 || '',
+    parentMobileNo:     p.studentParentMobileNo           || '',
+    parentEmail:        p.studentParentEmail              || '',
+
+    // Student current address
+    currentStreet:      p.studentCurrentAddress?.street   || '',
+    currentCity:        p.studentCurrentAddress?.city     || '',
+    currentPincode:     p.studentCurrentAddress?.pincode  || '',
+
+    // Student native address
+    nativeStreet:       p.studentNativeAddress?.street    || '',
+    nativeCity:         p.studentNativeAddress?.city      || '',
+    nativePincode:      p.studentNativeAddress?.nativePincode || '',
+});
+
+const placementColumnMap = {
+    companyName:        'Company',
+    role:               'Role',
+    placementType:      'Placement Type',
+    package:            'Package (LPA)',
+    placementYear:      'Placement Year',
+    passoutYear:        'Passout Year',
+    joiningYear:        'Joining Year',
+    placementProof:     'Placement Proof',
+    stuID:              'Student ID (DB)',
+    studentID:          'Student ID',
+	email:              'Email',
+    PRN:                'PRN',
+    firstName:          'First Name',
+    fathersName:        "Father's Name",
+    lastName:           'Last Name',
+    mothersName:        "Mother's Name",
+    year:               'Year',
+    division:           'Division',
+    branch:             'Branch',
+    dob:                'Date of Birth',
+    bloodGroup:         'Blood Group',
+    category:           'Category',
+    abcId:              'ABC ID',
+    mobileNo:           'Mobile No.',
+    parentMobileNo:     'Parent Mobile No.',
+    parentEmail:        'Parent Email',
+    currentStreet:      'Current Street',
+    currentCity:        'Current City',
+    currentPincode:     'Current Pincode',
+    nativeStreet:       'Native Street',
+    nativeCity:         'Native City',
+    nativePincode:      'Native Pincode',
+};
+
+
+const transformHigherStudy = (h) => ({
+    // Higher study fields
+    examName:           h.examName                        || '',
+    score:              h.score                           || '',
+    marksheet:          h.marksheet.url                       || '',
+    idCardPhoto:        h.idCardPhoto.url                     || '',
+
+    // Student identity
+    stuID:              h.stuID?.toString()               || '',
+    studentID:          h.studentID                       || '',
+	email:              h.studentEmail                    || '',
+    PRN:                h.PRN                             || '',
+
+    // Student name
+    firstName:          h.studentName?.firstName          || '',
+    fathersName:        h.studentName?.middleName         || '',
+    lastName:           h.studentName?.lastName           || '',
+    mothersName:        h.studentName?.motherName         || '',
+
+    // Student academic
+    year:               h.studentYear                     || '',
+    division:           h.studentDivision                 || '',
+    branch:             h.studentBranch                   || '',
+
+    // Student personal
+    dob:                h.studentDob ? new Date(h.studentDob).toLocaleDateString() : '',
+    bloodGroup:         h.studentBloodGroup               || '',
+    category:           h.studentCategory                 || '',
+    abcId:              h.studentAbcId                    || '',
+
+    // Student contact
+    mobileNo:           h.studentMobileNo                 || '',
+    parentMobileNo:     h.studentParentMobileNo           || '',
+    parentEmail:        h.studentParentEmail              || '',
+
+    // Student current address
+    currentStreet:      h.studentCurrentAddress?.street   || '',
+    currentCity:        h.studentCurrentAddress?.city     || '',
+    currentPincode:     h.studentCurrentAddress?.pincode  || '',
+
+    // Student native address
+    nativeStreet:       h.studentNativeAddress?.street    || '',
+    nativeCity:         h.studentNativeAddress?.city      || '',
+    nativePincode:      h.studentNativeAddress?.nativePincode || '',
+});
+
+const higherStudyColumnMap = {
+    examName:           'Exam Name',
+    score:              'Score',
+    marksheet:          'Marksheet',
+    idCardPhoto:        'ID Card Photo',
+    stuID:              'Student ID (DB)',
+    studentID:          'Student ID',
+	email:              'Email',
+    PRN:                'PRN',
+    firstName:          'First Name',
+    fathersName:        "Father's Name",
+    lastName:           'Last Name',
+    mothersName:        "Mother's Name",
+    year:               'Year',
+    division:           'Division',
+    branch:             'Branch',
+    dob:                'Date of Birth',
+    bloodGroup:         'Blood Group',
+    category:           'Category',
+    abcId:              'ABC ID',
+    mobileNo:           'Mobile No.',
+    parentMobileNo:     'Parent Mobile No.',
+    parentEmail:        'Parent Email',
+    currentStreet:      'Current Street',
+    currentCity:        'Current City',
+    currentPincode:     'Current Pincode',
+    nativeStreet:       'Native Street',
+    nativeCity:         'Native City',
+    nativePincode:      'Native Pincode',
+};
+
+
 //transform achievement 
 const transformAchievement = (a) => ({
     /* Achievement Info */
@@ -412,17 +576,13 @@ const semesterInfoColumnMap = {
   division: "Division",
 };
 
-module.exports = { 
-    transformInternship, 
-    transformStudent,
-    studentColumnMap, 
-    internshipColumnMap , 
-    transformAchievement , 
-    achievementColumnMap , 
-    transformActivity , 
-    activityColumnMap , 
-    transformAdmission , 
-    admissionColumnMap ,
-    transformSemesterInfo,
-    semesterInfoColumnMap
+module.exports = {
+	transformStudent, studentColumnMap, 
+    transformInternship, internshipColumnMap,
+	transformPlacement, placementColumnMap, 
+    transformHigherStudy, higherStudyColumnMap,
+    transformAchievement , achievementColumnMap , 
+    transformActivity , activityColumnMap , 
+	transformAdmission , admissionColumnMap ,
+    transformSemesterInfo, semesterInfoColumnMap
 };

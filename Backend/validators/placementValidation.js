@@ -138,6 +138,10 @@ const getPlacementsValidation = Joi.object({
 		"string.base": "Placement type must be a string"
 	}),
 
+	export: Joi.string().valid("true", "false").optional().messages({
+		"any.only": "export must be true or false."
+	}),
+
 	search: Joi.string().max(100).optional().messages({
 		"string.base": "Search must be a string",
 		"string.max": "Search cannot exceed 100 characters"

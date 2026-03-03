@@ -141,11 +141,10 @@ const createInternship = async (req, res) => {
 
 const getInternships = async (req, res) => {
     try {
-        const { year, division, search, page, limit, isPaid } = req.query;
-        const isExport = req.query.export === 'true';
-
+        const { year, division, search, page, limit, isPaid, export : exportFlag } = req.query;
+        
         const { error, value } = getInternshipsValidation.validate(
-            { year, search, page, limit, isPaid },
+            { year, search, page, limit, isPaid, export: exportFlag  },
             { abortEarly: false }
         );
         if (error) {
@@ -155,6 +154,9 @@ const getInternships = async (req, res) => {
             }));
             return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
         }
+
+        const isExport = value.export === 'true';
+
 
         if (req.user.role === "divisionIncharge") {
             if ((year && year !== req.user.year) || (division && division !== req.user.division)) {

@@ -36,38 +36,42 @@ const updateHigherStudySchema = Joi.object({
 });
 
 const getHigherStudiesValidation = Joi.object({
-  year: Joi.string().valid("SE", "TE", "BE").optional().messages({
-      "string.base": "Year must be a string.",
-      "any.only": "Year must be SE, TE or BE."
-  }),
+    year: Joi.string().valid("SE", "TE", "BE").optional().messages({
+        "string.base": "Year must be a string.",
+        "any.only": "Year must be SE, TE or BE."
+    }),
 
-  division : Joi.string().valid("A", "B", "C").optional().messages({
-      "string.base": "Division must be a string.",
-      "any.only": "Division must be A, B or C."
-  }),
+    division : Joi.string().valid("A", "B", "C").optional().messages({
+        "string.base": "Division must be a string.",
+        "any.only": "Division must be A, B or C."
+    }),
 
-  examName: Joi.string().valid("GATE", "CAT", "GRE", "TOEFL", "IELTS", "UPSC").optional().messages({
-      "string.base": "Exam name must be a string.",
-      "any.only": "Exam name must be one of: GATE, CAT, GRE, TOEFL, IELTS, UPSC."
-  }),
+    examName: Joi.string().valid("GATE", "CAT", "GRE", "TOEFL", "IELTS", "UPSC").optional().messages({
+        "string.base": "Exam name must be a string.",
+        "any.only": "Exam name must be one of: GATE, CAT, GRE, TOEFL, IELTS, UPSC."
+    }),
 
-  search: Joi.string().max(100).optional().messages({
-      "string.base": "Search must be a string.",
-      "string.max": "Search can be maximum 100 characters."
-  }),
+    export: Joi.string().valid("true", "false").optional().messages({
+            "any.only": "export must be true or false."
+        }),
 
-  page: Joi.number().integer().min(1).optional().messages({
-      "number.base": "Page must be a number.",
-      "number.integer": "Page must be an integer.",
-      "number.min": "Page must be at least 1."
-  }),
+    search: Joi.string().max(100).optional().messages({
+        "string.base": "Search must be a string.",
+        "string.max": "Search can be maximum 100 characters."
+    }),
 
-  limit: Joi.number().integer().min(1).max(20).optional().messages({
-      "number.base": "Limit must be a number.",
-      "number.integer": "Limit must be an integer.",
-      "number.min": "Limit must be at least 1.",
-      "number.max": "Limit can be maximum 20."
-  }),
+    page: Joi.number().integer().min(1).optional().messages({
+        "number.base": "Page must be a number.",
+        "number.integer": "Page must be an integer.",
+        "number.min": "Page must be at least 1."
+    }),
+
+    limit: Joi.number().integer().min(1).max(20).optional().messages({
+        "number.base": "Limit must be a number.",
+        "number.integer": "Limit must be an integer.",
+        "number.min": "Limit must be at least 1.",
+        "number.max": "Limit can be maximum 20."
+    }),
 });
 
 
