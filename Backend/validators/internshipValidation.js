@@ -18,7 +18,7 @@ const Joi = require("../helpers/profanity/joiWithProfanity");
 -> The .custom() runs after all individual field validations pass, so startDate, endDate, and durationMonths are already guaranteed to be valid values when this check runs.
 */
 
-const validateDurationMonths = (value, helpers) => {4
+const validateDurationMonths = (value, helpers) => {
     const { startDate, endDate, durationMonths } = value;
 
     if (startDate && endDate && durationMonths !== undefined) {
@@ -47,14 +47,14 @@ const durationMismatchMessage = {
 
 
 const internshipValidationSchema = Joi.object({
-    companyName: Joi.string().trim().min(2).max(200).required().messages({
+    companyName: Joi.string().trim().min(2).max(200).noProfanity().required().messages({
         "string.base": "Company name must be a string.",
         "string.min": "Company name must have at least 2 characters.",
         "string.max" : "Company Name can have a maximum of 200 characters.",
         "any.required": "Company name is required."
     }),
 
-    role: Joi.string().trim().min(2).max(200).required().messages({
+    role: Joi.string().trim().min(2).max(200).noProfanity().required().messages({
         "string.base": "Role must be a string.",
         "string.min": "Role must have at least 2 characters.",
         "string.max" : "Role can have a maximum of 200 characters.",
@@ -113,16 +113,18 @@ const internshipValidationSchema = Joi.object({
 
 
 const updateInternshipValidationSchema = Joi.object({
-    companyName: Joi.string().trim().min(2).max(200).empty("").optional().messages({
+    companyName: Joi.string().trim().min(2).max(200).noProfanity().optional().messages({
         "string.base": "Company name must be a string.",
         "string.min": "Company name must have at least 2 characters.",
-        "string.max" : "Company name can have a maximum of 200 characters."
+        "string.max" : "Company name can have a maximum of 200 characters.",
+        "string.empty" : "Company Name cannot be empty."
     }),
 
-    role: Joi.string().trim().min(2).max(200).empty("").optional().messages({
+    role: Joi.string().trim().min(2).max(200).noProfanity().optional().messages({
         "string.base": "Role must be a string.",
         "string.min": "Role must have at least 2 characters.",
-        "string.max" : "Role can have a maximum of 200 characters."
+        "string.max" : "Role can have a maximum of 200 characters.",
+        "string.empty" : "Role cannot be empty."
     }),
 
     startDate: Joi.date().max("now").optional().messages({
@@ -154,7 +156,7 @@ const updateInternshipValidationSchema = Joi.object({
         otherwise: Joi.forbidden()
     }),
 
-    description: Joi.string().trim().min(10).max(300).empty("").optional().messages({
+    description: Joi.string().trim().min(10).max(300).optional().messages({
         "string.base": "Description must be a string.",
         "string.min": "Description must be at least 10 characters.",
         "string.max" : "Description can have a maximum of 300 characters."
