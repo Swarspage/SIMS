@@ -137,7 +137,8 @@ const getPlacementsValidation = Joi.object({
 	}),
 
 	export: Joi.string().valid("true", "false").optional().messages({
-		"any.only": "export must be true or false."
+		"any.only": "export must be true or false.",
+		"boolean.base": "export must be either true or false."
 	}),
 
 	// NEW

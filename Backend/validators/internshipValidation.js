@@ -51,14 +51,16 @@ const internshipValidationSchema = Joi.object({
         "string.base": "Company name must be a string.",
         "string.min": "Company name must have at least 2 characters.",
         "string.max" : "Company Name can have a maximum of 200 characters.",
-        "any.required": "Company name is required."
+        "any.required": "Company name is required.",
+        "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
     role: Joi.string().trim().min(2).max(200).noProfanity().required().messages({
         "string.base": "Role must be a string.",
         "string.min": "Role must have at least 2 characters.",
         "string.max" : "Role can have a maximum of 200 characters.",
-        "any.required": "Role is required."
+        "any.required": "Role is required.",
+        "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
     startDate: Joi.date().max("now").required().messages({
@@ -100,7 +102,7 @@ const internshipValidationSchema = Joi.object({
         "string.min": "Description must be at least 10 characters.",
         "string.max" : "Description can have a maximum of 300 characters.",
         "any.required": "Description is required.",
-        "string.profanity": "Description contains inappropriate language."
+        "string.profanity": "Inappropriate Language Not Allowed.",
     })
 })
 .custom(validateDurationMonths)
@@ -117,14 +119,16 @@ const updateInternshipValidationSchema = Joi.object({
         "string.base": "Company name must be a string.",
         "string.min": "Company name must have at least 2 characters.",
         "string.max" : "Company name can have a maximum of 200 characters.",
-        "string.empty" : "Company Name cannot be empty."
+        "string.empty" : "Company Name cannot be empty.",
+        "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
     role: Joi.string().trim().min(2).max(200).noProfanity().optional().messages({
         "string.base": "Role must be a string.",
         "string.min": "Role must have at least 2 characters.",
         "string.max" : "Role can have a maximum of 200 characters.",
-        "string.empty" : "Role cannot be empty."
+        "string.empty" : "Role cannot be empty.",
+        "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
     startDate: Joi.date().max("now").optional().messages({
@@ -156,10 +160,11 @@ const updateInternshipValidationSchema = Joi.object({
         otherwise: Joi.forbidden()
     }),
 
-    description: Joi.string().trim().min(10).max(300).optional().messages({
+    description: Joi.string().trim().min(10).max(300).noProfanity().optional().messages({
         "string.base": "Description must be a string.",
         "string.min": "Description must be at least 10 characters.",
-        "string.max" : "Description can have a maximum of 300 characters."
+        "string.max" : "Description can have a maximum of 300 characters.",
+        "string.profanity": "Inappropriate Language Not Allowed.",
     })
 })
 .min(1) // At least one field is required
@@ -183,7 +188,8 @@ const getInternshipsValidation = Joi.object({
     }),
 
     export: Joi.string().valid("true", "false").optional().messages({
-        "any.only": "export must be true or false."
+        "any.only": "export must be true or false.",
+        "boolean.base": "export must be either true or false."
     }),
 
     // NEW
@@ -202,7 +208,7 @@ const getInternshipsValidation = Joi.object({
         "date.min": "endDateTo must be after endDateFrom."
     }),
 
-    search: Joi.string().max(100).optional().messages({
+    search: Joi.string().trim().max(100).optional().messages({
         "string.base": "Search must be a string.",
         "string.max": "Search cannot exceed 100 characters."
     }),

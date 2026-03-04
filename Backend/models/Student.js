@@ -71,6 +71,8 @@ const studentSchema = new mongoose.Schema({
     abcId : {type: String},
     parentEmail: {type: String},
 
+    academicYear : {type:String},
+
 
 
 }, 
