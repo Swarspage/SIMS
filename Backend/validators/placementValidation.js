@@ -86,6 +86,7 @@ const updatePlacementSchema = Joi.object({
 		"string.base": "Role must be a string",
 		"string.min": "Role cannot be empty",
 		"string.max" : "Role can have maximum of 200 characters.",
+		"string.empty" : "Role cannot be empty.",
 		"string.profanity": "Inappropriate Language Not Allowed.",
 	}),
 

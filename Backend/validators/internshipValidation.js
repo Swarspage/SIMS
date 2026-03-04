@@ -165,6 +165,7 @@ const updateInternshipValidationSchema = Joi.object({
         "string.min": "Description must be at least 10 characters.",
         "string.max" : "Description can have a maximum of 300 characters.",
         "string.profanity": "Inappropriate Language Not Allowed.",
+        "string.empty" : "Description cannot be empty."
     })
 })
 .min(1) // At least one field is required

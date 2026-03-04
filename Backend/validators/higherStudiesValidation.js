@@ -34,7 +34,8 @@ const createHigherStudySchema = Joi.object({
 const updateHigherStudySchema = Joi.object({
     examName: Joi.string().trim().valid("GATE", "CAT", "GRE", "TOEFL", "IELTS", "UPSC").messages({
         "string.base": "Exam name must be a string.",
-        "any.only": "Exam name must be one of: GATE, CAT, GRE, TOFEL, IELTS, UPSC."
+        "any.only": "Exam name must be one of: GATE, CAT, GRE, TOFEL, IELTS, UPSC.",
+        "string.empty" : "Exam Name cannot be empty.",
     }),
 
     score: Joi.string()
