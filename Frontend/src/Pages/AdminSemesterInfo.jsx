@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { semInfoService } from "../services/semInfoService";
 import * as XLSX from "xlsx";
+import { toast } from "react-toastify";
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 function DetailModal({ record, onClose }) {
@@ -123,7 +124,7 @@ function DetailModal({ record, onClose }) {
 }
 
 // ─── Semester Card ────────────────────────────────────────────────────────────
-function SemInfoCard({ record, onView, onDelete }) {
+function SemInfoCard({ record, onView, onDelete, onEdit }) {
     const stuId = typeof record?.stuID === "string" ? record.stuID : record?.stuID?.studentID || "N/A";
     const totalScore = record.marks?.reduce((s, m) => s + m.score, 0) ?? 0;
     const totalOutOf = record.marks?.reduce((s, m) => s + m.outOf, 0) ?? 0;
@@ -174,13 +175,302 @@ function SemInfoCard({ record, onView, onDelete }) {
                     >
                         View Details
                     </button>
-                    <button
-                        onClick={() => onDelete(record._id)}
-                        className="w-full px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
-                    >
-                        Delete
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            onClick={() => onEdit && onEdit(record)}
+                            className="px-3 py-1.5 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors"
+                        >
+                            Edit
+                        </button>
+                        <button
+                            onClick={() => onDelete(record._id)}
+                            className="px-3 py-1.5 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ─── Form Modal Component (Add / Edit) ────────────────────────────────────────────────────────
+function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
+    const [formData, setFormData] = useState({
+        studentId: "",
+        semester: "",
+        attendance: "",
+        kts: [],
+        marks: [],
+    });
+
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            if (record) {
+                setFormData({
+                    studentId: typeof record.stuID === "string" ? record.stuID : record.stuID?.studentID || "",
+                    semester: record.semester || "",
+                    attendance: record.attendance || "",
+                    kts: record.kts ? [...record.kts] : [],
+                    marks: record.marks ? [...record.marks] : [],
+                });
+            } else {
+                setFormData({
+                    studentId: "",
+                    semester: "",
+                    attendance: "",
+                    kts: [],
+                    marks: [],
+                });
+            }
+        }
+    }, [isOpen, record]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    // KT Handlers
+    const handleAddKt = () => {
+        setFormData((prev) => ({ ...prev, kts: [...prev.kts, ""] }));
+    };
+    const handleKtChange = (index, value) => {
+        const newKts = [...formData.kts];
+        newKts[index] = value;
+        setFormData((prev) => ({ ...prev, kts: newKts }));
+    };
+    const handleRemoveKt = (index) => {
+        const newKts = formData.kts.filter((_, i) => i !== index);
+        setFormData((prev) => ({ ...prev, kts: newKts }));
+    };
+
+    // Marks Handlers
+    const handleAddMark = () => {
+        setFormData((prev) => ({ ...prev, marks: [...prev.marks, { subject: "", score: "", outOf: "" }] }));
+    };
+    const handleMarkChange = (index, field, value) => {
+        const newMarks = [...formData.marks];
+        newMarks[index][field] = value;
+        setFormData((prev) => ({ ...prev, marks: newMarks }));
+    };
+    const handleRemoveMark = (index) => {
+        const newMarks = formData.marks.filter((_, i) => i !== index);
+        setFormData((prev) => ({ ...prev, marks: newMarks }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            // Clean payload
+            const payload = {
+                semester: Number(formData.semester),
+                attendance: Number(formData.attendance),
+                kts: formData.kts.filter(kt => kt.trim() !== ""),
+                marks: formData.marks.filter(m => m.subject.trim() !== "").map(m => ({
+                    subject: m.subject.trim(),
+                    score: Number(m.score),
+                    outOf: Number(m.outOf)
+                }))
+            };
+
+            if (!record) { payload.studentId = formData.studentId; }
+
+            if (record) {
+                await semInfoService.updateSemInfo(record._id, payload);
+                toast.success("Semester Info updated successfully!");
+            } else {
+                await semInfoService.addSemInfo(payload);
+                toast.success("Semester Info added successfully!");
+            }
+            onSave();
+            onClose();
+        } catch (err) {
+            console.error("Error saving SemInfo:", err);
+            toast.error(err.response?.data?.message || err.response?.data?.errors?.[0]?.message || "Failed to save record.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-slideUp">
+                <div className="sticky top-0 z-10 p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h2 className="text-xl font-bold text-slate-900">
+                        {record ? "Edit Semester Info" : "Add Semester Info"}
+                    </h2>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                     </button>
                 </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-8">
+                    {/* Basic Info */}
+                    <div>
+                        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Basic Info</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
+                                <input
+                                    type="text"
+                                    name="studentId"
+                                    required={!record}
+                                    value={formData.studentId}
+                                    onChange={handleChange}
+                                    placeholder="e.g. 2024COMP123"
+                                    disabled={!!record} // Prevent editing student ID if updating
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Semester (1-8) *</label>
+                                <input
+                                    type="number"
+                                    name="semester"
+                                    required
+                                    min="1"
+                                    max="8"
+                                    value={formData.semester}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Attendance (%) *</label>
+                                <input
+                                    type="number"
+                                    name="attendance"
+                                    required
+                                    min="0"
+                                    max="100"
+                                    value={formData.attendance}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Subject Marks Array Builder */}
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Subject Marks</h3>
+                            <button type="button" onClick={handleAddMark} className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-bold rounded hover:bg-blue-200">
+                                + Add Subject
+                            </button>
+                        </div>
+                        {formData.marks.length === 0 ? (
+                            <p className="text-sm text-slate-500 italic">No subjects added yet.</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {formData.marks.map((mark, index) => (
+                                    <div key={index} className="flex items-center gap-3">
+                                        <input
+                                            type="text"
+                                            placeholder="Subject Name"
+                                            required
+                                            value={mark.subject}
+                                            onChange={(e) => handleMarkChange(index, "subject", e.target.value)}
+                                            className="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Score"
+                                            required
+                                            min="0"
+                                            value={mark.score}
+                                            onChange={(e) => handleMarkChange(index, "score", e.target.value)}
+                                            className="w-24 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                        <span className="text-slate-500 font-bold">/</span>
+                                        <input
+                                            type="number"
+                                            placeholder="Out Of"
+                                            required
+                                            min="1"
+                                            value={mark.outOf}
+                                            onChange={(e) => handleMarkChange(index, "outOf", e.target.value)}
+                                            className="w-24 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                        <button type="button" onClick={() => handleRemoveMark(index)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* KTs Array Builder */}
+                    <div className="p-4 bg-orange-50/50 border border-orange-200 rounded-xl">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-sm font-bold text-orange-800 uppercase tracking-widest">Active KTs</h3>
+                            <button type="button" onClick={handleAddKt} className="px-3 py-1.5 bg-orange-200 text-orange-800 text-xs font-bold rounded hover:bg-orange-300">
+                                + Add KT
+                            </button>
+                        </div>
+                        {formData.kts.length === 0 ? (
+                            <p className="text-sm text-slate-500 italic">No KTs recorded.</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {formData.kts.map((kt, index) => (
+                                    <div key={index} className="flex items-center gap-3">
+                                        <input
+                                            type="text"
+                                            placeholder="Failed Subject Name"
+                                            required
+                                            value={kt}
+                                            onChange={(e) => handleKtChange(index, e.target.value)}
+                                            className="flex-1 px-3 py-2 text-sm border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                        />
+                                        <button type="button" onClick={() => handleRemoveKt(index)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="pt-6 flex justify-end gap-3 border-t border-slate-100">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 focus:ring-2 focus:ring-slate-300"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="px-6 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {loading ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    Saving...
+                                </>
+                            ) : (
+                                "Save Semester Info"
+                            )}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );
@@ -194,6 +484,8 @@ export default function AdminSemesterInfo() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedSem, setSelectedSem] = useState("");
     const [selectedItem, setSelectedItem] = useState(null);
+    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [recordToEdit, setRecordToEdit] = useState(null);
 
     useEffect(() => {
         fetchAll();
@@ -221,12 +513,12 @@ export default function AdminSemesterInfo() {
             await semInfoService.deleteSemInfo(id);
             fetchAll();
         } catch {
-            alert("Failed to delete record");
+            toast.error("Failed to delete record.");
         }
     };
 
     const handleExport = () => {
-        if (filtered.length === 0) { alert("No data to export."); return; }
+        if (filtered.length === 0) { toast.warn("No data to export."); return; }
         try {
             const rows = filtered.map((r) => {
                 const stuId = typeof r?.stuID === "string" ? r.stuID : r?.stuID?.studentID || "N/A";
@@ -255,7 +547,7 @@ export default function AdminSemesterInfo() {
             XLSX.writeFile(wb, `SemesterInfo_Export_${new Date().toLocaleDateString("en-IN")}.xlsx`);
         } catch (err) {
             console.error(err);
-            alert("Export failed. Please try again.");
+            toast.error("Export failed. Please try again.");
         }
     };
 
@@ -316,6 +608,11 @@ export default function AdminSemesterInfo() {
                         </svg>
                         Export to Excel
                     </button>
+                    <button
+                        onClick={() => { setRecordToEdit(null); setIsFormModalOpen(true); }}
+                        className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center">
+                        + Add Semester Info
+                    </button>
                 </div>
             </div>
 
@@ -345,13 +642,20 @@ export default function AdminSemesterInfo() {
                 {!loading && !error && filtered.length > 0 && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                         {filtered.map((r) => (
-                            <SemInfoCard key={r._id} record={r} onView={setSelectedItem} onDelete={handleDelete} />
+                            <SemInfoCard key={r._id} record={r} onView={setSelectedItem} onEdit={(rec) => { setRecordToEdit(rec); setIsFormModalOpen(true); }} onDelete={handleDelete} />
                         ))}
                     </div>
                 )}
             </div>
 
             {selectedItem && <DetailModal record={selectedItem} onClose={() => setSelectedItem(null)} />}
+
+            <SemInfoFormModal
+                isOpen={isFormModalOpen}
+                onClose={() => setIsFormModalOpen(false)}
+                record={recordToEdit}
+                onSave={fetchAll}
+            />
         </main>
     );
 }

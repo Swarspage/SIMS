@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function AdminSignUp() {
   const [form, setForm] = useState({
@@ -38,7 +39,7 @@ export default function AdminSignUp() {
       // Fake submit (replace with real API call)
       setTimeout(() => {
         setSubmitting(false);
-        alert(
+        toast.info(
           "Registered successfully (demo). Replace with real submit logic."
         );
         setForm({
@@ -88,9 +89,8 @@ export default function AdminSignUp() {
             name="name"
             value={form.name}
             onChange={handleChange}
-            className={`w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B347D] ${
-              errors.name ? "ring-2 ring-red-200" : ""
-            }`}
+            className={`w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B347D] ${errors.name ? "ring-2 ring-red-200" : ""
+              }`}
             placeholder="Your full name"
             aria-invalid={!!errors.name}
           />
@@ -113,9 +113,8 @@ export default function AdminSignUp() {
               name="adminId"
               value={form.adminId}
               onChange={handleChange}
-              className={`w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B347D] ${
-                errors.adminId ? "ring-2 ring-red-200" : ""
-              }`}
+              className={`w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B347D] ${errors.adminId ? "ring-2 ring-red-200" : ""
+                }`}
               placeholder="Admin ID"
               aria-invalid={!!errors.adminId}
             />
@@ -136,9 +135,8 @@ export default function AdminSignUp() {
               name="email"
               value={form.email}
               onChange={handleChange}
-              className={`w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B347D] ${
-                errors.email ? "ring-2 ring-red-200" : ""
-              }`}
+              className={`w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B347D] ${errors.email ? "ring-2 ring-red-200" : ""
+                }`}
               placeholder="email@domain.com"
               aria-invalid={!!errors.email}
             />
@@ -162,9 +160,8 @@ export default function AdminSignUp() {
             name="password"
             value={form.password}
             onChange={handleChange}
-            className={`w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B347D] ${
-              errors.password ? "ring-2 ring-red-200" : ""
-            }`}
+            className={`w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B347D] ${errors.password ? "ring-2 ring-red-200" : ""
+              }`}
             placeholder="Enter password"
             aria-invalid={!!errors.password}
           />
@@ -186,9 +183,8 @@ export default function AdminSignUp() {
             name="confirmPassword"
             value={form.confirmPassword}
             onChange={handleChange}
-            className={`w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B347D] ${
-              errors.confirmPassword ? "ring-2 ring-red-200" : ""
-            }`}
+            className={`w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B347D] ${errors.confirmPassword ? "ring-2 ring-red-200" : ""
+              }`}
             placeholder="Re-enter password"
             aria-invalid={!!errors.confirmPassword}
           />
@@ -212,7 +208,7 @@ export default function AdminSignUp() {
           <button
             type="button"
             onClick={() =>
-              alert("Go to login — replace with router/link in your app.")
+              toast.info("Go to login — replace with router/link in your app.")
             }
             className="w-full py-3 rounded-lg font-semibold border-2 border-[#1B347D] bg-white text-[#1B347D] transform transition-all duration-300 ease-in-out hover:-translate-y-1 hover:bg-[#1B347D] hover:text-white"
           >

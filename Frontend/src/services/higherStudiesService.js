@@ -33,9 +33,9 @@ export const higherStudiesService = {
     return response.data;
   },
 
-  // Get all higher studies (Admin)
-  getAllHigherStudies: async () => {
-    const response = await API.get("/higherStudies");
+  // Get all higher studies (Admin) — accepts filter params for server-side filtering
+  getAllHigherStudies: async (params = {}) => {
+    const response = await API.get("/higherStudies", { params });
     return response.data;
   },
 

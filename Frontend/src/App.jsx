@@ -99,6 +99,7 @@ import AdminDashboard from "./Pages/AdminDashboard";
 import AdminPlacement from "./Pages/AdminPlacement";
 import AdminAdmission from "./Pages/AdminAdmission";
 import AdminSemesterInfo from "./Pages/AdminSemesterInfo";
+import AdminDivisionIncharge from "./Pages/AdminDivisionIncharge";
 
 // Student Pages
 import StudentActivity from "./Pages/StudentActivity";
@@ -146,6 +147,7 @@ const App = () => {
           <Route path="internships" element={<AdminInternship />} />
           <Route path="placements" element={<AdminPlacement />} />
           <Route path="semester-info" element={<AdminSemesterInfo />} />
+          <Route path="division-incharges" element={<AdminDivisionIncharge />} />
         </Route>
 
         {/* Student Routes - PROTECTED */}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { activityService } from "../services/activityService";
+import { toast } from "react-toastify";
 
 // Activity Card Component - COMPACT & BEAUTIFUL
-function ActivityCard({ activity, onView, onDelete }) {
+function ActivityCard({ activity, onView, onDelete, onEdit }) {
   const getTypeColor = (type) => {
     switch (type) {
       case "Committee":
@@ -18,14 +19,29 @@ function ActivityCard({ activity, onView, onDelete }) {
 
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
-      {/* Certificate Image */}
-      <div className="h-32 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden">
+      {/* Document/Image Preview Section */}
+      <div className="h-32 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden relative">
         {activity?.certificateURL?.url ? (
-          <img
-            src={activity.certificateURL.url}
-            alt={activity?.title || "Activity"}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+          activity.certificateURL.url.toLowerCase().endsWith(".pdf") ? (
+            <div className="w-full h-full relative group-hover:scale-105 transition-transform duration-300">
+              <iframe
+                src={`${activity.certificateURL.url}#view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
+                title="PDF Preview"
+                className="w-full h-full border-none pointer-events-none"
+                scrolling="no"
+                tabIndex="-1"
+              />
+              <div className="absolute inset-0 bg-transparent flex items-center justify-center pointer-events-none">
+                <span className="bg-black/50 text-white text-xs px-2 py-1 rounded shadow backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">PDF Preview</span>
+              </div>
+            </div>
+          ) : (
+            <img
+              src={activity.certificateURL.url}
+              alt={activity?.title || "Activity"}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          )
         ) : (
           <div className="text-slate-400 text-xs font-medium">
             No Certificate
@@ -36,7 +52,7 @@ function ActivityCard({ activity, onView, onDelete }) {
       {/* Content */}
       <div className="p-4 flex flex-col flex-grow">
         {/* Student ID */}
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2 hidden">
           {typeof activity?.stuID === "string"
             ? activity.stuID
             : activity?.stuID?.studentID || "N/A"}
@@ -74,29 +90,38 @@ function ActivityCard({ activity, onView, onDelete }) {
         </p>
 
         {/* Action Buttons */}
-        <div className="mt-auto flex gap-2">
+        <div className="mt-auto space-y-2">
           <button
             onClick={() => onView && onView(activity)}
-            className="flex-1 px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
           >
-            View
+            View Details
           </button>
-          {activity?.certificateURL?.url && (
-            <a
-              href={activity.certificateURL.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 px-3 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-200 transition-colors text-center"
+
+          <div className="grid grid-cols-2 gap-2">
+            {activity?.certificateURL?.url && (
+              <a
+                href={activity.certificateURL.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-200 transition-colors text-center"
+              >
+                Download
+              </a>
+            )}
+            <button
+              onClick={() => onEdit && onEdit(activity)}
+              className="px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors"
             >
-              Download
-            </a>
-          )}
-          <button
-            onClick={() => onDelete && onDelete(activity._id)}
-            className="px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
-          >
-            Delete
-          </button>
+              Edit
+            </button>
+            <button
+              onClick={() => onDelete && onDelete(activity._id)}
+              className="col-span-2 px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -117,7 +142,6 @@ function DetailModal({ activity, onClose }) {
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Activity Details</h2>
-            <p className="text-xs text-slate-500 mt-0.5">ID: {activity._id}</p>
           </div>
           <button
             onClick={onClose}
@@ -211,6 +235,195 @@ function DetailModal({ activity, onClose }) {
   );
 }
 
+// Form Modal Component (Add / Edit)
+function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
+  const [formData, setFormData] = useState({
+    stuID: "",
+    title: "",
+    type: "Committee",
+    date: "",
+    description: "",
+  });
+  const [certificate, setCertificate] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (activity) {
+        setFormData({
+          stuID: typeof activity.stuID === "string" ? activity.stuID : activity.stuID?.studentID || "",
+          title: activity.title || "",
+          type: activity.type || "Committee",
+          date: activity.date ? new Date(activity.date).toISOString().split('T')[0] : "",
+          description: activity.description || "",
+        });
+      } else {
+        setFormData({
+          stuID: "",
+          title: "",
+          type: "Committee",
+          date: "",
+          description: "",
+        });
+      }
+      setCertificate(null);
+    }
+  }, [isOpen, activity]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    setCertificate(e.target.files[0]);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const data = new FormData();
+      Object.keys(formData).forEach((key) => {
+        data.append(key, formData[key]);
+      });
+      if (certificate) {
+        data.append("certificate", certificate);
+      }
+
+      if (activity) {
+        await activityService.updateActivity(activity._id, data);
+        toast.success("Activity updated successfully!");
+      } else {
+        await activityService.createActivity(data);
+        toast.success("Activity added successfully!");
+      }
+      onSave(); // Refresh list
+      onClose(); // Close modal
+    } catch (err) {
+      console.error("Error saving activity:", err);
+      toast.error(err.response?.data?.message || "Failed to save activity.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-slideUp">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+          <h2 className="text-xl font-bold text-slate-900">
+            {activity ? "Edit Activity" : "Add New Activity"}
+          </h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
+            <input
+              type="text"
+              name="stuID"
+              required
+              value={formData.stuID}
+              onChange={handleChange}
+              placeholder="e.g. 2024COMP123"
+              disabled={!!activity} // Prevent editing student ID if updating
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Title *</label>
+            <input
+              type="text"
+              name="title"
+              required
+              value={formData.title}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Type *</label>
+              <select
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Committee">Committee</option>
+                <option value="Sports">Sports</option>
+                <option value="Hackathon">Hackathon</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Date *</label>
+              <input
+                type="date"
+                name="date"
+                required
+                value={formData.date}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Description</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows="3"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            ></textarea>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">
+              Certificate (Optional)
+            </label>
+            <input
+              type="file"
+              accept=".pdf, image/*"
+              onChange={handleFileChange}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+            />
+          </div>
+
+          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Activity"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // Main Admin Activity Component
 export default function AdminActivity() {
   const [activities, setActivities] = useState([]);
@@ -222,6 +435,8 @@ export default function AdminActivity() {
 
   // Modal State
   const [selectedActivity, setSelectedActivity] = useState(null);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [activityToEdit, setActivityToEdit] = useState(null);
 
   // Fetch activities from backend
   useEffect(() => {
@@ -264,7 +479,7 @@ export default function AdminActivity() {
       link.parentNode.removeChild(link);
     } catch (err) {
       console.error("Error exporting activities:", err);
-      alert("Failed to export activities. Please try again.");
+      toast.error("Failed to export activities. Please try again.");
     }
   };
 
@@ -300,6 +515,16 @@ export default function AdminActivity() {
     setSelectedActivity(null);
   };
 
+  const handleEdit = (activity) => {
+    setActivityToEdit(activity);
+    setIsFormModalOpen(true);
+  };
+
+  const handleAddActivity = () => {
+    setActivityToEdit(null);
+    setIsFormModalOpen(true);
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this activity?"))
       return;
@@ -308,7 +533,7 @@ export default function AdminActivity() {
       fetchActivities();
     } catch (err) {
       console.error("Error deleting activity:", err);
-      alert("Failed to delete activity");
+      toast.error("Failed to delete activity.");
     }
   };
 
@@ -387,7 +612,10 @@ export default function AdminActivity() {
           </button>
 
           {/* Add Button */}
-          <button className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm ml-2">
+          <button
+            onClick={handleAddActivity}
+            className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm ml-2"
+          >
             + Add Activity
           </button>
         </div>
@@ -444,6 +672,7 @@ export default function AdminActivity() {
                 key={activity?._id}
                 activity={activity}
                 onView={handleView}
+                onEdit={handleEdit}
                 onDelete={handleDelete}
               />
             ))}
@@ -458,6 +687,14 @@ export default function AdminActivity() {
           onClose={handleCloseModal}
         />
       )}
+
+      {/* Form Modal (Add / Edit) */}
+      <ActivityFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        activity={activityToEdit}
+        onSave={fetchActivities}
+      />
     </main>
   );
 }
