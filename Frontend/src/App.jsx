@@ -98,6 +98,7 @@ import AdminInternship from "./Pages/AdminInternship";
 import AdminDashboard from "./Pages/AdminDashboard";
 import AdminPlacement from "./Pages/AdminPlacement";
 import AdminAdmission from "./Pages/AdminAdmission";
+import AdminSemesterInfo from "./Pages/AdminSemesterInfo";
 
 // Student Pages
 import StudentActivity from "./Pages/StudentActivity";
@@ -107,6 +108,7 @@ import StudentAchievements from "./Pages/StudentAchievements";
 import StudentInternship from "./Pages/StudentInternship";
 import StudentPlacement from "./Pages/StudentPlacement";
 import StudentDashboard from "./Pages/StudentDashboard";
+import StudentSemesterInfo from "./Pages/StudentSemesterInfo";
 
 // Layouts
 import AdminLayout from "./layouts/AdminLayout";
@@ -143,6 +145,7 @@ const App = () => {
           <Route path="achievements" element={<AdminAchievements />} />
           <Route path="internships" element={<AdminInternship />} />
           <Route path="placements" element={<AdminPlacement />} />
+          <Route path="semester-info" element={<AdminSemesterInfo />} />
         </Route>
 
         {/* Student Routes - PROTECTED */}
@@ -162,6 +165,7 @@ const App = () => {
           <Route path="achievements" element={<StudentAchievements />} />
           <Route path="internship" element={<StudentInternship />} />
           <Route path="placement" element={<StudentPlacement />} />
+          <Route path="semester-info" element={<StudentSemesterInfo />} />
         </Route>
 
         {/* Catch all - redirect to home */}
