@@ -51,7 +51,6 @@ const createPlacement = async (req, res) => {
 			return res.status(403).json({ success: false, message: "Unauthorised access." });
 		}
 
-		const { companyName, role, placementType, package, placementYear, passoutYear, joiningYear } = req.body;
 
 		// Joi Validation
 		const { error, value: validatedData } = createPlacementSchema.validate(req.body, { abortEarly: false });
@@ -64,6 +63,8 @@ const createPlacement = async (req, res) => {
 
 			return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
 		}
+
+		const { companyName, role, placementType, package, placementYear, passoutYear, joiningYear } = validatedData;
 
 		// Logical year validation
 		const extractStartYear = (year) => Number(year.split("-")[0]);
@@ -240,65 +241,6 @@ const updatePlacement = async (req, res) => {
 	}
 };
 
-// DELETE PLACEMENT
-const deletePlacement = async (req, res) => {
-	try {
-		
-
-		const { placementId } = req.params;
-
-
-		if (!placementId || !mongoose.Types.ObjectId.isValid(placementId)) {
-			return res.status(400).json({ success: false, message: "Invalid Placement ID" });
-		}
-
-
-		let query = Placement.findById(placementId);
-		if (req.user.role !== "student") {
-			query = query.populate("stuID", "year division");
-		}
-		
-		const existingPlacement = await query; // execute once
-		if (!existingPlacement) {
-			return res.status(404).json({ success: false, message: "Placement not found" });
-		}
-
-		if (req.user.role === "student") {
-			if (existingPlacement.stuID.toString() !== req.user.id.toString()) {
-				return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
-			}
-		} else if (req.user.role === "divisionIncharge") {
-			if (existingPlacement.stuID.year !== req.user.year || existingPlacement.stuID.division !== req.user.division) {
-				return res.status(403).json({ success: false, message: "You can only access students in your division." });
-			}
-		} else if (req.user.role !== "admin") {
-			return res.status(403).json({ success: false, message: "Wrong Role." });
-		}
-
-		const delResult = await Placement.findByIdAndDelete(placementId);
-
-		if(!delResult){
-			return res.status(404).json({success : false, message: "Delete failed."});
-		}
-		
-
-		// Delete Cloudinary proof file
-		if ( delResult?.placementProof?.publicId) {
-			try{
-				await cloudinary.uploader.destroy(delResult.placementProof.publicId)
-			}catch(err){
-				console.error("Cloudinary delete failed:", err);
-			}
-		}
-
-		
-		return res.status(200).json({ success: true, message: "Placement deleted successfully" });
-	} catch (err) {
-		console.error("Error in deletePlacement controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
-    }
-	
-};
 
 const getPlacements = async (req, res) => {
 	try {
@@ -486,6 +428,66 @@ const getPlacements = async (req, res) => {
 	}
 };
 
+
+// DELETE PLACEMENT
+const deletePlacement = async (req, res) => {
+	try {
+		
+
+		const { placementId } = req.params;
+
+
+		if (!placementId || !mongoose.Types.ObjectId.isValid(placementId)) {
+			return res.status(400).json({ success: false, message: "Invalid Placement ID" });
+		}
+
+
+		let query = Placement.findById(placementId);
+		if (req.user.role !== "student") {
+			query = query.populate("stuID", "year division");
+		}
+		
+		const existingPlacement = await query; // execute once
+		if (!existingPlacement) {
+			return res.status(404).json({ success: false, message: "Placement not found" });
+		}
+
+		if (req.user.role === "student") {
+			if (existingPlacement.stuID.toString() !== req.user.id.toString()) {
+				return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
+			}
+		} else if (req.user.role === "divisionIncharge") {
+			if (existingPlacement.stuID.year !== req.user.year || existingPlacement.stuID.division !== req.user.division) {
+				return res.status(403).json({ success: false, message: "You can only access students in your division." });
+			}
+		} else if (req.user.role !== "admin") {
+			return res.status(403).json({ success: false, message: "Wrong Role." });
+		}
+
+		const delResult = await Placement.findByIdAndDelete(placementId);
+
+		if(!delResult){
+			return res.status(404).json({success : false, message: "Delete failed."});
+		}
+		
+
+		// Delete Cloudinary proof file
+		if ( delResult?.placementProof?.publicId) {
+			try{
+				await cloudinary.uploader.destroy(delResult.placementProof.publicId)
+			}catch(err){
+				console.error("Cloudinary delete failed:", err);
+			}
+		}
+
+		
+		return res.status(200).json({ success: true, message: "Placement deleted successfully" });
+	} catch (err) {
+		console.error("Error in deletePlacement controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+    }
+	
+};
 
 //GET PLACEMENTS (search by placement fields & student name + year filter + pagination) --admin or divisionIncharge
 const getPlacements2 = async (req, res) => {

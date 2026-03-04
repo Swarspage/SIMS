@@ -7,6 +7,16 @@ const yearPattern = /^\d{4}-\d{2}$/;
 //but still it changes this reusable year regex pattern and changed it into :- const yearPattern = /^\\d{4}-\\d{2}$/;
 //which is wrong
 
+const academicYearValidator = (value, helpers) => {
+	const [start, end] = value.split("-");
+	const expectedEnd = String(Number(start) + 1).slice(-2);
+
+	if (end !== expectedEnd) {
+		return helpers.error("any.invalid");
+	}
+
+	return value;
+};
 
 // CREATE
 const createPlacementSchema = Joi.object({
@@ -35,33 +45,35 @@ const createPlacementSchema = Joi.object({
 		"string.empty" : "Placement Type cannot be empty."
 	}),
 
-	package: Joi.number().positive().min(1).max(100).precision(2).required().messages({
+	package: Joi.number().min(1).max(100).precision(2).required().messages({
 		"number.base": "Package must be a number",
-		"number.positive": "Package must be a positive number",
 		"number.min": "Package must be at least 1 LPA",
 		"number.max": "Package cannot exceed 100 LPA",
 		"any.required": "Package is required"
 	}),
 
-	placementYear: Joi.string().trim().min(1).pattern(yearPattern).required().messages({
+	placementYear: Joi.string().trim().min(1).pattern(yearPattern).custom(academicYearValidator).required().messages({
 		"string.base": "Placement year must be a string",
 		"string.empty": "Placement year cannot be empty",
 		"string.pattern.base": "Placement year must be a valid year like 2023-24.",
-		"any.required": "Placement year is required"
+		"any.required": "Placement year is required",
+		"any.invalid": "Year must follow format like 2023-24 where end year is start year + 1."
 	}),
 
-	passoutYear: Joi.string().trim().min(1).pattern(yearPattern).required().messages({
+	passoutYear: Joi.string().trim().min(1).pattern(yearPattern).custom(academicYearValidator).required().messages({
 		"string.base": "Passout year must be a string",
 		"string.empty": "Passout year cannot be empty",
 		"string.pattern.base": "Passout year must be a valid year like 2023-24.",
-		"any.required": "Passout year is required"
+		"any.required": "Passout year is required",
+		"any.invalid": "Year must follow format like 2023-24 where end year is start year + 1."
 	}),
 
-	joiningYear: Joi.string().trim().min(1).pattern(yearPattern).required().messages({
+	joiningYear: Joi.string().trim().min(1).pattern(yearPattern).custom(academicYearValidator).required().messages({
 		"string.base": "Joining year must be a string",
 		"string.empty": "Joining year cannot be empty",
 		"string.pattern.base": "Joining year must be a valid year like 2023-24.",
-		"any.required": "Joining year is required"
+		"any.required": "Joining year is required",
+		"any.invalid": "Year must follow format like 2023-24 where end year is start year + 1."
 	}),
 }).options({
 	stripUnknown: true,   // removes extra fields
@@ -90,34 +102,37 @@ const updatePlacementSchema = Joi.object({
 		"string.profanity": "Inappropriate Language Not Allowed.",
 	}),
 
-	placementType: Joi.string().trim().valid("Campus", "Off-Campus").empty("").optional().messages({
+	placementType: Joi.string().trim().valid("Campus", "Off-Campus").optional().messages({
 		"any.only": "Placement type must be either Campus or Off-Campus",
 		"string.empty" : "Placement Type cannot be empty."
 	}),
 
-	package: Joi.number().positive().min(1).max(100).precision(2).empty("").optional().messages({
+	package: Joi.number().min(1).max(100).precision(2).optional().messages({
 		"number.base": "Package must be a number",
 		"number.positive": "Package must be a positive number",
 		"number.min": "Package must be at least 1 LPA",
 		"number.max": "Package cannot exceed 100 LPA",
 	}),
 
-	placementYear: Joi.string().trim().pattern(yearPattern).empty("").optional().messages({
+	placementYear: Joi.string().trim().pattern(yearPattern).custom(academicYearValidator).optional().messages({
 		"string.base": "Placement year must be a string",
 		"string.pattern.base": "Placement year must be a valid year like 2023-24.",
-		"string.empty" : "Placement Type cannot be empty.",
+		"string.empty" : "Placement Year cannot be empty.",
+		"any.invalid": "Year must follow format like 2023-24 where end year is start year + 1."
 	}),
 
-	passoutYear: Joi.string().pattern(yearPattern).empty("").optional().messages({
+	passoutYear: Joi.string().trim().pattern(yearPattern).custom(academicYearValidator).optional().messages({
 		"string.base": "Passout year must be a string",
 		"string.pattern.base": "Passout year must be a valid year like 2023-24.",
-		"string.empty" : "Placement Type cannot be empty.",
+		"string.empty" : "Passout Year cannot be empty.",
+		"any.invalid": "Year must follow format like 2023-24 where end year is start year + 1."
 	}),
 
-	joiningYear: Joi.string().pattern(yearPattern).empty("").optional().messages({
+	joiningYear: Joi.string().trim().pattern(yearPattern).custom(academicYearValidator).optional().messages({
 		"string.base": "Joining year must be a string",
 		"string.pattern.base": "Joining year must be a valid year like 2023-24.",
-		"string.empty" : "Placement Type cannot be empty.",
+		"string.empty" : "Joining Year cannot be empty.",
+		"any.invalid": "Year must follow format like 2023-24 where end year is start year + 1."
 	}),
 
 }).min(1)	// at least one field is required to update
@@ -179,7 +194,7 @@ const getPlacementsValidation = Joi.object({
 		"string.max": "Search cannot exceed 100 characters"
 	}),
 
-	page: Joi.number().integer().min(1).optional().messages({
+	page: Joi.number().integer().min(1).max(1000).optional().messages({
 		"number.base": "Page must be a number",
 		"number.integer": "Page must be an integer",
 		"number.min": "Page must be at least 1"
@@ -191,6 +206,10 @@ const getPlacementsValidation = Joi.object({
 		"number.min": "Limit must be at least 1",
 		"number.max": "Limit cannot exceed 20"
 	})
+}).options({
+	stripUnknown: true,
+    convert: true,
+    abortEarly: false
 });
 
 
