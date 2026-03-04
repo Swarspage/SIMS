@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { placementService } from "../services/placementService";
 import { higherStudiesService } from "../services/higherStudiesService";
+import * as XLSX from "xlsx";
 
 // Placement Card Component - COMPACT
 function PlacementCard({ placement, onView, onDelete }) {
@@ -483,6 +484,62 @@ export default function AdminPlacement() {
   const totalData =
     activeTab === "placements" ? placements.length : higherStudies.length;
 
+  const handleExport = () => {
+    try {
+      const isPlacement = activeTab === "placements";
+
+      if (currentData.length === 0) {
+        alert("No data available to export.");
+        return;
+      }
+
+      const formattedData = currentData.map((item) => {
+        const studentId = typeof item?.stuID === "string" ? item.stuID : item?.stuID?.studentID || "N/A";
+
+        if (isPlacement) {
+          return {
+            "Student ID": studentId,
+            "Company Name": item.companyName || "N/A",
+            "Job Role": item.jobRole || "N/A",
+            "Package (LPA)": item.ctc || "N/A",
+            "Placement Type": item.placementType || "N/A",
+            "Placement Date": item.placementDate ? new Date(item.placementDate).toLocaleDateString("en-IN") : "N/A",
+            "Company Address": item.companyAddress || "N/A",
+            "HR Email": item.hrEmail || "N/A",
+          };
+        } else {
+          return {
+            "Student ID": studentId,
+            "University Name": item.universityName || "N/A",
+            "Degree": item.degree || "N/A",
+            "Specialization": item.specialization || "N/A",
+            "Country": item.country || "N/A",
+            "Duration": item.duration || "N/A",
+            "University Address": item.universityAddress || "N/A",
+          };
+        }
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+
+      // Auto-size columns
+      const colWidths = Object.keys(formattedData[0]).map(key => ({
+        wch: Math.max(key.length, ...formattedData.map(d => (d[key] ? d[key].toString().length : 0))) + 2
+      }));
+      worksheet['!cols'] = colWidths;
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, isPlacement ? "Placements" : "Higher Studies");
+
+      const fileName = `${isPlacement ? "Placements" : "Higher_Studies"}_Export_${new Date().toLocaleDateString("en-IN")}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+
+    } catch (err) {
+      console.error("Error exporting data:", err);
+      alert("Failed to export data. Please try again.");
+    }
+  };
+
   return (
     <main className="p-8 bg-slate-50 min-h-screen">
       {/* Page Header */}
@@ -533,6 +590,27 @@ export default function AdminPlacement() {
                 }`}
             >
               🎓 Higher Studies
+            </button>
+
+            {/* Export Button */}
+            <button
+              onClick={handleExport}
+              className="px-6 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm flex items-center gap-2"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Export to Excel
             </button>
 
             <button className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm">
