@@ -109,6 +109,7 @@ const changeDivisionInchargeDetailsSchema = Joi.object({
 		"string.base": "Name must be a string.",
 		"string.min": "Name must have at least 2 characters.",
 		"string.max": "Name cannot exceed 50 characters.",
+    "string.empty" : "Name cannot be empty."
 	}),
 
 	year: Joi.string().trim()
@@ -118,6 +119,7 @@ const changeDivisionInchargeDetailsSchema = Joi.object({
 		.messages({
 		"string.base": "Year must be a string.",
 		"any.only": "Year must be one of SE, TE, BE.",
+    "string.empty" : "Year cannot be empty."
 	}),
 
 	division: Joi.string().trim()
@@ -127,6 +129,7 @@ const changeDivisionInchargeDetailsSchema = Joi.object({
 		.messages({
 		"string.base": "Division must be a string.",
 		"any.only": "Division must be A, B, or C.",
+    "string.empty" : "Division cannnot be empty."
 	}),
 })
 .or("name", "year", "division")
@@ -150,6 +153,7 @@ const changeEmailOfDivisionInchargeSchema = Joi.object({
 		"string.base": "Email must be a string.",
 		"string.email": "Please enter a valid email.",
 		"any.required": "New email is required.",
+    "string.empty" : "Email cannot be empty."
 	}),
 }).options({
 	stripUnknown: true,

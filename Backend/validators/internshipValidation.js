@@ -165,6 +165,7 @@ const updateInternshipValidationSchema = Joi.object({
         "string.min": "Description must be at least 10 characters.",
         "string.max" : "Description can have a maximum of 300 characters.",
         "string.profanity": "Inappropriate Language Not Allowed.",
+        "string.empty" : "Description cannot be empty."
     })
 })
 .min(1) // At least one field is required
@@ -175,19 +176,19 @@ const updateInternshipValidationSchema = Joi.object({
 });
 
 const getInternshipsValidation = Joi.object({
-    year: Joi.string().valid("SE", "TE", "BE").optional().messages({
+    year: Joi.string().trim().valid("SE", "TE", "BE").optional().messages({
         "any.only": "Year must be SE, TE, or BE."
     }),
 
-    division: Joi.string().valid("A", "B", "C").optional().messages({
+    division: Joi.string().trim().valid("A", "B", "C").optional().messages({
         "any.only": "Division must be A, B, or C."
     }),
 
-    isPaid: Joi.string().valid("true", "false").optional().messages({
+    isPaid: Joi.string().trim().valid("true", "false").optional().messages({
         "any.only": "isPaid must be true or false."
     }),
 
-    export: Joi.string().valid("true", "false").optional().messages({
+    export: Joi.string().trim().valid("true", "false").optional().messages({
         "any.only": "export must be true or false.",
         "boolean.base": "export must be either true or false."
     }),
