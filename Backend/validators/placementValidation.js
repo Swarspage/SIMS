@@ -169,25 +169,34 @@ const getPlacementsValidation = Joi.object({
 	}),
 
 	// NEW
-    placementYear:  Joi.string().trim().pattern(yearPattern).optional().messages({
-        "string.pattern.base": "placementYear must be in format like 2023-24."
+    placementYear: Joi.string().trim().pattern(yearPattern).custom(academicYearValidator).optional().messages({
+        "string.pattern.base": "placementYear must be in format like 2023-24.",
+		"any.invalid": "Year must follow format like 2023-24 where end year is start year + 1."
     }),
-    passoutYear:    Joi.string().trim().pattern(yearPattern).optional().messages({
-        "string.pattern.base": "passoutYear must be in format like 2023-24."
+    passoutYear: Joi.string().trim().pattern(yearPattern).custom(academicYearValidator).optional().messages({
+        "string.pattern.base": "passoutYear must be in format like 2023-24.",
+		"any.invalid": "Year must follow format like 2023-24 where end year is start year + 1."
     }),
-    joiningYear:    Joi.string().trim().pattern(yearPattern).optional().messages({
-        "string.pattern.base": "joiningYear must be in format like 2023-24."
+    joiningYear: Joi.string().trim().pattern(yearPattern).custom(academicYearValidator).optional().messages({
+        "string.pattern.base": "joiningYear must be in format like 2023-24.",
+		"any.invalid": "Year must follow format like 2023-24 where end year is start year + 1."
     }),
-    packageMin:     Joi.number().min(1).max(100).optional().messages({
+    packageMin: Joi.number().min(1).max(100).optional().messages({
         "number.base": "packageMin must be a number.",
         "number.min":  "packageMin must be at least 1 LPA.",
         "number.max":  "packageMin cannot exceed 100 LPA."
     }),
-    packageMax:     Joi.number().min(Joi.ref("packageMin")).max(100).optional().messages({
-        "number.base": "packageMax must be a number.",
-        "number.min":  "packageMax must be greater than or equal to packageMin.",
-        "number.max":  "packageMax cannot exceed 100 LPA."
-    }),
+    packageMax: Joi.number()
+		.max(100)
+		.when("packageMin", {
+			is: Joi.exist(),
+			then: Joi.number().min(Joi.ref("packageMin")).max(100),
+			otherwise: Joi.number().min(1).max(100)
+		}).optional().messages({
+			"number.base": "packageMax must be a number.",
+			"number.min":  "packageMax must be greater than or equal to packageMin.",
+			"number.max":  "packageMax cannot exceed 100 LPA."
+    	}),
 
 	search: Joi.string().trim().max(100).optional().messages({
 		"string.base": "Search must be a string",
