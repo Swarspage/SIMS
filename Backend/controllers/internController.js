@@ -30,7 +30,7 @@ const fileConfigs = [
 
 const createInternship = async (req, res) => {
 
-    let uploadedFiles;
+    let uploadedFiles=null;
     let dbSaved=false; //flag to track if save to Db operations succeeds or fails
 
     try {
@@ -58,15 +58,8 @@ const createInternship = async (req, res) => {
             }
         }
 
-        const { companyName, startDate, endDate, role, durationMonths, isPaid: isPaidRaw, stipend, description } = req.body;
-
-        // Convert strings to proper types
-        const parsedDurationMonths = Number(durationMonths);
-        const parsedStipend = stipend ? Number(stipend) : undefined;
-        const parsedIsPaid = isPaidRaw === "true" || isPaidRaw === true;
-
         // Validate input using Joi
-		const { error } = internshipValidationSchema.validate({ companyName, startDate, endDate, role, durationMonths : parsedDurationMonths, isPaid: parsedIsPaid, stipend : parsedStipend, description }, { abortEarly: false });
+		const { value, error } = internshipValidationSchema.validate(req.body, { abortEarly: false });
 		if (error) {
 			const validationErrors = error.details.map(err => ({
 				field: err.path[0],
@@ -80,23 +73,29 @@ const createInternship = async (req, res) => {
 			});
 		}
 
+        const { companyName, startDate, endDate, role, durationMonths, isPaid, stipend, description } = value;
+
         // Manual check
-        if (parsedIsPaid && (parsedStipend === undefined || parsedStipend === null)) {
+        if (isPaid === true && (stipend === undefined || stipend === null)) {
             return res.status(400).json({ success: false, message: "Stipend amount required if internship is paid" });
         }
 
-        // Build stipendInfo object
-        const stipendInfo = { isPaid: parsedIsPaid };
-        if (parsedIsPaid) stipendInfo.stipend = parsedStipend;
+        if (isPaid === false && stipend !== undefined) {
+            return res.status(400).json({ success: false, message: "Stipend cannot be provided for unpaid internship" });
+        }
 
-        if (!req.files || Object.keys(req.files).length === 0) {
+        // Build stipendInfo object
+        const stipendInfo = { isPaid: isPaid };
+        if (isPaid === true) stipendInfo.stipend = stipend;
+
+        if (!req.files?.internshipReport || !req.files?.photoProof) {
 			return res.status(400).json({ success: false, message: "Photo Proof and Internship Report are required." });
 		}
 
 
         uploadedFiles = await validateAndUploadFiles(req.files, fileConfigs);
         
-
+        
         // Create Internship
         const internship = new Internship({
             stuID: stuID,
@@ -104,7 +103,7 @@ const createInternship = async (req, res) => {
             startDate,
             endDate,
             role,
-            durationMonths : parsedDurationMonths,
+            durationMonths,
             description,
             stipendInfo,
             internshipReport: {
@@ -117,10 +116,11 @@ const createInternship = async (req, res) => {
             }
         });
 
-        const saveResult = await internship.save();
-        dbSaved=true;   //set flag if DB save is sucessful
+        const savedResult = await internship.save();
+        dbSaved = true;
 
-        return res.status(201).json({ success: true, internship });
+
+        return res.status(201).json({ success: true, data: savedResult });
 
     } catch (err) {
         console.error("Error in createInternship  controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
@@ -141,10 +141,9 @@ const createInternship = async (req, res) => {
 
 const getInternships = async (req, res) => {
     try {
-        const { year, division, search, page, limit, isPaid, export : exportFlag, startDateFrom, startDateTo, endDateFrom, endDateTo } = req.query;
+        // const { year, division, search, page, limit, isPaid, export : exportFlag, startDateFrom, startDateTo, endDateFrom, endDateTo } = req.query;
         
-        const { error, value } = getInternshipsValidation.validate(
-            { year, search, page, limit, isPaid, export: exportFlag, startDateFrom, startDateTo, endDateFrom, endDateTo  },
+        const { value, error } = getInternshipsValidation.validate(req.query,
             { abortEarly: false }
         );
         if (error) {
@@ -154,6 +153,8 @@ const getInternships = async (req, res) => {
             }));
             return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
         }
+
+        const { year, division, search, page, limit, isPaid, export : exportFlag, startDateFrom, startDateTo, endDateFrom, endDateTo } = value;
 
         const isExport = value.export === 'true';
 
@@ -215,7 +216,7 @@ const getInternships = async (req, res) => {
         }
 
         if (search) {
-            const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+            const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#]/g);
             match.$or = [
                 { companyName: { $regex: safeSearch, $options: "i" } },
                 { role: { $regex: safeSearch, $options: "i" } },
@@ -623,17 +624,8 @@ const updateInternship = async (req, res) => {
             return res.status(403).json({ success: false, message: "Wrong Role." });
         }
 
-        const { companyName, startDate, endDate, role, durationMonths, isPaid: isPaidRaw, stipend, description } = req.body;
 
-        const parsedDurationMonths = durationMonths !== undefined ? Number(durationMonths) : undefined;
-        const parsedStipend = stipend !== undefined ? Number(stipend) : undefined;
-        const parsedIsPaid = isPaidRaw !== undefined ? (isPaidRaw === "true" || isPaidRaw === true) : undefined;
-
-
-        const { error , value:updatedData } = updateInternshipValidationSchema.validate(
-            { companyName, startDate, endDate, role, durationMonths: parsedDurationMonths, isPaid: parsedIsPaid, stipend: parsedStipend, description },
-            { abortEarly: false }
-        );
+        const { error , value:updatedData } = updateInternshipValidationSchema.validate(req.body, { abortEarly: false });
 
         if (error) {
             const validationErrors = error.details.map(err => ({
@@ -644,19 +636,64 @@ const updateInternship = async (req, res) => {
             return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
         }
 
-        if (parsedIsPaid && (parsedStipend === undefined || parsedStipend === null)) {
-            return res.status(400).json({ success: false, message: "Stipend amount required if internship is paid" });
+
+        // determine final isPaid value
+        const finalIsPaid =
+            updatedData.isPaid !== undefined
+                ? updatedData.isPaid
+                : existingInternship.stipendInfo?.isPaid;
+
+        // determine stipend value
+        const stipend =
+            updatedData.stipend !== undefined
+                ? updatedData.stipend
+                : existingInternship.stipendInfo?.stipend;
+
+
+        // VALIDATION
+        if (finalIsPaid === true && (stipend === undefined || stipend === null)) {
+            return res.status(400).json({
+                success: false,
+                message: "Stipend amount required if internship is paid"
+            });
         }
 
-        if (parsedIsPaid !== undefined) {
-            updatedData.stipendInfo = {
-                isPaid: parsedIsPaid,
-                ...(parsedIsPaid && { stipend: parsedStipend })
-            };
+        if (finalIsPaid === false && updatedData.stipend !== undefined) {
+            return res.status(400).json({
+                success: false,
+                message: "Stipend cannot be provided for unpaid internship"
+            });
+        }
 
-            // Remove flat fields so they don't go to DB
-            delete updatedData.isPaid;
-            delete updatedData.stipend;
+
+        // build stipendInfo object
+        updatedData.stipendInfo = {
+            isPaid: finalIsPaid,
+            ...(finalIsPaid && { stipend })
+        };
+
+        // remove flat fields
+        delete updatedData.isPaid;
+        delete updatedData.stipend;
+
+
+        const finalStartDate =
+        updatedData.startDate ?? existingInternship.startDate;
+
+        const finalEndDate =
+            updatedData.endDate ?? existingInternship.endDate;
+
+        const finalDuration =
+            updatedData.durationMonths ?? existingInternship.durationMonths;
+
+        const diffDays = (new Date(finalEndDate) - new Date(finalStartDate)) / (1000 * 60 * 60 * 24);
+        const diffMonths = Math.floor(diffDays / 30) || 1;
+
+        if (diffMonths !== finalDuration) {
+            return res.status(400).json({
+                success:false,
+                message:"Duration does not match startDate and endDate"
+            });
         }
 
         /* FILE HANDLING LOGIC */
