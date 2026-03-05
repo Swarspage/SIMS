@@ -19,6 +19,7 @@ export default function StudentInformation() {
     branch: "",
     year: "",
     division: "",
+    academicYear: "",
     dob: "",
     bloodGroup: "",
     currentStreet: "",
@@ -74,6 +75,7 @@ export default function StudentInformation() {
           branch: s.branch || "",
           year: s.year || "",
           division: s.division || "",
+          academicYear: s.academicYear || "",
           dob: s.dob ? new Date(s.dob).toISOString().split("T")[0] : "",
           bloodGroup: s.bloodGroup || "",
           currentStreet: s.currentAddress?.street || "",
@@ -240,6 +242,10 @@ export default function StudentInformation() {
                     <p className="text-xs text-slate-500 uppercase font-bold tracking-wide">ABC ID</p>
                     <p className="text-base font-medium text-slate-800">{formData.abcId}</p>
                   </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wide">Academic Year</p>
+                    <p className="text-base font-medium text-slate-800">{formData.academicYear || "N/A"}</p>
+                  </div>
                 </div>
               </div>
 
@@ -390,6 +396,7 @@ export default function StudentInformation() {
               <SelectField label="Branch" name="branch" value={formData.branch} onChange={handleChange} options={branches} required />
               <SelectField label="Year" name="year" value={formData.year} onChange={handleChange} options={years} required />
               <SelectField label="Division" name="division" value={formData.division} onChange={handleChange} options={divisions} required />
+              <InputField label="Academic Year" name="academicYear" value={formData.academicYear} onChange={handleChange} required placeholder="e.g. 2024-2025" title="Format: YYYY-YYYY (e.g. 2024-2025)" />
             </div>
           </section>
 
