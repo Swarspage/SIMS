@@ -1,6 +1,8 @@
 // const Joi = require("joi");
 const Joi = require("../helpers/profanity/joiWithProfanity");
 
+// so for createInternship - we only need ot take care of the durationValidator rest evcerything is fine
+
 //CHNAGES TO BE DONE:-
 //make only YYYY-MM-DD type  od date acceptable and not YYYY/MM/DD because mongoose wont accept dates with "/" . the YYYY-MM-DD workds for joi.date and also for mongoose type:Date
 
@@ -9,7 +11,7 @@ const Joi = require("../helpers/profanity/joiWithProfanity");
 //What Joi.date() does: It accepts strings like "2024-01-15", "2024/01/15", ISO strings, or Date objects and converts them all to JS Date objects automatically
 
 
-//IMP Notes:-
+//IMP Notes related to durationValidator:-
 /*
 -> The / 30 fractional part accounts for day differences within a month before rounding, making it reasonably accurate without being too strict.
 
@@ -18,6 +20,21 @@ const Joi = require("../helpers/profanity/joiWithProfanity");
 -> The .custom() runs after all individual field validations pass, so startDate, endDate, and durationMonths are already guaranteed to be valid values when this check runs.
 */
 
+const strictDate = Joi.date()
+  .custom((value, helpers) => {
+    const original = helpers.original;
+
+    if (typeof original === "string" && !/^\d{4}-\d{2}-\d{2}$/.test(original)) {
+      return helpers.error("date.format");
+    }
+
+    return value;
+  })
+  .messages({
+    "date.base": "Date must be a valid date.",
+    "date.format": "Date must be in YYYY-MM-DD format."
+  });
+// duration validator is not proper yet --we have to change this
 const validateDurationMonths = (value, helpers) => {
     const { startDate, endDate, durationMonths } = value;
 
@@ -26,11 +43,8 @@ const validateDurationMonths = (value, helpers) => {
         const end = new Date(endDate);
 
         // Calculate the difference in months (rounded)
-        const diffMonths = Math.round(
-            (end.getFullYear() - start.getFullYear()) * 12 +
-            (end.getMonth() - start.getMonth()) +
-            (end.getDate() - start.getDate()) / 30
-        );
+        const diffDays = (end - start) / (1000 * 60 * 60 * 24);
+        const diffMonths = Math.floor(diffDays / 30) || 1;
 
         if (diffMonths !== durationMonths) {
             return helpers.error("object.durationMismatch");
@@ -63,12 +77,12 @@ const internshipValidationSchema = Joi.object({
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    startDate: Joi.date().max("now").required().messages({
+    startDate: strictDate.max("now").required().messages({
         "date.base": "Start date must be a valid date.",
         "any.required": "Start date is required."
     }),
 
-    endDate: Joi.date().max("now").greater(Joi.ref("startDate")).required().messages({
+    endDate: strictDate.max("now").greater(Joi.ref("startDate")).required().messages({
         "date.base": "End date must be a valid date.",
         "date.greater": "End date must be greater than start date.",
         "any.required": "End date is required."
@@ -131,13 +145,19 @@ const updateInternshipValidationSchema = Joi.object({
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    startDate: Joi.date().max("now").optional().messages({
+    startDate: strictDate.max("now").optional().messages({
         "date.base": "Start date must be a valid date."
     }),
 
-    endDate: Joi.date().max("now").greater(Joi.ref("startDate")).optional().messages({
+
+    endDate: strictDate.max("now").when("startDate", {
+        is: Joi.exist(),
+        then: strictDate.max("now").greater(Joi.ref("startDate")),
+        otherwise: strictDate.max("now")
+    }).messages({
         "date.base": "End date must be a valid date.",
-        "date.greater": "End date must be greater than start date."
+        "date.greater": "End date must be greater than start date.",
+        "date.max": "End date cannot be in the future."
     }),
 
     durationMonths: Joi.number().integer().min(1).max(6).optional().messages({

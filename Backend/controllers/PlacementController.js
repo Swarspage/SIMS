@@ -3,6 +3,7 @@ const Student = require("../models/Student");
 const cloudinary = require("../config/cloudinaryConfig");
 const {createPlacementSchema, updatePlacementSchema, getPlacementsValidation} = require("../validators/placementValidation");
 const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
+const {deleteFromCloudinary} = require("../helpers/cloudinary/DeleteFromCloudinary");
 const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
 const mongoose= require("mongoose");
 const exportToExcel = require('../helpers/excel/exportToExcel');
@@ -177,11 +178,15 @@ const updatePlacement = async (req, res) => {
 		// Logical validation
 		const extractStartYear = (year) => Number(year.split("-")[0]);
 
-		if (updatedData.placementYear && updatedData.joiningYear) {
-			if (extractStartYear(updatedData.placementYear) > extractStartYear(updatedData.joiningYear)) {
-				return res.status(400).json({ success: false, message: "Placement Year cannot be greater than Joining Year" });
-					
-			}
+		const placementYearFinal =
+		updatedData.placementYear || existingPlacement.placementYear;
+
+		const joiningYearFinal =
+		updatedData.joiningYear || existingPlacement.joiningYear;
+
+		if (extractStartYear(placementYearFinal) > extractStartYear(joiningYearFinal)) {
+			return res.status(400).json({ success: false, message: "Placement Year cannot be greater than Joining Year" });
+				
 		}
 
 
@@ -201,8 +206,8 @@ const updatePlacement = async (req, res) => {
 
 				// delete old
 				if (oldPublicId) {
-					await cloudinary.uploader.destroy(oldPublicId).catch((err) => {
-						console.error("Error in updatePlacement:", err);
+					await deleteFromCloudinary(oldPublicId).catch((err) => {
+						console.error(`Error in updatePlacement -Failed to delete old placementProof id = ${oldPublicId}:`, err);
 					});
 				}
 			}
@@ -259,7 +264,7 @@ const getPlacements = async (req, res) => {
 		const packageMax    = req.query.packageMax;
 
 		const { error, value } = getPlacementsValidation.validate(
-			{ year, search, page, limit, placementType, export: exportFlag,placementYear, passoutYear, joiningYear, packageMin, packageMax },
+			{ year, division, search, page, limit, placementType, export: exportFlag,placementYear, passoutYear, joiningYear, packageMin, packageMax },
 			{ abortEarly: false }
 		);
 		if (error) {
@@ -320,7 +325,8 @@ const getPlacements = async (req, res) => {
 		}
 
 		if (search) {
-			const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+			// const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+			const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 			match.$or = [
 				{ companyName: { $regex: safeSearch, $options: "i" } },
 				{ role: { $regex: safeSearch, $options: "i" } },
