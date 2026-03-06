@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { achievementService } from "../services/achievementService";
+import { toast } from "react-toastify";
 
 // Achievement Card Component - COMPACT & BEAUTIFUL
-function AchievementCard({ achievement, onView, onDelete }) {
+function AchievementCard({ achievement, onView, onDelete, onEdit }) {
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
       {/* Image Section */}
@@ -20,7 +21,7 @@ function AchievementCard({ achievement, onView, onDelete }) {
       {/* Content Section */}
       <div className="p-4 flex flex-col flex-grow">
         {/* Student ID */}
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2 hidden">
           {typeof achievement?.stuID === "string"
             ? achievement.stuID
             : achievement?.stuID?.studentID || "N/A"}
@@ -74,6 +75,12 @@ function AchievementCard({ achievement, onView, onDelete }) {
             className="flex-1 px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
           >
             View
+          </button>
+          <button
+            onClick={() => onEdit && onEdit(achievement)}
+            className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors"
+          >
+            Edit
           </button>
           <button
             onClick={() => onDelete && onDelete(achievement._id)}
@@ -239,6 +246,355 @@ function DetailModal({ achievement, onClose }) {
   );
 }
 
+// Form Modal Component (Add / Edit)
+function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
+  const [formData, setFormData] = useState({
+    stuID: "",
+    title: "",
+    category: "Coding competitions",
+    achievementType: "Participation",
+    level: "",
+    rank: "",
+    org: "",
+    dateFrom: "",
+    dateTo: "",
+    description: "",
+  });
+
+  const [files, setFiles] = useState({
+    eventPhoto: null,
+    certificate: null,
+    course_certificate: null,
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (achievement) {
+        setFormData({
+          stuID: typeof achievement.stuID === "string" ? achievement.stuID : achievement.stuID?.studentID || "",
+          title: achievement.title || "",
+          category: achievement.category || "Coding competitions",
+          achievementType: achievement.achievementType || "Participation",
+          level: achievement.level || "",
+          rank: achievement.rank || "",
+          org: achievement.org || "",
+          dateFrom: achievement.date?.from ? new Date(achievement.date.from).toISOString().split('T')[0] : "",
+          dateTo: achievement.date?.to ? new Date(achievement.date.to).toISOString().split('T')[0] : "",
+          description: achievement.description || "",
+        });
+      } else {
+        setFormData({
+          stuID: "",
+          title: "",
+          category: "Coding competitions",
+          achievementType: "Participation",
+          level: "",
+          rank: "",
+          org: "",
+          dateFrom: "",
+          dateTo: "",
+          description: "",
+        });
+      }
+      setFiles({
+        eventPhoto: null,
+        certificate: null,
+        course_certificate: null,
+      });
+    }
+  }, [isOpen, achievement]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    const { name, files: selectedFiles } = e.target;
+    setFiles((prev) => ({ ...prev, [name]: selectedFiles[0] }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const data = new FormData();
+
+      // Append form fields
+      data.append('stuID', formData.stuID);
+      data.append('title', formData.title);
+      data.append('category', formData.category);
+      data.append('achievementType', formData.achievementType);
+      if (formData.level) data.append('level', formData.level);
+      if (formData.rank) data.append('rank', formData.rank);
+      if (formData.org) data.append('org', formData.org);
+      if (formData.description) data.append('description', formData.description);
+
+      // Date object restructuring based on backend validation logic
+      data.append('date[from]', formData.dateFrom);
+      if (formData.dateTo) data.append('date[to]', formData.dateTo);
+
+      // Append files
+      if (files.eventPhoto) data.append('eventPhoto', files.eventPhoto);
+      if (files.certificate) data.append('certificate', files.certificate);
+      if (files.course_certificate) data.append('course_certificate', files.course_certificate);
+
+      if (achievement) {
+        await achievementService.updateAchievement(achievement._id, data);
+        toast.success("Achievement updated successfully!");
+      } else {
+        await achievementService.createAchievement(data);
+        toast.success("Achievement added successfully!");
+      }
+      onSave(); // Refresh list
+      onClose(); // Close modal
+    } catch (err) {
+      console.error("Error saving achievement:", err);
+      toast.error(err.response?.data?.message || "Failed to save achievement.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-slideUp">
+        <div className="sticky top-0 z-10 p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+          <h2 className="text-xl font-bold text-slate-900">
+            {achievement ? "Edit Achievement" : "Add New Achievement"}
+          </h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {/* Student ID */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
+              <input
+                type="text"
+                name="stuID"
+                required
+                value={formData.stuID}
+                onChange={handleChange}
+                placeholder="e.g. 2024COMP123"
+                disabled={!!achievement} // Prevent editing student ID if updating
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+              />
+            </div>
+
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Title *</label>
+              <input
+                type="text"
+                name="title"
+                required
+                value={formData.title}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Category *</label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Coding competitions">Coding Competitions</option>
+                <option value="Committee">Committee</option>
+                <option value="Hackathons">Hackathons</option>
+                <option value="Sports">Sports</option>
+                <option value="Cultural">Cultural</option>
+                <option value="Technical">Technical</option>
+                <option value="Research Papers">Research Papers</option>
+                <option value="MOOCs">MOOCs</option>
+                <option value="Others">Others</option>
+              </select>
+            </div>
+
+            {/* Achievement Type */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Type *</label>
+              <select
+                name="achievementType"
+                value={formData.achievementType}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Winner">Winner</option>
+                <option value="Runner-up">Runner-up</option>
+                <option value="Participation">Participation</option>
+                <option value="Completed">Completed</option>
+                <option value="Published">Published</option>
+              </select>
+            </div>
+
+            {/* Level */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Level</label>
+              <select
+                name="level"
+                value={formData.level}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Level</option>
+                <option value="Department">Department</option>
+                <option value="College">College</option>
+                <option value="State">State</option>
+                <option value="National">National</option>
+                <option value="International">International</option>
+              </select>
+            </div>
+
+            {/* Rank */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Rank/Position</label>
+              <input
+                type="text"
+                name="rank"
+                value={formData.rank}
+                onChange={handleChange}
+                placeholder="e.g. 1st, 2nd, Top 10"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Organizing Body */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Organizing Body</label>
+              <input
+                type="text"
+                name="org"
+                value={formData.org}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Date (From) *</label>
+                <input
+                  type="date"
+                  name="dateFrom"
+                  required
+                  value={formData.dateFrom}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Date (To)</label>
+                <input
+                  type="date"
+                  name="dateTo"
+                  value={formData.dateTo}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Description</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows="3"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              ></textarea>
+            </div>
+
+            {/* Event Photo */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">
+                Event Photo (Optional)
+              </label>
+              <input
+                type="file"
+                name="eventPhoto"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Certificate */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">
+                Event Certificate (Optional)
+              </label>
+              <input
+                type="file"
+                name="certificate"
+                accept=".pdf, image/*"
+                onChange={handleFileChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+            </div>
+
+            {/* Course Certificate */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-1">
+                Course Certificate (For MOOCs/Courses)
+              </label>
+              <input
+                type="file"
+                name="course_certificate"
+                accept=".pdf, image/*"
+                onChange={handleFileChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+            </div>
+
+          </div>
+
+          <div className="pt-6 flex justify-end gap-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 focus:ring-2 focus:ring-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-6 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                "Save Achievement"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // Main Admin Achievements Page Component
 export default function AdminAchievements() {
   const [achievements, setAchievements] = useState([]);
@@ -251,6 +607,8 @@ export default function AdminAchievements() {
 
   // Modal State
   const [selectedAchievement, setSelectedAchievement] = useState(null);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [achievementToEdit, setAchievementToEdit] = useState(null);
 
   // Fetch achievements from backend when component loads
   useEffect(() => {
@@ -274,6 +632,27 @@ export default function AdminAchievements() {
       setAchievements([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const params = {};
+      if (selectedCategory) params.category = selectedCategory;
+      if (selectedType) params.type = selectedType;
+      if (searchQuery) params.search = searchQuery;
+
+      const blob = await achievementService.exportAchievements(params);
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Achievements_Export_${new Date().toLocaleDateString("en-IN")}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      console.error("Error exporting achievements:", err);
+      toast.error("Failed to export achievements. Please try again.");
     }
   };
 
@@ -314,15 +693,26 @@ export default function AdminAchievements() {
     setSelectedAchievement(null);
   };
 
+  const handleEdit = (achievement) => {
+    setAchievementToEdit(achievement);
+    setIsFormModalOpen(true);
+  };
+
+  const handleAddAchievement = () => {
+    setAchievementToEdit(null);
+    setIsFormModalOpen(true);
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this achievement?"))
       return;
     try {
       await achievementService.deleteAchievement(id);
       fetchAchievements();
+      toast.success("Achievement deleted successfully!");
     } catch (err) {
       console.error("Error deleting achievement:", err);
-      alert("Failed to delete achievement");
+      toast.error("Failed to delete achievement.");
     }
   };
 
@@ -399,8 +789,32 @@ export default function AdminAchievements() {
             </button>
           )}
 
+          {/* Export Button */}
+          <button
+            onClick={handleExport}
+            className="px-6 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm ml-auto flex items-center gap-2"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            Export to Excel
+          </button>
+
           {/* Add Button */}
-          <button className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm ml-auto">
+          <button
+            onClick={handleAddAchievement}
+            className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm ml-2"
+          >
             + Add Achievement
           </button>
         </div>
@@ -457,6 +871,7 @@ export default function AdminAchievements() {
                 key={achievement?._id}
                 achievement={achievement}
                 onView={handleView}
+                onEdit={handleEdit}
                 onDelete={handleDelete}
               />
             ))}
@@ -471,6 +886,14 @@ export default function AdminAchievements() {
           onClose={handleCloseModal}
         />
       )}
+
+      {/* Form Modal (Add / Edit) */}
+      <AchievementFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        achievement={achievementToEdit}
+        onSave={fetchAchievements}
+      />
     </main>
   );
 }

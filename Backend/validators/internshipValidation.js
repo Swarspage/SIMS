@@ -1,27 +1,88 @@
 // const Joi = require("joi");
 const Joi = require("../helpers/profanity/joiWithProfanity");
 
+// so for createInternship - we only need ot take care of the durationValidator rest evcerything is fine
+
+//CHNAGES TO BE DONE:-
+//make only YYYY-MM-DD type  od date acceptable and not YYYY/MM/DD because mongoose wont accept dates with "/" . the YYYY-MM-DD workds for joi.date and also for mongoose type:Date
+
+
+// we have used JOi.date() for date related stuff
+//What Joi.date() does: It accepts strings like "2024-01-15", "2024/01/15", ISO strings, or Date objects and converts them all to JS Date objects automatically
+
+
+//IMP Notes related to durationValidator:-
+/*
+-> The / 30 fractional part accounts for day differences within a month before rounding, making it reasonably accurate without being too strict.
+
+-> Math.round() gives a ±15 day tolerance, so e.g. Jan 1 → Feb 14 would round to 1 month. If you want stricter matching, use Math.floor() instead.
+
+-> The .custom() runs after all individual field validations pass, so startDate, endDate, and durationMonths are already guaranteed to be valid values when this check runs.
+*/
+
+const strictDate = Joi.date()
+  .custom((value, helpers) => {
+    const original = helpers.original;
+
+    if (typeof original === "string" && !/^\d{4}-\d{2}-\d{2}$/.test(original)) {
+      return helpers.error("date.format");
+    }
+
+    return value;
+  })
+  .messages({
+    "date.base": "Date must be a valid date.",
+    "date.format": "Date must be in YYYY-MM-DD format."
+  });
+// duration validator is not proper yet --we have to change this
+const validateDurationMonths = (value, helpers) => {
+    const { startDate, endDate, durationMonths } = value;
+
+    if (startDate && endDate && durationMonths !== undefined) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        // Calculate the difference in months (rounded)
+        const diffDays = (end - start) / (1000 * 60 * 60 * 24);
+        const diffMonths = Math.round(diffDays / 30) || 0;
+
+        if (diffMonths !== durationMonths) {
+            return helpers.error("object.durationMismatch");
+        }
+    }
+
+    return value;
+
+};
+
+const durationMismatchMessage = {
+    "object.durationMismatch": "Duration in months does not match the difference between start and end dates."
+};
+
+
 const internshipValidationSchema = Joi.object({
-    companyName: Joi.string().trim().min(2).max(200).required().messages({
+    companyName: Joi.string().trim().min(2).max(200).noProfanity().required().messages({
         "string.base": "Company name must be a string.",
         "string.min": "Company name must have at least 2 characters.",
         "string.max" : "Company Name can have a maximum of 200 characters.",
-        "any.required": "Company name is required."
+        "any.required": "Company name is required.",
+        "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    role: Joi.string().trim().min(2).max(200).required().messages({
+    role: Joi.string().trim().min(2).max(200).noProfanity().required().messages({
         "string.base": "Role must be a string.",
         "string.min": "Role must have at least 2 characters.",
         "string.max" : "Role can have a maximum of 200 characters.",
-        "any.required": "Role is required."
+        "any.required": "Role is required.",
+        "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    startDate: Joi.date().max("now").required().messages({
+    startDate: strictDate.max("now").required().messages({
         "date.base": "Start date must be a valid date.",
         "any.required": "Start date is required."
     }),
 
-    endDate: Joi.date().max("now").greater(Joi.ref("startDate")).required().messages({
+    endDate: strictDate.max("now").greater(Joi.ref("startDate")).required().messages({
         "date.base": "End date must be a valid date.",
         "date.greater": "End date must be greater than start date.",
         "any.required": "End date is required."
@@ -55,9 +116,12 @@ const internshipValidationSchema = Joi.object({
         "string.min": "Description must be at least 10 characters.",
         "string.max" : "Description can have a maximum of 300 characters.",
         "any.required": "Description is required.",
-        "string.profanity": "Description contains inappropriate language."
+        "string.profanity": "Inappropriate Language Not Allowed.",
     })
-}).options({
+})
+.custom(validateDurationMonths)
+.messages(durationMismatchMessage)
+.options({
     stripUnknown: true,
     convert: true,        
     abortEarly : false,
@@ -65,25 +129,35 @@ const internshipValidationSchema = Joi.object({
 
 
 const updateInternshipValidationSchema = Joi.object({
-    companyName: Joi.string().trim().min(2).max(200).empty("").optional().messages({
+    companyName: Joi.string().trim().min(2).max(200).noProfanity().optional().messages({
         "string.base": "Company name must be a string.",
         "string.min": "Company name must have at least 2 characters.",
-        "string.max" : "Company name can have a maximum of 200 characters."
+        "string.max" : "Company name can have a maximum of 200 characters.",
+        "string.empty" : "Company Name cannot be empty.",
+        "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    role: Joi.string().trim().min(2).max(200).empty("").optional().messages({
+    role: Joi.string().trim().min(2).max(200).noProfanity().optional().messages({
         "string.base": "Role must be a string.",
         "string.min": "Role must have at least 2 characters.",
-        "string.max" : "Role can have a maximum of 200 characters."
+        "string.max" : "Role can have a maximum of 200 characters.",
+        "string.empty" : "Role cannot be empty.",
+        "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    startDate: Joi.date().max("now").optional().messages({
+    startDate: strictDate.max("now").optional().messages({
         "date.base": "Start date must be a valid date."
     }),
 
-    endDate: Joi.date().max("now").greater(Joi.ref("startDate")).optional().messages({
+
+    endDate: strictDate.max("now").when("startDate", {
+        is: Joi.exist(),
+        then: strictDate.max("now").greater(Joi.ref("startDate")),
+        otherwise: strictDate.max("now")
+    }).messages({
         "date.base": "End date must be a valid date.",
-        "date.greater": "End date must be greater than start date."
+        "date.greater": "End date must be greater than start date.",
+        "date.max": "End date cannot be in the future."
     }),
 
     durationMonths: Joi.number().integer().min(1).max(6).optional().messages({
@@ -106,10 +180,12 @@ const updateInternshipValidationSchema = Joi.object({
         otherwise: Joi.forbidden()
     }),
 
-    description: Joi.string().trim().min(10).max(300).empty("").optional().messages({
+    description: Joi.string().trim().min(10).max(300).noProfanity().optional().messages({
         "string.base": "Description must be a string.",
         "string.min": "Description must be at least 10 characters.",
-        "string.max" : "Description can have a maximum of 300 characters."
+        "string.max" : "Description can have a maximum of 300 characters.",
+        "string.profanity": "Inappropriate Language Not Allowed.",
+        "string.empty" : "Description cannot be empty."
     })
 })
 .min(1) // At least one field is required
@@ -120,23 +196,40 @@ const updateInternshipValidationSchema = Joi.object({
 });
 
 const getInternshipsValidation = Joi.object({
-    year: Joi.string().valid("SE", "TE", "BE").optional().messages({
+    year: Joi.string().trim().valid("SE", "TE", "BE").optional().messages({
         "any.only": "Year must be SE, TE, or BE."
     }),
 
-    division: Joi.string().valid("A", "B", "C").optional().messages({
+    division: Joi.string().trim().valid("A", "B", "C").optional().messages({
         "any.only": "Division must be A, B, or C."
     }),
 
-    isPaid: Joi.string().valid("true", "false").optional().messages({
+    isPaid: Joi.string().trim().valid("true", "false").optional().messages({
         "any.only": "isPaid must be true or false."
     }),
 
-    export: Joi.string().valid("true", "false").optional().messages({
-        "any.only": "export must be true or false."
+    export: Joi.string().trim().valid("true", "false").optional().messages({
+        "any.only": "export must be true or false.",
+        "boolean.base": "export must be either true or false."
     }),
 
-    search: Joi.string().max(100).optional().messages({
+    // NEW
+    startDateFrom: Joi.date().optional().messages({
+        "date.base": "startDateFrom must be a valid date."
+    }),
+    startDateTo: Joi.date().min(Joi.ref("startDateFrom")).optional().messages({
+        "date.base": "startDateTo must be a valid date.",
+        "date.min": "startDateTo must be after startDateFrom."
+    }),
+    endDateFrom: Joi.date().optional().messages({
+        "date.base": "endDateFrom must be a valid date."
+    }),
+    endDateTo: Joi.date().min(Joi.ref("endDateFrom")).optional().messages({
+        "date.base": "endDateTo must be a valid date.",
+        "date.min": "endDateTo must be after endDateFrom."
+    }),
+
+    search: Joi.string().trim().max(100).optional().messages({
         "string.base": "Search must be a string.",
         "string.max": "Search cannot exceed 100 characters."
     }),

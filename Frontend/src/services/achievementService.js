@@ -70,4 +70,13 @@ export const achievementService = {
     const response = await API.get("/achievements/all");
     return response.data.data;
   },
+
+  // Export achievements (Admin only)
+  exportAchievements: async (params) => {
+    const response = await API.get("/achievements/all", {
+      params: { ...params, export: "true" },
+      responseType: "blob",
+    });
+    return response.data;
+  },
 };

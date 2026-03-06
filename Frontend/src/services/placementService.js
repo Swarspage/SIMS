@@ -23,9 +23,9 @@ export const placementService = {
     return response.data;
   },
 
-  // ✅ FIXED: Get all placements (Admin)
-  getAllPlacements: async () => {
-    const response = await API.get("/placement");
+  // Get all placements (Admin) — accepts filter params for server-side filtering
+  getAllPlacements: async (params = {}) => {
+    const response = await API.get("/placement", { params });
     return response.data;
   },
 

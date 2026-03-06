@@ -13,7 +13,7 @@ export default function StudentProfileSidebar({ student, isOpen, onClose }) {
       ></div>
 
       {/* Sidebar Panel */}
-      <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 overflow-y-auto transform transition-transform duration-300 flex flex-col">
+      <div className="fixed right-0 top-0 h-full w-full max-w-sm sm:max-w-md bg-white shadow-2xl z-50 overflow-y-auto transform transition-transform duration-300 flex flex-col">
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 flex items-center justify-between border-b border-blue-700">
           <h2 className="text-lg font-semibold">Student Profile</h2>

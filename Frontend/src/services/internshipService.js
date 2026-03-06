@@ -10,9 +10,9 @@ export const internshipService = {
     return response.data;
   },
 
-  // ✅ FIXED: Get all internships (Admin) - was calling wrong endpoint!
-  getAllInternships: async () => {
-    const response = await API.get("/internship"); // Correct endpoint
+  // Get all internships (Admin) — accepts filter params for server-side filtering
+  getAllInternships: async (params = {}) => {
+    const response = await API.get("/internship", { params });
     return response.data;
   },
 
@@ -48,6 +48,15 @@ export const internshipService = {
   // Delete internship
   deleteInternship: async (internshipId) => {
     const response = await API.delete(`/internship/${internshipId}`);
+    return response.data;
+  },
+
+  // Export internships (Admin only)
+  exportInternships: async (params) => {
+    const response = await API.get("/internship", {
+      params: { ...params, export: "true" },
+      responseType: "blob",
+    });
     return response.data;
   },
 };

@@ -8,6 +8,10 @@ const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUpl
 const mongoose = require("mongoose");
 
 const { createHigherStudySchema, updateHigherStudySchema, getHigherStudiesValidation } = require("../validators/higherStudiesValidation");
+const exportToExcel = require('../helpers/excel/exportToExcel');
+const { transformHigherStudy, higherStudyColumnMap } = require('../helpers/excel/exportTransformers');
+
+
 
 const fileConfigs = [
   {
@@ -144,8 +148,168 @@ const getSingleHigherStudy = async (req, res) => {
     }
 };
 
-// GET HIGHER STUDIES --with filter, search and pagination --admin or divisionIncharge
+
 const getHigherStudies = async (req, res) => {
+    try {
+        const { year, division, search, page, limit, examName, export: exportFlag } = req.query;
+        
+        const { error, value } = getHigherStudiesValidation.validate(
+            { year, division, search, page, limit, examName, export: exportFlag },
+            { abortEarly: false }
+        );
+        if (error) {
+            const validationErrors = error.details.map(err => ({
+                field: err.path[0],
+                message: err.message
+            }));
+            return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
+        }
+
+        const isExport = value.export === 'true';
+
+        if (req.user.role === "divisionIncharge") {
+            if ((year && year !== req.user.year) || (division && division !== req.user.division)) {
+                return res.status(403).json({ success: false, message: "You can only access students of your division." });
+            }
+        }
+
+        const pageNum = value.page || 1;
+        const limitNum = Math.min(value.limit || 10, 20);
+        const skip = (pageNum - 1) * limitNum;
+
+        // Shared pipeline
+        const pipeline = [];
+
+        pipeline.push({
+            $lookup: {
+                from: "students",
+                localField: "stuID",
+                foreignField: "_id",
+                as: "student"
+            }
+        });
+
+        pipeline.push({
+            $unwind: {
+                path: "$student",
+                preserveNullAndEmptyArrays: true
+            }
+        });
+
+        const match = {};
+
+        if (req.user.role === "divisionIncharge") {
+            match["student.year"] = req.user.year;
+            match["student.division"] = req.user.division;
+        } else if (req.user.role === "admin") {
+            if (year) match["student.year"] = year.trim();
+            if (division) match["student.division"] = division.trim();
+        } else {
+            return res.status(403).json({ success: false, message: "Unauthorized role." });
+        }
+
+        if (examName) match["examName"] = examName.trim();
+        if (search) {
+            const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+            match.$or = [
+                { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
+                { "student.name.middleName": { $regex: safeSearch, $options: "i" } },
+                { "student.name.lastName": { $regex: safeSearch, $options: "i" } },
+                { "examName": { $regex: safeSearch, $options: "i" } },
+            ];
+        }
+
+        if (Object.keys(match).length) pipeline.push({ $match: match });
+
+        // Define projection fields for export and pagination
+        const exportFields = {
+            stuID: "$student._id",
+            studentID: "$student.studentID",
+            PRN: "$student.PRN",
+            studentName: "$student.name",
+            studentYear: "$student.year",
+            studentDivision: "$student.division",
+            studentBranch: "$student.branch",
+            studentDob: "$student.dob",
+            studentBloodGroup: "$student.bloodGroup",
+            studentCategory: "$student.category",
+            studentAbcId: "$student.abcId",
+            studentMobileNo: "$student.mobileNo",
+            studentParentMobileNo: "$student.parentMobileNo",
+            studentEmail: "$student.email",
+            studentParentEmail: "$student.parentEmail",
+            studentCurrentAddress: "$student.currentAddress",
+            studentNativeAddress: "$student.nativeAddress",
+            examName: 1,
+            score: 1,
+            marksheet: 1,
+            idCardPhoto: 1
+        };
+
+        const leanFields = {
+            stuID: "$student._id",
+            studentName: "$student.name",
+            studentYear: "$student.year",
+            examName: 1,
+            score: 1,
+            marksheet: 1,
+            idCardPhoto: 1
+        };
+
+        // Export branch
+        if (isExport) {
+            const higherStudiesData = await HigherStudies.aggregate([
+                ...pipeline,
+                { $sort: { createdAt: -1 } },
+                { $project: exportFields },
+            ]);
+
+            const rows = higherStudiesData.map(transformHigherStudy); // You'll need to create this transform function
+            
+            const buffer = await exportToExcel(rows, 'HigherStudies', higherStudyColumnMap); // You'll need to create the column map
+            if (!buffer) return res.status(500).json({ success: false, message: 'Export failed.' });
+
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename="Higher_Studies.xlsx"');
+            return res.send(buffer);
+        }
+
+        // Paginated branch 
+        const results = await HigherStudies.aggregate([
+            ...pipeline,
+            {
+                $facet: {
+                    data: [
+                        { $sort: { createdAt: -1 } },
+                        { $skip: skip },
+                        { $limit: limitNum },
+                        { $project: leanFields }
+                    ],
+                    totalCount: [{ $count: "total" }]
+                }
+            }
+        ]);
+
+        const higherStudies = results[0]?.data || [];
+        const total = results[0]?.totalCount[0]?.total || 0;
+
+        return res.json({
+            success: true,
+            data: higherStudies,
+            total,
+            page: pageNum,
+            totalPages: Math.ceil(total / limitNum),
+        });
+
+    } catch (err) {
+        console.error("Error in getHigherStudies:", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+        return res.status(500).json({ success: false, message: err.message || "Some Error Occurred. Please Try Again Later." });
+    }
+};
+
+
+// GET HIGHER STUDIES --with filter, search and pagination --admin or divisionIncharge
+const getHigherStudies2 = async (req, res) => {
     try {
         const { year, division, search, page, limit, examName } = req.query;
         const { error, value } = getHigherStudiesValidation.validate({ year, division, search, page, limit, examName }, { abortEarly: false });

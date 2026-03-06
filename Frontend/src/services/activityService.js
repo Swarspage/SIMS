@@ -40,4 +40,13 @@ export const activityService = {
     const response = await API.get(`/activities/student/${studentId}`);
     return response.data;
   },
+
+  // Export activities (Admin only)
+  exportActivities: async (params) => {
+    const response = await API.get("/activities/all", {
+      params: { ...params, export: "true" },
+      responseType: "blob",
+    });
+    return response.data;
+  },
 };

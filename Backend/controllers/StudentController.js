@@ -583,7 +583,8 @@ const addStudentDetails = async (req, res) => {
         parentMobileNo: value.parentMobileNo,
         parentEmail: value.parentEmail,
         abcId: value.abcId,
-        studentPhoto
+        studentPhoto,
+        academicYear : value.academicYear,
       },
       { new: true }
     );
@@ -712,6 +713,7 @@ const updateStudent = async (req, res) => {
     if (value.parentMobileNo) updatedData.parentMobileNo = value.parentMobileNo;
     if (value.abcId) updatedData.abcId = value.abcId;
     if (value.parentEmail) updatedData.parentEmail = value.parentEmail;
+    if (value.academicYear) updatedData.academicYear = value.academicYear;
 
     // Handle student photo upload using validateAndUploadFiles
     if (req.files && Object.keys(req.files).length > 0) {
@@ -882,6 +884,7 @@ const getStudents = async (req, res) => {
         if (value.city)       filter['currentAddress.city'] = { $regex: value.city, $options: 'i' };
         if (value.bloodGroup) filter.bloodGroup = value.bloodGroup;
         if (value.category)   filter.category   = value.category;
+        if (value.academicYear) filter.academicYear = value.academicYear;
 
         // Search
         if (value.search) {
@@ -895,14 +898,14 @@ const getStudents = async (req, res) => {
         }
 
         // Filter by whether student has filled in their details
-if (value.detailsFilled === true) {
-    filter.PRN = { $exists: true, $ne: null };
-} else if (value.detailsFilled === false) {
-    filter.$and = [
-        ...(filter.$and || []),
-        { $or: [{ PRN: { $exists: false } }, { PRN: null }] }
-    ];
-}
+        if (value.detailsFilled === true) {
+            filter.PRN = { $exists: true, $ne: null };
+        } else if (value.detailsFilled === false) {
+            filter.$and = [
+                ...(filter.$and || []),
+                { $or: [{ PRN: { $exists: false } }, { PRN: null }] }
+            ];
+        }
 
 
         // Export branch

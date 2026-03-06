@@ -3,8 +3,12 @@ const Student = require("../models/Student");
 const cloudinary = require("../config/cloudinaryConfig");
 const {createPlacementSchema, updatePlacementSchema, getPlacementsValidation} = require("../validators/placementValidation");
 const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
+const {deleteFromCloudinary} = require("../helpers/cloudinary/DeleteFromCloudinary");
 const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
 const mongoose= require("mongoose");
+const exportToExcel = require('../helpers/excel/exportToExcel');
+const { transformPlacement, placementColumnMap } = require('../helpers/excel/exportTransformers');
+
 
 const fileConfigs = [
   {
@@ -48,7 +52,6 @@ const createPlacement = async (req, res) => {
 			return res.status(403).json({ success: false, message: "Unauthorised access." });
 		}
 
-		const { companyName, role, placementType, package, placementYear, passoutYear, joiningYear } = req.body;
 
 		// Joi Validation
 		const { error, value: validatedData } = createPlacementSchema.validate(req.body, { abortEarly: false });
@@ -61,6 +64,8 @@ const createPlacement = async (req, res) => {
 
 			return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
 		}
+
+		const { companyName, role, placementType, package, placementYear, passoutYear, joiningYear } = validatedData;
 
 		// Logical year validation
 		const extractStartYear = (year) => Number(year.split("-")[0]);
@@ -173,11 +178,15 @@ const updatePlacement = async (req, res) => {
 		// Logical validation
 		const extractStartYear = (year) => Number(year.split("-")[0]);
 
-		if (updatedData.placementYear && updatedData.joiningYear) {
-			if (extractStartYear(updatedData.placementYear) > extractStartYear(updatedData.joiningYear)) {
-				return res.status(400).json({ success: false, message: "Placement Year cannot be greater than Joining Year" });
-					
-			}
+		const placementYearFinal =
+		updatedData.placementYear || existingPlacement.placementYear;
+
+		const joiningYearFinal =
+		updatedData.joiningYear || existingPlacement.joiningYear;
+
+		if (extractStartYear(placementYearFinal) > extractStartYear(joiningYearFinal)) {
+			return res.status(400).json({ success: false, message: "Placement Year cannot be greater than Joining Year" });
+				
 		}
 
 
@@ -197,8 +206,8 @@ const updatePlacement = async (req, res) => {
 
 				// delete old
 				if (oldPublicId) {
-					await cloudinary.uploader.destroy(oldPublicId).catch((err) => {
-						console.error("Error in updatePlacement:", err);
+					await deleteFromCloudinary(oldPublicId).catch((err) => {
+						console.error(`Error in updatePlacement -Failed to delete old placementProof id = ${oldPublicId}:`, err);
 					});
 				}
 			}
@@ -236,6 +245,195 @@ const updatePlacement = async (req, res) => {
 		return res.status(500).json({ success: false, message: err.message || "Some Error Occurred. Please try again later." });
 	}
 };
+
+
+const getPlacements = async (req, res) => {
+	try {
+		const year = req.query.year?.trim();
+		const division = req.query.division?.trim();
+		const search = req.query.search?.trim();
+		const placementType = req.query.placementType?.trim();
+		const page = req.query.page;
+		const limit = req.query.limit;
+		const exportFlag = req.query.export;
+		// NEW
+		const placementYear = req.query.placementYear?.trim();
+		const passoutYear   = req.query.passoutYear?.trim();
+		const joiningYear   = req.query.joiningYear?.trim();
+		const packageMin    = req.query.packageMin;
+		const packageMax    = req.query.packageMax;
+
+		const { error, value } = getPlacementsValidation.validate(
+			{ year, division, search, page, limit, placementType, export: exportFlag,placementYear, passoutYear, joiningYear, packageMin, packageMax },
+			{ abortEarly: false }
+		);
+		if (error) {
+			const validationErrors = error.details.map(err => ({
+				field: err.path[0],
+				message: err.message
+			}));
+			return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
+		}
+
+		const isExport = value.export === 'true';
+
+		if (req.user.role === "divisionIncharge") {
+			if ((year && year !== req.user.year) || (division && division !== req.user.division)) {
+				return res.status(403).json({ success: false, message: "You can only access students of your division." });
+			}
+		}
+
+		const pageNum = value.page || 1;
+		const limitNum = Math.min(value.limit || 10, 20);
+		const skip = (pageNum - 1) * limitNum;
+
+		const pipeline = [];
+
+		pipeline.push({
+			$lookup: {
+				from: "students",
+				localField: "stuID",
+				foreignField: "_id",
+				as: "student"
+			}
+		});
+
+		pipeline.push({ $unwind: { path: "$student", preserveNullAndEmptyArrays: true } });
+
+		const match = {};
+
+		if (req.user.role === "divisionIncharge") {
+			match["student.year"] = req.user.year;
+			match["student.division"] = req.user.division;
+		} else if (req.user.role === "admin") {
+			if (year) match["student.year"] = year.trim();
+			if (division) match["student.division"] = division.trim();
+		} else {
+			return res.status(403).json({ success: false, message: "Unauthorized role." });
+		}
+
+		// Exact match on year strings
+		if (value.placementYear) match.placementYear = value.placementYear;
+		if (value.passoutYear)   match.passoutYear   = value.passoutYear;
+		if (value.joiningYear)   match.joiningYear   = value.joiningYear;
+
+		// Range filter on package
+		if (value.packageMin !== undefined || value.packageMax !== undefined) {
+			match.package = {};
+			if (value.packageMin !== undefined) match.package.$gte = value.packageMin;
+			if (value.packageMax !== undefined) match.package.$lte = value.packageMax;
+		}
+
+		if (search) {
+			// const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+			const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+			match.$or = [
+				{ companyName: { $regex: safeSearch, $options: "i" } },
+				{ role: { $regex: safeSearch, $options: "i" } },
+				{ "student.name.firstName": { $regex: safeSearch, $options: "i" } },
+				{ "student.name.middleName": { $regex: safeSearch, $options: "i" } },
+				{ "student.name.lastName": { $regex: safeSearch, $options: "i" } },
+			];
+		}
+
+		if (placementType) match.placementType = placementType;
+
+		if (Object.keys(match).length) pipeline.push({ $match: match });
+
+		// Export branch fields
+		const exportFields = {
+			companyName:        1,
+			role:               1,
+			placementType:      1,
+			package:            1,
+			placementYear:      1,
+			passoutYear:        1,
+			joiningYear:        1,
+			placementProof:     "$placementProof.url",
+			stuID:              "$student._id",
+			studentID:          "$student.studentID",
+			PRN:                "$student.PRN",
+			studentName:        "$student.name",
+			studentYear:        "$student.year",
+			studentDivision:    "$student.division",
+			studentBranch:      "$student.branch",
+			studentDob:         "$student.dob",
+			studentBloodGroup:  "$student.bloodGroup",
+			studentCategory:    "$student.category",
+			studentAbcId:       "$student.abcId",
+			studentMobileNo:    "$student.mobileNo",
+			studentParentMobileNo: "$student.parentMobileNo",
+			studentEmail:       "$student.email",
+			studentParentEmail: "$student.parentEmail",
+			studentCurrentAddress: "$student.currentAddress",
+			studentNativeAddress:  "$student.nativeAddress",
+		};
+
+		// Lean (paginated) fields
+		const leanFields = {
+			companyName:    1,
+			role:           1,
+			placementType:  1,
+			package:        1,
+			placementYear:  1,
+			passoutYear:    1,
+			joiningYear:    1,
+			placementProof: "$placementProof.url",
+			stuID:          "$student._id",
+			studentName:    "$student.name",
+			studentYear:    "$student.year",
+		};
+
+		// Export branch
+		if (isExport) {
+			const placements = await Placement.aggregate([
+				...pipeline,
+				{ $sort: { createdAt: -1 } },
+				{ $project: exportFields },
+			]);
+
+			const rows = placements.map(transformPlacement);
+			const buffer = await exportToExcel(rows, 'Placements', placementColumnMap);
+			if (!buffer) return res.status(500).json({ success: false, message: 'Export failed.' });
+
+			res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+			res.setHeader('Content-Disposition', 'attachment; filename="placements.xlsx"');
+			return res.send(buffer);
+		}
+
+		// Paginated branch
+		const results = await Placement.aggregate([
+			...pipeline,
+			{
+				$facet: {
+					data: [
+						{ $sort: { createdAt: -1 } },
+						{ $skip: skip },
+						{ $limit: limitNum },
+						{ $project: leanFields }
+					],
+					totalCount: [{ $count: "total" }]
+				}
+			}
+		]);
+
+		const placements = results[0]?.data || [];
+		const total = results[0]?.totalCount[0]?.total || 0;
+
+		return res.json({
+			success: true,
+			data: placements,
+			total,
+			page: pageNum,
+			totalPages: Math.ceil(total / limitNum),
+		});
+
+	} catch (err) {
+		console.error("Error in getPlacements controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
+		return res.status(500).json({ success: false, message: err.message || "Some Error Occurred. Please Try Again Later." });
+	}
+};
+
 
 // DELETE PLACEMENT
 const deletePlacement = async (req, res) => {
@@ -297,9 +495,8 @@ const deletePlacement = async (req, res) => {
 	
 };
 
-
 //GET PLACEMENTS (search by placement fields & student name + year filter + pagination) --admin or divisionIncharge
-const getPlacements = async (req, res) => {
+const getPlacements2 = async (req, res) => {
 	try {
 		// Get and trim query params
 		const year = req.query.year?.trim();
