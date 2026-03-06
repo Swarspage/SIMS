@@ -687,7 +687,7 @@ const updateInternship = async (req, res) => {
             updatedData.durationMonths ?? existingInternship.durationMonths;
 
         const diffDays = (new Date(finalEndDate) - new Date(finalStartDate)) / (1000 * 60 * 60 * 24);
-        const diffMonths = Math.floor(diffDays / 30) || 1;
+        const diffMonths = Math.round(diffDays / 30) || 0;
 
         if (diffMonths !== finalDuration) {
             return res.status(400).json({

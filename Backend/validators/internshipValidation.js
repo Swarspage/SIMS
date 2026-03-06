@@ -44,7 +44,7 @@ const validateDurationMonths = (value, helpers) => {
 
         // Calculate the difference in months (rounded)
         const diffDays = (end - start) / (1000 * 60 * 60 * 24);
-        const diffMonths = Math.floor(diffDays / 30) || 1;
+        const diffMonths = Math.round(diffDays / 30) || 0;
 
         if (diffMonths !== durationMonths) {
             return helpers.error("object.durationMismatch");
