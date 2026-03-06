@@ -24,7 +24,19 @@ const semesterInfoSchema = new mongoose.Schema({
     attendance: { type: Number, min: 0, max: 100, required: true },
     kts: { type: [String], default: [] },
     marks: { type: [markSchema], required: true },
-    isDefaulter: { type: Boolean, default: false }
+    isDefaulter: { type: Boolean, default: false },
+
+
+
+    journalTaken: {
+        type: Boolean,
+        default: false
+    },
+
+    examFormFilled: {
+        type: Boolean,
+        default: false
+    }
 
 }, { timestamps: true });
 

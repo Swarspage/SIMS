@@ -116,7 +116,7 @@ const updateSemInfo = async (req, res) => {
 
     // STUDENT FIELD LIMIT
     if (req.user.role === "student") {
-      const allowed = ["attendance", "kts"];
+      const allowed = ["attendance", "kts", "journalTaken", "examFormFilled"];
       Object.keys(req.body).forEach(key => {
         if (!allowed.includes(key)) delete req.body[key];
       });
@@ -130,6 +130,9 @@ const updateSemInfo = async (req, res) => {
         message: error.details[0].message,
       });
     }
+
+    console.log(req.body);
+console.log(typeof req.body.journalTaken);
 
     // UPDATE DATA
     Object.assign(semInfo, req.body);
@@ -229,26 +232,215 @@ const deleteSemInfo = async (req, res) => {
 
 
 //get all sem infos by admin or di with export option
+// const getAllSemInfos = async (req, res) => {
+//   try {
+//     const isExport = req.query.export === "true";
+//     const query = {};
+
+//     if (req.user.role === "divisionIncharge") {
+//       const students = await Student.find({
+//         year: req.user.year,
+//         division: req.user.division,
+//       }).select("_id");
+
+//       query.stuID = { $in: students.map(s => s._id) };
+//     }
+
+//     const semInfos = await SemesterInfo.find(query)
+//       .populate("stuID", "studentID name year division")
+//       .sort({ createdAt: -1 });
+
+//     //EXPORT BRANCH
+//     if (isExport) {
+//       const rows = semInfos.map(transformSemesterInfo);
+
+//       const buffer = await exportToExcel(
+//         rows,
+//         "Semester Info",
+//         semesterInfoColumnMap
+//       );
+
+//       res.setHeader(
+//         "Content-Type",
+//         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//       );
+
+//       res.setHeader(
+//         "Content-Disposition",
+//         'attachment; filename="semester-info.xlsx"'
+//       );
+
+//       return res.send(buffer);
+//     }
+
+//     //NORMAL JSON RESPONSE
+//     res.status(200).json({ success: true, data: semInfos });
+
+//   } catch (err) {
+//     console.error("getAllSemInfos error:", err);
+//     res.status(500).json({ success: false, message: "Server Error" });
+//   }
+// };
+
+//get own sem infos by student
+
+
 const getAllSemInfos = async (req, res) => {
   try {
-    const isExport = req.query.export === "true";
-    const query = {};
 
+    const {
+      semester,
+      isDefaulter,
+      journalTaken,
+      examFormFilled,
+      minAttendance,
+      maxAttendance,
+      year,
+      division,
+      search,
+      page,
+      limit,
+      export: exportFlag
+    } = req.query;
+
+    const isExport = exportFlag === "true";
+
+    const pageNum = Number(page) || 1;
+    const limitNum = Math.min(Number(limit) || 10, 20);
+    const skip = (pageNum - 1) * limitNum;
+
+    const pipeline = [];
+
+    // JOIN STUDENT
+    pipeline.push({
+      $lookup: {
+        from: "students",
+        localField: "stuID",
+        foreignField: "_id",
+        as: "student"
+      }
+    });
+
+    pipeline.push({
+      $unwind: {
+        path: "$student",
+        preserveNullAndEmptyArrays: true
+      }
+    });
+
+    const match = {};
+
+    // ROLE FILTERING
     if (req.user.role === "divisionIncharge") {
-      const students = await Student.find({
-        year: req.user.year,
-        division: req.user.division,
-      }).select("_id");
-
-      query.stuID = { $in: students.map(s => s._id) };
+      match["student.year"] = req.user.year;
+      match["student.division"] = req.user.division;
     }
 
-    const semInfos = await SemesterInfo.find(query)
-      .populate("stuID", "studentID name year division")
-      .sort({ createdAt: -1 });
+    if (req.user.role === "admin") {
+      if (year) match["student.year"] = year.trim();
+      if (division) match["student.division"] = division.trim();
+    }
 
-    //EXPORT BRANCH
+    // SEMESTER
+    if (semester) match.semester = Number(semester);
+
+    // BOOLEAN FILTERS
+    if (isDefaulter === "true") match.isDefaulter = true;
+    if (isDefaulter === "false") match.isDefaulter = false;
+
+    if (journalTaken === "true") match.journalTaken = true;
+    if (journalTaken === "false") match.journalTaken = false;
+
+    if (examFormFilled === "true") match.examFormFilled = true;
+    if (examFormFilled === "false") match.examFormFilled = false;
+
+    // ATTENDANCE RANGE
+    if (minAttendance || maxAttendance) {
+      match.attendance = {};
+
+      if (minAttendance) match.attendance.$gte = Number(minAttendance);
+      if (maxAttendance) match.attendance.$lte = Number(maxAttendance);
+    }
+
+    // SEARCH
+    if (search) {
+      const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#]/g, "");
+
+      match.$or = [
+        { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
+        { "student.name.middleName": { $regex: safeSearch, $options: "i" } },
+        { "student.name.lastName": { $regex: safeSearch, $options: "i" } },
+        { "student.studentID": { $regex: safeSearch, $options: "i" } }
+      ];
+    }
+
+    if (Object.keys(match).length) {
+      pipeline.push({ $match: match });
+    }
+
+    // EXPORT FIELDS
+    const exportFields = {
+  semester: 1,
+  attendance: 1,
+  kts: 1,
+  marks: 1,
+  isDefaulter: 1,
+  journalTaken: 1,
+  examFormFilled: 1,
+
+  // Student identity
+  stuID: "$student._id",
+  studentID: "$student.studentID",
+  PRN: "$student.PRN",
+
+  // Student name
+  studentName: "$student.name",
+
+  // Student academic
+  studentYear: "$student.year",
+  studentDivision: "$student.division",
+  studentBranch: "$student.branch",
+
+  // Student personal
+  studentDob: "$student.dob",
+  studentBloodGroup: "$student.bloodGroup",
+  studentCategory: "$student.category",
+  studentAbcId: "$student.abcId",
+
+  // Student contact
+  studentMobileNo: "$student.mobileNo",
+  studentParentMobileNo: "$student.parentMobileNo",
+  studentEmail: "$student.email",
+  studentParentEmail: "$student.parentEmail",
+
+  // Addresses
+  studentCurrentAddress: "$student.currentAddress",
+  studentNativeAddress: "$student.nativeAddress"
+};
+
+    const leanFields = {
+      semester: 1,
+      attendance: 1,
+      kts: 1,
+      isDefaulter: 1,
+      journalTaken: 1,
+      examFormFilled: 1,
+
+      stuID: "$student._id",
+      studentID: "$student.studentID",
+      studentName: "$student.name",
+      studentYear: "$student.year",
+      studentDivision: "$student.division"
+    };
+
+    // EXPORT
     if (isExport) {
+      const semInfos = await SemesterInfo.aggregate([
+        ...pipeline,
+        { $sort: { createdAt: -1 } },
+        { $project: exportFields }
+      ]);
+
       const rows = semInfos.map(transformSemesterInfo);
 
       const buffer = await exportToExcel(
@@ -270,16 +462,50 @@ const getAllSemInfos = async (req, res) => {
       return res.send(buffer);
     }
 
-    //NORMAL JSON RESPONSE
-    res.status(200).json({ success: true, data: semInfos });
+    // PAGINATION
+    const results = await SemesterInfo.aggregate([
+      ...pipeline,
+      {
+        $facet: {
+          data: [
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limitNum },
+            { $project: leanFields }
+          ],
+          totalCount: [{ $count: "total" }]
+        }
+      }
+    ]);
+
+    const semInfos = results[0]?.data || [];
+    const total = results[0]?.totalCount[0]?.total || 0;
+
+    return res.json({
+      success: true,
+      data: semInfos,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum)
+    });
 
   } catch (err) {
-    console.error("getAllSemInfos error:", err);
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error(
+      "Error in getAllSemInfos controller:",
+      "\ntime = ",
+      new Date().toISOString(),
+      "\nError:",
+      err
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Some Error Occurred. Please Try Again Later."
+    });
   }
 };
 
-//get own sem infos by student
+
 const getOwnSemInfos = async (req, res) => {
   try {
     const data = await SemesterInfo.find({ stuID: req.user.id })

@@ -551,14 +551,47 @@ const transformSemesterInfo = (s) => ({
     `${m.subject} (${m.score}/${m.outOf})`
   ).join(" | ") || "",
 
-  /* Student Info */
-  stuID: s.stuID?._id?.toString() || "",
-  studentID: s.stuID?.studentID || "",
-  firstName: s.stuID?.name?.firstName || "",
-  fathersName: s.stuID?.name?.middleName || "",
-  lastName: s.stuID?.name?.lastName || "",
-  year: s.stuID?.year || "",
-  division: s.stuID?.division || "",
+  journalTaken : s.journalTaken,
+  examFormFilled : s.examFormFilled,
+
+  /* Student identity */
+  stuID: s.stuID?.toString() || "",
+  studentID: s.studentID || "",
+  PRN: s.PRN || "",
+
+  /* Student name */
+  firstName: s.studentName?.firstName || "",
+  fathersName: s.studentName?.middleName || "",
+  lastName: s.studentName?.lastName || "",
+
+  /* Academic */
+  year: s.studentYear || "",
+  division: s.studentDivision || "",
+  branch: s.studentBranch || "",
+
+  /* Personal */
+  dob: s.studentDob
+    ? new Date(s.studentDob).toLocaleDateString()
+    : "",
+  bloodGroup: s.studentBloodGroup || "",
+  category: s.studentCategory || "",
+  abcId: s.studentAbcId || "",
+
+  /* Contact */
+  mobileNo: s.studentMobileNo || "",
+  parentMobileNo: s.studentParentMobileNo || "",
+  email: s.studentEmail || "",
+  parentEmail: s.studentParentEmail || "",
+
+  /* Current address */
+  currentStreet: s.studentCurrentAddress?.street || "",
+  currentCity: s.studentCurrentAddress?.city || "",
+  currentPincode: s.studentCurrentAddress?.pincode || "",
+
+  /* Native address */
+  nativeStreet: s.studentNativeAddress?.street || "",
+  nativeCity: s.studentNativeAddress?.city || "",
+  nativePincode: s.studentNativeAddress?.nativePincode || ""
 });
 
 //column mapping for semester info export
@@ -568,6 +601,8 @@ const semesterInfoColumnMap = {
   kts: "KTs",
   isDefaulter: "Defaulter",
   marks: "Marks",
+  journalTaken : "Journal Taken",
+  examFormFilled : "Exam Form Filled",
 
   stuID: "Student DB ID",
   studentID: "Student ID",
@@ -576,6 +611,23 @@ const semesterInfoColumnMap = {
   lastName: "Last Name",
   year: "Year",
   division: "Division",
+
+  PRN: "PRN",
+  branch: "Branch",
+  dob: "Date of Birth",
+  bloodGroup: "Blood Group",
+  category: "Category",
+  abcId: "ABC ID",
+  mobileNo: "Mobile No",
+  parentMobileNo: "Parent Mobile No",
+  email: "Email",
+  parentEmail: "Parent Email",
+  currentStreet: "Current Street",
+  currentCity: "Current City",
+  currentPincode: "Current Pincode",
+  nativeStreet: "Native Street",
+  nativeCity: "Native City",
+  nativePincode: "Native Pincode"
 };
 
 module.exports = {

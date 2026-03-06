@@ -122,10 +122,18 @@ const semInfoUpdateSchema = Joi.object({
     .messages({
       "array.base" : "Marks must be an array.",
       "array.min" : "At least one subject mark is required." ,
-    })
+    }),
+
+  journalTaken: Joi.boolean().optional().messages({
+      "boolean.base": "Journal Taken must be true or false.",
+  }),
+
+  examFormFilled: Joi.boolean().optional().messages({
+      "boolean.base": "ExamFormFilled must be true or false.",
+  }),
 }).min(1)
 .messages({
-  "object.min" : "At least one field must be provided for update."
+  "object.min" : "At least one field must be provided for update"
 }); // at least one field required
 
 module.exports = {
