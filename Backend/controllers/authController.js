@@ -1,13 +1,16 @@
 const bcrypt = require('bcryptjs');
+const crypto = require("crypto");   // For generating random tokens for password reset
+//mailservice -> going to use brevo instead of nodemailer
+// const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const DivisionIncharge = require("../models/DivisionIncharge");
-
 const Student = require("../models/Student.js")
 const Admin = require('../models/Admin.js');
-const { signupSchema, loginSchema, adminLoginSchema, divisionInchargeLoginSchema } = require('../validators/authValidation.js');
+const sendEmailBrevo = require("../services/sendEmailBrevo");
+const { signupSchema, loginSchema, adminLoginSchema, divisionInchargeLoginSchema , forgotPasswordSchema , resetPasswordSchema } = require('../validators/authValidation.js');
 
 
-const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary.js");
+// const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary.js");
 
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
@@ -18,138 +21,146 @@ const cookieOptions = {
   secure: true,
   sameSite: "none",
 };
-
-// SIGNUP
+ 
+//signup2
 exports.signup = async (req, res) => {
   try {
-    const { firstName, middleName, lastName, studentID, PRN, email, password, branch, year } = req.body;
 
-    // Validate input using Joi
-    const { error } = signupSchema.validate(req.body, { abortEarly: false });
+    const { error, value } = signupSchema.validate(req.body);
     if (error) {
-      const validationErrors = error.details.map(err => ({
-        field: err.path[0],
-        message: err.message
-      }));
-
       return res.status(400).json({
         success: false,
-        message: "Validation failed",
-        errors: validationErrors
+        message: error.details[0].message
       });
     }
 
-    // Check if Student exists
-    const existingStuID = await Student.findOne({ studentID: studentID });
-    if (existingStuID) return res.status(400).json({ success: false, message: 'Student ID already exists' });
+    const { studentID, email, password } = value;
 
-    const existingEmail = await Student.findOne({ email });
-    if (existingEmail) return res.status(400).json({ success: false, message: 'Email already exists' });
+    // Check student exists (added by admin)
+    const student = await Student.findOne({ studentID });
 
-    const existingPRN = await Student.findOne({ PRN });
-    if (existingPRN) return res.status(400).json({ success: false, message: 'PRN already exists' });
-
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "Student photo is required" });
+    if (!student) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Student ID. Contact admin."
+      });
     }
 
-    let studentPhoto = null;
-    if (req.file) {
-      const uploaded = await uploadToCloudinary(req.file.path);
-      studentPhoto = {
-        url: uploaded.url,
-        publicId: uploaded.publicId
-      };
+    // Already registered
+    if (student.password) {
+      return res.status(400).json({
+        success: false,
+        message: "Student already registered. Please login."
+      });
+    }
+
+    // Email already exists
+    const existingEmail = await Student.findOne({ email });
+    if (existingEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already in use."
+      });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create Student
-    const student = await Student.create({
-      name: { firstName, middleName, lastName },
-      studentID: studentID,
-      PRN,
-      email,
-      password: hashedPassword,
-      branch,
-      year,
-      studentPhoto
+    // Update existing record
+    student.email = email;
+    student.password = hashedPassword;
+    // student.isRegistered = true;
+
+    await student.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Signup successful. Please login."
     });
 
-    const studentObj = student.toObject();
-    delete studentObj.password;
-
-    // Create JWT
-    const token = jwt.sign(
-      { id: student._id, role: 'student' },
-      JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    // Send JWT only in cookie
-    res.cookie('token', token, cookieOptions);
-
-    return res.status(201).json({ success: true, message: 'Signup successful', data: studentObj });
   } catch (error) {
     console.error("Signup Error:", error);
-    return res.status(500).json({ success: false, message: "Internal Server Error. Please try again later." });
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
   }
 };
 
-// LOGIN
+//login2
+// POST /student/login
 exports.login = async (req, res) => {
   try {
-    const { studentID, password } = req.body;
 
-    if (!studentID || !password) {
-      return res.status(400).json({ error: "Student ID and password are required" });
-    }
+    // console.log("Request Body:", req.body);
 
-    // Validate input
-    const { value, error } = loginSchema.validate(req.body, { abortEarly: false });
+    const { error, value } = loginSchema.validate(req.body);
     if (error) {
-      const validationErrors = error.details.map(err => ({
-        field: err.path[0],
-        message: err.message
-      }));
-
       return res.status(400).json({
         success: false,
-        message: "Validation failed",
-        errors: validationErrors
+        message: error.details[0].message
       });
     }
 
-    // Find student by studentID
-    const student = await Student.findOne({ studentID: value.studentID });
-    if (!student) return res.status(400).json({ error: 'Invalid credentials' });
+    const { studentID, password } = value;
 
-    const match = await bcrypt.compare(value.password, student.password);
-    if (!match) return res.status(400).json({ error: 'Invalid credentials' });
+    const student = await Student.findOne({ studentID });
 
-    const studentObj = student.toObject();
-    delete studentObj.password;
+    if (!student) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Student ID"
+      });
+    }
 
+    if (!student.password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please complete signup first"
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, student.password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Incorrect password"
+      });
+    }
+
+    // Generate Token
     const token = jwt.sign(
-      { id: student._id, role: 'student' },
+      {
+        id: student._id,
+        role: "student",
+        studentID: student.studentID
+      },
       JWT_SECRET,
-      { expiresIn: '1d' }
+      { expiresIn: "1d" }
     );
 
-    res.cookie('token', token, cookieOptions);
+    // Save token in cookie
+    res.cookie("token", token, cookieOptions);
+
     return res.status(200).json({
-      success: true, message: 'Login successful', token: token, // ← ADDED THIS
+      success: true,
+      message: "Login successful",
+      token,
       user: {
         id: student._id,
         studentID: student.studentID,
         email: student.email,
-        role: "student",
-      },
+        role: "student"
+      }
     });
+
   } catch (error) {
     console.error("Login Error:", error);
-    return res.status(500).json({ success: false, message: "Internal Server Error. Please try again later." });
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
   }
 };
 
@@ -206,7 +217,7 @@ exports.adminLogin = async (req, res) => {
 };
 
 
-
+//division incharge login
 exports.divisionInchargeLogin = async (req, res) => {
   try {
 
@@ -275,5 +286,160 @@ exports.logout = (req, res) => {
   } catch (err) {
     console.error("Logout Error:", err);
     return res.status(500).json({ success: false, message: "Internal Server Error. Please try again later." });
+  }
+};
+
+
+// FORGOT PASSWORD -> new auth
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { error , value } = forgotPasswordSchema.validate(req.body);
+
+    if(error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+    const { email } = value;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+    }
+
+    const student = await Student.findOne({ email });
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "No account found with this email"
+      });
+    }
+
+    // Generate random token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Hash token before saving
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    // Save to DB
+    student.resetPasswordToken = hashedToken;
+    student.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+    await student.save();
+
+    // Create reset URL
+    const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+    // Email setup
+    // const transporter = nodemailer.createTransport({
+    //   service: "gmail",
+    //   auth: {
+    //     user: process.env.EMAIL_USER,
+    //     pass: process.env.EMAIL_PASSWORD
+    //   }
+    // });
+
+    const htmlContent = `
+    <h2>Hello ${student.name?.firstName || "Student"},</h2>
+    <p>You requested a password reset.</p>
+    <p><a href="${resetURL}">Click here to reset your password</a></p>
+    <p>This link expires in 15 minutes.</p>
+  `;
+
+    await sendEmailBrevo({
+      toEmail: student.email,
+      subject: "Password Reset Request",
+      htmlContent: htmlContent
+    }); 
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset link sent to your email"
+    });
+
+  } catch (error) {
+    console.error("Forgot Password Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+
+
+// RESET PASSWORD -> new auth
+exports.resetPassword = async (req, res) => {
+  try {
+
+    const { error , value } = resetPasswordSchema.validate(req.body);
+
+    if(error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+    const { token } = req.params;
+    const { newPassword } = value;
+
+    if (!newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "New password is required"
+      });
+    }
+    // if (!token) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Token is missing"
+    //   });
+    // }
+
+    // Hash incoming token
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    // Find student
+    const student = await Student.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!student) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired token"
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    student.password = hashedPassword;
+    student.resetPasswordToken = undefined;
+    student.resetPasswordExpire = undefined;
+
+    await student.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successful"
+    });
+
+  } catch (error) {
+    console.error("Reset Password Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
   }
 };
