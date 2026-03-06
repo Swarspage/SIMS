@@ -13,7 +13,16 @@ const studentSchema = new mongoose.Schema({
     studentID: { type: String, unique: true},
 
     email: { type: String, unique: true, },
-    password: { type: String, },
+    password: { type: String },
+    
+    //new authentication fields for password reset
+    resetPasswordToken: {
+        type: String,
+    },
+    
+    resetPasswordExpire: {
+        type: Date,
+    },
 
     branch: {
         type: String,
