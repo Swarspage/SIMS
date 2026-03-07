@@ -1,8 +1,6 @@
 const DivisionIncharge = require("../models/DivisionIncharge");
 const ExcelJS = require("exceljs");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
-const sgMail = require("@sendgrid/mail");
 const mongoose = require("mongoose");
 
 const { importDivisionInchargeSchema, changeDivisionInchargeDetailsSchema, changeEmailOfDivisionInchargeSchema, addSingleDivisionInchargeSchema } = require("../validators/divisionInchargeValidation");
@@ -11,9 +9,6 @@ const sendEmailBrevo = require("../services/sendEmailBrevo");
 
 const generateRandomPassword = require("../helpers/generateRandomPassword");
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-// Random password generator
 
 // Helper to read Excel cell safely
 const getCellValue = (cell) => {
@@ -541,23 +536,18 @@ const importDivisionInchargeFromExcel = async (req, res) => {
 
       await Promise.all(
         batch.map(job =>
-          sgMail.send({
-            to: job.email,
-            from: process.env.SENDGRID_VERIFIED_SENDER,
+          // Send Email
+          sendEmailBrevo({
+            toEmail: job.email,
             subject: "Division Incharge Account Created",
-            text: `Hello ${job.name},
-
-Your Division Incharge account has been created.
-
-Email: ${job.email}
-Password: ${job.password}`
+            htmlContent: `Hello ${job.name},\nYour Division Incharge account has been created.\nEmail: ${job.email}\nPassword: ${job.password}\n`
           }).catch(err => {
-            console.error(`Email failed for ${job.email}`, err.message);
-            failed.push({
-              email: job.email,
-              error: "Email failed"
-            });
-          })
+                  console.error(`Email failed for ${job.email}`, err.message);
+                  failed.push({
+                    email: job.email,
+                    error: "Email failed"
+                  });
+                })
         )
       );
 

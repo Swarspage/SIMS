@@ -1,17 +1,10 @@
 const Student = require("../models/Student");
-const Admin = require("../models/Admin");
 const cloudinary = require("../config/cloudinaryConfig");
-const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary");
 
-
-const fs = require("fs");
-const path = require("path");
-
-const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 
-
+const ExcelJS = require("exceljs"); // replaced xlsx
 
 const { importExcelSchema, addStudentDetailsSchema, updateStudentSchema, getStudentsValidation } = require("../validators/studentValidation");
 
@@ -30,21 +23,20 @@ const { transformStudent, studentColumnMap } = require('../helpers/excel/exportT
 const exportToExcel = require('../helpers/excel/exportToExcel');
 
 
+// SendGrid No Longer In Use.
+// const sgMail = require('@sendgrid/mail');
+// sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 
-const ExcelJS = require("exceljs"); // replaced xlsx
-
-// Configure your email transporter (example with Gmail)
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER || process.env.emailUser,       // your email
-    pass: process.env.EMAIL_PASSWORD || process.env.emailPassword,          // app password if 2FA enabled
-  },
-});
+// Configure your email transporter (example with Gmail) --No Longer In Use
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: {
+//     user: process.env.EMAIL_USER || process.env.emailUser,       // your email
+//     pass: process.env.EMAIL_PASSWORD || process.env.emailPassword,          // app password if 2FA enabled
+//   },
+// });
 
 
 // for studentPhoto

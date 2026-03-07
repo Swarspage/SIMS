@@ -59,10 +59,8 @@ const createHigherStudy = async (req, res) => {
             return res.status(403).json({success : false, message: "Unauthorized role."});
         }
 
-        const { examName, score } = req.body;
-
         // Validate input
-        const { error } = createHigherStudySchema.validate({ examName, score }, { abortEarly: false });
+        const { valie, error } = createHigherStudySchema.validate(req.body, { abortEarly: false });
         if (error) {
             const validationErrors = error.details.map(err => ({
                 field: err.path[0],
@@ -70,6 +68,8 @@ const createHigherStudy = async (req, res) => {
             }));
             return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
         }
+
+        const { examName, score } = validateAndUploadFiles;
 
         const exists = await HigherStudies.findOne({ stuID, examName });
         if (exists) {
