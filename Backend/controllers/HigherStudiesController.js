@@ -151,10 +151,9 @@ const getSingleHigherStudy = async (req, res) => {
 
 const getHigherStudies = async (req, res) => {
     try {
-        const { year, division, search, page, limit, examName, export: exportFlag } = req.query;
+        // const { year, division, search, page, limit, examName, export: exportFlag, academicYear, scoreMin, scoreMax } = req.query;
         
-        const { error, value } = getHigherStudiesValidation.validate(
-            { year, division, search, page, limit, examName, export: exportFlag },
+        const { error, value } = getHigherStudiesValidation.validate(req.query,
             { abortEarly: false }
         );
         if (error) {
@@ -172,6 +171,8 @@ const getHigherStudies = async (req, res) => {
                 return res.status(403).json({ success: false, message: "You can only access students of your division." });
             }
         }
+
+        const { year, division, search, page, limit, examName, export: exportFlag, academicYear, score, } = value;
 
         const pageNum = value.page || 1;
         const limitNum = Math.min(value.limit || 10, 20);
@@ -209,6 +210,12 @@ const getHigherStudies = async (req, res) => {
         }
 
         if (examName) match["examName"] = examName.trim();
+        if (score) match["score"] = score.trim(); // exact match e.g. "190/600"
+
+        // NEW: academicYear lives on the student document
+        if (academicYear) match["student.academicYear"] = academicYear.trim();
+
+
         if (search) {
             const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
             match.$or = [
@@ -230,6 +237,7 @@ const getHigherStudies = async (req, res) => {
             studentYear: "$student.year",
             studentDivision: "$student.division",
             studentBranch: "$student.branch",
+            academicYear: "$student.academicYear",
             studentDob: "$student.dob",
             studentBloodGroup: "$student.bloodGroup",
             studentCategory: "$student.category",
@@ -250,6 +258,7 @@ const getHigherStudies = async (req, res) => {
             stuID: "$student._id",
             studentName: "$student.name",
             studentYear: "$student.year",
+            academicYear: "$student.academicYear",
             examName: 1,
             score: 1,
             marksheet: 1,

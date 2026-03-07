@@ -1,5 +1,23 @@
 const Joi = require("../helpers/profanity/joiWithProfanity");
 
+// For admin filtering the Studentvalidation -> AcademicYearBase wont work.
+const academicYearBase = Joi.string()
+    .trim()
+    .pattern(/^\d{4}-\d{4}$/)
+    .custom((value, helpers) => {
+        const [start, end] = value.split("-").map(Number);
+
+        if (end !== start + 1) {
+            return helpers.error("any.invalid");
+        }
+
+        return value;
+    })
+    .messages({
+        "string.pattern.base": "Academic Year must be in format YYYY-YYYY (e.g., 2024-2025).",
+        "any.invalid": "Please enter valid Academic year. Eg: 2024-2025 is valid but 2024-2028 is not. It should be proper academic year",
+        "string.empty": "Academic Year cannot be empty."
+    });
 
 // --------------------------- CREATE HIGHER STUDY --------------------------- //
 const createHigherStudySchema = Joi.object({
@@ -74,9 +92,16 @@ const getHigherStudiesValidation = Joi.object({
     }),
 
     export: Joi.string().trim().valid("true", "false").optional().messages({
-            "any.only": "export must be true or false.",
-            "boolean.base": "export must be either true or false."
-        }),
+        "any.only": "export must be true or false.",
+        "boolean.base": "export must be either true or false."
+    }),
+
+    academicYear: academicYearBase.optional(),
+    
+    score: Joi.string().trim().max(20).optional().messages({
+        "string.base": "Score must be a string.",
+        "string.max": "Score can be maximum 20 characters."
+    }),
 
     search: Joi.string().trim().max(100).optional().messages({
         "string.base": "Search must be a string.",

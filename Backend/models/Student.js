@@ -89,6 +89,7 @@ const studentSchema = new mongoose.Schema({
 
 studentSchema.index({ year: 1, division: 1 });              // MOST used filter
 studentSchema.index({ branch: 1 });                         // admin filter
+studentSchema.index({ academicYear: 1 }); 
 
 studentSchema.index({ PRN: 1 });                            // optional lookup
 

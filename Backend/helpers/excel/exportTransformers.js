@@ -99,6 +99,7 @@ const transformStudent = (s) => ({
     email:              s.email                            || '',
     PRN:                s.PRN                              || '',
     studentPhoto:       s.studentPhoto?.url                || '',
+    academicYear:       s.academicYear                || '',
 
     // Name
     firstName:          s.name?.firstName                  || '',
@@ -145,6 +146,7 @@ const studentColumnMap = {
     division:           'Division',
     branch:             'Branch',
     studentPhoto:       'Student Photo',
+    academicYear:       'Academic Year',
     dob:                'Date of Birth',
     bloodGroup:         'Blood Group',
     category:           'Category',

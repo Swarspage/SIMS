@@ -3,6 +3,7 @@ const Joi = require("../helpers/profanity/joiWithProfanity");
 const addressPattern = /^[a-zA-Z0-9\s,./#()'-]+$/;
 const namePattern = /^[A-Z][a-z]+$/;
 
+
 const academicYearBase = Joi.string()
     .trim()
     .pattern(/^\d{4}-\d{4}$/)
@@ -13,11 +14,33 @@ const academicYearBase = Joi.string()
             return helpers.error("any.invalid");
         }
 
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1; // 1-indexed
+
+        // June (6) passed means new academic year has started
+        const newAcademicYearStarted = currentMonth > 6;
+
+        const allowedStarts = new Set();
+
+        // Previous academic year (e.g., 2025-2026 when current year is 2026)
+        allowedStarts.add(currentYear - 1);
+
+        // Current academic year (e.g., 2026-2027) only allowed after June
+        if (newAcademicYearStarted) {
+            allowedStarts.add(currentYear);
+        }
+
+        if (!allowedStarts.has(start)) {
+            return helpers.error("any.invalid.year");
+        }
+
         return value;
     })
     .messages({
         "string.pattern.base": "Academic Year must be in format YYYY-YYYY (e.g., 2024-2025).",
-        "any.invalid": "Please enter valid Academic year. Eg: 2024-2025 is valid but 2024-2028 is not. It should be proper academic year",
+        "any.invalid": "Academic Year must be consecutive years (e.g., 2024-2025).",
+        "any.invalid.year": `Please enter valid Academic Year.`,
         "string.empty": "Academic Year cannot be empty."
     });
 
