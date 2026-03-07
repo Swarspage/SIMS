@@ -6,7 +6,7 @@ const importDivisionInchargeSchema = Joi.object({
   name: Joi.string().trim()
     .min(2)
     .max(50)
-	.noProfanity()
+	.englishOnly().noProfanity()
     .required()
     .messages({
       "string.base": "Name must be a string.",
@@ -17,7 +17,7 @@ const importDivisionInchargeSchema = Joi.object({
 
   year: Joi.string().trim()
     .valid("SE", "TE", "BE")
-	.noProfanity()
+	.englishOnly().noProfanity()
     .required()
     .messages({
       "string.base": "Year must be a string.",
@@ -27,7 +27,7 @@ const importDivisionInchargeSchema = Joi.object({
 
   division: Joi.string().trim()
     .valid("A", "B", "C")
-	.noProfanity()
+	.englishOnly().noProfanity()
     .required()
     .messages({
       "string.base": "Division must be a string.",
@@ -37,7 +37,7 @@ const importDivisionInchargeSchema = Joi.object({
 
   email: Joi.string().trim()
     .email()
-	.noProfanity()
+	.englishOnly().noProfanity()
     .required()
     .messages({
       "string.base": "Email must be a string.",
@@ -52,7 +52,7 @@ const addSingleDivisionInchargeSchema = Joi.object({
   name: Joi.string().trim()
     .min(2)
     .max(50)
-	.noProfanity()
+	.englishOnly().noProfanity()
     .required()
     .messages({
       "string.base": "Name must be a string.",
@@ -63,7 +63,7 @@ const addSingleDivisionInchargeSchema = Joi.object({
 
   year: Joi.string().trim()
     .valid("SE", "TE", "BE")
-	.noProfanity()
+	.englishOnly().noProfanity()
     .required()
     .messages({
       "string.base": "Year must be a string.",
@@ -73,7 +73,7 @@ const addSingleDivisionInchargeSchema = Joi.object({
 
   division: Joi.string().trim()
     .valid("A", "B", "C")
-	.noProfanity()
+	.englishOnly().noProfanity()
     .required()
     .messages({
       "string.base": "Division must be a string.",
@@ -83,7 +83,7 @@ const addSingleDivisionInchargeSchema = Joi.object({
 
   email: Joi.string().trim()
     .email()
-	.noProfanity()
+	.englishOnly().noProfanity()
     .required()
     .messages({
       "string.base": "Email must be a string.",
@@ -103,7 +103,7 @@ const changeDivisionInchargeDetailsSchema = Joi.object({
 	name: Joi.string().trim()
 		.min(2)
 		.max(50)
-		.noProfanity()
+		.englishOnly().noProfanity()
 		.optional()
 		.messages({
 		"string.base": "Name must be a string.",
@@ -114,7 +114,7 @@ const changeDivisionInchargeDetailsSchema = Joi.object({
 
 	year: Joi.string().trim()
 		.valid("SE", "TE", "BE")
-		.noProfanity()
+		.englishOnly().noProfanity()
 		.optional()
 		.messages({
 		"string.base": "Year must be a string.",
@@ -124,7 +124,7 @@ const changeDivisionInchargeDetailsSchema = Joi.object({
 
 	division: Joi.string().trim()
 		.valid("A", "B", "C")
-		.noProfanity()
+		.englishOnly().noProfanity()
 		.optional()
 		.messages({
 		"string.base": "Division must be a string.",
@@ -147,7 +147,7 @@ const changeEmailOfDivisionInchargeSchema = Joi.object({
 	newEmail: Joi.string().trim()
 		.email()
 		.lowercase()
-		.noProfanity()
+		.englishOnly().noProfanity()
 		.required()
 		.messages({
 		"string.base": "Email must be a string.",

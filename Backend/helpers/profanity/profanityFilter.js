@@ -1,7 +1,7 @@
 // utils/profanityFilter.js
 const LeoProfanity = require("leo-profanity");
 
-LeoProfanity.loadDictionary("en"); // load default english list
+LeoProfanity.loadDictionary("en");
 
 // Add custom words (Indian + common internet profanity) --generated from chatGPT
 LeoProfanity.add([
@@ -77,6 +77,37 @@ LeoProfanity.add([
   "dipshit"
 ]);
 
-module.exports = LeoProfanity;
 
-module.exports = LeoProfanity;
+// normalize text to catch tricks
+function normalizeText(text) {
+
+  return text
+    .toLowerCase()
+
+    // remove spaces between characters
+    .replace(/\s+/g, "")
+
+    // remove punctuation
+    .replace(/[._\-*@#!$%^&()+=]/g, "")
+
+    // convert numbers to letters
+    .replace(/0/g, "o")
+    .replace(/1/g, "i")
+    .replace(/3/g, "e")
+    .replace(/4/g, "a")
+    .replace(/5/g, "s")
+    .replace(/7/g, "t");
+}
+
+function containsProfanity(text) {
+
+  if (!text) return false;
+
+  const normalized = normalizeText(text);
+
+  return LeoProfanity.check(text) || LeoProfanity.check(normalized);
+}
+
+module.exports = {
+  check: containsProfanity
+};

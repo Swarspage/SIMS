@@ -621,6 +621,21 @@ const addStudentDetails = async (req, res) => {
       return res.status(401).json({ success: false, message: "Unauthorized access" });
     }
 
+    
+    const existingStudent = await Student.findById(studentId);
+
+    if (!existingStudent) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    // block if details already added
+    if (existingStudent.PRN) {
+      return res.status(400).json({
+        success: false,
+        message: "Student details already added. To update details please use Edit Option."
+      });
+    }
+
 
     // Validate input using Joi
     const { error, value } = addStudentDetailsSchema.validate(req.body, {

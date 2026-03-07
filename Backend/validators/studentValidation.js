@@ -48,7 +48,7 @@ const importExcelSchema = Joi.object({
     studentID: Joi.string()
         .trim()
         .pattern(/^[0-9]{4}[A-Z]{4}[0-9]{3}$/)
-        .noProfanity()
+        .englishOnly().noProfanity()
         .required()
         .messages({
             "string.pattern.base": "Student ID must follow the format: 4 digits, 4 uppercase letters, 3 digits.",
@@ -60,7 +60,7 @@ const importExcelSchema = Joi.object({
         .email()
         .trim()
         .lowercase()
-        .noProfanity()
+        .englishOnly().noProfanity()
         .required()
         .messages({
             "string.email": "Email must be a valid email address.",
@@ -70,28 +70,28 @@ const importExcelSchema = Joi.object({
 });
 
 const addStudentDetailsSchema = Joi.object({
-    firstName: Joi.string().trim().pattern(namePattern).min(2).max(20).noProfanity().required().messages({
+    firstName: Joi.string().trim().pattern(namePattern).min(2).max(20).englishOnly().noProfanity().required().messages({
         "string.pattern.base": "First Name must contain only alphabets(minimum of 2 characters) and first letter must be capital.",
         "string.empty": "First Name cannot be empty.",
         "any.required": "First Name is required.",
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    middleName: Joi.string().trim().pattern(namePattern).min(2).max(20).noProfanity().required().messages({
+    middleName: Joi.string().trim().pattern(namePattern).min(2).max(20).englishOnly().noProfanity().required().messages({
         "string.pattern.base": "Middle Name must contain only alphabets(minimum of 2 characters) and first letter must be capital.",
         "string.empty": "Middle Name cannot be empty.",
         "any.required": "Middle Name is required.",
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    lastName: Joi.string().trim().pattern(namePattern).min(2).max(20).noProfanity().required().messages({
+    lastName: Joi.string().trim().pattern(namePattern).min(2).max(20).englishOnly().noProfanity().required().messages({
         "string.pattern.base": "Last Name must contain only alphabets(minimum of 2 characters) and first letter must be capital.",
         "string.empty": "Last Name cannot be empty.",
         "any.required": "Last Name is required.",
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    motherName: Joi.string().trim().pattern(namePattern).min(2).max(20).noProfanity().required().messages({
+    motherName: Joi.string().trim().pattern(namePattern).min(2).max(20).englishOnly().noProfanity().required().messages({
         "string.pattern.base": "Mother Name must contain only alphabets(minimum of 2 characters) and first letter must be capital.",
         "string.empty": "Mother Name cannot be empty.",
         "any.required": "Mother Name is required.",
@@ -129,7 +129,7 @@ const addStudentDetailsSchema = Joi.object({
             "any.required": "Blood Group is required."
         }),
 
-    currentStreet: Joi.string().trim().max(300).noProfanity().pattern(addressPattern).required().messages({
+    currentStreet: Joi.string().trim().max(300).englishOnly().noProfanity().pattern(addressPattern).required().messages({
         "string.pattern.base" : "Current Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Current Street must not exceed 300 characters.",
         "string.empty": "Current Street cannot be empty",
@@ -137,7 +137,7 @@ const addStudentDetailsSchema = Joi.object({
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    currentCity: Joi.string().trim().max(200).noProfanity().pattern(addressPattern).required().messages({
+    currentCity: Joi.string().trim().max(200).englishOnly().noProfanity().pattern(addressPattern).required().messages({
         "string.pattern.base" : "Current City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Current City must not exceed 200 characters.",
         "string.empty": "Current City cannot be empty.",
@@ -151,7 +151,7 @@ const addStudentDetailsSchema = Joi.object({
         "any.required": "Pincode is required.",
     }),
 
-    nativeStreet: Joi.string().trim().max(300).noProfanity().pattern(addressPattern).required().messages({
+    nativeStreet: Joi.string().trim().max(300).englishOnly().noProfanity().pattern(addressPattern).required().messages({
         "string.pattern.base" : "Native Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Native Street must not exceed 300 characters.",
         "string.empty": "Native Street cannot be empty.",
@@ -159,7 +159,7 @@ const addStudentDetailsSchema = Joi.object({
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    nativeCity: Joi.string().trim().max(200).noProfanity().pattern(addressPattern).required().messages({
+    nativeCity: Joi.string().trim().max(200).englishOnly().noProfanity().pattern(addressPattern).required().messages({
         "string.pattern.base" : "Native City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Native City must not exceed 200 characters.",
         "string.empty": "Native City cannot be empty.",
@@ -192,7 +192,7 @@ const addStudentDetailsSchema = Joi.object({
         "any.required": "Parent Mobile number is required."
     }),
 
-    parentEmail: Joi.string().trim().email().lowercase().noProfanity().required().messages({
+    parentEmail: Joi.string().trim().email().lowercase().englishOnly().noProfanity().required().messages({
         "string.email": "Parent Email must be a valid email address.",
         "string.empty": "Parent Email cannot be empty.",
         "any.required": "Parent Email is required."
@@ -221,25 +221,25 @@ const addStudentDetailsSchema = Joi.object({
 
 
 const updateStudentSchema = Joi.object({
-    firstName: Joi.string().trim().pattern(namePattern).min(2).max(20).noProfanity().messages({
+    firstName: Joi.string().trim().pattern(namePattern).min(2).max(20).englishOnly().noProfanity().messages({
         "string.pattern.base": "First Name must contain only alphabets(minimum of 2 characters) and first letter must be capital.",
         "string.empty" : "First Name cannot be empty.",
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    middleName: Joi.string().trim().pattern(namePattern).min(2).max(20).noProfanity().messages({
+    middleName: Joi.string().trim().pattern(namePattern).min(2).max(20).englishOnly().noProfanity().messages({
         "string.pattern.base": "Middle Name must contain only alphabets(minimum of 2 characters) and first letter must be capital.",
         "string.empty" : "Middle Name cannot be empty.",
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    lastName: Joi.string().trim().pattern(namePattern).min(2).max(20).noProfanity().messages({
+    lastName: Joi.string().trim().pattern(namePattern).min(2).max(20).englishOnly().noProfanity().messages({
         "string.pattern.base": "Last Name must contain only alphabets(minimum of 2 characters) and first letter must be capital.",
         "string.empty" : "Last Name cannot be empty.",
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    motherName: Joi.string().trim().pattern(namePattern).min(2).max(20).noProfanity().messages({
+    motherName: Joi.string().trim().pattern(namePattern).min(2).max(20).englishOnly().noProfanity().messages({
         "string.pattern.base": "Mother Name must contain only alphabets(minimum of 2 characters) and first letter must be capital.",
         "string.empty" : "Mother's Name cannot be empty.",
         "string.profanity": "Inappropriate Language Not Allowed.",
@@ -272,14 +272,14 @@ const updateStudentSchema = Joi.object({
             "string.empty" : "Blood Group cannot be empty.",
         }),
 
-    currentStreet: Joi.string().trim().min(4).max(300).noProfanity().pattern(addressPattern).messages({
+    currentStreet: Joi.string().trim().min(4).max(300).englishOnly().noProfanity().pattern(addressPattern).messages({
         "string.pattern.base" : "Current Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Current Street must not exceed 300 characters.",
         "string.empty" : "Current Street cannot be empty.",
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    currentCity: Joi.string().trim().max(200).noProfanity().pattern(addressPattern).messages({
+    currentCity: Joi.string().trim().max(200).englishOnly().noProfanity().pattern(addressPattern).messages({
         "string.pattern.base" : "Current City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Current City must not exceed 200 characters.",
         "string.empty" : "Current City cannot be empty.",
@@ -291,14 +291,14 @@ const updateStudentSchema = Joi.object({
         "string.empty" : "Pincode cannot be empty.",
     }),
 
-    nativeStreet: Joi.string().trim().max(300).noProfanity().pattern(addressPattern).messages({
+    nativeStreet: Joi.string().trim().max(300).englishOnly().noProfanity().pattern(addressPattern).messages({
         "string.pattern.base" : "Native Street can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Native Street must not exceed 300 characters.",
         "string.empty" : "Native Street cannot be empty.",
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    nativeCity: Joi.string().trim().max(200).noProfanity().pattern(addressPattern).messages({
+    nativeCity: Joi.string().trim().max(200).englishOnly().noProfanity().pattern(addressPattern).messages({
         "string.pattern.base" : "Native City can contain only letters, numbers, spaces, and these symbols: , . - / # ( )",
         "string.max" : "Native City must not exceed 200 characters.",
         "string.empty" : "Native City cannot be empty.",
@@ -325,7 +325,7 @@ const updateStudentSchema = Joi.object({
         "string.empty" : "Parent Mobile Number cannot be empty.",
     }),
 
-    parentEmail: Joi.string().trim().email().noProfanity().lowercase().messages({
+    parentEmail: Joi.string().trim().email().englishOnly().noProfanity().lowercase().messages({
         "string.email": "Parent Email must be a valid email address.",
         "string.empty" : "Parent Email cannot be empty.",
         "string.profanity": "Inappropriate Language Not Allowed.",

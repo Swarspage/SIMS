@@ -21,7 +21,7 @@ const academicYearValidator = (value, helpers) => {
 // CREATE
 const createPlacementSchema = Joi.object({
 
-	companyName: Joi.string().trim().min(1).max(200).noProfanity().required().messages({
+	companyName: Joi.string().trim().min(1).max(200).englishOnly().noProfanity().required().messages({
 		"string.base": "Company name must be a string",
 		"string.empty": "Company name cannot be empty",
 		"string.min": "Company name cannot be empty",
@@ -30,7 +30,7 @@ const createPlacementSchema = Joi.object({
 		"string.profanity": "Inappropriate Language Not Allowed.",
 	}),
 
-	role: Joi.string().trim().min(1).max(200).noProfanity().required().messages({
+	role: Joi.string().trim().min(1).max(200).englishOnly().noProfanity().required().messages({
 		"string.base": "Role must be a string",
 		"string.empty": "Role cannot be empty",
 		"string.min": "Role cannot be empty",
@@ -86,7 +86,7 @@ const createPlacementSchema = Joi.object({
 // UPDATE
 const updatePlacementSchema = Joi.object({
 
-	companyName: Joi.string().trim().min(1).max(200).noProfanity().optional().messages({
+	companyName: Joi.string().trim().min(1).max(200).englishOnly().noProfanity().optional().messages({
 		"string.base": "Company name must be a string",
 		"string.min": "Company name cannot be empty",
 		"string.max" : "Company name can have maximum of 200 characters.",
@@ -94,7 +94,7 @@ const updatePlacementSchema = Joi.object({
 		"string.profanity": "Inappropriate Language Not Allowed.",
 	}),
 
-	role: Joi.string().trim().min(1).max(200).noProfanity().optional().messages({
+	role: Joi.string().trim().min(1).max(200).englishOnly().noProfanity().optional().messages({
 		"string.base": "Role must be a string",
 		"string.min": "Role cannot be empty",
 		"string.max" : "Role can have maximum of 200 characters.",

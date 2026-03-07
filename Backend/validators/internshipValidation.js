@@ -61,7 +61,7 @@ const durationMismatchMessage = {
 
 
 const internshipValidationSchema = Joi.object({
-    companyName: Joi.string().trim().min(2).max(200).noProfanity().required().messages({
+    companyName: Joi.string().trim().min(2).max(200).englishOnly().noProfanity().required().messages({
         "string.base": "Company name must be a string.",
         "string.min": "Company name must have at least 2 characters.",
         "string.max" : "Company Name can have a maximum of 200 characters.",
@@ -69,7 +69,7 @@ const internshipValidationSchema = Joi.object({
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    role: Joi.string().trim().min(2).max(200).noProfanity().required().messages({
+    role: Joi.string().trim().min(2).max(200).englishOnly().noProfanity().required().messages({
         "string.base": "Role must be a string.",
         "string.min": "Role must have at least 2 characters.",
         "string.max" : "Role can have a maximum of 200 characters.",
@@ -111,7 +111,7 @@ const internshipValidationSchema = Joi.object({
         otherwise: Joi.forbidden()
     }),
 
-    description: Joi.string().trim().min(10).max(300).noProfanity().required().messages({
+    description: Joi.string().trim().min(10).max(300).englishOnly().noProfanity().required().messages({
         "string.base": "Description must be a string.",
         "string.min": "Description must be at least 10 characters.",
         "string.max" : "Description can have a maximum of 300 characters.",
@@ -129,7 +129,7 @@ const internshipValidationSchema = Joi.object({
 
 
 const updateInternshipValidationSchema = Joi.object({
-    companyName: Joi.string().trim().min(2).max(200).noProfanity().optional().messages({
+    companyName: Joi.string().trim().min(2).max(200).englishOnly().noProfanity().optional().messages({
         "string.base": "Company name must be a string.",
         "string.min": "Company name must have at least 2 characters.",
         "string.max" : "Company name can have a maximum of 200 characters.",
@@ -137,7 +137,7 @@ const updateInternshipValidationSchema = Joi.object({
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    role: Joi.string().trim().min(2).max(200).noProfanity().optional().messages({
+    role: Joi.string().trim().min(2).max(200).englishOnly().noProfanity().optional().messages({
         "string.base": "Role must be a string.",
         "string.min": "Role must have at least 2 characters.",
         "string.max" : "Role can have a maximum of 200 characters.",
@@ -180,7 +180,7 @@ const updateInternshipValidationSchema = Joi.object({
         otherwise: Joi.forbidden()
     }),
 
-    description: Joi.string().trim().min(10).max(300).noProfanity().optional().messages({
+    description: Joi.string().trim().min(10).max(300).englishOnly().noProfanity().optional().messages({
         "string.base": "Description must be a string.",
         "string.min": "Description must be at least 10 characters.",
         "string.max" : "Description can have a maximum of 300 characters.",

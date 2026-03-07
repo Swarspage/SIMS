@@ -32,7 +32,7 @@ const createHigherStudySchema = Joi.object({
     .trim()
     .pattern(/^\d+(\.\d+)?%?$|^\d+\/\d+$/)
     .max(15)
-    .noProfanity()
+    .englishOnly().noProfanity()
     .required()
     .messages({
         "any.required": "Score is required.",
@@ -60,7 +60,7 @@ const updateHigherStudySchema = Joi.object({
     .trim()
     .pattern(/^\d+(\.\d+)?%?$|^\d+\/\d+$/)
     .max(15)
-    .noProfanity()
+    .englishOnly().noProfanity()
     .optional()
     .messages({
         "string.base": "Score must be a string.",
