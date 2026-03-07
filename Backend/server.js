@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 require("dotenv").config();
 const errorHandler = require("./middlewares/errorHandler");
+const {generalLimiter} = require("./middlewares/rateLimiter/rateLimiter");
 
 // ✅ ADD THIS DEBUG CHECK
 // console.log("🔍 ENVIRONMENT VARIABLES CHECK:");
@@ -40,6 +41,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
+app.use(generalLimiter); //always used just before routes
 
 // Routes
 app.use("/api/auth", require("./routes/authRoutes"));

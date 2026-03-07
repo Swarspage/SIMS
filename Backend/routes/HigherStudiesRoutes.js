@@ -52,6 +52,7 @@ const authenticateToken = require("../middlewares/authenticateToken");
 const authorizeRoles = require("../middlewares/authorizeRoles");
 const trimRequestBodyStrings = require("../middlewares/trimRequestBodyStrings");
 const upload = require("../middlewares/multer");
+const { readLimiter, writeLimiter } = require("../middlewares/rateLimiter/rateLimiter");
 
 
 // Create Higher Study --student or admin or divisionIncharge
@@ -59,6 +60,7 @@ router.post(
     "/",
     authenticateToken,
     authorizeRoles("admin", "student", "divisionIncharge"),
+    writeLimiter,
     upload.fields([{ name: "marksheet", maxCount: 1 }, { name: "idCardPhoto", maxCount: 1 }]),
     trimRequestBodyStrings,
     createHigherStudy
@@ -69,27 +71,27 @@ router.put(
     "/:higherStudyId",
     authenticateToken,
     authorizeRoles("admin", "student", "divisionIncharge"),
+    writeLimiter,
     upload.fields([{ name: "marksheet", maxCount: 1 }, { name: "idCardPhoto", maxCount: 1 }]),
     trimRequestBodyStrings,
     updateHigherStudy
 );
 
 // Delete Higher Study --student or admin or divisionIncharge
-router.delete("/:higherStudyId", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings, deleteHigherStudy );
+router.delete("/:higherStudyId", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), writeLimiter, trimRequestBodyStrings, deleteHigherStudy );
 
-// Get Logged-in Student’s Own Higher Studies --student only
-router.get( "/me", authenticateToken, authorizeRoles("student"), trimRequestBodyStrings, getOwnHigherStudies );
+// Get Logged-in Student's Own Higher Studies --student only
+router.get( "/me", authenticateToken, authorizeRoles("student"), readLimiter, trimRequestBodyStrings, getOwnHigherStudies );
 
 // Get All Higher Studies --admin or divisionIncharge
-router.get( "/", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings, getHigherStudies );
+router.get( "/", authenticateToken, authorizeRoles("admin", "divisionIncharge"), readLimiter, trimRequestBodyStrings, getHigherStudies );
 
 
 // Get Higher Studies of Specific Student (Admin or student)
-router.get("/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings, getHigherStudiesByStudent );
+router.get("/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), readLimiter, trimRequestBodyStrings, getHigherStudiesByStudent );
 
 
 //Get single higherstudy by higherStidyId --admin or student or divisionIncharge
-router.get("/single/:higherStudyId", authenticateToken, authorizeRoles("student", "admin", "divisionIncharge"), getSingleHigherStudy);
+router.get("/single/:higherStudyId", authenticateToken, authorizeRoles("student", "admin", "divisionIncharge"), readLimiter, getSingleHigherStudy);
 
 module.exports = router;
-
