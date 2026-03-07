@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addStudentDetails, getStudentById, getStudents, getSingleStudent, updateStudent, deleteStudent, importExcelDataWithPasswords, exportAllStudentsToExcel } = require("../controllers/StudentController");
+const { importStudentIDs ,addStudentDetails, getStudentById, getStudents, getSingleStudent, updateStudent, deleteStudent, importExcelDataWithPasswords, exportAllStudentsToExcel } = require("../controllers/StudentController");
 const uploadExcel = require("../middlewares/excelMulter");
 const verifyToken = require("../middlewares/VerifyToken");
 const upload = require("../middlewares/multer");
@@ -14,6 +14,9 @@ const uploadMemoryStorage = require("../middlewares/multerImportExcel");
 
 // route to add excel file and then send generated passwords via email --admin access
 router.post('/import', authenticateToken, authorizeRoles("admin", "divisionIncharge"), uploadMemoryStorage.single("studentData"), importExcelDataWithPasswords);
+
+// route to add excel file with only studentIDs --admin access
+router.post('/import-student-ids', authenticateToken, authorizeRoles("admin", "divisionIncharge"), uploadExcel.single("studentIDs"), importStudentIDs);
 
 // route to dwnload all student data in Excel format
 router.get("/export-students", authenticateToken, authorizeRoles("admin", "divisionIncharge"), exportAllStudentsToExcel);

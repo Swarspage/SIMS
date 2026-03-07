@@ -77,7 +77,121 @@ const getCellValue = (cell) => {
 };
 
 
+// Import studentIDs from Excel (only studentID )
+const importStudentIDs = async (req, res) => {
+  try {
 
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Excel file is required"
+      });
+    }
+
+    // File type validation
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({
+        success: false,
+        message: "Only Excel files (.xls, .xlsx) are allowed"
+      });
+    }
+
+    // Size validation
+    if (req.file.size > MAX_FILE_SIZE) {
+      return res.status(400).json({
+        success: false,
+        message: "Excel file size must be less than 1MB"
+      });
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(req.file.buffer);
+
+    const worksheet = workbook.worksheets[0];
+
+    if (!worksheet) {
+      return res.status(400).json({
+        success: false,
+        message: "Excel sheet is empty"
+      });
+    }
+
+    // Read header
+    const headerRow = worksheet.getRow(1);
+    const headers = headerRow.values
+      .slice(1)
+      .map(h => h?.toString().trim().toLowerCase());
+
+    // Check only one column
+    if (headers.length !== 1 || headers[0] !== "studentid") {
+      return res.status(400).json({
+        success: false,
+        message: "Excel must contain ONLY one column named 'studentID'"
+      });
+    }
+
+    const students = [];
+
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+
+      const studentID = getCellValue(row.getCell(1));
+
+      if (studentID) {
+        students.push({ studentID });
+      }
+    });
+
+    if (students.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No studentIDs found in Excel"
+      });
+    }
+
+    // Remove duplicates inside Excel
+    const uniqueStudents = [
+      ...new Map(students.map(item => [item.studentID, item])).values()
+    ];
+
+    // Check existing studentIDs
+    const existingStudents = await Student.find({
+      studentID: { $in: uniqueStudents.map(s => s.studentID) }
+    }).select("studentID");
+
+    const existingSet = new Set(existingStudents.map(s => s.studentID));
+
+    const newStudents = uniqueStudents.filter(
+      s => !existingSet.has(s.studentID)
+    );
+
+    let insertedStudents = [];
+
+    if (newStudents.length > 0) {
+      insertedStudents = await Student.insertMany(newStudents);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "StudentIDs imported successfully",
+      summary: {
+        received: students.length,
+        unique: uniqueStudents.length,
+        inserted: insertedStudents.length,
+        alreadyExists: existingStudents.length
+      }
+    });
+
+  } catch (error) {
+    console.error("Import StudentIDs Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error importing student IDs"
+    });
+  }
+};
+
+//importExcelDataWithPasswords
 const importExcelDataWithPasswords = async (req, res) => {
 	try {
 		if (!req.file) {
@@ -1105,4 +1219,4 @@ const getStudentById = async (req, res) => {
 };
 
 
-module.exports = { addStudentDetails, getStudentById, getStudents, getSingleStudent, updateStudent, deleteStudent, importExcelDataWithPasswords, exportAllStudentsToExcel };
+module.exports = { importStudentIDs , addStudentDetails, getStudentById, getStudents, getSingleStudent, updateStudent, deleteStudent, importExcelDataWithPasswords, exportAllStudentsToExcel };

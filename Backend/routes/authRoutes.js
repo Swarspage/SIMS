@@ -6,7 +6,6 @@ const authController = require('../controllers/authController');
 //student auth routes
 router.post('/signup' , authController.signup);     
 router.post('/login', authController.login);
-// router.post('/login', authController.login);
 
 //admin auth routes
 router.post('/admin-login', authController.adminLogin);
