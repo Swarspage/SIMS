@@ -400,6 +400,22 @@ function StudentProfileView({ student, onBack, onEdit, onDelete }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                 <div>
                   <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Student ID
+                  </p>
+                  <p className="text-base text-slate-800 font-bold text-blue-700">
+                    {student.studentID || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    PRN Number
+                  </p>
+                  <p className="text-base text-slate-800 font-bold text-red-600">
+                    {student.PRN || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
                     First Name
                   </p>
                   <p className="text-base text-slate-800 font-medium">
@@ -472,6 +488,14 @@ function StudentProfileView({ student, onBack, onEdit, onDelete }) {
                     {student.year || "N/A"}
                   </p>
                 </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Academic Year
+                  </p>
+                  <p className="text-base text-slate-800 font-medium">
+                    {student.academicYear || "N/A"}
+                  </p>
+                </div>
                 {student.division && (
                   <div>
                     <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
@@ -488,6 +512,14 @@ function StudentProfileView({ student, onBack, onEdit, onDelete }) {
                   </p>
                   <p className="text-base text-slate-800 font-medium">
                     {student.mobileNo || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2 font-semibold">
+                    Student Email
+                  </p>
+                  <p className="text-base text-slate-800 font-medium break-all text-blue-600">
+                    {student.email || "N/A"}
                   </p>
                 </div>
                 <div className="sm:col-span-2">

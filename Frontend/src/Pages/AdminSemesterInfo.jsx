@@ -19,7 +19,7 @@ function DetailModal({ record, onClose }) {
                 <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
                     <div>
                         <h2 className="text-xl font-bold text-slate-900">Semester {record.semester} Details</h2>
-                        <p className="text-xs text-slate-500 mt-0.5">ID: {record._id}</p>
+                        <p className="text-xs font-bold text-blue-600 mt-0.5">Student ID: {record?.stuID?.studentID || record?.studentID || record?.studentId || (typeof record?.stuID === 'string' ? record.stuID : "N/A")}</p>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,6 +52,18 @@ function DetailModal({ record, onClose }) {
                             This student is marked as a defaulter
                         </div>
                     )}
+
+                    {/* Status Indicators */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className={`rounded-xl p-4 flex items-center justify-between border ${record.journalTaken ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
+                            <span className="text-sm font-bold uppercase tracking-wider">Journal Status</span>
+                            <span className="text-sm font-black italic">{record.journalTaken ? '✅ TAKEN' : '❌ PENDING'}</span>
+                        </div>
+                        <div className={`rounded-xl p-4 flex items-center justify-between border ${record.examFormFilled ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                            <span className="text-sm font-bold uppercase tracking-wider">Exam Form</span>
+                            <span className="text-sm font-black italic">{record.examFormFilled ? '✅ FILLED' : '❌ NOT FILLED'}</span>
+                        </div>
+                    </div>
 
                     {/* KTs */}
                     {record.kts?.length > 0 && (
@@ -124,7 +136,8 @@ function DetailModal({ record, onClose }) {
 
 // ─── Semester Card ────────────────────────────────────────────────────────────
 function SemInfoCard({ record, onView, onDelete, onEdit }) {
-    const stuId = typeof record?.stuID === "string" ? record.stuID : record?.stuID?.studentID || "N/A";
+    // Try to get the human-readable studentID first (from populated object or direct field)
+    const stuId = record?.stuID?.studentID || record?.studentID || record?.studentId || (typeof record?.stuID === "string" ? record.stuID : "N/A");
     const totalScore = record.marks?.reduce((s, m) => s + m.score, 0) ?? 0;
     const totalOutOf = record.marks?.reduce((s, m) => s + m.outOf, 0) ?? 0;
 
@@ -140,6 +153,15 @@ function SemInfoCard({ record, onView, onDelete, onEdit }) {
                 </div>
 
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">{stuId}</p>
+
+                <div className="flex gap-2 mt-auto mb-3">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${record.journalTaken ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                        Jrn: {record.journalTaken ? 'Yes' : 'No'}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${record.examFormFilled ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
+                        Exam: {record.examFormFilled ? 'Yes' : 'No'}
+                    </span>
+                </div>
 
                 <div className="mb-3">
                     <div className="flex items-center gap-2">
@@ -202,6 +224,8 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
         attendance: "",
         kts: [],
         marks: [],
+        journalTaken: false,
+        examFormFilled: false,
     });
 
     const [loading, setLoading] = useState(false);
@@ -210,11 +234,13 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
         if (isOpen) {
             if (record) {
                 setFormData({
-                    studentId: typeof record.stuID === "string" ? record.stuID : record.stuID?.studentID || "",
+                    studentId: record?.stuID?.studentID || record?.studentID || record?.studentId || (typeof record?.stuID === "string" ? record.stuID : ""),
                     semester: record.semester || "",
                     attendance: record.attendance || "",
                     kts: record.kts ? [...record.kts] : [],
                     marks: record.marks ? [...record.marks] : [],
+                    journalTaken: record.journalTaken || false,
+                    examFormFilled: record.examFormFilled || false,
                 });
             } else {
                 setFormData({
@@ -223,6 +249,8 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
                     attendance: "",
                     kts: [],
                     marks: [],
+                    journalTaken: false,
+                    examFormFilled: false,
                 });
             }
         }
@@ -275,7 +303,9 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
                     subject: m.subject.trim(),
                     score: Number(m.score),
                     outOf: Number(m.outOf)
-                }))
+                })),
+                journalTaken: formData.journalTaken,
+                examFormFilled: formData.examFormFilled
             };
 
             if (!record) { payload.studentId = formData.studentId; }
@@ -443,6 +473,38 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
                                 ))}
                             </div>
                         )}
+                    </div>
+
+                    {/* Status & Compliance */}
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4">Status & Compliance</h3>
+                        <div className="flex flex-wrap gap-6">
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                                <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.journalTaken}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, journalTaken: e.target.checked }))}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </div>
+                                <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Journal Taken</span>
+                            </label>
+
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                                <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.examFormFilled}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, examFormFilled: e.target.checked }))}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </div>
+                                <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Exam Form Filled</span>
+                            </label>
+                        </div>
                     </div>
 
                     {/* Actions */}
