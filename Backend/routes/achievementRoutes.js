@@ -6,6 +6,7 @@ const upload = require("../middlewares/multer");
 const authenticateToken = require("../middlewares/authenticateToken");
 const authorizeRoles = require("../middlewares/authorizeRoles");
 const trimRequestBodyStrings = require("../middlewares/trimRequestBodyStrings");
+const { readLimiter, writeLimiter , uploadLimiter } = require("../middlewares/rateLimiter/rateLimiter");
 
 
 const {
@@ -24,6 +25,7 @@ router.post(
   "/",
   authenticateToken,
   authorizeRoles("admin", "student", "divisionIncharge"),
+  uploadLimiter,
   upload.fields([
     { name: "eventPhoto", maxCount: 1 },
     { name: "certificate", maxCount: 1 },
@@ -34,13 +36,14 @@ router.post(
 );
 
 //Get achievements of logged-in student
-router.get("/", authenticateToken, authorizeRoles("student"), trimRequestBodyStrings , getOwnAchievements);
+router.get("/", authenticateToken, authorizeRoles("student"),readLimiter, trimRequestBodyStrings , getOwnAchievements);
 
 // Update Achievement (allow replacing any uploaded file)
 router.put(
   "/:id",
   authenticateToken,
   authorizeRoles("admin", "student", "divisionIncharge"),
+  uploadLimiter,
   upload.fields([
     { name: "eventPhoto", maxCount: 1 },
     { name: "certificate", maxCount: 1 },
@@ -51,13 +54,13 @@ router.put(
 );
 
 //Delete an achievement
-router.delete("/:id", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings , deleteAchievement);
+router.delete("/:id", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), writeLimiter, trimRequestBodyStrings , deleteAchievement);
 
 //Get all achievements (with filtering options) -> admin or divisionIncharge
-router.get("/all", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings , getAllAchievements);
+router.get("/all", authenticateToken, authorizeRoles("admin", "divisionIncharge"), readLimiter , trimRequestBodyStrings , getAllAchievements);
 
 //Get specific student's achievements -> admin or divisionIncharge
-router.get("/student/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings , getStudentAchievements);
+router.get("/student/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), readLimiter, trimRequestBodyStrings , getStudentAchievements);
 
 // Get Single Achievement by ID  -- student | admin | divisionInchargee
 // router.get(
