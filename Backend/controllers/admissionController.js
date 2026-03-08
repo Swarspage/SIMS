@@ -239,69 +239,6 @@ const deleteAdmission = async (req, res) => {
   }
 };
 
-//get all admissions => admin | DI
-// const getAllAdmissions = async (req, res) => {
-//   try {
-
-//     if (!["admin" , "divisionIncharge"].includes(req.user.role)) {
-//       return res.status(403).json( { success : false , message : "Unauthorized" } );
-//     }
-
-//     const { error, value } = getAdmissionsValidation.validate(req.query);
-//     if (error) {
-//       return res.status(400).json({ success: false, message: error.details[0].message });
-//     }
-
-//     const page = Number(value.page || 1);
-//     const limit = Math.min(Number(value.limit || 10), 50);
-//     const skip = (page - 1) * limit;
-
-//     const query = {};
-
-    
-//     // Division Incharge scope
-//     if (req.user.role === "divisionIncharge") {
-//       query.year = req.user.year;
-//       query.div = req.user.division;
-//     } else{
-//       if (value.year) query.year = value.year;
-//     }
-
-//     if (value.academicYear) query.academicYear = value.academicYear;
-//     if (value.filterPaid)
-//       query.isFeesPaid = value.filterPaid === "paid";
-
-//     //search across rollno, course, academic year
-//     if (value.search) {
-//       const regex = new RegExp(value.search, "i");
-//       query.$or = [
-//         { rollno: regex },
-//         { course: regex },
-//         { academicYear: regex },
-//       ];
-//     }
-
-//     const [data, total] = await Promise.all([
-//       Admission.find(query)
-//         .populate("stuID", "name branch year")
-//         .sort({ createdAt: -1 })
-//         .skip(skip)
-//         .limit(limit),
-//       Admission.countDocuments(query),
-//     ]);
-
-//     return res.status(200).json({
-//       success: true,
-//       data,
-//       total,
-//       page,
-//       totalPages: Math.ceil(total / limit),
-//     });
-//   } catch {
-//     return res.status(500).json({ success: false, message: "Server Error" });
-//   }
-// };
-
 //get all admissions with export => admin | DI
 const getAllAdmissions = async (req, res) => {
   try {

@@ -27,7 +27,7 @@ const fileConfigs = [
   },
 ];
 
-/* ----------------------------- CREATE ACTIVITY ----------------------------- */
+/* CREATE ACTIVITY */
 
 const createActivity = async (req, res) => {
   let uploadedFiles;
@@ -206,33 +206,6 @@ const getActivities = async (req, res) => {
   }
 };
 
-/* ------------------------- GET ALL ACTIVITIES ------------------------- */
-
-// const getAllActivities = async (req, res) => {
-//   try {
-//     const match = { type: "Committee" };
-
-//     if (req.user.role === "divisionIncharge") {
-//       const students = await Student.find({
-//         year: req.user.year,
-//         division: req.user.division,
-//       }).select("_id");
-
-//       match.stuID = { $in: students.map(s => s._id) };
-//     }
-
-//     const activities = await Activity.find(match)
-//       .populate("stuID", "name roll year division")
-//       .sort({ createdAt: -1 });
-
-//     return res.status(200).json({
-//       success: true,
-//       data: activities,
-//     });
-//   } catch {
-//     return res.status(500).json({ success: false, message: "Server Error" });
-//   }
-// };
 
 //get all activities with export option
 const getAllActivities = async (req, res) => {

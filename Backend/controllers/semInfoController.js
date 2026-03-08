@@ -6,10 +6,15 @@ const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformSemesterInfo, semesterInfoColumnMap } = require('../helpers/excel/exportTransformers');
 
 
-// Helper to calculate defaulter
-const calculateDefaulter = (attendance, kts) => {
-  return attendance < 75 || (kts && kts.length > 0);
+// // Helper to calculate defaulter
+// const calculateDefaulter = (attendance, kts) => {
+//   return attendance < 75 || (kts && kts.length > 0);
+// };
+
+const calculateDefaulter = (attendance) => {
+  return attendance < 75;
 };
+
 
 //create sem info student or admin/DI
 const addSemInfo = async (req, res) => {
@@ -63,7 +68,7 @@ const addSemInfo = async (req, res) => {
       attendance,
       kts,
       marks,
-      isDefaulter: calculateDefaulter(attendance, kts),
+      isDefaulter: calculateDefaulter(attendance),
     });
 
     await semInfo.save();
@@ -204,87 +209,7 @@ const deleteSemInfo = async (req, res) => {
   }
 };
 
-// get all sem infos by admin or di
-// const getAllSemInfos = async (req, res) => {
-//   try {
-//     const query = {};
-
-//     if (req.user.role === "divisionIncharge") {
-//       const students = await Student.find({
-//         year: req.user.year,
-//         division: req.user.division,
-//       }).select("_id");
-
-//       query.stuID = { $in: students.map(s => s._id) };
-//     }
-
-//     const data = await SemesterInfo.find(query)
-//       .populate("stuID", "name roll year division")
-//       .sort({ createdAt: -1 });
-
-//     res.status(200).json({ success: true, data });
-
-//   } catch (err) {
-//     console.error("getAllSemInfos error:", err);
-//     res.status(500).json({ success: false, message: "Server Error" });
-//   }
-// };
-
-
-//get all sem infos by admin or di with export option
-// const getAllSemInfos = async (req, res) => {
-//   try {
-//     const isExport = req.query.export === "true";
-//     const query = {};
-
-//     if (req.user.role === "divisionIncharge") {
-//       const students = await Student.find({
-//         year: req.user.year,
-//         division: req.user.division,
-//       }).select("_id");
-
-//       query.stuID = { $in: students.map(s => s._id) };
-//     }
-
-//     const semInfos = await SemesterInfo.find(query)
-//       .populate("stuID", "studentID name year division")
-//       .sort({ createdAt: -1 });
-
-//     //EXPORT BRANCH
-//     if (isExport) {
-//       const rows = semInfos.map(transformSemesterInfo);
-
-//       const buffer = await exportToExcel(
-//         rows,
-//         "Semester Info",
-//         semesterInfoColumnMap
-//       );
-
-//       res.setHeader(
-//         "Content-Type",
-//         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-//       );
-
-//       res.setHeader(
-//         "Content-Disposition",
-//         'attachment; filename="semester-info.xlsx"'
-//       );
-
-//       return res.send(buffer);
-//     }
-
-//     //NORMAL JSON RESPONSE
-//     res.status(200).json({ success: true, data: semInfos });
-
-//   } catch (err) {
-//     console.error("getAllSemInfos error:", err);
-//     res.status(500).json({ success: false, message: "Server Error" });
-//   }
-// };
-
-//get own sem infos by student
-
-
+//get all sem infos with export option
 const getAllSemInfos = async (req, res) => {
   try {
 

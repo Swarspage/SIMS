@@ -158,69 +158,7 @@ const getOwnAchievements = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-/* --------------------------- GET ALL (ADMIN / DI) ------------------------------ */
 
-// const getAllAchievements = async (req, res) => {
-//   try {
-//     const { year, division, category, search, page = 1, limit = 10 } = req.query;
-//     const skip = (page - 1) * Math.min(limit, 20);
-
-//     const pipeline = [
-//       {
-//         $lookup: {
-//           from: "students",
-//           localField: "stuID",
-//           foreignField: "_id",
-//           as: "student",
-//         },
-//       },
-//       { $unwind: "$student" },
-//     ];
-
-//     const match = {};
-
-//     if (req.user.role === "divisionIncharge") {
-//       match["student.year"] = req.user.year;
-//       match["student.division"] = req.user.division;
-//     } else if (req.user.role === "admin") {
-//       if (year) match["student.year"] = year;
-//       if (division) match["student.division"] = division;
-//     }
-
-//     if (category) match.category = category;
-
-//     if (search) {
-//       match.$or = [
-//         { title: { $regex: search, $options: "i" } },
-//         { issuedBy: { $regex: search, $options: "i" } },
-//         { "student.name.firstName": { $regex: search, $options: "i" } },
-//         { "student.name.lastName": { $regex: search, $options: "i" } },
-//       ];
-//     }
-
-//     pipeline.push({ $match: match });
-
-//     const result = await Achievement.aggregate([
-//       ...pipeline,
-//       {
-//         $facet: {
-//           data: [{ $sort: { createdAt: -1 } }, { $skip: skip }, { $limit: Number(limit) }],
-//           total: [{ $count: "count" }],
-//         },
-//       },
-//     ]);
-
-//     return res.status(200).json({
-//       success: true,
-//       data: result[0].data,
-//       total: result[0].total[0]?.count || 0,
-//       page: Number(page),
-//       totalPages: Math.ceil((result[0].total[0]?.count || 0) / limit),
-//     });
-//   } catch {
-//     return res.status(500).json({ success: false, message: "Server Error" });
-//   }
-// };
 
 //getall achievements with export option
 const getAllAchievements = async (req, res) => {
