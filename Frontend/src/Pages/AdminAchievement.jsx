@@ -607,6 +607,9 @@ export default function AdminAchievements() {
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedDivision, setSelectedDivision] = useState("");
 
+  // Applied Filters State (Snapshot for WYSIWYG)
+  const [appliedFilters, setAppliedFilters] = useState({});
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(12);
@@ -621,7 +624,7 @@ export default function AdminAchievements() {
   // Fetch achievements from backend when component loads or pagination changes
   useEffect(() => {
     fetchAchievements(currentPage);
-  }, [currentPage, limit]);
+  }, [currentPage, limit, appliedFilters]);
 
   const fetchAchievements = async (page = 1) => {
     setLoading(true);
@@ -629,11 +632,7 @@ export default function AdminAchievements() {
       const params = {
         page,
         limit,
-        search: searchQuery || undefined,
-        category: selectedCategory || undefined,
-        type: selectedType || undefined,
-        year: selectedYear || undefined,
-        division: selectedDivision || undefined,
+        ...appliedFilters
       };
       const response = await achievementService.getAllAchievements(params);
       
@@ -657,10 +656,9 @@ export default function AdminAchievements() {
 
   const handleExport = async () => {
     try {
-      const params = {};
-      if (selectedCategory) params.category = selectedCategory;
-      if (selectedType) params.type = selectedType;
-      if (searchQuery) params.search = searchQuery;
+      const params = {
+        ...appliedFilters
+      };
 
       const blob = await achievementService.exportAchievements(params);
       const url = window.URL.createObjectURL(new Blob([blob]));
@@ -793,7 +791,16 @@ export default function AdminAchievements() {
         <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-6 border-t border-slate-100">
           <div className="flex gap-3">
             <button
-              onClick={() => fetchAchievements(1)}
+              onClick={() => {
+                setAppliedFilters({
+                  search: searchQuery || undefined,
+                  category: selectedCategory || undefined,
+                  type: selectedType || undefined,
+                  year: selectedYear || undefined,
+                  division: selectedDivision || undefined,
+                });
+                setCurrentPage(1);
+              }}
               className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

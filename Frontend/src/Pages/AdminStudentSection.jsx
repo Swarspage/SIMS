@@ -697,7 +697,6 @@ export default function AdminStudentSection() {
   const [detailsFilled, setDetailsFilled] = useState("");
 
   // Import/Export state (Students)
-  const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -705,85 +704,29 @@ export default function AdminStudentSection() {
   const [importingStudentIDs, setImportingStudentIDs] = useState(false);
   const studentIDsFileInputRef = useRef(null);
 
-  // Division Incharge State
-  const [activeTab, setActiveTab] = useState("students"); // "students" or "divisionIncharges"
-  const [divisionIncharges, setDivisionIncharges] = useState([]);
-  const [loadingIncharges, setLoadingIncharges] = useState(false);
-
-  // Import/Export state (Division Incharge)
-  const [importingDivision, setImportingDivision] = useState(false);
-  const [exportingDivision, setExportingDivision] = useState(false);
-  const divisionFileInputRef = useRef(null);
-
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
 
-  // Fetch Division Incharges
-  const fetchDivisionIncharges = async () => {
-    try {
-      setLoadingIncharges(true);
-      const response = await divisionInchargeService.getAll();
-      if (response && response.data) {
-        setDivisionIncharges(response.data);
-      }
-    } catch (err) {
-      console.error("Error fetching division incharges:", err);
-    } finally {
-      setLoadingIncharges(false);
-    }
-  };
+  // Applied Filters State (Snapshot for WYSIWYG)
+  const [appliedFilters, setAppliedFilters] = useState({});
 
-  // Effect to fetch incharges when tab changes
-  useEffect(() => {
-    if (activeTab === "divisionIncharges") {
-      fetchDivisionIncharges();
-    }
-  }, [activeTab]);
-
-  // Handle Delete Division Incharge
-  const handleDeleteDivisionIncharge = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this Division Incharge? This action cannot be undone.")) {
-      return;
-    }
-
-    try {
-      await divisionInchargeService.delete(id);
-      toast.success("Division Incharge deleted successfully");
-      fetchDivisionIncharges(); // Refresh list
-    } catch (err) {
-      console.error("Error deleting division incharge:", err);
-      toast.error("Failed to delete Division Incharge");
-    }
-  };
 
   // Fetch students from backend on mount ONLY
   useEffect(() => {
     fetchStudents(currentPage);
-  }, [currentPage, limit]); // Refetch when page or limit changes
+  }, [currentPage, limit, appliedFilters]); // Refetch when page, limit, or APPLIED filters change
 
   const fetchStudents = async (page = 1) => {
     try {
-      setLoading(true); // Ensure loading state is shown during refetch
+      setLoading(true);
 
       const params = {
         page,
         limit,
-        search: searchQuery || undefined,
-        year: selectedYear || undefined,
-        branch: selectedBranch || undefined,
-        division: selectedDivision || undefined,
-        academicYear: academicYear || undefined,
-        detailsFilled: detailsFilled !== "" ? detailsFilled === "true" : undefined,
-        firstName: firstName || undefined,
-        middleName: middleName || undefined,
-        lastName: lastName || undefined,
-        motherName: motherName || undefined,
-        city: city || undefined,
-        bloodGroup: bloodGroup || undefined,
-        category: category || undefined,
+        ...appliedFilters
       };
 
       // Use getStudents for server-side filtering instead of getAllStudents
@@ -852,36 +795,6 @@ export default function AdminStudentSection() {
     );
   }
 
-  // ✅ HANDLE IMPORT EXCEL (STUDENTS)
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!file.name.match(/\.(xlsx|xls)$/)) {
-      toast.warn("Please upload a valid Excel file (.xlsx or .xls)");
-      return;
-    }
-
-    try {
-      setImporting(true);
-      await studentService.importExcel(file);
-      toast.success("✅ Students imported successfully! Passwords sent via email.");
-      fetchStudents();
-      e.target.value = "";
-    } catch (err) {
-      console.error("Import error:", err);
-      toast.error(
-        err.response?.data?.message ||
-        "Failed to import students. Check file format."
-      );
-    } finally {
-      setImporting(false);
-    }
-  };
 
   // ✅ HANDLE IMPORT STUDENT IDs (new auth flow — only studentID column)
   const handleImportStudentIDsClick = () => {
@@ -914,57 +827,6 @@ export default function AdminStudentSection() {
   };
 
 
-  const handleImportDivisionInchargeClick = () => {
-    divisionFileInputRef.current?.click();
-  };
-
-  const handleDivisionFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!file.name.match(/\.(xlsx|xls)$/)) {
-      toast.warn("Please upload a valid Excel file (.xlsx or .xls)");
-      return;
-    }
-
-    try {
-      setImportingDivision(true);
-      const response = await divisionInchargeService.importExcel(file);
-
-      console.log("Import response:", response);
-
-      if (response && response.summary) {
-        const { received, inserted, emailed, failed } = response.summary;
-
-        let message = `✅ Processed ${received} records.\n`;
-        message += `Entries created: ${inserted}\n`;
-        message += `Emails sent: ${emailed}\n`;
-
-        if (failed > 0 || (response.failed && response.failed.length > 0)) {
-          message += `\n⚠️ Failed to send emails to: ${failed} users.\nCheck console for details.`;
-          console.error("Failed emails:", response.failed);
-        }
-
-        if (emailed === 0 && inserted > 0) {
-          message += `\n⚠️ WARNING: Accounts created but NO emails were sent.\nPossible reasons: SendGrid quota exceeded or invalid API key.`;
-        }
-
-        toast.info(message);
-      } else {
-        toast.info("✅ Import completed, but no detailed summary received.");
-      }
-
-      e.target.value = "";
-    } catch (err) {
-      console.error("Import error:", err);
-      toast.error(
-        err.response?.data?.message ||
-        "Failed to import Division Incharges. Check file format."
-      );
-    } finally {
-      setImportingDivision(false);
-    }
-  };
 
   // ✅ HANDLE EXPORT EXCEL (STUDENTS)
   const handleExport = async () => {
@@ -972,19 +834,7 @@ export default function AdminStudentSection() {
       setExporting(true);
 
       const params = {
-        search: searchQuery || undefined,
-        year: selectedYear || undefined,
-        branch: selectedBranch || undefined,
-        division: selectedDivision || undefined,
-        academicYear: academicYear || undefined,
-        detailsFilled: detailsFilled !== "" ? detailsFilled === "true" : undefined,
-        firstName: firstName || undefined,
-        middleName: middleName || undefined,
-        lastName: lastName || undefined,
-        motherName: motherName || undefined,
-        city: city || undefined,
-        bloodGroup: bloodGroup || undefined,
-        category: category || undefined,
+        ...appliedFilters
       };
 
       const blob = await studentService.exportStudents(params);
@@ -1012,22 +862,6 @@ export default function AdminStudentSection() {
     }
   };
 
-  // ✅ HANDLE EXPORT EXCEL (DIVISION INCHARGE)
-  const handleExportDivisionIncharge = async () => {
-    toast.warn("⚠️ Export feature for Division Incharges is not yet available in the backend. Please contact the developer to enable this (requires backend changes).");
-    // Placeholder logic for when backend is ready
-    /*
-    try {
-        setExportingDivision(true);
-        const token = localStorage.getItem("token");
-        // ... fetch logic similar to student export ...
-    } catch (err) {
-        console.error("Export error:", err);
-    } finally {
-        setExportingDivision(false);
-    }
-    */
-  };
 
   // If viewing a student profile, show full page view
   if (viewMode === "profile" && selectedStudent) {
@@ -1149,7 +983,24 @@ export default function AdminStudentSection() {
             {/* Find & Clear Buttons Group */}
             <div className="flex gap-3">
               <button
-                onClick={() => fetchStudents(1)}
+                onClick={() => {
+                  setAppliedFilters({
+                    search: searchQuery || undefined,
+                    year: selectedYear || undefined,
+                    branch: selectedBranch || undefined,
+                    division: selectedDivision || undefined,
+                    academicYear: academicYear || undefined,
+                    detailsFilled: detailsFilled !== "" ? detailsFilled === "true" : undefined,
+                    firstName: firstName || undefined,
+                    middleName: middleName || undefined,
+                    lastName: lastName || undefined,
+                    motherName: motherName || undefined,
+                    city: city || undefined,
+                    bloodGroup: bloodGroup || undefined,
+                    category: category || undefined,
+                  });
+                  setCurrentPage(1);
+                }}
                 className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1189,21 +1040,6 @@ export default function AdminStudentSection() {
                 )}
               </button>
 
-              {/* Import Button */}
-              <button
-                onClick={handleImportClick}
-                disabled={importing}
-                className="px-4 py-2.5 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {importing ? (
-                  <> <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> Importing... </>
-                ) : (
-                  <> <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg> Import </>
-                )}
-              </button>
-
-              {/* Hidden Input for Import */}
-              <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleFileChange} className="hidden" />
 
               {/* Import Student IDs Button — new auth flow */}
               <button
@@ -1234,85 +1070,6 @@ export default function AdminStudentSection() {
           </div>
 
 
-          {/* Division Incharge Actions Row - ONLY FOR ADMIN */}
-          {userRole === "admin" && (
-            <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-slate-100">
-              <h3 className="text-sm font-semibold text-slate-700 flex items-center mr-2">
-                Division Incharge Data:
-              </h3>
-
-              {/* ✅ EXPORT DIVISION INCHARGE BUTTON */}
-              <button
-                onClick={handleExportDivisionIncharge}
-                disabled={exportingDivision}
-                className="px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {exportingDivision ? (
-                  <>
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Export Incharges
-                  </>
-                )}
-              </button>
-
-              {/* ✅ IMPORT DIVISION INCHARGE BUTTON */}
-              <button
-                onClick={handleImportDivisionInchargeClick}
-                disabled={importingDivision}
-                className="px-5 py-2.5 rounded-lg bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {importingDivision ? (
-                  <>
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    Importing...
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
-                    Import Incharges
-                  </>
-                )}
-              </button>
-
-              {/* Hidden File Input for Division Incharge */}
-              <input
-                ref={divisionFileInputRef}
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleDivisionFileChange}
-                className="hidden"
-              />
-            </div>
-          )}
         </div>
 
         {/* Cards Container */}

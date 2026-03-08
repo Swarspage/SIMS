@@ -488,6 +488,9 @@ export default function AdminSemesterInfo() {
     const [minAttendance, setMinAttendance] = useState("");
     const [maxAttendance, setMaxAttendance] = useState("");
 
+    // Applied Filters State (Snapshot for WYSIWYG)
+    const [appliedFilters, setAppliedFilters] = useState({});
+
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [limit, setLimit] = useState(10);
@@ -500,7 +503,7 @@ export default function AdminSemesterInfo() {
 
     useEffect(() => {
         fetchAll(currentPage);
-    }, [currentPage, limit]);
+    }, [currentPage, limit, appliedFilters]);
 
     const fetchAll = async (page = 1) => {
         setLoading(true);
@@ -508,13 +511,7 @@ export default function AdminSemesterInfo() {
             const params = {
                 page,
                 limit,
-                search: searchQuery || undefined,
-                semester: selectedSem || undefined,
-                year: selectedYear || undefined,
-                division: selectedDivision || undefined,
-                isDefaulter: filterDefaulter || undefined,
-                minAttendance: minAttendance || undefined,
-                maxAttendance: maxAttendance || undefined,
+                ...appliedFilters
             };
             const response = await semInfoService.getAllSemInfo(params);
             
@@ -551,13 +548,7 @@ export default function AdminSemesterInfo() {
         try {
             setLoading(true);
             const params = {
-                search: searchQuery || undefined,
-                semester: selectedSem || undefined,
-                year: selectedYear || undefined,
-                division: selectedDivision || undefined,
-                isDefaulter: filterDefaulter || undefined,
-                minAttendance: minAttendance || undefined,
-                maxAttendance: maxAttendance || undefined,
+                ...appliedFilters
             };
 
             const blob = await semInfoService.exportSemInfo(params);
@@ -675,7 +666,18 @@ export default function AdminSemesterInfo() {
 
                     <div className="flex gap-3">
                         <button
-                            onClick={() => fetchAll(1)}
+                            onClick={() => {
+                                setAppliedFilters({
+                                    search: searchQuery || undefined,
+                                    semester: selectedSem || undefined,
+                                    year: selectedYear || undefined,
+                                    division: selectedDivision || undefined,
+                                    isDefaulter: filterDefaulter || undefined,
+                                    minAttendance: minAttendance || undefined,
+                                    maxAttendance: maxAttendance || undefined,
+                                });
+                                setCurrentPage(1);
+                            }}
                             className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

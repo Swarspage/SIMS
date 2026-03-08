@@ -605,10 +605,13 @@ export default function AdminInternship() {
   const [endDateFrom, setEndDateFrom] = useState("");
   const [endDateTo, setEndDateTo] = useState("");
 
+  // Applied Filters State (Snapshot for WYSIWYG)
+  const [appliedFilters, setAppliedFilters] = useState({});
+
   // Initial fetch on mount or pagination change
   useEffect(() => {
     fetchInternships(currentPage);
-  }, [currentPage, limit]);
+  }, [currentPage, limit, appliedFilters]);
 
   const fetchInternships = async (page = 1) => {
     try {
@@ -616,14 +619,7 @@ export default function AdminInternship() {
       const params = {
         page,
         limit,
-        search: searchQuery || undefined,
-        year: filterYear || undefined,
-        division: filterDivision || undefined,
-        isPaid: filterIsPaid || undefined,
-        startDateFrom: startDateFrom || undefined,
-        startDateTo: startDateTo || undefined,
-        endDateFrom: endDateFrom || undefined,
-        endDateTo: endDateTo || undefined,
+        ...appliedFilters
       };
       const response = await internshipService.getAllInternships(params);
       
@@ -648,14 +644,7 @@ export default function AdminInternship() {
   const handleExport = async () => {
     try {
       const params = {
-        search: searchQuery || undefined,
-        year: filterYear || undefined,
-        division: filterDivision || undefined,
-        isPaid: filterIsPaid || undefined,
-        startDateFrom: startDateFrom || undefined,
-        startDateTo: startDateTo || undefined,
-        endDateFrom: endDateFrom || undefined,
-        endDateTo: endDateTo || undefined,
+        ...appliedFilters
       };
       const blob = await internshipService.exportInternships(params);
       const url = window.URL.createObjectURL(new Blob([blob]));
@@ -727,7 +716,19 @@ export default function AdminInternship() {
 
           <div className="flex gap-3 ml-auto flex-wrap">
             <button
-               onClick={() => fetchInternships(1)}
+               onClick={() => {
+                 setAppliedFilters({
+                   search: searchQuery || undefined,
+                   year: filterYear || undefined,
+                   division: filterDivision || undefined,
+                   isPaid: filterIsPaid || undefined,
+                   startDateFrom: startDateFrom || undefined,
+                   startDateTo: startDateTo || undefined,
+                   endDateFrom: endDateFrom || undefined,
+                   endDateTo: endDateTo || undefined,
+                 });
+                 setCurrentPage(1);
+               }}
                className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
