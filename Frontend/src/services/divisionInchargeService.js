@@ -8,8 +8,8 @@ export const divisionInchargeService = {
     },
 
     // Get All Division Incharges (Admin)
-    getAll: async () => {
-        const response = await API.get("/divisionIncharge", { withCredentials: true });
+    getAll: async (params = {}) => {
+        const response = await API.get("/divisionIncharge", { params, withCredentials: true });
         return response.data;
     },
 

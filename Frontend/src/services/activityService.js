@@ -30,8 +30,8 @@ export const activityService = {
   },
 
   // ✅ FIXED: Get all activities (Admin only)
-  getAllActivities: async () => {
-    const response = await API.get("/activities/all");
+  getAllActivities: async (params = {}) => {
+    const response = await API.get("/activities/all", { params });
     return response.data;
   },
 

@@ -48,4 +48,14 @@ export const placementService = {
     const response = await API.get(`/placement/${placementId}`);
     return response.data;
   },
+
+  // Export placements
+  exportPlacements: async (params = {}) => {
+    const exportParams = { ...params, export: true };
+    const response = await API.get("/placement", {
+      params: exportParams,
+      responseType: "blob",
+    });
+    return response.data;
+  },
 };

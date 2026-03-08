@@ -44,4 +44,14 @@ export const higherStudiesService = {
     const response = await API.get(`/higherStudies/${studentId}`);
     return response.data;
   },
+
+  // Export higher studies
+  exportHigherStudies: async (params = {}) => {
+    const exportParams = { ...params, export: true };
+    const response = await API.get("/higherStudies", {
+      params: exportParams,
+      responseType: "blob",
+    });
+    return response.data;
+  },
 };

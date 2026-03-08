@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { admissionService } from "../services/admissionService";
 import { toast, Toaster } from "react-hot-toast";
+import Pagination from "../Components/Common/Pagination";
 
 // ==================== COMPONENTS ====================
 
@@ -350,18 +351,41 @@ export default function AdminAdmission() {
   const [academicYearFilter, setAcademicYearFilter] = useState("");
   const [feesPaidFilter, setFeesPaidFilter] = useState("");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   const [selectedAdmission, setSelectedAdmission] = useState(null); // For View
   const [editingAdmission, setEditingAdmission] = useState(null); // For Edit
 
   useEffect(() => {
-    fetchAdmissions();
-  }, []);
+    fetchAdmissions(currentPage);
+  }, [currentPage, limit]);
 
-  const fetchAdmissions = async () => {
+  const fetchAdmissions = async (page = 1) => {
     try {
       setLoading(true);
-      const data = await admissionService.getAllAdmissions();
-      setAdmissions(Array.isArray(data) ? data : []);
+      const params = {
+        page,
+        limit,
+        search: searchQuery || undefined,
+        status: statusFilter || undefined,
+        year: yearFilter || undefined,
+        academicYear: academicYearFilter || undefined,
+        filterPaid: feesPaidFilter || undefined,
+      };
+      const response = await admissionService.getAllAdmissions(params);
+      
+      const data = response.data || [];
+      const total = response.total || 0;
+      const totalP = response.totalPages || 1;
+
+      setAdmissions(data);
+      setTotalRecords(total);
+      setTotalPages(totalP);
+      if (page === 1) setCurrentPage(1);
       setError(null);
     } catch (err) {
       console.error("Error fetching admissions:", err);
@@ -379,7 +403,7 @@ export default function AdminAdmission() {
     const toastId = toast.loading("Deleting admission...");
     try {
       await admissionService.deleteAdmission(id);
-      setAdmissions(prev => prev.filter(a => a._id !== id));
+      fetchAdmissions(currentPage);
       toast.success("Admission deleted successfully", { id: toastId });
     } catch (err) {
       console.error(err);
@@ -405,43 +429,17 @@ export default function AdminAdmission() {
     }
   };
 
-  // FILTER LOGIC
-  const filteredAdmissions = admissions.filter((a) => {
-    const q = searchQuery.toLowerCase();
-    const sid = typeof a.stuID === "string" ? a.stuID : a.stuID?.studentID || "";
-    // Safe rollno check
-    const roll = a.rollno ? a.rollno.toLowerCase() : "";
-
-    const matchesSearch = (sid.toLowerCase().includes(q) ||
-        a.course?.toLowerCase().includes(q) ||
-        roll.includes(q) ||
-        a.academicYear?.toLowerCase().includes(q));
-
-    const matchesStatus = !statusFilter || a.status === statusFilter;
-
-    // Year block
-    const matchesYear = !yearFilter || (() => {
-      if (typeof a.stuID === 'object' && a.stuID?.year) {
-        return a.stuID.year === yearFilter;
-      }
-      return true; // Pass if unknown
-    })();
-
-    const matchesAcademicYear = !academicYearFilter || (a.academicYear && a.academicYear === academicYearFilter);
-
-    // Fee paid logic (feesPaidFilter can be "paid" or "unpaid")
-    const matchesFees = !feesPaidFilter || 
-      (feesPaidFilter === "paid" ? a.isFeesPaid === true : a.isFeesPaid === false);
-
-    return matchesSearch && matchesStatus && matchesYear && matchesAcademicYear && matchesFees;
-  });
+  // FILTER LOGIC - Manual Trigger
+  const handleFind = () => {
+    fetchAdmissions(1);
+  };
 
   return (
     <main className="p-8 bg-slate-50 min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Manage Admissions</h1>
         <p className="text-slate-600 mt-2">
-          {filteredAdmissions.length} of {admissions.length} admissions
+          {totalRecords} admissions
         </p>
       </div>
 
@@ -498,20 +496,29 @@ export default function AdminAdmission() {
           <option value="unpaid">Unpaid</option>
         </select>
 
-        {(searchQuery || statusFilter || yearFilter || academicYearFilter || feesPaidFilter) && (
+        <div className="flex gap-3">
           <button
-            onClick={() => {
-              setSearchQuery("");
-              setStatusFilter("");
-              setYearFilter("");
-              setAcademicYearFilter("");
-              setFeesPaidFilter("");
-            }}
-            className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition"
+            onClick={handleFind}
+            className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
           >
-            Clear
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Find Admissions
           </button>
-        )}
+
+          {(searchQuery || statusFilter || yearFilter || academicYearFilter || feesPaidFilter) && (
+            <button
+              onClick={() => {
+                setSearchQuery(""); setStatusFilter(""); setYearFilter(""); setAcademicYearFilter(""); setFeesPaidFilter("");
+              }}
+              className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              Clear All
+            </button>
+          )}
+        </div>
       </div>
 
       {/* CONTENT */}
@@ -529,7 +536,7 @@ export default function AdminAdmission() {
           </div>
         )}
 
-        {!loading && !error && filteredAdmissions.length === 0 && (
+        {!loading && !error && admissions.length === 0 && (
           <div className="bg-white p-16 text-center rounded-xl border border-slate-200 border-dashed">
             <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
@@ -539,9 +546,9 @@ export default function AdminAdmission() {
           </div>
         )}
 
-        {!loading && !error && filteredAdmissions.length > 0 && (
+        {!loading && !error && admissions.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredAdmissions.map((admission) => (
+            {admissions.map((admission) => (
               <AdmissionCard
                 key={admission._id}
                 admission={admission}
@@ -551,6 +558,21 @@ export default function AdminAdmission() {
               />
             ))}
           </div>
+        )}
+
+        {/* Pagination Component */}
+        {!loading && !error && admissions.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            limit={limit}
+            onPageChange={(page) => setCurrentPage(page)}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setCurrentPage(1);
+            }}
+          />
         )}
       </div>
 

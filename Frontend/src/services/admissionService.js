@@ -11,9 +11,9 @@ export const admissionService = {
     return response.data.data;
   },
 
-  getAllAdmissions: async () => {
-    const response = await API.get("/admission/all"); // ✅ NEW
-    return response.data?.data || response.data || [];
+  getAllAdmissions: async (params = {}) => {
+    const response = await API.get("/admission/all", { params }); // ✅ FIXED
+    return response.data;
   },
 
   updateAdmission: async (admissionId, admissionData) => {

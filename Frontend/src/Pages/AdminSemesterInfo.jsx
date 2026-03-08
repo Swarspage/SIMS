@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { semInfoService } from "../services/semInfoService";
-import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
+import Pagination from "../Components/Common/Pagination";
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 function DetailModal({ record, onClose }) {
@@ -44,7 +44,6 @@ function DetailModal({ record, onClose }) {
                             </div>
                         ))}
                     </div>
-
                     {record.isDefaulter && (
                         <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-2 text-red-700 text-sm font-semibold">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -488,20 +487,45 @@ export default function AdminSemesterInfo() {
     const [filterDefaulter, setFilterDefaulter] = useState(""); // "" or "true"
     const [minAttendance, setMinAttendance] = useState("");
     const [maxAttendance, setMaxAttendance] = useState("");
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalRecords, setTotalRecords] = useState(0);
+
     const [selectedItem, setSelectedItem] = useState(null);
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [recordToEdit, setRecordToEdit] = useState(null);
 
     useEffect(() => {
-        fetchAll();
-    }, []);
+        fetchAll(currentPage);
+    }, [currentPage, limit]);
 
-    const fetchAll = async () => {
+    const fetchAll = async (page = 1) => {
         setLoading(true);
         try {
-            const response = await semInfoService.getAllSemInfo();
-            const data = response.data || response;
-            setRecords(Array.isArray(data) ? data : []);
+            const params = {
+                page,
+                limit,
+                search: searchQuery || undefined,
+                semester: selectedSem || undefined,
+                year: selectedYear || undefined,
+                division: selectedDivision || undefined,
+                isDefaulter: filterDefaulter || undefined,
+                minAttendance: minAttendance || undefined,
+                maxAttendance: maxAttendance || undefined,
+            };
+            const response = await semInfoService.getAllSemInfo(params);
+            
+            const data = response.data || [];
+            const total = response.total || 0;
+            const totalP = response.totalPages || 1;
+
+            setRecords(data);
+            setTotalRecords(total);
+            setTotalPages(totalP);
+            if (page === 1) setCurrentPage(1);
             setError(null);
         } catch (err) {
             console.error("Error fetching semester info:", err);
@@ -516,77 +540,49 @@ export default function AdminSemesterInfo() {
         if (!window.confirm("Delete this semester record?")) return;
         try {
             await semInfoService.deleteSemInfo(id);
-            fetchAll();
+            fetchAll(currentPage);
         } catch {
             toast.error("Failed to delete record.");
         }
     };
 
-    const handleExport = () => {
+    const handleExport = async () => {
         if (filtered.length === 0) { toast.warn("No data to export."); return; }
         try {
-            const rows = filtered.map((r) => {
-                const stuId = typeof r?.stuID === "string" ? r.stuID : r?.stuID?.studentID || "N/A";
-                const totalScore = r.marks?.reduce((s, m) => s + m.score, 0) ?? 0;
-                const totalOutOf = r.marks?.reduce((s, m) => s + m.outOf, 0) ?? 0;
-                return {
-                    "Student ID": stuId,
-                    Semester: r.semester,
-                    "Attendance (%)": r.attendance,
-                    "Total Score": totalScore,
-                    "Total Out Of": totalOutOf,
-                    "KTs": (r.kts || []).join(", ") || "None",
-                    Defaulter: r.isDefaulter ? "Yes" : "No",
-                    "Subjects & Marks": (r.marks || []).map((m) => `${m.subject}: ${m.score}/${m.outOf}`).join(" | "),
-                };
-            });
+            setLoading(true);
+            const params = {
+                search: searchQuery || undefined,
+                semester: selectedSem || undefined,
+                year: selectedYear || undefined,
+                division: selectedDivision || undefined,
+                isDefaulter: filterDefaulter || undefined,
+                minAttendance: minAttendance || undefined,
+                maxAttendance: maxAttendance || undefined,
+            };
 
-            const ws = XLSX.utils.json_to_sheet(rows);
-            const colWidths = Object.keys(rows[0]).map((k) => ({
-                wch: Math.max(k.length, ...rows.map((r) => (r[k] ? r[k].toString().length : 0))) + 2,
-            }));
-            ws["!cols"] = colWidths;
+            const blob = await semInfoService.exportSemInfo(params);
 
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Semester Info");
-            XLSX.writeFile(wb, `SemesterInfo_Export_${new Date().toLocaleDateString("en-IN")}.xlsx`);
+            // Create download link
+            const url = window.URL.createObjectURL(new Blob([blob]));
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `SemesterInfo_Export_${new Date().toLocaleDateString("en-IN").replace(/\//g, "-")}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            toast.success("✅ Exported successfully!");
         } catch (err) {
             console.error(err);
             toast.error("Export failed. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
-    const filtered = records.filter((r) => {
-        const stuIdStr = (typeof r?.stuID === "string" ? r.stuID : r?.stuID?.studentID || "").toLowerCase();
-        
-        const matchSearch = !searchQuery || stuIdStr.includes(searchQuery.toLowerCase()) || r.semester?.toString().includes(searchQuery);
-        const matchSem = !selectedSem || r.semester?.toString() === selectedSem;
-        
-        // Defaulter filter
-        const matchDefaulter = filterDefaulter === "true" ? r.isDefaulter === true : true;
-        
-        // Attendance range
-        const minAtt = minAttendance === "" ? 0 : Number(minAttendance);
-        const maxAtt = maxAttendance === "" ? 100 : Number(maxAttendance);
-        const matchAttendance = r.attendance >= minAtt && r.attendance <= maxAtt;
-
-        // Year/Div filter matching on populated stuID object
-        const matchYear = !selectedYear || (() => {
-            if (typeof r.stuID === 'object' && r.stuID?.year) {
-                return r.stuID.year === selectedYear;
-            }
-            return true; // if not populated, let it pass
-        })();
-
-        const matchDiv = !selectedDivision || (() => {
-            if (typeof r.stuID === 'object' && r.stuID?.division) {
-                return r.stuID.division === selectedDivision;
-            }
-            return true; // if not populated, let it pass
-        })();
-
-        return matchSearch && matchSem && matchDefaulter && matchAttendance && matchYear && matchDiv;
-    });
+    // We now use server-side filtering, so filtered is just the records list
+    const filtered = records;
 
     return (
         <main className="p-8 bg-slate-50 min-h-screen">
@@ -594,8 +590,7 @@ export default function AdminSemesterInfo() {
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-slate-900">Semester Information</h1>
                 <p className="text-slate-600 mt-2">
-                    Showing <span className="font-semibold text-blue-600">{filtered.length}</span> of{" "}
-                    <span className="font-semibold text-slate-900">{records.length}</span> records
+                    Showing <span className="font-semibold text-blue-600">{totalRecords}</span> records
                 </p>
             </div>
 
@@ -678,22 +673,31 @@ export default function AdminSemesterInfo() {
                         />
                     </div>
 
-                    {(searchQuery || selectedSem || selectedYear || selectedDivision || filterDefaulter || minAttendance || maxAttendance) && (
+                    <div className="flex gap-3">
                         <button
-                            onClick={() => { 
-                                setSearchQuery(""); 
-                                setSelectedSem(""); 
-                                setSelectedYear("");
-                                setSelectedDivision("");
-                                setFilterDefaulter("");
-                                setMinAttendance("");
-                                setMaxAttendance("");
-                            }}
-                            className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition"
+                            onClick={() => fetchAll(1)}
+                            className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
                         >
-                            Clear
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Find Records
                         </button>
-                    )}
+
+                        {(searchQuery || selectedSem || selectedYear || selectedDivision || filterDefaulter || minAttendance || maxAttendance) && (
+                            <button
+                                onClick={() => {
+                                    setSearchQuery(""); setSelectedSem(""); setSelectedYear("");
+                                    setSelectedDivision(""); setFilterDefaulter("");
+                                    setMinAttendance(""); setMaxAttendance("");
+                                }}
+                                className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                Clear Filters
+                            </button>
+                        )}
+                    </div>
 
                     <button
                         onClick={handleExport}
@@ -742,6 +746,21 @@ export default function AdminSemesterInfo() {
                         ))}
                     </div>
                 )}
+
+                {/* Pagination Component */}
+                {!loading && !error && filtered.length > 0 && (
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalRecords={totalRecords}
+                        limit={limit}
+                        onPageChange={(page) => setCurrentPage(page)}
+                        onLimitChange={(newLimit) => {
+                            setLimit(newLimit);
+                            setCurrentPage(1);
+                        }}
+                    />
+                )}
             </div>
 
             {selectedItem && <DetailModal record={selectedItem} onClose={() => setSelectedItem(null)} />}
@@ -750,7 +769,7 @@ export default function AdminSemesterInfo() {
                 isOpen={isFormModalOpen}
                 onClose={() => setIsFormModalOpen(false)}
                 record={recordToEdit}
-                onSave={fetchAll}
+                onSave={() => fetchAll(currentPage)}
             />
         </main>
     );

@@ -38,9 +38,10 @@ export const semInfoService = {
     },
 
     // Admin: export all semester info as Excel blob
-    exportSemInfo: async () => {
+    exportSemInfo: async (params = {}) => {
+        const exportParams = { ...params, export: "true" };
         const response = await API.get("/semesterInfo/all", {
-            params: { export: "true" },
+            params: exportParams,
             responseType: "blob",
         });
         return response.data;

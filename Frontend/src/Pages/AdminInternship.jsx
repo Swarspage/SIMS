@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { internshipService } from "../services/internshipService";
 import { toast } from "react-toastify";
+import Pagination from "../Components/Common/Pagination";
 
 // InternshipCard Component - COMPACT & BEAUTIFUL
 function InternshipCard({ internship, onView, onDelete, onEdit }) {
@@ -234,6 +235,20 @@ function DetailModal({ internship, onClose }) {
             </div>
           </div>
 
+          <div className="flex justify-end mt-4">
+            {(searchQuery || filterYear || filterDivision || filterIsPaid || startDateFrom || startDateTo || endDateFrom || endDateTo) && (
+              <button
+                onClick={() => {
+                  setSearchQuery(""); setFilterYear(""); setFilterDivision(""); setFilterIsPaid("");
+                  setStartDateFrom(""); setStartDateTo(""); setEndDateFrom(""); setEndDateTo("");
+                }}
+                className="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                Clear All Filters
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Modal Footer */}
@@ -569,6 +584,12 @@ export default function AdminInternship() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   // Modal State
   const [selectedInternship, setSelectedInternship] = useState(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -584,16 +605,17 @@ export default function AdminInternship() {
   const [endDateFrom, setEndDateFrom] = useState("");
   const [endDateTo, setEndDateTo] = useState("");
 
-  // Debounced re-fetch whenever any filter changes
+  // Initial fetch on mount or pagination change
   useEffect(() => {
-    const t = setTimeout(() => fetchInternships(), 500);
-    return () => clearTimeout(t);
-  }, [searchQuery, filterYear, filterDivision, filterIsPaid, startDateFrom, startDateTo, endDateFrom, endDateTo]);
+    fetchInternships(currentPage);
+  }, [currentPage, limit]);
 
-  const fetchInternships = async () => {
+  const fetchInternships = async (page = 1) => {
     try {
       setLoading(true);
       const params = {
+        page,
+        limit,
         search: searchQuery || undefined,
         year: filterYear || undefined,
         division: filterDivision || undefined,
@@ -604,8 +626,15 @@ export default function AdminInternship() {
         endDateTo: endDateTo || undefined,
       };
       const response = await internshipService.getAllInternships(params);
-      const data = response.data || response.internships || response;
-      setInternships(Array.isArray(data) ? data : []);
+      
+      const data = response.data || [];
+      const total = response.total || 0;
+      const totalP = response.totalPages || 1;
+
+      setInternships(data);
+      setTotalRecords(total);
+      setTotalPages(totalP);
+      if (page === 1) setCurrentPage(1);
       setError(null);
     } catch (err) {
       console.error("Error fetching internships:", err);
@@ -666,7 +695,7 @@ export default function AdminInternship() {
       return;
     try {
       await internshipService.deleteInternship(id);
-      fetchInternships();
+      fetchInternships(currentPage);
       toast.success("Internship deleted successfully!");
     } catch (err) {
       console.error("Error deleting internship:", err);
@@ -680,7 +709,7 @@ export default function AdminInternship() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Manage Internships</h1>
         <p className="text-slate-600 mt-2">
-          <span className="font-semibold text-blue-600">{internships.length}</span> internships loaded
+          <span className="font-semibold text-blue-600">{totalRecords}</span> internships loaded
         </p>
       </div>
 
@@ -697,18 +726,27 @@ export default function AdminInternship() {
           />
 
           <div className="flex gap-3 ml-auto flex-wrap">
+            <button
+               onClick={() => fetchInternships(1)}
+               className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Find Internships
+            </button>
+            <button
+              onClick={handleAddInternship}
+              className="px-5 py-2.5 rounded-lg border border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition-colors shadow-sm">
+              + Add Internship
+            </button>
             <button onClick={handleExport}
-              className="px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm flex items-center gap-2">
+              className="px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Export to Excel
-            </button>
-            <button
-              onClick={handleAddInternship}
-              className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm">
-              + Add Internship
+              Export
             </button>
           </div>
         </div>
@@ -833,6 +871,21 @@ export default function AdminInternship() {
             ))}
           </div>
         )}
+
+        {/* Pagination Component */}
+        {!loading && !error && internships.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            limit={limit}
+            onPageChange={(page) => setCurrentPage(page)}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setCurrentPage(1);
+            }}
+          />
+        )}
       </div>
 
       {/* Detail Modal */}
@@ -848,7 +901,7 @@ export default function AdminInternship() {
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
         internship={internshipToEdit}
-        onSave={fetchInternships}
+        onSave={() => fetchInternships(currentPage)}
       />
     </main>
   );

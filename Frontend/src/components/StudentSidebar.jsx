@@ -87,57 +87,72 @@ function getIcon(name, isActive) {
 }
 
 // Extracted outside parent to avoid remounting on every render
-function SidebarInner({ collapsed, pathname, onLinkClick, onLogout }) {
+function SidebarInner({ pathname, onLinkClick, onLogout }) {
   return (
-    <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="flex flex-col items-center py-6 px-4 border-b border-slate-200">
+    <div className="flex flex-col h-full bg-white/70 backdrop-blur-xl">
+      {/* Logo Section */}
+      <div className="flex flex-col items-center py-8 px-4 border-b border-slate-200/50">
         <img
           src={logo}
           alt="logo"
-          className={`object-contain transition-all ${collapsed ? "md:w-8 md:h-8 w-16 h-16" : "w-16 h-16"}`}
+          className="w-20 h-20 object-contain transition-all duration-500"
         />
-        {!collapsed && (
-          <p className="text-xs font-semibold text-center text-slate-700 leading-tight mt-2">
+        <div className="mt-4 flex flex-col items-center animate-in fade-in slide-in-from-top-2 duration-700">
+          <p className="text-[10px] font-bold text-center text-slate-400 uppercase tracking-widest leading-tight">
             Datta Meghe College Of Engineering
           </p>
-        )}
+          <span className="text-[10px] font-semibold text-blue-600 mt-2 bg-blue-50/80 backdrop-blur-sm border border-blue-100 px-3 py-1 rounded-full shadow-sm">
+            Student Portal
+          </span>
+        </div>
       </div>
 
-      {/* Nav - scrollable */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
-        {menuItems.map((item) => {
+      {/* Nav Section - scrollable */}
+      <nav className="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-1.5 custom-scrollbar">
+        {menuItems.map((item, index) => {
           const isActive = pathname === item.path;
           return (
             <Link
               key={item.name}
               to={item.path}
               onClick={onLinkClick}
-              title={collapsed ? item.name : undefined}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
-                ${isActive ? "bg-blue-500 text-white shadow-sm" : "text-slate-700 hover:bg-slate-200 hover:text-slate-900"}
-                ${collapsed ? "md:justify-center md:px-2" : ""}`}
+              style={{ animationDelay: `${index * 50}ms` }}
+              className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 transform active:scale-95
+                ${isActive 
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-200/50 ring-1 ring-blue-700/10" 
+                  : "text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-sm hover:translate-x-1"
+                }
+                animate-in fade-in slide-in-from-left-4 duration-500`}
             >
-              <span className="flex-shrink-0">{getIcon(item.name, isActive)}</span>
-              <span className={`truncate ${collapsed ? "md:hidden" : ""}`}>{item.name}</span>
+              <span className={`flex-shrink-0 transition-transform duration-300 group-hover:scale-110 ${isActive ? "drop-shadow-sm" : ""}`}>
+                {getIcon(item.name, isActive)}
+              </span>
+              <span className="truncate transition-all duration-300 opacity-100">
+                {item.name}
+              </span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Logout */}
-      <div className="p-3 border-t border-slate-200">
+      {/* Logout Section */}
+      <div className="p-4 border-t border-slate-200/50 bg-slate-50/30">
         <button
           onClick={onLogout}
-          title={collapsed ? "Logout" : undefined}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-            bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-all
-            ${collapsed ? "md:justify-center md:px-2" : ""}`}
+          className="group w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold
+            bg-red-50/50 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-red-200/50
+            active:scale-95"
         >
-          <svg className="w-5 h-5 flex-shrink-0" stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24">
+          <svg 
+            className="w-5 h-5 flex-shrink-0 transition-transform duration-300 group-hover:-translate-x-1" 
+            stroke="currentColor" 
+            fill="none" 
+            strokeWidth="2" 
+            viewBox="0 0 24 24"
+          >
             <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          <span className={`${collapsed ? "md:hidden" : ""}`}>Logout</span>
+          <span className="transition-all duration-300 opacity-100">Logout</span>
         </button>
       </div>
     </div>
@@ -148,7 +163,6 @@ export default function StudentSidebar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -161,12 +175,12 @@ export default function StudentSidebar() {
     <>
       {/* ── Mobile hamburger ─────────────────────────────────── */}
       <button
-        className="md:hidden fixed top-3 left-3 z-50 p-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
+        className="md:hidden fixed top-4 left-4 z-50 p-2.5 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 duration-300"
         onClick={() => setMobileOpen(true)}
         aria-label="Open menu"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
 
@@ -179,42 +193,26 @@ export default function StudentSidebar() {
 
       {/* ── Mobile drawer ────────────────────────────────────── */}
       <aside
-        className={`md:hidden fixed top-0 left-0 h-full w-72 max-w-[85vw] bg-gradient-to-b from-slate-50 to-slate-100 shadow-2xl z-50 transition-transform duration-300 flex flex-col
+        className={`md:hidden fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white/90 backdrop-blur-2xl shadow-[20px_0_50px_rgba(0,0,0,0.1)] z-50 transition-transform duration-500 ease-out flex flex-col border-r border-white/20
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <button
-          className="absolute top-3 right-3 p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition"
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all duration-300 active:scale-95"
           onClick={() => setMobileOpen(false)}
           aria-label="Close menu"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <SidebarInner collapsed={false} pathname={pathname} onLinkClick={() => setMobileOpen(false)} onLogout={handleLogout} />
+        <SidebarInner pathname={pathname} onLinkClick={() => setMobileOpen(false)} onLogout={handleLogout} />
       </aside>
 
       {/* ── Desktop sidebar ──────────────────────────────────── */}
       <aside
-        className={`hidden md:flex flex-col sticky top-0 h-screen bg-gradient-to-b from-slate-50 to-slate-100 border-r border-slate-200 shadow-sm transition-all duration-300 flex-shrink-0
-          ${collapsed ? "w-16" : "w-64"}`}
+        className="hidden md:flex flex-col sticky top-0 h-screen bg-white/80 backdrop-blur-xl border-r border-slate-200/50 shadow-sm transition-all duration-500 ease-in-out flex-shrink-0 z-30 w-72"
       >
-        <button
-          className="absolute -right-3 top-6 z-10 bg-blue-500 text-white rounded-full p-1 shadow hover:bg-blue-600 transition"
-          onClick={() => setCollapsed((c) => !c)}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? (
-            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none">
-              <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none">
-              <path d="M13 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          )}
-        </button>
-        <SidebarInner collapsed={collapsed} pathname={pathname} onLinkClick={() => { }} onLogout={handleLogout} />
+        <SidebarInner pathname={pathname} onLinkClick={() => { }} onLogout={handleLogout} />
       </aside>
     </>
   );

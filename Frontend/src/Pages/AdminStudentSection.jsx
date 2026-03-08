@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import avatar from "../assets/Students.png";
 import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import Pagination from "../Components/Common/Pagination";
 
 
 // Component: Add Student Modal
@@ -19,18 +20,15 @@ function AddStudentModal({ isOpen, onClose, onAdded }) {
     }
     try {
       setSaving(true);
-      // Create a dummy Excel workbook in memory
-      const wb = XLSX.utils.book_new();
-      const wsData = [
-        ["studentID", "email"],
-        [form.studentID.trim(), form.email.trim().toLowerCase()],
-      ];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      XLSX.utils.book_append_sheet(wb, ws, "Students");
+      // Create a dummy Excel workbook in memory using exceljs
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Students");
+      worksheet.addRow(["studentID", "email"]);
+      worksheet.addRow([form.studentID.trim(), form.email.trim().toLowerCase()]);
 
       // Write workbook to array buffer
-      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-      const blob = new Blob([wbout], { type: "application/octet-stream" });
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
       const file = new File([blob], "new_student.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 
       // Call the existing import endpoint with our 1-row file
@@ -669,7 +667,6 @@ function StudentProfileView({ student, onBack, onEdit, onDelete }) {
 // Main App Component
 export default function AdminStudentSection() {
   const [students, setStudents] = useState([]);
-  const [filteredStudents, setFilteredStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userRole, setUserRole] = useState(localStorage.getItem("role") || "");
@@ -718,6 +715,12 @@ export default function AdminStudentSection() {
   const [exportingDivision, setExportingDivision] = useState(false);
   const divisionFileInputRef = useRef(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   // Fetch Division Incharges
   const fetchDivisionIncharges = async () => {
     try {
@@ -756,22 +759,18 @@ export default function AdminStudentSection() {
     }
   };
 
-  // Fetch students from backend when filters change
+  // Fetch students from backend on mount ONLY
   useEffect(() => {
-    // Debounce search query to avoid too many API calls
-    const delayDebounceFn = setTimeout(() => {
-      fetchStudents();
-    }, 500);
+    fetchStudents(currentPage);
+  }, [currentPage, limit]); // Refetch when page or limit changes
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, selectedYear, selectedBranch, firstName, middleName, lastName, motherName, city, bloodGroup, category, selectedDivision, academicYear, detailsFilled]);
-
-  const fetchStudents = async () => {
+  const fetchStudents = async (page = 1) => {
     try {
       setLoading(true); // Ensure loading state is shown during refetch
 
       const params = {
-        limit: 100,
+        page,
+        limit,
         search: searchQuery || undefined,
         year: selectedYear || undefined,
         branch: selectedBranch || undefined,
@@ -790,11 +789,15 @@ export default function AdminStudentSection() {
       // Use getStudents for server-side filtering instead of getAllStudents
       const response = await studentService.getStudents(params);
 
-      // response.data contains the array of students
+      // response contains the standard wrapper { success, data, total, page, totalPages }
       const data = response.data || [];
+      const total = response.total || 0;
+      const totalP = response.totalPages || 1;
 
       setStudents(data);
-      setFilteredStudents(data);
+      setTotalRecords(total);
+      setTotalPages(totalP);
+      if (page === 1) setCurrentPage(1); // Reset to first page if we explicitly passed 1
     } catch (err) {
       console.error("Error fetching students:", err);
       // setError("Failed to load students. Backend might not be running!"); 
@@ -1045,13 +1048,9 @@ export default function AdminStudentSection() {
         <p className="text-slate-600 mt-2">
           Showing{" "}
           <span className="font-semibold text-blue-600">
-            {filteredStudents.length}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-slate-900">
             {students.length}
           </span>{" "}
-          students
+          of{" "}
           <span className="font-semibold text-slate-900">
             {students.length}
           </span>{" "}
@@ -1147,8 +1146,18 @@ export default function AdminStudentSection() {
           {/* 3. Actions & Buttons */}
           <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
 
-            {/* Clear Filters Button */}
-            <div>
+            {/* Find & Clear Buttons Group */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => fetchStudents(1)}
+                className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Find Students
+              </button>
+
               {(searchQuery || selectedYear || selectedBranch || firstName || middleName || lastName || motherName || city || bloodGroup || category || selectedDivision || academicYear || detailsFilled) && (
                 <button
                   onClick={() => {
@@ -1342,7 +1351,7 @@ export default function AdminStudentSection() {
           )}
 
           {/* Empty State */}
-          {!loading && !error && filteredStudents.length === 0 && (
+          {!loading && !error && students.length === 0 && (
             <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-16 text-center">
               <svg
                 className="w-16 h-16 text-slate-300 mx-auto mb-4"
@@ -1369,9 +1378,9 @@ export default function AdminStudentSection() {
           )}
 
           {/* Students Grid */}
-          {!loading && !error && filteredStudents.length > 0 && (
+          {!loading && !error && students.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredStudents.map((s) => (
+              {students.map((s) => (
                 <StudentCard
                   key={s._id}
                   student={s}
@@ -1381,6 +1390,21 @@ export default function AdminStudentSection() {
                 />
               ))}
             </div>
+          )}
+
+          {/* Pagination Component */}
+          {!loading && !error && students.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalRecords={totalRecords}
+              limit={limit}
+              onPageChange={(page) => setCurrentPage(page)}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit);
+                setCurrentPage(1);
+              }}
+            />
           )}
         </div>
       </>

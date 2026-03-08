@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { achievementService } from "../services/achievementService";
 import { toast } from "react-toastify";
+import Pagination from "../Components/Common/Pagination";
 
 // Achievement Card Component - COMPACT & BEAUTIFUL
 function AchievementCard({ achievement, onView, onDelete, onEdit }) {
@@ -598,7 +599,6 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
 // Main Admin Achievements Page Component
 export default function AdminAchievements() {
   const [achievements, setAchievements] = useState([]);
-  const [filteredAchievements, setFilteredAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -607,26 +607,44 @@ export default function AdminAchievements() {
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedDivision, setSelectedDivision] = useState("");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   // Modal State
   const [selectedAchievement, setSelectedAchievement] = useState(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [achievementToEdit, setAchievementToEdit] = useState(null);
 
-  // Fetch achievements from backend when component loads
+  // Fetch achievements from backend when component loads or pagination changes
   useEffect(() => {
-    fetchAchievements();
-  }, []);
+    fetchAchievements(currentPage);
+  }, [currentPage, limit]);
 
-  // Apply filters
-  useEffect(() => {
-    applyFilters();
-  }, [achievements, searchQuery, selectedCategory, selectedType, selectedYear, selectedDivision]);
-
-  const fetchAchievements = async () => {
+  const fetchAchievements = async (page = 1) => {
+    setLoading(true);
     try {
-      const response = await achievementService.getAllAchievements();
-      const data = response.data || response.achievements || response;
-      setAchievements(Array.isArray(data) ? data : []);
+      const params = {
+        page,
+        limit,
+        search: searchQuery || undefined,
+        category: selectedCategory || undefined,
+        type: selectedType || undefined,
+        year: selectedYear || undefined,
+        division: selectedDivision || undefined,
+      };
+      const response = await achievementService.getAllAchievements(params);
+      
+      const data = response.data || [];
+      const total = response.total || 0;
+      const totalP = response.totalPages || 1;
+
+      setAchievements(data);
+      setTotalRecords(total);
+      setTotalPages(totalP);
+      if (page === 1) setCurrentPage(1);
       setError(null);
     } catch (err) {
       console.error("Error fetching achievements:", err);
@@ -658,55 +676,6 @@ export default function AdminAchievements() {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...achievements];
-
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (a) =>
-          a.title?.toLowerCase().includes(query) ||
-          a.description?.toLowerCase().includes(query) ||
-          (typeof a.stuID === "string" ? a.stuID : a.stuID?.studentID)
-            ?.toLowerCase()
-            .includes(query)
-      );
-    }
-
-    // Category filter
-    if (selectedCategory) {
-      filtered = filtered.filter((a) => a.category === selectedCategory);
-    }
-
-    // Type filter
-    if (selectedType) {
-      filtered = filtered.filter((a) => a.achievementType === selectedType);
-    }
-
-    // Year filter (stuID might be populated object or just string ID, we try to match object if available)
-    if (selectedYear) {
-      filtered = filtered.filter((a) => {
-        if (typeof a.stuID === 'object' && a.stuID?.year) {
-          return a.stuID.year === selectedYear;
-        }
-        return true; // If stuID is not populated, we can't filter by year safely, so just pass it
-      });
-    }
-
-    // Division filter
-    if (selectedDivision) {
-      filtered = filtered.filter((a) => {
-        if (typeof a.stuID === 'object' && a.stuID?.division) {
-          return a.stuID.division === selectedDivision;
-        }
-        return true;
-      });
-    }
-
-    setFilteredAchievements(filtered);
-  };
-
   const handleView = (achievement) => {
     setSelectedAchievement(achievement);
   };
@@ -730,7 +699,7 @@ export default function AdminAchievements() {
       return;
     try {
       await achievementService.deleteAchievement(id);
-      fetchAchievements();
+      fetchAchievements(currentPage);
       toast.success("Achievement deleted successfully!");
     } catch (err) {
       console.error("Error deleting achievement:", err);
@@ -748,11 +717,7 @@ export default function AdminAchievements() {
         <p className="text-slate-600 mt-2">
           Showing{" "}
           <span className="font-semibold text-blue-600">
-            {filteredAchievements.length}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-slate-900">
-            {achievements.length}
+            {totalRecords}
           </span>{" "}
           achievements
         </p>
@@ -822,50 +787,50 @@ export default function AdminAchievements() {
             <option value="C">C</option>
           </select>
 
-          {/* Clear Filters */}
-          {(searchQuery || selectedCategory || selectedType || selectedYear || selectedDivision) && (
+        </div>
+
+        {/* Action Row */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-6 border-t border-slate-100">
+          <div className="flex gap-3">
             <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedCategory("");
-                setSelectedType("");
-                setSelectedYear("");
-                setSelectedDivision("");
-              }}
-              className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition"
+              onClick={() => fetchAchievements(1)}
+              className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
             >
-              Clear
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Find Achievements
             </button>
-          )}
 
-          {/* Export Button */}
-          <button
-            onClick={handleExport}
-            className="px-6 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm ml-auto flex items-center gap-2"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            {(searchQuery || selectedCategory || selectedType || selectedYear || selectedDivision) && (
+              <button
+                onClick={() => {
+                  setSearchQuery(""); setSelectedCategory(""); setSelectedType("");
+                  setSelectedYear(""); setSelectedDivision("");
+                }}
+                className="px-4 py-2.5 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                Clear All
+              </button>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleExport}
+              className="px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition shadow-sm flex items-center gap-2"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            Export to Excel
-          </button>
-
-          {/* Add Button */}
-          <button
-            onClick={handleAddAchievement}
-            className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm ml-2"
-          >
-            + Add Achievement
-          </button>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              Export
+            </button>
+            <button
+              onClick={() => { setAchievementToEdit(null); setIsFormModalOpen(true); }}
+              className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm transition flex items-center gap-2"
+            >
+              <span>+ Add Achievement</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -889,7 +854,7 @@ export default function AdminAchievements() {
         )}
 
         {/* Empty State */}
-        {!loading && !error && filteredAchievements.length === 0 && (
+        {!loading && !error && achievements.length === 0 && (
           <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-16 text-center">
             <svg
               className="w-16 h-16 text-slate-300 mx-auto mb-4"
@@ -913,9 +878,9 @@ export default function AdminAchievements() {
         )}
 
         {/* Achievements Grid - 4 columns for compact cards */}
-        {!loading && !error && filteredAchievements.length > 0 && (
+        {!loading && !error && achievements.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filteredAchievements.map((achievement) => (
+            {achievements.map((achievement) => (
               <AchievementCard
                 key={achievement?._id}
                 achievement={achievement}
@@ -925,6 +890,21 @@ export default function AdminAchievements() {
               />
             ))}
           </div>
+        )}
+
+        {/* Pagination Component */}
+        {!loading && !error && achievements.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            limit={limit}
+            onPageChange={(page) => setCurrentPage(page)}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setCurrentPage(1);
+            }}
+          />
         )}
       </div>
 
@@ -941,7 +921,7 @@ export default function AdminAchievements() {
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
         achievement={achievementToEdit}
-        onSave={fetchAchievements}
+        onSave={() => fetchAchievements(currentPage)}
       />
     </main>
   );

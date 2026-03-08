@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import * as XLSX from "xlsx";
 import { placementService } from "../services/placementService";
 import { higherStudiesService } from "../services/higherStudiesService";
 import { toast } from "react-toastify";
+import Pagination from "../Components/Common/Pagination";
 
 // Placement Card Component - COMPACT
 function PlacementCard({ placement, onView, onDelete, onEdit }) {
@@ -544,6 +544,12 @@ export default function AdminPlacement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   // ── Shared filter ───────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -570,25 +576,25 @@ export default function AdminPlacement() {
   const [isPlacementModalOpen, setIsPlacementModalOpen] = useState(false);
   const [placementToEdit, setPlacementToEdit] = useState(null);
 
-  // Debounced re-fetch whenever placement filters change
+  // Re-fetch whenever tab, page, or limit changes
   useEffect(() => {
-    if (activeTab !== "placements") return;
-    const t = setTimeout(() => fetchPlacements(), 500);
-    return () => clearTimeout(t);
-  }, [activeTab, searchQuery, filterYear, filterDivision, filterPlacementType,
-    filterPlacementYear, filterPassoutYear, filterJoiningYear, filterPackageMin, filterPackageMax]);
+    setCurrentPage(1); // Reset page when tab changes
+  }, [activeTab]);
 
-  // Debounced re-fetch for higher studies when HS filters change
   useEffect(() => {
-    if (activeTab !== "higherStudies") return;
-    const t = setTimeout(() => fetchHigherStudies(), 500);
-    return () => clearTimeout(t);
-  }, [activeTab, searchQuery, hsFilterYear, hsFilterDivision, hsFilterExamName, hsFilterAcademicYear, hsFilterScore]);
+    if (activeTab === "placements") {
+      fetchPlacements(currentPage);
+    } else {
+      fetchHigherStudies(currentPage);
+    }
+  }, [activeTab, currentPage, limit]);
 
-  const fetchPlacements = async () => {
+  const fetchPlacements = async (page = 1) => {
     setLoading(true);
     try {
       const params = {
+        page,
+        limit,
         search: searchQuery || undefined,
         year: filterYear || undefined,
         division: filterDivision || undefined,
@@ -600,8 +606,15 @@ export default function AdminPlacement() {
         packageMax: filterPackageMax ? Number(filterPackageMax) : undefined,
       };
       const response = await placementService.getAllPlacements(params);
-      const data = response.data || response.placements || response;
-      setPlacements(Array.isArray(data) ? data : []);
+      
+      const data = response.data || [];
+      const total = response.total || 0;
+      const totalP = response.totalPages || 1;
+
+      setPlacements(data);
+      setTotalRecords(total);
+      setTotalPages(totalP);
+      if (page === 1) setCurrentPage(1);
       setError(null);
     } catch (err) {
       console.error("Error fetching placements:", err);
@@ -612,10 +625,12 @@ export default function AdminPlacement() {
     }
   };
 
-  const fetchHigherStudies = async () => {
+  const fetchHigherStudies = async (page = 1) => {
     setLoading(true);
     try {
       const params = {
+        page,
+        limit,
         search: searchQuery || undefined,
         year: hsFilterYear || undefined,
         division: hsFilterDivision || undefined,
@@ -624,8 +639,15 @@ export default function AdminPlacement() {
         score: hsFilterScore || undefined,
       };
       const response = await higherStudiesService.getAllHigherStudies(params);
-      const data = response.data || response.higherStudies || response;
-      setHigherStudies(Array.isArray(data) ? data : []);
+      
+      const data = response.data || [];
+      const total = response.total || 0;
+      const totalP = response.totalPages || 1;
+
+      setHigherStudies(data);
+      setTotalRecords(total);
+      setTotalPages(totalP);
+      if (page === 1) setCurrentPage(1);
       setError(null);
     } catch (err) {
       console.error("Error fetching higher studies:", err);
@@ -681,16 +703,10 @@ export default function AdminPlacement() {
     }
   };
 
-  // Server now filters both; keep as-is (arrays returned from fetch are already filtered)
-  const filteredPlacements = placements;
-  const filteredHigherStudies = higherStudies;
-
   const currentData =
-    activeTab === "placements" ? filteredPlacements : filteredHigherStudies;
-  const totalData =
-    activeTab === "placements" ? placements.length : higherStudies.length;
+    activeTab === "placements" ? placements : higherStudies;
 
-  const handleExport = () => {
+  const handleExport = async () => {
     try {
       const isPlacement = activeTab === "placements";
 
@@ -699,50 +715,49 @@ export default function AdminPlacement() {
         return;
       }
 
-      const formattedData = currentData.map((item) => {
-        const studentId = typeof item?.stuID === "string" ? item.stuID : item?.stuID?.studentID || "N/A";
+      setLoading(true);
 
-        if (isPlacement) {
-          return {
-            "Student ID": studentId,
-            "Company Name": item.companyName || "N/A",
-            "Job Role": item.jobRole || "N/A",
-            "Package (LPA)": item.ctc || "N/A",
-            "Placement Type": item.placementType || "N/A",
-            "Placement Date": item.placementDate ? new Date(item.placementDate).toLocaleDateString("en-IN") : "N/A",
-            "Company Address": item.companyAddress || "N/A",
-            "HR Email": item.hrEmail || "N/A",
-          };
-        } else {
-          return {
-            "Student ID": studentId,
-            "University Name": item.universityName || "N/A",
-            "Degree": item.degree || "N/A",
-            "Specialization": item.specialization || "N/A",
-            "Country": item.country || "N/A",
-            "Duration": item.duration || "N/A",
-            "University Address": item.universityAddress || "N/A",
-          };
-        }
-      });
+      const params = {
+        search: searchQuery || undefined,
+      };
 
-      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+      if (isPlacement) {
+        params.year = filterYear || undefined;
+        params.division = filterDivision || undefined;
+        params.placementType = filterPlacementType || undefined;
+        params.placementYear = filterPlacementYear || undefined;
+        params.passoutYear = filterPassoutYear || undefined;
+        params.joiningYear = filterJoiningYear || undefined;
+        params.packageMin = filterPackageMin ? Number(filterPackageMin) : undefined;
+        params.packageMax = filterPackageMax ? Number(filterPackageMax) : undefined;
+      } else {
+        params.year = hsFilterYear || undefined;
+        params.division = hsFilterDivision || undefined;
+        params.examName = hsFilterExamName || undefined;
+        params.academicYear = hsFilterAcademicYear || undefined;
+        params.score = hsFilterScore || undefined;
+      }
 
-      // Auto-size columns
-      const colWidths = Object.keys(formattedData[0]).map(key => ({
-        wch: Math.max(key.length, ...formattedData.map(d => (d[key] ? d[key].toString().length : 0))) + 2
-      }));
-      worksheet['!cols'] = colWidths;
+      const blob = isPlacement
+        ? await placementService.exportPlacements(params)
+        : await higherStudiesService.exportHigherStudies(params);
 
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, isPlacement ? "Placements" : "Higher Studies");
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${isPlacement ? "Placements" : "Higher_Studies"}_Export_${new Date().toLocaleDateString("en-IN").replace(/\//g, "-")}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
-      const fileName = `${isPlacement ? "Placements" : "Higher_Studies"}_Export_${new Date().toLocaleDateString("en-IN")}.xlsx`;
-      XLSX.writeFile(workbook, fileName);
-
+      toast.success("✅ Exported successfully!");
     } catch (err) {
       console.error("Error exporting data:", err);
       toast.error("Failed to export data. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -754,9 +769,8 @@ export default function AdminPlacement() {
         <p className="text-slate-600 mt-2">
           Manage{" "}
           <span className="font-semibold text-blue-600">
-            {currentData.length}
+            {totalRecords}
           </span>{" "}
-          of <span className="font-semibold text-slate-900">{totalData}</span>{" "}
           {activeTab === "placements" ? "placements" : "higher studies"}
         </p>
       </div>
@@ -853,25 +867,30 @@ export default function AdminPlacement() {
 
             </div>
 
-            {/* Clear filters */}
-            {(filterYear || filterDivision || filterPlacementType || filterPlacementYear ||
-              filterPassoutYear || filterJoiningYear || filterPackageMin || filterPackageMax) && (
-                <div className="mt-3">
-                  <button
-                    onClick={() => {
-                      setFilterYear(""); setFilterDivision(""); setFilterPlacementType("");
-                      setFilterPlacementYear(""); setFilterPassoutYear(""); setFilterJoiningYear("");
-                      setFilterPackageMin(""); setFilterPackageMax("");
-                    }}
-                    className="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Clear Filters
-                  </button>
-                </div>
-              )}
+            <div className="mt-3 flex gap-3">
+              <button
+                onClick={() => fetchPlacements(1)}
+                className="px-6 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Find Placements
+              </button>
+              <button
+                onClick={() => {
+                  setFilterYear(""); setFilterDivision(""); setFilterPlacementType("");
+                  setFilterPlacementYear(""); setFilterPassoutYear(""); setFilterJoiningYear("");
+                  setFilterPackageMin(""); setFilterPackageMax("");
+                }}
+                className="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Clear Filters
+              </button>
+            </div>
           </div>
         )}
 
@@ -918,8 +937,16 @@ export default function AdminPlacement() {
 
             </div>
 
-            {(hsFilterYear || hsFilterDivision || hsFilterExamName || hsFilterAcademicYear || hsFilterScore) && (
-              <div className="mt-3">
+              <div className="mt-3 flex gap-3">
+                <button
+                  onClick={() => fetchHigherStudies(1)}
+                  className="px-6 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Find Higher Studies
+                </button>
                 <button
                   onClick={() => { setHsFilterYear(""); setHsFilterDivision(""); setHsFilterExamName(""); setHsFilterAcademicYear(""); setHsFilterScore(""); }}
                   className="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
@@ -930,7 +957,6 @@ export default function AdminPlacement() {
                   Clear Filters
                 </button>
               </div>
-            )}
           </div>
         )}
       </div>
@@ -984,7 +1010,7 @@ export default function AdminPlacement() {
         {!loading && !error && currentData.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {activeTab === "placements"
-              ? filteredPlacements.map((p) => (
+              ? placements.map((p) => (
                 <PlacementCard
                   key={p._id}
                   placement={p}
@@ -993,7 +1019,7 @@ export default function AdminPlacement() {
                   onDelete={handleDeletePlacement}
                 />
               ))
-              : filteredHigherStudies.map((h) => (
+              : higherStudies.map((h) => (
                 <HigherStudyCard
                   key={h._id}
                   higherStudy={h}
@@ -1002,6 +1028,21 @@ export default function AdminPlacement() {
                 />
               ))}
           </div>
+        )}
+
+        {/* Pagination Component */}
+        {!loading && !error && currentData.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            limit={limit}
+            onPageChange={(page) => setCurrentPage(page)}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setCurrentPage(1);
+            }}
+          />
         )}
       </div>
 

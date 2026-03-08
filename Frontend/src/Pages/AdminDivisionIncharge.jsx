@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { divisionInchargeService } from "../services/divisionInchargeService";
 import { toast } from "react-toastify";
+import Pagination from "../Components/Common/Pagination";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 const YEARS = ["SE", "TE", "BE"];
@@ -305,22 +306,44 @@ export default function AdminDivisionIncharge() {
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [limit, setLimit] = useState(12);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalRecords, setTotalRecords] = useState(0);
+
     // Modal state
     const [viewTarget, setViewTarget] = useState(null);
     const [editTarget, setEditTarget] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
 
-    useEffect(() => { fetchIncharges(); }, []);
+    useEffect(() => {
+        fetchIncharges(currentPage);
+    }, [currentPage, limit]);
 
-    const fetchIncharges = async () => {
+    const fetchIncharges = async (page = 1) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await divisionInchargeService.getAll();
-            setIncharges(Array.isArray(response?.data) ? response.data : []);
+            const params = {
+                page,
+                limit,
+                search: searchQuery || undefined,
+            };
+            const response = await divisionInchargeService.getAll(params);
+            
+            const data = response?.data || [];
+            const total = response?.total ?? data.length; // Fallback to array length if no pagination
+            const totalP = response?.totalPages ?? (limit > 0 ? Math.ceil(total / limit) : 1);
+
+            setIncharges(data);
+            setTotalRecords(total);
+            setTotalPages(totalP);
+            if (page === 1) setCurrentPage(1);
         } catch (err) {
             console.error("Error fetching division incharges:", err);
             setError("Failed to load Division Incharges. Please try again.");
+            setIncharges([]);
         } finally {
             setLoading(false);
         }
@@ -331,22 +354,15 @@ export default function AdminDivisionIncharge() {
         try {
             await divisionInchargeService.delete(id);
             toast.success("✅ Division Incharge deleted.");
-            fetchIncharges();
+            fetchIncharges(currentPage);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to delete.");
         }
     };
 
-    // Client-side search filter
-    const filtered = incharges.filter((i) => {
-        const q = searchQuery.toLowerCase();
-        return (
-            i.name?.toLowerCase().includes(q) ||
-            i.email?.toLowerCase().includes(q) ||
-            i.division?.toLowerCase().includes(q) ||
-            i.year?.toLowerCase().includes(q)
-        );
-    });
+    const handleFind = () => {
+        fetchIncharges(1);
+    };
 
     return (
         <main className="p-8 bg-slate-50 min-h-screen">
@@ -354,14 +370,12 @@ export default function AdminDivisionIncharge() {
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-slate-900">Division Incharges</h1>
                 <p className="text-slate-600 mt-2">
-                    <span className="font-semibold text-violet-600">{filtered.length}</span> of{" "}
-                    <span className="font-semibold text-slate-900">{incharges.length}</span> incharges
+                    <span className="font-semibold text-violet-600">{totalRecords}</span> incharges
                 </p>
             </div>
 
             {/* Action Bar */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-8 flex flex-wrap items-center gap-4">
-                {/* Search */}
                 <div className="relative flex-1 min-w-[220px]">
                     <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -373,6 +387,28 @@ export default function AdminDivisionIncharge() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition text-sm"
                     />
+                </div>
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleFind}
+                        className="px-6 py-2.5 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition shadow-sm flex items-center gap-2"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Find Incharges
+                    </button>
+
+                    {searchQuery && (
+                        <button
+                            onClick={() => { setSearchQuery(""); }}
+                            className="px-4 py-2.5 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            Clear All
+                        </button>
+                    )}
                 </div>
 
                 {/* Add Button */}
@@ -404,7 +440,7 @@ export default function AdminDivisionIncharge() {
                     </div>
                 )}
 
-                {!loading && !error && filtered.length === 0 && (
+                {!loading && !error && incharges.length === 0 && (
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-16 text-center border-dashed">
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-violet-50 mb-4">
                             <svg className="w-8 h-8 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -421,9 +457,9 @@ export default function AdminDivisionIncharge() {
                     </div>
                 )}
 
-                {!loading && !error && filtered.length > 0 && (
+                {!loading && !error && incharges.length > 0 && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filtered.map((incharge) => (
+                        {incharges.map((incharge) => (
                             <DivisionInchargeCard
                                 key={incharge._id}
                                 incharge={incharge}
@@ -433,6 +469,21 @@ export default function AdminDivisionIncharge() {
                             />
                         ))}
                     </div>
+                )}
+
+                {/* Pagination Component */}
+                {!loading && !error && incharges.length > 0 && (
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalRecords={totalRecords}
+                        limit={limit}
+                        onPageChange={(page) => setCurrentPage(page)}
+                        onLimitChange={(newLimit) => {
+                            setLimit(newLimit);
+                            setCurrentPage(1);
+                        }}
+                    />
                 )}
             </div>
 
@@ -454,7 +505,7 @@ export default function AdminDivisionIncharge() {
                 <EditModal
                     incharge={editTarget}
                     onClose={() => setEditTarget(null)}
-                    onSaved={fetchIncharges}
+                    onSaved={() => fetchIncharges(currentPage)}
                 />
             )}
         </main>

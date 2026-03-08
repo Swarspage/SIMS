@@ -66,9 +66,9 @@ export const achievementService = {
   },
 
   // Get all achievements (Admin)
-  getAllAchievements: async () => {
-    const response = await API.get("/achievements/all");
-    return response.data.data;
+  getAllAchievements: async (params = {}) => {
+    const response = await API.get("/achievements/all", { params });
+    return response.data;
   },
 
   // Export achievements (Admin only)

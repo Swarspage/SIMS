@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { activityService } from "../services/activityService";
 import { toast } from "react-toastify";
+import Pagination from "../Components/Common/Pagination";
 
 // Activity Card Component - COMPACT & BEAUTIFUL
 function ActivityCard({ activity, onView, onDelete, onEdit }) {
@@ -427,34 +428,50 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
 // Main Admin Activity Component
 export default function AdminActivity() {
   const [activities, setActivities] = useState([]);
-  const [filteredActivities, setFilteredActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedType, setSelectedType] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedDivision, setSelectedDivision] = useState("");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   // Modal State
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [activityToEdit, setActivityToEdit] = useState(null);
 
-  // Fetch activities from backend
+  // Fetch activities from backend when component loads or pagination changes
   useEffect(() => {
-    fetchActivities();
-  }, []);
+    fetchActivities(currentPage);
+  }, [currentPage, limit]);
 
-  // Apply filters when activities or filters change
-  useEffect(() => {
-    applyFilters();
-  }, [activities, selectedType, searchQuery, selectedYear, selectedDivision]);
-
-  const fetchActivities = async () => {
+  const fetchActivities = async (page = 1) => {
+    setLoading(true);
     try {
-      const response = await activityService.getAllActivities();
-      const data = response.data || response.activities || response;
-      setActivities(Array.isArray(data) ? data : []);
+      const params = {
+        page,
+        limit,
+        search: searchQuery || undefined,
+        type: selectedType || undefined,
+        year: selectedYear || undefined,
+        division: selectedDivision || undefined,
+      };
+      const response = await activityService.getAllActivities(params);
+      
+      const data = response.data || [];
+      const total = response.total || 0;
+      const totalP = response.totalPages || 1;
+
+      setActivities(data);
+      setTotalRecords(total);
+      setTotalPages(totalP);
+      if (page === 1) setCurrentPage(1);
       setError(null);
     } catch (err) {
       console.error("Error fetching activities:", err);
@@ -485,50 +502,6 @@ export default function AdminActivity() {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...activities];
-
-    // Type filter
-    if (selectedType) {
-      filtered = filtered.filter((a) => a.type === selectedType);
-    }
-
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (a) =>
-          a.title?.toLowerCase().includes(query) ||
-          a.description?.toLowerCase().includes(query) ||
-          (typeof a.stuID === "string" ? a.stuID : a.stuID?.studentID)
-            ?.toLowerCase()
-            .includes(query)
-      );
-    }
-
-    // Year filter
-    if (selectedYear) {
-      filtered = filtered.filter((a) => {
-        if (typeof a.stuID === 'object' && a.stuID?.year) {
-          return a.stuID.year === selectedYear;
-        }
-        return true;
-      });
-    }
-
-    // Division filter
-    if (selectedDivision) {
-      filtered = filtered.filter((a) => {
-        if (typeof a.stuID === 'object' && a.stuID?.division) {
-          return a.stuID.division === selectedDivision;
-        }
-        return true;
-      });
-    }
-
-    setFilteredActivities(filtered);
-  };
-
   const handleView = (activity) => {
     setSelectedActivity(activity);
   };
@@ -552,7 +525,7 @@ export default function AdminActivity() {
       return;
     try {
       await activityService.deleteActivity(id);
-      fetchActivities();
+      fetchActivities(currentPage);
     } catch (err) {
       console.error("Error deleting activity:", err);
       toast.error("Failed to delete activity.");
@@ -567,11 +540,7 @@ export default function AdminActivity() {
         <p className="text-slate-600 mt-2">
           Showing{" "}
           <span className="font-semibold text-blue-600">
-            {filteredActivities.length}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-slate-900">
-            {activities.length}
+            {totalRecords}
           </span>{" "}
           activities
         </p>
@@ -627,20 +596,32 @@ export default function AdminActivity() {
             <option value="C">C</option>
           </select>
 
-          {/* Clear Filters */}
-          {(searchQuery || selectedType || selectedYear || selectedDivision) && (
+          <div className="flex gap-3">
             <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedType("");
-                setSelectedYear("");
-                setSelectedDivision("");
-              }}
-              className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition"
+              onClick={() => fetchActivities(1)}
+              className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
             >
-              Clear
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Find Activities
             </button>
-          )}
+
+            {(searchQuery || selectedType || selectedYear || selectedDivision) && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedType("");
+                  setSelectedYear("");
+                  setSelectedDivision("");
+                }}
+                className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                Clear All
+              </button>
+            )}
+          </div>
 
           {/* Export Button */}
           <button
@@ -693,7 +674,7 @@ export default function AdminActivity() {
         )}
 
         {/* Empty State */}
-        {!loading && !error && filteredActivities.length === 0 && (
+        {!loading && !error && activities.length === 0 && (
           <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-16 text-center">
             <svg
               className="w-16 h-16 text-slate-300 mx-auto mb-4"
@@ -717,9 +698,9 @@ export default function AdminActivity() {
         )}
 
         {/* Activities Grid - 4 columns for compact cards */}
-        {!loading && !error && filteredActivities.length > 0 && (
+        {!loading && !error && activities.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filteredActivities.map((activity) => (
+            {activities.map((activity) => (
               <ActivityCard
                 key={activity?._id}
                 activity={activity}
@@ -729,6 +710,21 @@ export default function AdminActivity() {
               />
             ))}
           </div>
+        )}
+
+        {/* Pagination Component */}
+        {!loading && !error && activities.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            limit={limit}
+            onPageChange={(page) => setCurrentPage(page)}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setCurrentPage(1);
+            }}
+          />
         )}
       </div>
 
@@ -745,7 +741,7 @@ export default function AdminActivity() {
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
         activity={activityToEdit}
-        onSave={fetchActivities}
+        onSave={() => fetchActivities(currentPage)}
       />
     </main>
   );
