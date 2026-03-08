@@ -89,6 +89,9 @@ import Home from "./Pages/Home";
 import LoginPage from "./Pages/LoginPage";
 import AdminLoginPage from "./Pages/AdminLoginPage";
 import DivisionInchargeLogin from "./Pages/DivisionInchargeLogin"; // ✅ IMPORTED
+import SignupPage from "./Pages/SignupPage";
+import ForgotPasswordPage from "./Pages/ForgotPasswordPage";
+import ResetPasswordPage from "./Pages/ResetPasswordPage";
 
 // Admin Pages
 import AdminStudentSection from "./Pages/AdminStudentSection";
@@ -127,6 +130,9 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/division/login" element={<DivisionInchargeLogin />} /> {/* ✅ NEW ROUTE */}
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
         {/* Admin Routes - PROTECTED */}
         {/* Note: Updated requiredRole to allow 'division' role to access admin dashboard */}

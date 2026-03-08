@@ -9,6 +9,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [successMsg] = useState(() => {
+    // Read signup success message passed via navigation state
+    return window.history.state?.usr?.message || "";
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -90,6 +94,16 @@ export default function LoginPage() {
 
           {/* Form Section */}
           <form onSubmit={handleSubmit} className="px-8 pb-10">
+            {/* Success message from signup redirect */}
+            {successMsg && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-100 text-green-700 rounded-lg flex items-start gap-3 text-sm">
+                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>{successMsg}</span>
+              </div>
+            )}
+
             {/* Error Message */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-700 rounded-lg flex items-start gap-3 text-sm">
@@ -122,12 +136,21 @@ export default function LoginPage() {
 
             {/* Password Input */}
             <div className="mb-6">
-              <label
-                htmlFor="password"
-                className="block text-sm font-semibold text-gray-700 mb-2"
-              >
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-semibold text-gray-700"
+                >
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-xs text-[#1D3EA1] hover:underline font-medium"
+                >
+                  Forgot Password?
+                </button>
+              </div>
               <div className="relative">
                 <input
                   id="password"
@@ -176,7 +199,17 @@ export default function LoginPage() {
           </form>
 
           {/* Footer */}
-          <div className="bg-gray-50 px-8 py-4 border-t border-gray-200 text-center">
+          <div className="bg-gray-50 px-8 py-4 border-t border-gray-200 text-center space-y-2">
+            <p className="text-sm text-gray-600">
+              New student?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/signup")}
+                className="text-[#1D3EA1] font-semibold hover:underline"
+              >
+                Sign Up
+              </button>
+            </p>
             <button
               type="button"
               onClick={() => navigate("/")}

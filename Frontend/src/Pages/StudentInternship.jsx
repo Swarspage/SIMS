@@ -130,6 +130,10 @@ export default function StudentInternship() {
   const [deletingId, setDeletingId] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
 
+  // Local Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterIsPaid, setFilterIsPaid] = useState("");
+
   const [formData, setFormData] = useState({
     companyName: "",
     role: "",
@@ -672,6 +676,19 @@ export default function StudentInternship() {
   }
 
   // =============== LIST VIEW ===============
+  const filteredInternships = internships.filter((internship) => {
+    const matchesSearch = searchQuery
+      ? (internship.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         internship.role?.toLowerCase().includes(searchQuery.toLowerCase()))
+      : true;
+    
+    const matchesPaid = filterIsPaid
+      ? (filterIsPaid === "paid" ? internship.stipendInfo?.isPaid : !internship.stipendInfo?.isPaid)
+      : true;
+
+    return matchesSearch && matchesPaid;
+  });
+
   return (
     <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
@@ -683,9 +700,9 @@ export default function StudentInternship() {
           <p className="text-slate-600 mt-1 text-sm sm:text-base">
             Showing{" "}
             <span className="font-semibold text-blue-600">
-              {internships.length}
+              {filteredInternships.length}
             </span>{" "}
-            internships
+            of {internships.length} internships
           </p>
         </div>
         <button
@@ -695,6 +712,37 @@ export default function StudentInternship() {
           + Add Internship
         </button>
       </div>
+
+      {/* Local Filters */}
+      {internships.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6 flex flex-wrap gap-4 items-center">
+          <input
+            type="text"
+            placeholder="Search company or role..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="px-4 py-2 border border-slate-300 rounded-lg bg-white flex-1 min-w-[200px] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <select
+            value={filterIsPaid}
+            onChange={(e) => setFilterIsPaid(e.target.value)}
+            className="px-4 py-2 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Types (Paid/Unpaid)</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+          </select>
+          {(searchQuery || filterIsPaid) && (
+            <button
+              onClick={() => { setSearchQuery(""); setFilterIsPaid(""); }}
+              className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="min-h-[60vh]">
         {loading && (
           <div className="flex items-center justify-center h-64">
@@ -725,9 +773,14 @@ export default function StudentInternship() {
             </p>
           </div>
         )}
-        {!loading && internships.length > 0 && (
+        {!loading && internships.length > 0 && filteredInternships.length === 0 && (
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-10 text-center">
+            <p className="text-slate-600 text-base font-medium">No internships match your filter criteria.</p>
+          </div>
+        )}
+        {!loading && filteredInternships.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {internships.map((internship) => (
+            {filteredInternships.map((internship) => (
               <InternshipCard
                 key={internship._id}
                 internship={internship}

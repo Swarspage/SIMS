@@ -346,6 +346,9 @@ export default function AdminAdmission() {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
+  const [academicYearFilter, setAcademicYearFilter] = useState("");
+  const [feesPaidFilter, setFeesPaidFilter] = useState("");
 
   const [selectedAdmission, setSelectedAdmission] = useState(null); // For View
   const [editingAdmission, setEditingAdmission] = useState(null); // For Edit
@@ -409,13 +412,28 @@ export default function AdminAdmission() {
     // Safe rollno check
     const roll = a.rollno ? a.rollno.toLowerCase() : "";
 
-    return (
-      (sid.toLowerCase().includes(q) ||
+    const matchesSearch = (sid.toLowerCase().includes(q) ||
         a.course?.toLowerCase().includes(q) ||
         roll.includes(q) ||
-        a.academicYear?.toLowerCase().includes(q)) &&
-      (!statusFilter || a.status === statusFilter)
-    );
+        a.academicYear?.toLowerCase().includes(q));
+
+    const matchesStatus = !statusFilter || a.status === statusFilter;
+
+    // Year block
+    const matchesYear = !yearFilter || (() => {
+      if (typeof a.stuID === 'object' && a.stuID?.year) {
+        return a.stuID.year === yearFilter;
+      }
+      return true; // Pass if unknown
+    })();
+
+    const matchesAcademicYear = !academicYearFilter || (a.academicYear && a.academicYear === academicYearFilter);
+
+    // Fee paid logic (feesPaidFilter can be "paid" or "unpaid")
+    const matchesFees = !feesPaidFilter || 
+      (feesPaidFilter === "paid" ? a.isFeesPaid === true : a.isFeesPaid === false);
+
+    return matchesSearch && matchesStatus && matchesYear && matchesAcademicYear && matchesFees;
   });
 
   return (
@@ -427,28 +445,73 @@ export default function AdminAdmission() {
         </p>
       </div>
 
-      {/* FILTER BAR */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-8 flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
+      {/* FILTER BAR flex-wrap */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-8 flex flex-wrap gap-4 items-center">
+        <div className="flex-1 relative min-w-[200px]">
           <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
           <input
             type="text"
             placeholder="Search by ID, Course, Roll No..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
         >
           <option value="">All Status</option>
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
         </select>
+        
+        <select
+          value={yearFilter}
+          onChange={(e) => setYearFilter(e.target.value)}
+          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+        >
+          <option value="">All Years</option>
+          <option value="FE">FE</option>
+          <option value="SE">SE</option>
+          <option value="TE">TE</option>
+          <option value="BE">BE</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder="Academic Year (e.g. 2024-25)"
+          value={academicYearFilter}
+          onChange={(e) => setAcademicYearFilter(e.target.value)}
+          className="w-48 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+        />
+
+        <select
+          value={feesPaidFilter}
+          onChange={(e) => setFeesPaidFilter(e.target.value)}
+          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+        >
+          <option value="">All Fee Status</option>
+          <option value="paid">Paid</option>
+          <option value="unpaid">Unpaid</option>
+        </select>
+
+        {(searchQuery || statusFilter || yearFilter || academicYearFilter || feesPaidFilter) && (
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setStatusFilter("");
+              setYearFilter("");
+              setAcademicYearFilter("");
+              setFeesPaidFilter("");
+            }}
+            className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* CONTENT */}

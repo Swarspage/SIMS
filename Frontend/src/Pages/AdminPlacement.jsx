@@ -561,6 +561,8 @@ export default function AdminPlacement() {
   const [hsFilterYear, setHsFilterYear] = useState("");
   const [hsFilterDivision, setHsFilterDivision] = useState("");
   const [hsFilterExamName, setHsFilterExamName] = useState("");
+  const [hsFilterAcademicYear, setHsFilterAcademicYear] = useState("");
+  const [hsFilterScore, setHsFilterScore] = useState("");
 
   // Modal State
   const [selectedItem, setSelectedItem] = useState(null);
@@ -581,7 +583,7 @@ export default function AdminPlacement() {
     if (activeTab !== "higherStudies") return;
     const t = setTimeout(() => fetchHigherStudies(), 500);
     return () => clearTimeout(t);
-  }, [activeTab, searchQuery, hsFilterYear, hsFilterDivision, hsFilterExamName]);
+  }, [activeTab, searchQuery, hsFilterYear, hsFilterDivision, hsFilterExamName, hsFilterAcademicYear, hsFilterScore]);
 
   const fetchPlacements = async () => {
     setLoading(true);
@@ -618,6 +620,8 @@ export default function AdminPlacement() {
         year: hsFilterYear || undefined,
         division: hsFilterDivision || undefined,
         examName: hsFilterExamName || undefined,
+        academicYear: hsFilterAcademicYear || undefined,
+        score: hsFilterScore || undefined,
       };
       const response = await higherStudiesService.getAllHigherStudies(params);
       const data = response.data || response.higherStudies || response;
@@ -904,12 +908,20 @@ export default function AdminPlacement() {
                 <option value="UPSC">UPSC</option>
               </select>
 
+              <input type="text" placeholder="Academic Year (e.g. 2023-24)" value={hsFilterAcademicYear}
+                onChange={(e) => setHsFilterAcademicYear(e.target.value)}
+                className="px-3 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+              <input type="text" placeholder="Score (Partial Match)" value={hsFilterScore}
+                onChange={(e) => setHsFilterScore(e.target.value)}
+                className="px-3 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
             </div>
 
-            {(hsFilterYear || hsFilterDivision || hsFilterExamName) && (
+            {(hsFilterYear || hsFilterDivision || hsFilterExamName || hsFilterAcademicYear || hsFilterScore) && (
               <div className="mt-3">
                 <button
-                  onClick={() => { setHsFilterYear(""); setHsFilterDivision(""); setHsFilterExamName(""); }}
+                  onClick={() => { setHsFilterYear(""); setHsFilterDivision(""); setHsFilterExamName(""); setHsFilterAcademicYear(""); setHsFilterScore(""); }}
                   className="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

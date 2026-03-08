@@ -205,6 +205,12 @@ export default function StudentPlacement() {
   const [deletingStudyId, setDeletingStudyId] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
 
+  // Local Filters
+  const [searchPlacement, setSearchPlacement] = useState("");
+  const [filterPlacementType, setFilterPlacementType] = useState("");
+  const [searchHigherStudies, setSearchHigherStudies] = useState("");
+  const [filterExamName, setFilterExamName] = useState("");
+
   const [placementData, setPlacementData] = useState({
     companyName: "",
     role: "",
@@ -942,6 +948,27 @@ export default function StudentPlacement() {
   }
 
   // =============== LIST VIEW ===============
+  const filteredPlacements = placements.filter(p => {
+    const matchesSearch = searchPlacement
+      ? (p.companyName?.toLowerCase().includes(searchPlacement.toLowerCase()) || 
+         p.role?.toLowerCase().includes(searchPlacement.toLowerCase()))
+      : true;
+    const matchesType = filterPlacementType
+      ? p.placementType === filterPlacementType
+      : true;
+    return matchesSearch && matchesType;
+  });
+
+  const filteredHigherStudies = higherStudies.filter(s => {
+    const matchesSearch = searchHigherStudies
+      ? s.examName?.toLowerCase().includes(searchHigherStudies.toLowerCase())
+      : true;
+    const matchesExam = filterExamName
+      ? s.examName === filterExamName
+      : true;
+    return matchesSearch && matchesExam;
+  });
+
   return (
     <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
@@ -963,9 +990,9 @@ export default function StudentPlacement() {
             </h2>
             <p className="text-slate-600 mt-1">
               <span className="font-semibold text-blue-600">
-                {placements.length}
+                {filteredPlacements.length}
               </span>{" "}
-              placement(s)
+              of {placements.length} placement(s)
             </p>
           </div>
           <button
@@ -975,6 +1002,37 @@ export default function StudentPlacement() {
             + Add Placement
           </button>
         </div>
+
+        {/* Placement Filters */}
+        {placements.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6 flex flex-wrap gap-4 items-center">
+            <input
+              type="text"
+              placeholder="Search company or role..."
+              value={searchPlacement}
+              onChange={(e) => setSearchPlacement(e.target.value)}
+              className="px-4 py-2 border border-slate-300 rounded-lg bg-white flex-1 min-w-[200px] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <select
+              value={filterPlacementType}
+              onChange={(e) => setFilterPlacementType(e.target.value)}
+              className="px-4 py-2 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Types</option>
+              <option value="Campus">Campus</option>
+              <option value="Off-Campus">Off-Campus</option>
+            </select>
+            {(searchPlacement || filterPlacementType) && (
+              <button
+                onClick={() => { setSearchPlacement(""); setFilterPlacementType(""); }}
+                className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+
         {loadingPlacements && (
           <div className="flex items-center justify-center h-32">
             <p className="text-slate-600">Loading placements...</p>
@@ -985,9 +1043,14 @@ export default function StudentPlacement() {
             <p className="text-slate-600">No placements yet.</p>
           </div>
         )}
-        {!loadingPlacements && placements.length > 0 && (
+        {!loadingPlacements && placements.length > 0 && filteredPlacements.length === 0 && (
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-10 text-center">
+            <p className="text-slate-600 text-base font-medium">No placements match your search.</p>
+          </div>
+        )}
+        {!loadingPlacements && filteredPlacements.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {placements.map((placement) => (
+            {filteredPlacements.map((placement) => (
               <PlacementCard
                 key={placement._id}
                 placement={placement}
@@ -1009,9 +1072,9 @@ export default function StudentPlacement() {
             </h2>
             <p className="text-slate-600 mt-1">
               <span className="font-semibold text-green-600">
-                {higherStudies.length}
+                {filteredHigherStudies.length}
               </span>{" "}
-              record(s)
+              of {higherStudies.length} record(s)
             </p>
           </div>
           <button
@@ -1021,6 +1084,41 @@ export default function StudentPlacement() {
             + Add Higher Studies
           </button>
         </div>
+
+        {/* Higher Studies Filters */}
+        {higherStudies.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6 flex flex-wrap gap-4 items-center">
+            <input
+              type="text"
+              placeholder="Search exam..."
+              value={searchHigherStudies}
+              onChange={(e) => setSearchHigherStudies(e.target.value)}
+              className="px-4 py-2 border border-slate-300 rounded-lg bg-white flex-1 min-w-[200px] text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <select
+              value={filterExamName}
+              onChange={(e) => setFilterExamName(e.target.value)}
+              className="px-4 py-2 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="">All Exams</option>
+              <option value="GATE">GATE</option>
+              <option value="CAT">CAT</option>
+              <option value="GRE">GRE</option>
+              <option value="TOEFL">TOEFL</option>
+              <option value="IELTS">IELTS</option>
+              <option value="UPSC">UPSC</option>
+            </select>
+            {(searchHigherStudies || filterExamName) && (
+              <button
+                onClick={() => { setSearchHigherStudies(""); setFilterExamName(""); }}
+                className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+
         {loadingStudies && (
           <div className="flex items-center justify-center h-32">
             <p className="text-slate-600">Loading higher studies...</p>
@@ -1031,9 +1129,14 @@ export default function StudentPlacement() {
             <p className="text-slate-600">No higher studies yet.</p>
           </div>
         )}
-        {!loadingStudies && higherStudies.length > 0 && (
+        {!loadingStudies && higherStudies.length > 0 && filteredHigherStudies.length === 0 && (
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-10 text-center">
+            <p className="text-slate-600 text-base font-medium">No higher studies match your search.</p>
+          </div>
+        )}
+        {!loadingStudies && filteredHigherStudies.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {higherStudies.map((study) => (
+            {filteredHigherStudies.map((study) => (
               <HigherStudiesCard
                 key={study._id}
                 study={study}

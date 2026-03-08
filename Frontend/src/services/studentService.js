@@ -1,11 +1,22 @@
 import API from "../api/axios";
 
 export const studentService = {
-  // Import Excel (Admin only)
+  // Import Excel (Admin only) - full student data with passwords
   importExcel: async (file) => {
     const formData = new FormData();
     formData.append("studentData", file);
     const response = await API.post("/student/import", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+
+  // Import Student IDs only (Admin only) - new auth flow
+  // Excel must have a single column: studentID
+  importStudentIDs: async (file) => {
+    const formData = new FormData();
+    formData.append("studentIDs", file);
+    const response = await API.post("/student/import-student-ids", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;

@@ -604,6 +604,8 @@ export default function AdminAchievements() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedType, setSelectedType] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedDivision, setSelectedDivision] = useState("");
 
   // Modal State
   const [selectedAchievement, setSelectedAchievement] = useState(null);
@@ -618,7 +620,7 @@ export default function AdminAchievements() {
   // Apply filters
   useEffect(() => {
     applyFilters();
-  }, [achievements, searchQuery, selectedCategory, selectedType]);
+  }, [achievements, searchQuery, selectedCategory, selectedType, selectedYear, selectedDivision]);
 
   const fetchAchievements = async () => {
     try {
@@ -680,6 +682,26 @@ export default function AdminAchievements() {
     // Type filter
     if (selectedType) {
       filtered = filtered.filter((a) => a.achievementType === selectedType);
+    }
+
+    // Year filter (stuID might be populated object or just string ID, we try to match object if available)
+    if (selectedYear) {
+      filtered = filtered.filter((a) => {
+        if (typeof a.stuID === 'object' && a.stuID?.year) {
+          return a.stuID.year === selectedYear;
+        }
+        return true; // If stuID is not populated, we can't filter by year safely, so just pass it
+      });
+    }
+
+    // Division filter
+    if (selectedDivision) {
+      filtered = filtered.filter((a) => {
+        if (typeof a.stuID === 'object' && a.stuID?.division) {
+          return a.stuID.division === selectedDivision;
+        }
+        return true;
+      });
     }
 
     setFilteredAchievements(filtered);
@@ -775,13 +797,40 @@ export default function AdminAchievements() {
             <option value="Participation">Participation</option>
           </select>
 
+          {/* Year Filter */}
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
+          >
+            <option value="">All Years</option>
+            <option value="FE">First Year (FE)</option>
+            <option value="SE">Second Year (SE)</option>
+            <option value="TE">Third Year (TE)</option>
+            <option value="BE">Final Year (BE)</option>
+          </select>
+
+          {/* Division Filter */}
+          <select
+            value={selectedDivision}
+            onChange={(e) => setSelectedDivision(e.target.value)}
+            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
+          >
+            <option value="">All Divs</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+
           {/* Clear Filters */}
-          {(searchQuery || selectedCategory || selectedType) && (
+          {(searchQuery || selectedCategory || selectedType || selectedYear || selectedDivision) && (
             <button
               onClick={() => {
                 setSearchQuery("");
                 setSelectedCategory("");
                 setSelectedType("");
+                setSelectedYear("");
+                setSelectedDivision("");
               }}
               className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition"
             >

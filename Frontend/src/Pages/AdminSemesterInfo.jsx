@@ -483,6 +483,11 @@ export default function AdminSemesterInfo() {
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedSem, setSelectedSem] = useState("");
+    const [selectedYear, setSelectedYear] = useState("");
+    const [selectedDivision, setSelectedDivision] = useState("");
+    const [filterDefaulter, setFilterDefaulter] = useState(""); // "" or "true"
+    const [minAttendance, setMinAttendance] = useState("");
+    const [maxAttendance, setMaxAttendance] = useState("");
     const [selectedItem, setSelectedItem] = useState(null);
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [recordToEdit, setRecordToEdit] = useState(null);
@@ -552,10 +557,35 @@ export default function AdminSemesterInfo() {
     };
 
     const filtered = records.filter((r) => {
-        const stuId = (typeof r?.stuID === "string" ? r.stuID : r?.stuID?.studentID || "").toLowerCase();
-        const matchSearch = !searchQuery || stuId.includes(searchQuery.toLowerCase()) || r.semester?.toString().includes(searchQuery);
+        const stuIdStr = (typeof r?.stuID === "string" ? r.stuID : r?.stuID?.studentID || "").toLowerCase();
+        
+        const matchSearch = !searchQuery || stuIdStr.includes(searchQuery.toLowerCase()) || r.semester?.toString().includes(searchQuery);
         const matchSem = !selectedSem || r.semester?.toString() === selectedSem;
-        return matchSearch && matchSem;
+        
+        // Defaulter filter
+        const matchDefaulter = filterDefaulter === "true" ? r.isDefaulter === true : true;
+        
+        // Attendance range
+        const minAtt = minAttendance === "" ? 0 : Number(minAttendance);
+        const maxAtt = maxAttendance === "" ? 100 : Number(maxAttendance);
+        const matchAttendance = r.attendance >= minAtt && r.attendance <= maxAtt;
+
+        // Year/Div filter matching on populated stuID object
+        const matchYear = !selectedYear || (() => {
+            if (typeof r.stuID === 'object' && r.stuID?.year) {
+                return r.stuID.year === selectedYear;
+            }
+            return true; // if not populated, let it pass
+        })();
+
+        const matchDiv = !selectedDivision || (() => {
+            if (typeof r.stuID === 'object' && r.stuID?.division) {
+                return r.stuID.division === selectedDivision;
+            }
+            return true; // if not populated, let it pass
+        })();
+
+        return matchSearch && matchSem && matchDefaulter && matchAttendance && matchYear && matchDiv;
     });
 
     return (
@@ -590,9 +620,75 @@ export default function AdminSemesterInfo() {
                         ))}
                     </select>
 
-                    {(searchQuery || selectedSem) && (
+                    {/* Year Filter */}
+                    <select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    >
+                        <option value="">All Years</option>
+                        <option value="FE">First Year (FE)</option>
+                        <option value="SE">Second Year (SE)</option>
+                        <option value="TE">Third Year (TE)</option>
+                        <option value="BE">Final Year (BE)</option>
+                    </select>
+
+                    {/* Division Filter */}
+                    <select
+                        value={selectedDivision}
+                        onChange={(e) => setSelectedDivision(e.target.value)}
+                        className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    >
+                        <option value="">All Divs</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                    </select>
+
+                    {/* Defaulter Toggle */}
+                    <select
+                        value={filterDefaulter}
+                        onChange={(e) => setFilterDefaulter(e.target.value)}
+                        className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    >
+                        <option value="">All Students</option>
+                        <option value="true">Defaulters Only</option>
+                    </select>
+
+                    {/* Attendance Range */}
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="number"
+                            placeholder="Min %"
+                            min="0"
+                            max="100"
+                            value={minAttendance}
+                            onChange={(e) => setMinAttendance(e.target.value)}
+                            className="w-20 px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                        />
+                        <span className="text-slate-400 font-medium">-</span>
+                        <input
+                            type="number"
+                            placeholder="Max %"
+                            min="0"
+                            max="100"
+                            value={maxAttendance}
+                            onChange={(e) => setMaxAttendance(e.target.value)}
+                            className="w-20 px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                        />
+                    </div>
+
+                    {(searchQuery || selectedSem || selectedYear || selectedDivision || filterDefaulter || minAttendance || maxAttendance) && (
                         <button
-                            onClick={() => { setSearchQuery(""); setSelectedSem(""); }}
+                            onClick={() => { 
+                                setSearchQuery(""); 
+                                setSelectedSem(""); 
+                                setSelectedYear("");
+                                setSelectedDivision("");
+                                setFilterDefaulter("");
+                                setMinAttendance("");
+                                setMaxAttendance("");
+                            }}
                             className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition"
                         >
                             Clear
