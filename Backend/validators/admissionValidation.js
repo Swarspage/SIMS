@@ -4,15 +4,25 @@ const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
 
 //create admission => student
 const admissionCreateSchema = Joi.object({
-  year: Joi.string().valid("FY", "SY", "TY").optional()
+  year: Joi.string()
+    .trim()
+    .valid("FY", "SY", "TY")
+    .optional()
     .messages({
-      "any.only": "Year must be one of FY, SY, or TY."
+      "any.only": "Year must be one of FY, SY, or TY.",
+      "string.empty": "Year cannot be empty."
     }),
 
-  div: Joi.string().trim().pattern(textWithNumberRegex).max(10).noProfanity().required()
+  div: Joi.string()
+    .trim()
+    .pattern(textWithNumberRegex)
+    .max(10)
+    .noProfanity()
+    .required()
     .messages({
       "string.pattern.base": "Division must contain only letters, numbers and allowed characters.",
       "string.noProfanity": "Division contains inappropriate language.",
+      "string.empty": "Division cannot be empty.",
       "any.required": "Division is required."
     }),
 
@@ -22,6 +32,7 @@ const admissionCreateSchema = Joi.object({
     .required()
     .messages({
       "string.pattern.base": "Roll number must contain only digits.",
+      "string.empty": "Roll number cannot be empty.",
       "any.required": "Roll number is required."
     }),
 
@@ -37,7 +48,8 @@ const admissionCreateSchema = Joi.object({
       "string.empty": "Course name is required.",
       "string.min": "Course name must be at least 2 characters long.",
       "string.max": "Course name cannot exceed 100 characters.",
-      "string.pattern.base": "Course name must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
+      "string.pattern.base":
+        "Course name must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
       "string.noProfanity": "Course name contains inappropriate language.",
       "any.required": "Course name is required."
     }),
@@ -51,7 +63,8 @@ const admissionCreateSchema = Joi.object({
       "any.required": "Fees are required."
     }),
 
-  isScholarshipApplied: Joi.boolean().default(false)
+  isScholarshipApplied: Joi.boolean()
+    .default(false)
     .messages({
       "boolean.base": "Scholarship status must be true or false."
     }),
@@ -64,12 +77,14 @@ const admissionCreateSchema = Joi.object({
       .required()
       .messages({
         "any.required": "Reason for not applying for scholarship is required when scholarship is not applied.",
-        "string.min": "Reason for not applying for scholarship must be at least 5 characters long."
+        "string.min": "Reason for not applying for scholarship must be at least 5 characters long.",
+        "string.empty": "Reason cannot be empty."
       }),
     otherwise: Joi.forbidden()
   }),
 
   academicYear: Joi.string()
+    .trim()
     .pattern(/^\d{4}-\d{4}$/)
     .custom((value, helpers) => {
       const [start, end] = value.split("-").map(Number);
@@ -85,54 +100,86 @@ const admissionCreateSchema = Joi.object({
       "any.required": "Academic year is required."
     }),
 
-  isMahadbtFormSubmitted: Joi.boolean().default(false)
+  isMahadbtFormSubmitted: Joi.boolean()
+    .default(false)
     .messages({ "boolean.base": "MahaDBT status must be true or false." }),
 
   mahadbtFilledDate: Joi.when("isMahadbtFormSubmitted", {
     is: true,
-    then: Joi.date().required().messages({ "any.required": "MahaDBT form filled date is required." }),
+    then: Joi.date().required().messages({
+      "any.required": "MahaDBT form filled date is required.",
+      "date.base": "MahaDBT form filled date must be a valid date."
+    }),
     otherwise: Joi.forbidden()
   }),
 
   mahadbtNotFilledReason: Joi.when("isMahadbtFormSubmitted", {
     is: false,
-    then: Joi.string().trim().min(5).required().messages({
-      "any.required": "Reason is required if MahaDBT form is not submitted.",
-      "string.min": "Reason must be at least 5 characters long."
-    }),
+    then: Joi.string()
+      .trim()
+      .min(5)
+      .required()
+      .messages({
+        "any.required": "Reason is required if MahaDBT form is not submitted.",
+        "string.min": "Reason must be at least 5 characters long.",
+        "string.empty": "Reason cannot be empty."
+      }),
     otherwise: Joi.forbidden()
   }),
 
-  hasMigrationCertificate: Joi.boolean().default(false)
+  hasMigrationCertificate: Joi.boolean()
+    .default(false)
     .messages({ "boolean.base": "Migration certificate status must be true or false." }),
 
   migrationExpectedDate: Joi.when("hasMigrationCertificate", {
     is: true,
-    then: Joi.date().required().messages({ "any.required": "Migration expected date is required." }),
+    then: Joi.date().required().messages({
+      "any.required": "Migration expected date is required.",
+      "date.base": "Migration expected date must be a valid date."
+    }),
     otherwise: Joi.forbidden()
   }),
 
   migrationNotAvailableReason: Joi.when("hasMigrationCertificate", {
     is: false,
-    then: Joi.string().trim().min(5).required().messages({
-      "any.required": "Reason is required if migration certificate is not available.",
-      "string.min": "Reason must be at least 5 characters long."
-    }),
+    then: Joi.string()
+      .trim()
+      .min(5)
+      .required()
+      .messages({
+        "any.required": "Reason is required if migration certificate is not available.",
+        "string.min": "Reason must be at least 5 characters long.",
+        "string.empty": "Reason cannot be empty."
+      }),
     otherwise: Joi.forbidden()
-  }),
-}).unknown(false);
+  })
+}).options({
+  stripUnknown: true,
+  convert: true,
+  abortEarly: false
+});
 
 //update admission => student | pending only
 const admissionUpdateSchema = Joi.object({
-  year: Joi.string().valid("FY", "SY", "TY").optional()
+  year: Joi.string()
+    .trim()
+    .valid("FY", "SY", "TY")
+    .optional()
     .messages({
-      "any.only": "Year must be one of FY, SY, or TY."
+      "any.only": "Year must be one of FY, SY, or TY.",
+      "string.empty": "Year cannot be empty."
     }),
 
-  div: Joi.string().trim().pattern(textWithNumberRegex).max(10).noProfanity().optional()
+  div: Joi.string()
+    .trim()
+    .pattern(textWithNumberRegex)
+    .max(10)
+    .noProfanity()
+    .optional()
     .messages({
       "string.pattern.base": "Division must contain only letters, numbers and allowed characters.",
-      "string.noProfanity": "Division contains inappropriate language."
+      "string.noProfanity": "Division contains inappropriate language.",
+      "string.empty": "Division cannot be empty."
     }),
 
   rollno: Joi.string()
@@ -140,7 +187,8 @@ const admissionUpdateSchema = Joi.object({
     .pattern(/^\d+$/)
     .optional()
     .messages({
-      "string.pattern.base": "Roll number must contain only digits."
+      "string.pattern.base": "Roll number must contain only digits.",
+      "string.empty": "Roll number cannot be empty."
     }),
 
   course: Joi.string()
@@ -154,7 +202,8 @@ const admissionUpdateSchema = Joi.object({
       "string.empty": "Course name cannot be empty.",
       "string.min": "Course name must be at least 2 characters long.",
       "string.max": "Course name cannot exceed 100 characters.",
-      "string.pattern.base": "Course name must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
+      "string.pattern.base":
+        "Course name must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
       "string.noProfanity": "Course name contains inappropriate language."
     }),
 
@@ -166,7 +215,8 @@ const admissionUpdateSchema = Joi.object({
       "number.min": "Fees cannot be negative."
     }),
 
-  isScholarshipApplied: Joi.boolean().optional()
+  isScholarshipApplied: Joi.boolean()
+    .optional()
     .messages({
       "boolean.base": "Scholarship status must be true or false."
     }),
@@ -179,90 +229,139 @@ const admissionUpdateSchema = Joi.object({
       .required()
       .messages({
         "any.required": "Reason is required if scholarship is not applied.",
-        "string.min": "Reason must be at least 5 characters long."
+        "string.min": "Reason must be at least 5 characters long.",
+        "string.empty": "Reason cannot be empty."
       }),
     otherwise: Joi.optional()
   }),
 
-  isMahadbtFormSubmitted: Joi.boolean().optional()
+  isMahadbtFormSubmitted: Joi.boolean()
+    .optional()
     .messages({ "boolean.base": "MahaDBT status must be true or false." }),
 
   mahadbtFilledDate: Joi.when("isMahadbtFormSubmitted", {
     is: true,
-    then: Joi.date().required().messages({ "any.required": "MahaDBT form filled date is required." }),
+    then: Joi.date().required().messages({
+      "any.required": "MahaDBT form filled date is required.",
+      "date.base": "MahaDBT form filled date must be a valid date."
+    }),
     otherwise: Joi.optional()
   }),
 
   mahadbtNotFilledReason: Joi.when("isMahadbtFormSubmitted", {
     is: false,
-    then: Joi.string().trim().min(5).required().messages({
-      "any.required": "Reason is required if MahaDBT form is not submitted.",
-      "string.min": "Reason must be at least 5 characters long."
-    }),
+    then: Joi.string()
+      .trim()
+      .min(5)
+      .required()
+      .messages({
+        "any.required": "Reason is required if MahaDBT form is not submitted.",
+        "string.min": "Reason must be at least 5 characters long.",
+        "string.empty": "Reason cannot be empty."
+      }),
     otherwise: Joi.optional()
   }),
 
-  hasMigrationCertificate: Joi.boolean().optional()
+  hasMigrationCertificate: Joi.boolean()
+    .optional()
     .messages({ "boolean.base": "Migration certificate status must be true or false." }),
 
   migrationExpectedDate: Joi.when("hasMigrationCertificate", {
     is: true,
-    then: Joi.date().required().messages({ "any.required": "Migration expected date is required." }),
+    then: Joi.date().required().messages({
+      "any.required": "Migration expected date is required.",
+      "date.base": "Migration expected date must be a valid date."
+    }),
     otherwise: Joi.optional()
   }),
 
   migrationNotAvailableReason: Joi.when("hasMigrationCertificate", {
     is: false,
-    then: Joi.string().trim().min(5).required().messages({
-      "any.required": "Reason is required if migration certificate is not available.",
-      "string.min": "Reason must be at least 5 characters long."
-    }),
+    then: Joi.string()
+      .trim()
+      .min(5)
+      .required()
+      .messages({
+        "any.required": "Reason is required if migration certificate is not available.",
+        "string.min": "Reason must be at least 5 characters long.",
+        "string.empty": "Reason cannot be empty."
+      }),
     otherwise: Joi.optional()
-  }),
-
-}).min(1)
+  })
+})
+  .min(1)
   .messages({
     "object.min": "At least one field must be provided for update."
-  }).unknown(false);
+  })
+  .options({
+    stripUnknown: true,
+    convert: true,
+    abortEarly: false
+  });
+
 
 //update admission status => admin | DI
 const admissionStatusSchema = Joi.object({
   status: Joi.string()
+    .trim()
     .valid("approved", "rejected")
     .required()
     .messages({
       "any.required": "Status is required.",
-      "any.only": "Please select a valid status."
-    }),
-}).unknown(false);
+      "any.only": "Please select a valid status.",
+      "string.empty": "Status cannot be empty."
+    })
+}).options({
+  stripUnknown: true,
+  convert: true,
+  abortEarly: false
+});
+
 
 //get all admissions => admin | DI
 const getAdmissionsValidation = Joi.object({
-  year: Joi.string().valid("FY", "SY", "TY").optional()
+  year: Joi.string()
+    .trim()
+    .valid("FY", "SY", "TY")
+    .optional()
     .messages({
       "any.only": "Year must be one of FY, SY, or TY."
     }),
 
   academicYear: Joi.string()
+    .trim()
     .pattern(/^\d{4}-\d{4}$/)
     .optional()
     .messages({
-      "string.pattern.base": "Academic year must be in the format YYYY-YYYY.",
+      "string.pattern.base": "Academic year must be in the format YYYY-YYYY."
     }),
 
-  search: Joi.string().trim().pattern(textWithNumberRegex).max(100).optional()
+  search: Joi.string()
+    .trim()
+    .pattern(textWithNumberRegex)
+    .max(100)
+    .optional()
     .messages({
       "string.max": "Search cannot exceed 100 characters.",
-      "string.pattern.base": "Search must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens."
+      "string.pattern.base":
+        "Search must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens."
     }),
 
-  page: Joi.number().integer().min(1).optional().messages({
-    "number.base": "Page must be a valid number.",
-    "number.integer": "Page must be an integer.",
-    "number.min": "Page must be at least 1."
-  }),
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .optional()
+    .messages({
+      "number.base": "Page must be a valid number.",
+      "number.integer": "Page must be an integer.",
+      "number.min": "Page must be at least 1."
+    }),
 
-  limit: Joi.number().integer().min(1).max(50).optional()
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(50)
+    .optional()
     .messages({
       "number.base": "Limit must be a valid number.",
       "number.integer": "Limit must be an integer.",
@@ -271,12 +370,18 @@ const getAdmissionsValidation = Joi.object({
     }),
 
   filterPaid: Joi.string()
+    .trim()
     .valid("paid", "unpaid")
     .optional()
     .messages({
       "any.only": "Filter paid must be either 'paid' or 'unpaid'."
-    }),
-}).unknown(false);
+    })
+}).options({
+  stripUnknown: true,
+  convert: true,
+  abortEarly: false
+});
+
 
 module.exports = {
   admissionCreateSchema,
