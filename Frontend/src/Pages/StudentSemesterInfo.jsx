@@ -71,6 +71,22 @@ function SemInfoCard({ record, onEdit, onDelete, isDeleting }) {
                     )}
                 </div>
 
+                {/* Academic Status */}
+                <div className="mb-4 grid grid-cols-2 gap-3 pb-3 border-b border-slate-100">
+                    <div>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Exam Form</p>
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${record.examFormFilled ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-500 border-slate-200"}`}>
+                            {record.examFormFilled ? "✓ FILLED" : "PENDING"}
+                        </span>
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Journal</p>
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${record.journalTaken ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-slate-50 text-slate-500 border-slate-200"}`}>
+                            {record.journalTaken ? "✓ TAKEN" : "PENDING"}
+                        </span>
+                    </div>
+                </div>
+
                 {/* Actions */}
                 <div className="mt-auto grid grid-cols-2 gap-2">
                     <button
@@ -109,6 +125,8 @@ export default function StudentSemesterInfo() {
         attendance: "",
         kts: [],
         marks: [{ subject: "", score: "", outOf: "" }],
+        journalTaken: false,
+        examFormFilled: false,
     };
     const [formData, setFormData] = useState(emptyForm);
     const [ktInput, setKtInput] = useState(""); // current KT being typed
@@ -153,6 +171,8 @@ export default function StudentSemesterInfo() {
                 score: m.score?.toString() || "",
                 outOf: m.outOf?.toString() || "",
             })) || [{ subject: "", score: "", outOf: "" }],
+            journalTaken: record.journalTaken || false,
+            examFormFilled: record.examFormFilled || false,
         });
         setKtInput("");
         setView("form");
@@ -217,6 +237,8 @@ export default function StudentSemesterInfo() {
                 score: Number(m.score),
                 outOf: Number(m.outOf),
             })),
+            journalTaken: formData.journalTaken,
+            examFormFilled: formData.examFormFilled,
         };
 
         try {
@@ -224,14 +246,48 @@ export default function StudentSemesterInfo() {
                 await semInfoService.updateSemInfo(editingId, payload);
                 toast.success("Semester info updated!");
             } else {
-                await semInfoService.addSemInfo(payload);
+                // Try sending everything first
+                const response = await semInfoService.addSemInfo(payload);
+                const newRecord = response.data || response;
+                
+                // If the backend creation ignored the fields (which it might based on validators),
+                // we'll follow up with an update to be sure.
+                if (newRecord._id && (payload.journalTaken || payload.examFormFilled)) {
+                    await semInfoService.updateSemInfo(newRecord._id, {
+                        journalTaken: payload.journalTaken,
+                        examFormFilled: payload.examFormFilled
+                    });
+                }
                 toast.success("Semester info added!");
             }
             resetForm();
             await fetchRecords();
             setTimeout(() => setView("list"), 500);
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to save");
+            // Fallback: If creation fails because of unknown fields in Joi, try again without them
+            if (!editingId && err.response?.status === 400) {
+                try {
+                    const { journalTaken, examFormFilled, ...basicPayload } = payload;
+                    const response = await semInfoService.addSemInfo(basicPayload);
+                    const newRecord = response.data || response;
+                    
+                    if (newRecord._id) {
+                        await semInfoService.updateSemInfo(newRecord._id, {
+                            journalTaken,
+                            examFormFilled
+                        });
+                        toast.success("Semester info added!");
+                        resetForm();
+                        await fetchRecords();
+                        setTimeout(() => setView("list"), 500);
+                        return;
+                    }
+                } catch (retryErr) {
+                    toast.error(retryErr.response?.data?.message || "Failed to save");
+                }
+            } else {
+                toast.error(err.response?.data?.message || "Failed to save");
+            }
             console.error(err);
         } finally {
             setFormLoading(false);
@@ -318,6 +374,39 @@ export default function StudentSemesterInfo() {
                                             required
                                         />
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* ── Additional Status ── */}
+                            <div>
+                                <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-4 pb-3 border-b-2 border-blue-500">
+                                    Academic Status
+                                </h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-white transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.examFormFilled}
+                                            onChange={(e) => setFormData(p => ({ ...p, examFormFilled: e.target.checked }))}
+                                            className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                                        />
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800">Exam Form Filled</p>
+                                            <p className="text-xs text-slate-500 mt-0.5">Check if you have submitted the semester exam form</p>
+                                        </div>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-white transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.journalTaken}
+                                            onChange={(e) => setFormData(p => ({ ...p, journalTaken: e.target.checked }))}
+                                            className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                                        />
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800">Journal Taken</p>
+                                            <p className="text-xs text-slate-500 mt-0.5">Check if the engineering journal has been collected</p>
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
 
