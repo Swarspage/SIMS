@@ -16,7 +16,7 @@ const { readLimiter, writeLimiter, uploadLimiter, exportLimiter } = require("../
 router.post('/import', authenticateToken, authorizeRoles("admin", "divisionIncharge"), uploadLimiter, uploadMemoryStorage.single("studentData"), importExcelDataWithPasswords);
 
 // route to add excel file with only studentIDs --admin access
-router.post('/import-student-ids', authenticateToken, authorizeRoles("admin", "divisionIncharge"), uploadLimiter, uploadExcel.single("studentIDs"), importStudentIDs);
+router.post('/import-student-ids', authenticateToken, authorizeRoles("admin", "divisionIncharge"), uploadLimiter, uploadMemoryStorage.single("studentIDs"), importStudentIDs);
 
 // route to dwnload all student data in Excel format
 router.get("/export-students", authenticateToken, authorizeRoles("admin", "divisionIncharge"), exportLimiter, exportAllStudentsToExcel);
