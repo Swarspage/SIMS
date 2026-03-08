@@ -588,13 +588,18 @@ export default function AdminSemesterInfo() {
             {/* Filter Bar */}
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-8">
                 <div className="flex flex-wrap gap-4 items-center">
+                <div className="flex-1 min-w-[240px]">
                     <input
                         type="text"
-                        placeholder="Search by student ID or semester..."
+                        placeholder="e.g. 2024COMP123, Sem 1"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white flex-1 min-w-[240px] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                    <p className="text-[11px] text-slate-500 mt-1.5 ml-1">
+                        <span className="font-semibold text-blue-600">Tip:</span> Search by Student ID or Semester Number.
+                    </p>
+                </div>
                     <select
                         value={selectedSem}
                         onChange={(e) => setSelectedSem(e.target.value)}

@@ -706,13 +706,18 @@ export default function AdminInternship() {
 
         {/* Row 1 — Search + Export */}
         <div className="flex flex-wrap gap-4 items-center mb-5">
-          <input
-            type="text"
-            placeholder="Search by company, student ID..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white flex-1 min-w-[240px] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          />
+          <div className="flex-1 min-w-[240px]">
+            <input
+              type="text"
+              placeholder="e.g. Google, 2024COMP123, Software Engineer"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            />
+            <p className="text-[11px] text-slate-500 mt-1.5 ml-1">
+              <span className="font-semibold text-blue-600">Tip:</span> Search by Company Name, Student ID, or Role.
+            </p>
+          </div>
 
           <div className="flex gap-3 ml-auto flex-wrap">
             <button

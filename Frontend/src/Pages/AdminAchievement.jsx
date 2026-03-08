@@ -725,13 +725,18 @@ export default function AdminAchievements() {
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-8">
         <div className="flex flex-wrap gap-4 items-center">
           {/* Search */}
-          <input
-            type="text"
-            placeholder="Search by title, description, ID..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white flex-1 min-w-[250px] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-          />
+          <div className="flex-1 min-w-[250px]">
+            <input
+              type="text"
+              placeholder="e.g. Hackathon Winner, 2024COMP123, Smart India"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+            <p className="text-[11px] text-slate-500 mt-1.5 ml-1">
+              <span className="font-semibold text-blue-600">Tip:</span> Search by Achievement Title, Student ID, or Description keyword.
+            </p>
+          </div>
 
           {/* Category Filter */}
           <select
