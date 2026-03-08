@@ -5,6 +5,7 @@ const router = express.Router();
 const authenticateToken = require("../middlewares/authenticateToken");
 const authorizeRoles = require("../middlewares/authorizeRoles");
 const trimRequestBodyStrings = require("../middlewares/trimRequestBodyStrings");
+const { readLimiter, writeLimiter } = require("../middlewares/rateLimiter/rateLimiter");
 
 const {
   addSemInfo,
@@ -16,13 +17,13 @@ const {
 } = require("../controllers/semInfoController");
 
 // Admin or DI routes 
-router.get("/all", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings, getAllSemInfos);
-router.get("/student/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), trimRequestBodyStrings, getStudentSemInfos);
+router.get("/all", authenticateToken, authorizeRoles("admin", "divisionIncharge"), readLimiter, trimRequestBodyStrings, getAllSemInfos);
+router.get("/student/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), readLimiter, trimRequestBodyStrings, getStudentSemInfos);
 
 // Student routes
-router.get("/", authenticateToken, authorizeRoles("student"), trimRequestBodyStrings, getOwnSemInfos);
-router.post("/", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings, addSemInfo);
-router.put("/:id", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings, updateSemInfo);
-router.delete("/:id", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), trimRequestBodyStrings, deleteSemInfo);
+router.get("/", authenticateToken, authorizeRoles("student"), readLimiter, trimRequestBodyStrings, getOwnSemInfos);
+router.post("/", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), writeLimiter, trimRequestBodyStrings, addSemInfo);
+router.put("/:id", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), writeLimiter ,trimRequestBodyStrings, updateSemInfo);
+router.delete("/:id", authenticateToken, authorizeRoles("admin", "student", "divisionIncharge"), writeLimiter, trimRequestBodyStrings, deleteSemInfo);
 
 module.exports = router;
