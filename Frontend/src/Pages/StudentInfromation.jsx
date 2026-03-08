@@ -424,7 +424,7 @@ export default function StudentInformation() {
               {/* Current Address */}
               <div className="space-y-4">
                 <h3 className="text-md font-bold text-orange-900 bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">Current Address</h3>
-                <InputField label="Street / Building" name="currentStreet" value={formData.currentStreet} onChange={handleChange} required />
+                <InputField label="Street / Building (Complete Address)" name="currentStreet" value={formData.currentStreet} onChange={handleChange} required />
                 <div className="grid grid-cols-2 gap-4">
                   <InputField label="City" name="currentCity" value={formData.currentCity} onChange={handleChange} required />
                   <InputField label="Pincode" name="pincode" value={formData.pincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6 digit pincode" maxLength={6} />
@@ -434,7 +434,7 @@ export default function StudentInformation() {
               {/* Native Address */}
               <div className="space-y-4">
                 <h3 className="text-md font-bold text-orange-900 bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">Native Address</h3>
-                <InputField label="Street / Building" name="nativeStreet" value={formData.nativeStreet} onChange={handleChange} required />
+                <InputField label="Street / Building (Complete Address)" name="nativeStreet" value={formData.nativeStreet} onChange={handleChange} required />
                 <div className="grid grid-cols-2 gap-4">
                   <InputField label="City" name="nativeCity" value={formData.nativeCity} onChange={handleChange} required />
                   <InputField label="Pincode" name="nativePincode" value={formData.nativePincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6 digit pincode" maxLength={6} />

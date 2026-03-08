@@ -162,6 +162,16 @@ function HigherStudiesCard({ study, onEdit, onDelete, isDeleting }) {
               View Marksheet
             </a>
           )}
+          {study?.idCardPhoto?.url && (
+            <a
+              href={study.idCardPhoto.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors text-center block"
+            >
+              View ID Card
+            </a>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => onEdit(study)}
@@ -654,7 +664,7 @@ export default function StudentPlacement() {
                       Documentation
                     </h2>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Internship Photo
+                      Placement Proof
                     </label>
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">
@@ -858,7 +868,7 @@ export default function StudentPlacement() {
                     )}
 
                     <label className="block text-sm font-semibold text-slate-700 mb-2 mt-6">
-                      ID Card Photo (Image)
+                      ID Card Photo (If no ID Card, then upload any valid admission proof for higher studies.)
                     </label>
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">
@@ -950,8 +960,8 @@ export default function StudentPlacement() {
   // =============== LIST VIEW ===============
   const filteredPlacements = placements.filter(p => {
     const matchesSearch = searchPlacement
-      ? (p.companyName?.toLowerCase().includes(searchPlacement.toLowerCase()) || 
-         p.role?.toLowerCase().includes(searchPlacement.toLowerCase()))
+      ? (p.companyName?.toLowerCase().includes(searchPlacement.toLowerCase()) ||
+        p.role?.toLowerCase().includes(searchPlacement.toLowerCase()))
       : true;
     const matchesType = filterPlacementType
       ? p.placementType === filterPlacementType
