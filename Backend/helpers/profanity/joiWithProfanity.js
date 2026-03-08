@@ -29,7 +29,7 @@
 const Joi = require("joi");
 const profanity = require("./profanityFilter");
 
-const englishRegex = /^[A-Za-z0-9\s.,!?'"@()\-_:;]+$/; //to ensure only englissh language is accepted -no other language like hindi or marathi etc(because what if someone pastes bad words in hindi language?)
+const englishRegex = /^[A-Za-z0-9\s.,!?'"@()\-_:;/#]+$/; //to ensure only englissh language is accepted -no other language like hindi or marathi etc(because what if someone pastes bad words in hindi language?)
 
 const JoiExtended = Joi.extend((joi) => ({
   type: "string",

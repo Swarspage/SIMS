@@ -60,7 +60,7 @@ const createHigherStudy = async (req, res) => {
         }
 
         // Validate input
-        const { valie, error } = createHigherStudySchema.validate(req.body, { abortEarly: false });
+        const { value, error } = createHigherStudySchema.validate(req.body, { abortEarly: false });
         if (error) {
             const validationErrors = error.details.map(err => ({
                 field: err.path[0],
@@ -69,7 +69,7 @@ const createHigherStudy = async (req, res) => {
             return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
         }
 
-        const { examName, score } = validateAndUploadFiles;
+        const { examName, score } = value;
 
         const exists = await HigherStudies.findOne({ stuID, examName });
         if (exists) {
@@ -163,6 +163,8 @@ const getHigherStudies = async (req, res) => {
             }));
             return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
         }
+        
+        const { year, division, search, page, limit, examName, export: exportFlag, academicYear, score, } = value;
 
         const isExport = value.export === 'true';
 
@@ -172,7 +174,6 @@ const getHigherStudies = async (req, res) => {
             }
         }
 
-        const { year, division, search, page, limit, examName, export: exportFlag, academicYear, score, } = value;
 
         const pageNum = value.page || 1;
         const limitNum = Math.min(value.limit || 10, 20);

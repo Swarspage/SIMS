@@ -42,7 +42,7 @@ router.delete('/:id', authenticateToken, authorizeRoles("admin"), writeLimiter, 
 
 
 // Login Route --put this in auth --talk  to swar ki usne kaha se liya hain frontend mein
-router.post('/login', require("../controllers/divisionInchargeController").loginDivisionIncharge);
+// router.post('/login', require("../controllers/divisionInchargeController").loginDivisionIncharge);
 
 
 module.exports = router;
