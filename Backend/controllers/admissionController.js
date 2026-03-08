@@ -262,7 +262,7 @@ const getAllAdmissions = async (req, res) => {
 
     const query = {};
 
-    /* Role Scope */
+    //role scope restrictions
     if (req.user.role === "divisionIncharge") {
       query.year = req.user.year;
       query.div = req.user.division;
@@ -272,9 +272,15 @@ const getAllAdmissions = async (req, res) => {
 
     if (value.academicYear) query.academicYear = value.academicYear;
 
-    if (value.filterPaid)
-      query.isFeesPaid = value.filterPaid === "paid";
+    //paid/unpaid filter
+    if (value.filterPaid === "paid") {
+      query.isFeesPaid = true;
+    } else if(value.filterPaid === "unpaid") {
+      query.isFeesPaid = false;
+    }
 
+
+    //search
     if (value.search) {
       const regex = new RegExp(value.search, "i");
       query.$or = [
@@ -287,8 +293,9 @@ const getAllAdmissions = async (req, res) => {
     //export
     if (isExport) {
       const admissions = await Admission.find(query)
-        .populate("stuID")
-        .sort({ createdAt: -1 });
+        .populate("stuID" , "name branch studentID")
+        .sort({ createdAt: -1 })
+        .limit(5000); // limit export to 5000 records to prevent overload
 
       const rows = admissions.map(transformAdmission);
 
