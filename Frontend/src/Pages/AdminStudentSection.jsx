@@ -704,6 +704,10 @@ export default function AdminStudentSection() {
   const [exporting, setExporting] = useState(false);
   const fileInputRef = useRef(null);
 
+  // Import Student IDs state (new auth flow)
+  const [importingStudentIDs, setImportingStudentIDs] = useState(false);
+  const studentIDsFileInputRef = useRef(null);
+
   // Division Incharge State
   const [activeTab, setActiveTab] = useState("students"); // "students" or "divisionIncharges"
   const [divisionIncharges, setDivisionIncharges] = useState([]);
@@ -876,8 +880,37 @@ export default function AdminStudentSection() {
     }
   };
 
+  // ✅ HANDLE IMPORT STUDENT IDs (new auth flow — only studentID column)
+  const handleImportStudentIDsClick = () => {
+    studentIDsFileInputRef.current?.click();
+  };
 
-  // ✅ HANDLE IMPORT EXCEL (DIVISION INCHARGE)
+  const handleStudentIDsFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.name.match(/\.(xlsx|xls)$/)) {
+      toast.warn("Please upload a valid Excel file (.xlsx or .xls)");
+      return;
+    }
+
+    try {
+      setImportingStudentIDs(true);
+      const response = await studentService.importStudentIDs(file);
+      const inserted = response?.summary?.inserted ?? "?";
+      const skipped = response?.summary?.alreadyExists ?? 0;
+      toast.success(`✅ Student IDs imported! Created: ${inserted}${ skipped ? `, Skipped (already exist): ${skipped}` : ""}.`);
+      fetchStudents();
+      e.target.value = "";
+    } catch (err) {
+      console.error("Import Student IDs error:", err);
+      toast.error(err.response?.data?.message || "Failed to import Student IDs. Check the file has a 'studentID' column.");
+    } finally {
+      setImportingStudentIDs(false);
+    }
+  };
+
+
   const handleImportDivisionInchargeClick = () => {
     divisionFileInputRef.current?.click();
   };
@@ -1162,6 +1195,23 @@ export default function AdminStudentSection() {
 
               {/* Hidden Input for Import */}
               <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleFileChange} className="hidden" />
+
+              {/* Import Student IDs Button — new auth flow */}
+              <button
+                onClick={handleImportStudentIDsClick}
+                disabled={importingStudentIDs}
+                title="Upload an Excel file with a single 'studentID' column to pre-register students for self-signup"
+                className="px-4 py-2.5 rounded-lg bg-orange-600 text-white text-sm font-semibold hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {importingStudentIDs ? (
+                  <> <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> Importing IDs... </>
+                ) : (
+                  <> <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg> Import Student IDs </>
+                )}
+              </button>
+
+              {/* Hidden Input for Student IDs Import */}
+              <input ref={studentIDsFileInputRef} type="file" accept=".xlsx,.xls" onChange={handleStudentIDsFileChange} className="hidden" />
 
               {/* Add Student Button */}
               <button
