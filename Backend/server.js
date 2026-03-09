@@ -54,6 +54,7 @@ app.use("/api/placement", require("./routes/PlacementRoutes"));
 app.use("/api/higherStudies", require("./routes/HigherStudiesRoutes"));
 app.use("/api/student", require("./routes/StudentRoutes"));
 app.use("/api/divisionIncharge", require("./routes/divisionInchargeRoutes"));
+app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 
 // after all routes
 app.use(errorHandler);

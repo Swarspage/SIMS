@@ -3,7 +3,6 @@ const router = express.Router();
 
 const { createInternship , getInternships, getOwnInternships , updateInternship , deleteInternship, getStudentInternshipsByAdmin, getSingleInternship } = require("../controllers/internController");
 
-const verifyToken =require ("../middlewares/VerifyToken");
 
 const upload=require("../middlewares/multer");
 
