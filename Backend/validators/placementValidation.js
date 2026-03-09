@@ -221,6 +221,23 @@ const getPlacementsValidation = Joi.object({
     abortEarly: false
 });
 
+const validateStudentID = Joi.object({
+    studentID: Joi.string()
+        .trim()
+        .pattern(/^[0-9]{4}[A-Z]{4}[0-9]{3}$/)
+        .englishOnly().noProfanity()
+        .required()
+        .messages({
+            "string.pattern.base": "Student ID must follow the format: 4 digits, 4 uppercase letters, 3 digits.",
+            "string.empty": "Student ID cannot be empty.",
+            "any.required": "Student ID is required."
+        }),
+}).options({
+    stripUnknown : true,
+    convert : true,
+    abortEarly : false,
+});
+
 
 //How to Call getPlacements API
 /*
@@ -231,4 +248,4 @@ GET /placements?placementYear=2023-24&packageMin=10&placementType=Campus
 */
 
 
-module.exports = { createPlacementSchema, updatePlacementSchema, getPlacementsValidation };
+module.exports = { createPlacementSchema, updatePlacementSchema, getPlacementsValidation, validateStudentID };

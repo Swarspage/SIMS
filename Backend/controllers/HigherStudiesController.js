@@ -40,21 +40,35 @@ const createHigherStudy = async (req, res) => {
             stuID = req.user.id;
 
         }else if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
-            stuID = req.body.studentId;
+            
+            // Validate input using Joi
+            const { value, error } = validateStudentID.validate({studentID: req.body.studentId}, { abortEarly: false });
+            if (error) {
+                console.log(error);
+                const validationErrors = error.details.map(err => ({
+                    field: err.path[0],
+                    message: err.message
+                }));
 
-            if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
-                return res.status(400).json({ success: false, message: "Invalid student ID." });
+                return res.status(400).json({
+                    success: false,
+                    message: "Validation failed",
+                    errors: validationErrors
+                });
             }
 
-
-            const student = await Student.findById(stuID);
-            if (!student) return res.status(404).json({ success: false, message: "Student not found." });
-
+            const student = await Student.findOne({studentID : value.studentID});
+            if (!student) {
+                return res.status(404).json({ success: false, message: "Student not found. Cannot create internship."});
+            }
+            
             if(req.user.role === "divisionIncharge"){
                 if(student.year !== req.user.year || student.division !== req.user.division){
                     return res.status(403).json({success: false, message: "You can access students of only your own division."});
                 }
             }
+
+            stuID = student._id;
         }else{
             return res.status(403).json({success : false, message: "Unauthorized role."});
         }
@@ -220,6 +234,7 @@ const getHigherStudies = async (req, res) => {
         if (search) {
             const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
             match.$or = [
+                { "student.studentID": { $regex: safeSearch, $options: "i" } },
                 { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
                 { "student.name.middleName": { $regex: safeSearch, $options: "i" } },
                 { "student.name.lastName": { $regex: safeSearch, $options: "i" } },

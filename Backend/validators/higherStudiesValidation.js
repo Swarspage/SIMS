@@ -122,5 +122,21 @@ const getHigherStudiesValidation = Joi.object({
     }),
 });
 
+const validateStudentID = Joi.object({
+    studentID: Joi.string()
+        .trim()
+        .pattern(/^[0-9]{4}[A-Z]{4}[0-9]{3}$/)
+        .englishOnly().noProfanity()
+        .required()
+        .messages({
+            "string.pattern.base": "Student ID must follow the format: 4 digits, 4 uppercase letters, 3 digits.",
+            "string.empty": "Student ID cannot be empty.",
+            "any.required": "Student ID is required."
+        }),
+}).options({
+    stripUnknown : true,
+    convert : true,
+    abortEarly : false,
+});
 
-module.exports = { createHigherStudySchema, updateHigherStudySchema, getHigherStudiesValidation };
+module.exports = { createHigherStudySchema, updateHigherStudySchema, getHigherStudiesValidation, validateStudentID };

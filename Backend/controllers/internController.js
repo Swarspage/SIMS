@@ -10,7 +10,7 @@ const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformInternship, internshipColumnMap } = require('../helpers/excel/exportTransformers');
 
 
-const { internshipValidationSchema, updateInternshipValidationSchema, getInternshipsValidation } = require("../validators/internshipValidation");
+const { internshipValidationSchema, updateInternshipValidationSchema, getInternshipsValidation, validateStudentID } = require("../validators/internshipValidation");
 
 const fileConfigs = [
     {
@@ -40,13 +40,25 @@ const createInternship = async (req, res) => {
         if(req.user.role === "student"){
             stuID=req.user.id;
         }else if(req.user.role==="admin" || req.user.role === "divisionIncharge"){
-            stuID=req.body.studentId;
 
-            if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
-                return res.status(400).json({ success: false, message: "Student ID required in valid format." });
+
+            // Validate input using Joi
+            const { value, error } = validateStudentID.validate({studentID: req.body.studentId}, { abortEarly: false });
+            if (error) {
+                console.log(error);
+                const validationErrors = error.details.map(err => ({
+                    field: err.path[0],
+                    message: err.message
+                }));
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Validation failed",
+                    errors: validationErrors
+                });
             }
 
-            const student = await Student.findById(stuID);
+            const student = await Student.findOne({studentID : value.studentID});
             if (!student) {
                 return res.status(404).json({ success: false, message: "Student not found. Cannot create internship."});
             }
@@ -56,6 +68,8 @@ const createInternship = async (req, res) => {
                     return res.status(403).json({success: false, message: "You can only access students of your division"});
                 }
             }
+
+            stuID = student._id
         }
 
         // Validate input using Joi
@@ -221,6 +235,7 @@ const getInternships = async (req, res) => {
                 { companyName: { $regex: safeSearch, $options: "i" } },
                 { role: { $regex: safeSearch, $options: "i" } },
                 { description: { $regex: safeSearch, $options: "i" } },
+                { "student.studentID": { $regex: safeSearch, $options: "i" } },
                 { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
                 { "student.name.middleName": { $regex: safeSearch, $options: "i" } },
                 { "student.name.lastName": { $regex: safeSearch, $options: "i" } },

@@ -1,7 +1,7 @@
 const Placement = require("../models/Placement");
 const Student = require("../models/Student");
 const cloudinary = require("../config/cloudinaryConfig");
-const {createPlacementSchema, updatePlacementSchema, getPlacementsValidation} = require("../validators/placementValidation");
+const {createPlacementSchema, updatePlacementSchema, getPlacementsValidation, validateStudentID} = require("../validators/placementValidation");
 const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
 const {deleteFromCloudinary} = require("../helpers/cloudinary/DeleteFromCloudinary");
 const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
@@ -32,13 +32,23 @@ const createPlacement = async (req, res) => {
 			stuID = req.user.id;
 		} 
 		else if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
-			stuID = req.body.studentId;
+			// Validate input using Joi
+            const { value, error } = validateStudentID.validate({studentID: req.body.studentId}, { abortEarly: false });
+            if (error) {
+                console.log(error);
+                const validationErrors = error.details.map(err => ({
+                    field: err.path[0],
+                    message: err.message
+                }));
 
-			if(!stuID || !mongoose.Types.ObjectId.isValid(stuID)){
-				return res.status(400).json({ success: false, message: "Student ID required in valid format." });
-			}
+                return res.status(400).json({
+                    success: false,
+                    message: "Validation failed",
+                    errors: validationErrors
+                });
+            }
 
-			const student = await Student.findById(stuID);
+			const student = await Student.findOne({studentID : value.studentID});
 			if (!student) {
 				return res.status(404).json({ success: false, message: "Student not found. Cannot create placement." });
 			}
@@ -48,6 +58,8 @@ const createPlacement = async (req, res) => {
 					return res.status(403).json({ success: false, message: "You can access students of only your division." });
 				}
 			}
+
+			stuID = student._id;
 		}else{
 			return res.status(403).json({ success: false, message: "Unauthorised access." });
 		}
@@ -72,6 +84,14 @@ const createPlacement = async (req, res) => {
 
 		if (extractStartYear(placementYear) > extractStartYear(joiningYear)) {
 			return res.status(400).json({ success: false, message: "Placement Year cannot be greater than Joining Year" });
+		}
+
+		if (extractStartYear(passoutYear) < extractStartYear(placementYear)) {
+			return res.status(400).json({ success: false, message: "Passout Year cannot be before Placement Year" });
+		}
+
+		if (extractStartYear(passoutYear) > extractStartYear(joiningYear)) {
+			return res.status(400).json({ success: false, message: "Passout Year cannot be after Joining Year" });
 		}
 
 		if (!req.files?.placementProof) {
@@ -178,15 +198,21 @@ const updatePlacement = async (req, res) => {
 		// Logical validation
 		const extractStartYear = (year) => Number(year.split("-")[0]);
 
-		const placementYearFinal =
-		updatedData.placementYear || existingPlacement.placementYear;
 
-		const joiningYearFinal =
-		updatedData.joiningYear || existingPlacement.joiningYear;
+		const placementYearFinal = updatedData.placementYear || existingPlacement.placementYear;
+		const passoutYearFinal = updatedData.passoutYear || existingPlacement.passoutYear;
+		const joiningYearFinal = updatedData.joiningYear || existingPlacement.joiningYear;
 
 		if (extractStartYear(placementYearFinal) > extractStartYear(joiningYearFinal)) {
 			return res.status(400).json({ success: false, message: "Placement Year cannot be greater than Joining Year" });
-				
+		}
+
+		if (extractStartYear(passoutYearFinal) < extractStartYear(placementYearFinal)) {
+			return res.status(400).json({ success: false, message: "Passout Year cannot be before Placement Year" });
+		}
+
+		if (extractStartYear(passoutYearFinal) > extractStartYear(joiningYearFinal)) {
+			return res.status(400).json({ success: false, message: "Passout Year cannot be after Joining Year" });
 		}
 
 
@@ -330,6 +356,7 @@ const getPlacements = async (req, res) => {
 			match.$or = [
 				{ companyName: { $regex: safeSearch, $options: "i" } },
 				{ role: { $regex: safeSearch, $options: "i" } },
+				{ "student.studentID": { $regex: safeSearch, $options: "i" } },
 				{ "student.name.firstName": { $regex: safeSearch, $options: "i" } },
 				{ "student.name.middleName": { $regex: safeSearch, $options: "i" } },
 				{ "student.name.lastName": { $regex: safeSearch, $options: "i" } },
