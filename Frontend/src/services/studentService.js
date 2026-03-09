@@ -71,8 +71,9 @@ export const studentService = {
   },
   // Export all students (Admin only)
   exportStudents: async (params) => {
-    const response = await API.get("/student/export-students", {
-      params,
+    // The main GET /student route handles export when export=true is passed
+    const response = await API.get("/student", {
+      params: { ...params, export: "true" },
       responseType: "blob",
     });
     return response.data;

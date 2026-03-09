@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { placementService } from "../services/placementService";
 import { higherStudiesService } from "../services/higherStudiesService";
+import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
 import Pagination from "../Components/Common/Pagination";
 
@@ -88,31 +89,19 @@ function PlacementCard({ placement, onView, onDelete, onEdit }) {
             View
           </button>
 
-          <div className="grid grid-cols-2 gap-2">
-            {placement?.placementProof && (
-              <a
-                href={placement.placementProof}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-200 transition-colors text-center"
-              >
-                Download
-              </a>
-            )}
-            <div className="flex gap-2 w-full mt-2">
-              <button
-                onClick={() => onEdit && onEdit(placement)}
-                className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => onDelete && onDelete(placement._id)}
-                className="flex-1 px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => onEdit && onEdit(placement)}
+              className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => onDelete && onDelete(placement._id)}
+              className="flex-1 px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+            >
+              Delete
+            </button>
           </div>
         </div>
       </div>
@@ -182,20 +171,16 @@ function HigherStudyCard({ higherStudy, onView, onDelete }) {
             View
           </button>
 
-          <div className="grid grid-cols-2 gap-2">
-            {higherStudy?.marksheet?.url && (
-              <a
-                href={higherStudy.marksheet.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-200 transition-colors text-center"
-              >
-                Download
-              </a>
-            )}
+          <div className="flex gap-2">
+            <button
+              onClick={() => onEdit && onEdit(higherStudy)}
+              className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors"
+            >
+              Edit
+            </button>
             <button
               onClick={() => onDelete && onDelete(higherStudy._id)}
-              className="px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+              className="flex-1 px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
             >
               Delete
             </button>
@@ -236,62 +221,48 @@ function DetailModal({ item, type, onClose }) {
         {/* Modal Content */}
         <div className="p-6 space-y-6">
 
-          {/* Main Info Section */}
-          <div className="flex flex-col sm:flex-row gap-6">
-            {/* Image */}
-            <div className="flex-shrink-0">
-              <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 flex items-center justify-center">
-                {(type === "placement" ? item.placementProof : item.marksheet?.url) ? (
-                  <img
-                    src={type === "placement" ? item.placementProof : item.marksheet.url}
-                    alt="Proof"
-                    className="w-full h-full object-cover"
+          {/* Document Preview Section */}
+          <div className="bg-slate-100 rounded-xl overflow-hidden border border-slate-200 relative">
+            <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center text-xs font-bold text-slate-500 uppercase tracking-widest">
+              <span>Document Preview</span>
+              {(type === "placement" ? item.placementProof : item.marksheet?.url) && (
+                <a
+                  href={type === "placement" ? item.placementProof : item.marksheet.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 normal-case flex items-center gap-1"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                  Open Original
+                </a>
+              )}
+            </div>
+            <div className="min-h-[300px] flex items-center justify-center bg-white">
+              {(type === "placement" ? item.placementProof : item.marksheet?.url) ? (
+                (type === "placement" ? item.placementProof : item.marksheet.url).toLowerCase().endsWith(".pdf") ? (
+                  <iframe
+                    src={`${type === "placement" ? item.placementProof : item.marksheet.url}#view=FitH`}
+                    title="Document Preview"
+                    className="w-full h-[500px] border-none"
                   />
                 ) : (
-                  <span className="text-4xl">🎓</span>
-                )}
-              </div>
-            </div>
-
-            {/* Basic Details */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">
-                  {type === "placement" ? item.companyName : item.examName}
-                </h3>
-                <p className="text-sm text-slate-500">
-                  {typeof item?.stuID === "string" ? item.stuID : item?.stuID?.studentID || "Student ID N/A"}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {type === "placement" ? (
-                  <>
-                    <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
-                      {item.role}
-                    </span>
-                    <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full border border-green-100">
-                      ₹{item.package} LPA
-                    </span>
-                    <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full border border-purple-100">
-                      {item.placementType}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
-                      Score: {item.score}
-                    </span>
-                  </>
-                )}
-              </div>
+                  <img
+                    src={type === "placement" ? item.placementProof : item.marksheet.url}
+                    alt="Proof Preview"
+                    className="max-w-full max-h-[500px] object-contain"
+                  />
+                )
+              ) : (
+                <div className="py-12 text-slate-400 text-center">
+                  <svg className="w-16 h-16 mx-auto mb-3 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  <p className="text-sm italic">No document proof found</p>
+                </div>
+              )}
             </div>
           </div>
 
-          <hr className="border-slate-100" />
-
-          {/* Grid Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+          {/* Details Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
             {type === "placement" ? (
               <>
                 <div>
@@ -428,10 +399,37 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
     setLoading(true);
 
     try {
+      let stuIDToUse = formData.studentId;
+
+      // Handle Student ID resolution for new records
+      if (!placement) {
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(formData.studentId);
+        
+        if (!isObjectId) {
+          const studentRes = await studentService.getStudents({ search: formData.studentId });
+          const students = studentRes.data || [];
+          
+          const exactMatch = students.find(s => s.studentID === formData.studentId);
+          if (exactMatch) {
+            stuIDToUse = exactMatch._id;
+          } else if (students.length === 1) {
+            stuIDToUse = students[0]._id;
+          } else if (students.length > 1) {
+            toast.error("Multiple students found with this ID. Please be more specific.");
+            setLoading(false);
+            return;
+          } else {
+            toast.error("No student found with this ID. Please verify.");
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
       const payload = new FormData();
       Object.keys(formData).forEach((key) => {
         if (!placement && key === "studentId") {
-          payload.append("studentId", formData[key]);
+          payload.append("studentId", stuIDToUse);
         } else if (key !== "studentId") {
           payload.append(key, formData[key]);
         }
@@ -575,6 +573,8 @@ export default function AdminPlacement() {
   const [modalType, setModalType] = useState(null);
   const [isPlacementModalOpen, setIsPlacementModalOpen] = useState(false);
   const [placementToEdit, setPlacementToEdit] = useState(null);
+  const [isHigherStudyModalOpen, setIsHigherStudyModalOpen] = useState(false);
+  const [higherStudyToEdit, setHigherStudyToEdit] = useState(null);
 
   // Re-fetch whenever tab, page, or limit changes
   useEffect(() => {
@@ -813,6 +813,13 @@ export default function AdminPlacement() {
                 + Add Placement
               </button>
             )}
+            {activeTab === "higherStudies" && (
+              <button
+                onClick={() => { setHigherStudyToEdit(null); setIsHigherStudyModalOpen(true); }}
+                className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm transition-colors flex items-center">
+                + Add Higher Study
+              </button>
+            )}
           </div>
         </div>
 
@@ -1024,6 +1031,7 @@ export default function AdminPlacement() {
                   key={h._id}
                   higherStudy={h}
                   onView={handleViewHigherStudy}
+                  onEdit={(hs) => { setHigherStudyToEdit(hs); setIsHigherStudyModalOpen(true); }}
                   onDelete={handleDeleteHigherStudy}
                 />
               ))}
@@ -1062,6 +1070,189 @@ export default function AdminPlacement() {
         onClose={() => setIsPlacementModalOpen(false)}
         onSave={() => fetchPlacements()}
       />
+
+      {/* Higher Study Form Modal */}
+      <HigherStudyFormModal
+        isOpen={isHigherStudyModalOpen}
+        higherStudy={higherStudyToEdit}
+        onClose={() => setIsHigherStudyModalOpen(false)}
+        onSave={() => fetchHigherStudies()}
+      />
     </main>
+  );
+}
+
+// Form Modal Component (Add / Edit) for HIGHER STUDIES
+function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
+  const [formData, setFormData] = useState({
+    studentId: "",
+    examName: "GATE",
+    score: "",
+  });
+
+  const [marksheet, setMarksheet] = useState(null);
+  const [idCardPhoto, setIdCardPhoto] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (higherStudy) {
+        setFormData({
+          studentId: typeof higherStudy.stuID === "string" ? higherStudy.stuID : higherStudy.stuID?.studentID || "",
+          examName: higherStudy.examName || "GATE",
+          score: higherStudy.score || "",
+        });
+      } else {
+        setFormData({
+          studentId: "",
+          examName: "GATE",
+          score: "",
+        });
+      }
+      setMarksheet(null);
+      setIdCardPhoto(null);
+    }
+  }, [isOpen, higherStudy]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e, setter) => {
+    setter(e.target.files[0]);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      let stuIDToUse = formData.studentId;
+
+      // Handle Student ID resolution for new records
+      if (!higherStudy) {
+        // If it's not a 24-char hex string, it's likely a human-readable ID
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(formData.studentId);
+        
+        if (!isObjectId) {
+          const studentRes = await studentService.getStudents({ search: formData.studentId });
+          const students = studentRes.data || [];
+          
+          // Try exact match on studentID first
+          const exactMatch = students.find(s => s.studentID === formData.studentId);
+          if (exactMatch) {
+            stuIDToUse = exactMatch._id;
+          } else if (students.length === 1) {
+            stuIDToUse = students[0]._id;
+          } else if (students.length > 1) {
+            toast.error("Multiple students found with this ID. Please be more specific.");
+            setLoading(false);
+            return;
+          } else {
+            toast.error("No student found with this ID. Please verify.");
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      const payload = new FormData();
+      // Only append studentId if creating new
+      if (!higherStudy) {
+        payload.append("studentId", stuIDToUse);
+      }
+      payload.append("examName", formData.examName);
+      payload.append("score", formData.score);
+
+      if (marksheet) {
+        payload.append("marksheet", marksheet);
+      }
+      if (idCardPhoto) {
+        payload.append("idCardPhoto", idCardPhoto);
+      }
+
+      if (higherStudy) {
+        await higherStudiesService.updateHigherStudy(higherStudy._id, payload);
+        toast.success("Higher study record updated successfully!");
+      } else {
+        if (!marksheet) {
+          toast.error("Marksheet (PDF/Image) is required for new records.");
+          setLoading(false);
+          return;
+        }
+        await higherStudiesService.createHigherStudy(payload);
+        toast.success("Higher study record added successfully!");
+      }
+
+      onSave();
+      onClose();
+    } catch (err) {
+      console.error("Error saving higher study:", err);
+      toast.error(err.response?.data?.message || err.response?.data?.errors?.[0]?.message || "Failed to save record.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp">
+        <div className="sticky top-0 z-10 p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+          <h2 className="text-xl font-bold text-slate-900">
+            {higherStudy ? "Edit Higher Study" : "Add Higher Study"}
+          </h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
+              <input type="text" name="studentId" required={!higherStudy} disabled={!!higherStudy} value={formData.studentId} onChange={handleChange} placeholder="2024COMP123" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Exam Name *</label>
+              <select name="examName" required value={formData.examName} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="GATE">GATE</option>
+                <option value="CAT">CAT</option>
+                <option value="GRE">GRE</option>
+                <option value="TOEFL">TOEFL</option>
+                <option value="IELTS">IELTS</option>
+                <option value="UPSC">UPSC</option>
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Score *</label>
+              <input type="text" name="score" required value={formData.score} onChange={handleChange} placeholder="e.g. 98.5 percentile or 750" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Marksheet (PDF/Image) {higherStudy ? "(Optional override)" : "*"}</label>
+              <input type="file" onChange={(e) => handleFileChange(e, setMarksheet)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">ID Card Photo (Optional)</label>
+              <input type="file" onChange={(e) => handleFileChange(e, setIdCardPhoto)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+            </div>
+          </div>
+
+          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+            <button type="button" onClick={onClose} className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200">Cancel</button>
+            <button type="submit" disabled={loading} className="px-6 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              {loading ? "Saving..." : "Save Higher Study"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
