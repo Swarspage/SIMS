@@ -6,7 +6,17 @@ import { toast } from "react-toastify";
 import Pagination from "../Components/Common/Pagination";
 
 // Placement Card Component - COMPACT
-function PlacementCard({ placement, onView, onDelete, onEdit }) {
+function PlacementCard({ placement, onView, onDelete, onEdit, isDeleting }) {
+  // Student info from projected fields
+  const studentNameRaw = placement.studentName;
+  const studentName = studentNameRaw && 
+    (studentNameRaw.firstName || studentNameRaw.lastName) &&
+    `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim() !== "N/A"
+    ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim()
+    : null;
+  const studentID = placement.studentID && placement.studentID !== "N/A" ? placement.studentID : null;
+  const studentYear = placement.studentYear && placement.studentYear !== "N/A" ? placement.studentYear : null;
+
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
       {/* Document/Image Preview Section */}
@@ -37,19 +47,37 @@ function PlacementCard({ placement, onView, onDelete, onEdit }) {
             {placement?.companyName?.charAt(0) || "?"}
           </div>
         )}
+
+        {/* Top Overlay: ID & Year */}
+        <div className="absolute top-2 left-2 flex gap-1">
+          {studentID && (
+            <span className="px-2 py-0.5 bg-white/90 backdrop-blur-md text-[10px] font-bold text-slate-700 rounded shadow-sm border border-white/20 uppercase tracking-tighter">
+              {studentID}
+            </span>
+          )}
+          {studentYear && (
+            <span className="px-2 py-0.5 bg-blue-600/90 backdrop-blur-md text-[10px] font-bold text-white rounded shadow-sm border border-blue-500/20 uppercase tracking-tighter font-mono">
+              {studentYear}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-grow">
-        {/* Student ID */}
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2 hidden">
-          {typeof placement?.stuID === "string"
-            ? placement.stuID
-            : placement?.stuID?.studentID || "N/A"}
-        </p>
+        
+        {/* Student Name */}
+        {studentName && (
+          <div className="mb-2">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Student</p>
+            <h4 className="text-sm font-black text-slate-900 line-clamp-1">{studentName}</h4>
+          </div>
+        )}
+
+        <div className="h-px bg-slate-100 mb-3" />
 
         {/* Company Name */}
-        <h3 className="text-sm font-bold text-slate-900 mb-1 line-clamp-2">
+        <h3 className="text-sm font-bold text-blue-600 mb-1 line-clamp-2">
           {placement?.companyName || "N/A"}
         </h3>
 
@@ -63,44 +91,44 @@ function PlacementCard({ placement, onView, onDelete, onEdit }) {
           <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">
             Package
           </p>
-          <p className="text-lg font-bold text-blue-600">
+          <p className="text-lg font-bold text-green-600">
             ₹{placement?.package ? `${placement.package} LPA` : "N/A"}
           </p>
         </div>
 
         {/* Placement Type */}
         <div className="mb-2">
-          <span className="inline-block px-2 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full">
+          <span className="inline-block px-2 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
             {placement?.placementType || "N/A"}
           </span>
         </div>
-
-        {/* Date */}
-        <p className="text-xs text-slate-500 mb-3">
-          {placement?.placementYear ? `Placement Year: ${placement.placementYear}` : "N/A"}
-        </p>
 
         {/* Action Buttons */}
         <div className="mt-auto space-y-2">
           <button
             onClick={() => onView && onView(placement)}
-            className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
           >
-            View
+            View Details
           </button>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full mt-2">
             <button
               onClick={() => onEdit && onEdit(placement)}
-              className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors"
+              className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors border border-amber-100"
             >
               Edit
             </button>
             <button
               onClick={() => onDelete && onDelete(placement._id)}
-              className="flex-1 px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+              disabled={isDeleting}
+              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${
+                isDeleting 
+                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
+                  : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
+              }`}
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </button>
           </div>
         </div>
@@ -110,7 +138,15 @@ function PlacementCard({ placement, onView, onDelete, onEdit }) {
 }
 
 // Higher Studies Card Component - COMPACT
-function HigherStudyCard({ higherStudy, onView, onDelete }) {
+function HigherStudyCard({ higherStudy, onView, onDelete, onEdit, isDeleting }) {
+  // Student info from projected fields
+  const studentNameRaw = higherStudy.studentName;
+  const studentName = studentNameRaw 
+    ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim()
+    : "N/A";
+  const studentID = higherStudy.studentID || "N/A";
+  const studentYear = higherStudy.studentYear || "N/A";
+
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
       {/* Document/Image Preview Section */}
@@ -141,48 +177,66 @@ function HigherStudyCard({ higherStudy, onView, onDelete }) {
             {higherStudy?.examName?.charAt(0) || "?"}
           </div>
         )}
+
+        {/* Top Overlay: ID & Year */}
+        <div className="absolute top-2 left-2 flex gap-1">
+          <span className="px-2 py-0.5 bg-white/90 backdrop-blur-md text-[10px] font-bold text-slate-700 rounded shadow-sm border border-white/20 uppercase tracking-tighter">
+            {studentID}
+          </span>
+          <span className="px-2 py-0.5 bg-blue-600/90 backdrop-blur-md text-[10px] font-bold text-white rounded shadow-sm border border-blue-500/20 uppercase tracking-tighter font-mono">
+           {studentYear}
+          </span>
+        </div>
       </div>
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-grow">
-        {/* Student ID */}
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2 hidden">
-          {typeof higherStudy?.stuID === "string"
-            ? higherStudy.stuID
-            : higherStudy?.stuID?.studentID || "N/A"}
-        </p>
+        
+        {/* Student Name */}
+        <div className="mb-2">
+           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Student</p>
+           <h4 className="text-sm font-black text-slate-900 line-clamp-1">{studentName}</h4>
+        </div>
+
+        <div className="h-px bg-slate-100 mb-3" />
 
         {/* Exam Name */}
-        <h3 className="text-sm font-bold text-slate-900 mb-1 line-clamp-2">
+        <h3 className="text-sm font-bold text-blue-600 mb-1 line-clamp-2">
           {higherStudy?.examName || "N/A"}
         </h3>
 
         {/* Score */}
-        <p className="text-xs text-slate-600 mb-2 line-clamp-1">
-          Score: <span className="font-semibold text-slate-800">{higherStudy?.score || "N/A"}</span>
-        </p>
+        <div className="mb-3">
+          <p className="text-xs text-slate-500 uppercase tracking-wide mb-0.5">Exam Score</p>
+          <p className="text-lg font-black text-slate-900">{higherStudy?.score || "N/A"}</p>
+        </div>
 
         {/* Action Buttons */}
         <div className="mt-auto space-y-2">
           <button
             onClick={() => onView && onView(higherStudy)}
-            className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
           >
-            View
+            View Details
           </button>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full mt-2">
             <button
               onClick={() => onEdit && onEdit(higherStudy)}
-              className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors"
+              className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors border border-amber-100"
             >
               Edit
             </button>
             <button
               onClick={() => onDelete && onDelete(higherStudy._id)}
-              className="flex-1 px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+              disabled={isDeleting}
+              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${
+                isDeleting 
+                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
+                  : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
+              }`}
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </button>
           </div>
         </div>
@@ -193,12 +247,43 @@ function HigherStudyCard({ higherStudy, onView, onDelete }) {
 
 // Detail View Modal Component
 function DetailModal({ item, type, onClose }) {
+  const [studentDetails, setStudentDetails] = useState(null);
+  const [loadingStudent, setLoadingStudent] = useState(false);
+
+  useEffect(() => {
+    const fetchStudent = async () => {
+      if (!item?.stuID) return;
+      setLoadingStudent(true);
+      try {
+        const studentId = typeof item.stuID === 'string' ? item.stuID : item.stuID._id;
+        const res = await studentService.getSingleStudent(studentId);
+        if (res.success) {
+          setStudentDetails(res.data);
+        }
+      } catch (err) {
+        console.error("Error fetching student details for modal:", err);
+      } finally {
+        setLoadingStudent(false);
+      }
+    };
+
+    fetchStudent();
+  }, [item]);
+
   if (!item) return null;
+
+  // Format student name (prefer fetched details, fallback to item data)
+  const studentNameRaw = studentDetails?.name || item.studentName;
+  const studentName = studentNameRaw
+    ? `${studentNameRaw.firstName || ""} ${studentNameRaw.middleName || ""} ${studentNameRaw.lastName || ""}`.trim()
+    : "N/A";
+
+  const studentID = studentDetails?.studentID || (typeof item.stuID === 'string' ? item.stuID : item.stuID?.studentID) || "N/A";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -219,118 +304,181 @@ function DetailModal({ item, type, onClose }) {
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-8">
+
+          {/* Top Info Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {/* Student Info Card */}
+            <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100 relative overflow-hidden">
+              {loadingStudent && (
+                <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex items-center justify-center z-10">
+                  <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xl font-bold uppercase">
+                  {studentName.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-lg">{studentName}</h3>
+                  <p className="text-blue-600 font-semibold text-sm">{studentID}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-white/80 p-2 rounded-lg border border-blue-100 text-center">
+                  <p className="text-[10px] uppercase text-slate-500 font-bold mb-0.5">Year</p>
+                  <p className="text-sm font-bold text-slate-800">{studentDetails?.year || item.studentYear || "N/A"}</p>
+                </div>
+                <div className="bg-white/80 p-2 rounded-lg border border-blue-100 text-center">
+                  <p className="text-[10px] uppercase text-slate-500 font-bold mb-0.5">Division</p>
+                  <p className="text-sm font-bold text-slate-800">{studentDetails?.division || "N/A"}</p>
+                </div>
+                <div className="bg-white/80 p-2 rounded-lg border border-blue-100 text-center">
+                  <p className="text-[10px] uppercase text-slate-500 font-bold mb-0.5">Branch</p>
+                  <p className="text-sm font-bold text-slate-800 truncate px-1">{studentDetails?.branch || "N/A"}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-blue-100/50 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-xs text-slate-600">
+                  <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 00-2 2z" /></svg>
+                  {studentDetails?.email || "N/A"}
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-600">
+                  <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                  {studentDetails?.mobileNo || "N/A"}
+                </div>
+              </div>
+            </div>
+
+            {/* Summary Card */}
+            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200">
+              <h3 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-2 mb-4">
+                {type === "placement" ? "Placement Overview" : "Exam Details"}
+              </h3>
+              <div className="space-y-4">
+                {type === "placement" ? (
+                  <>
+                    <div>
+                      <p className="text-xs text-slate-500 font-semibold uppercase mb-1">Company & Role</p>
+                      <p className="text-base font-bold text-slate-900">{item.companyName}</p>
+                      <p className="text-sm font-medium text-slate-600 italic">{item.role}</p>
+                    </div>
+
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Package</p>
+                        <p className="text-sm font-bold text-blue-600">₹ {item.package} LPA</p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Type</p>
+                        <span className="text-xs font-bold text-slate-700 bg-white border border-slate-200 px-2 py-1 rounded-full">{item.placementType}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/50">
+                      <div>
+                        <p className="text-[9px] text-slate-500 font-bold uppercase mb-0.5">Placement</p>
+                        <p className="text-xs font-bold text-slate-800">{item.placementYear}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-slate-500 font-bold uppercase mb-0.5">Passout</p>
+                        <p className="text-xs font-bold text-slate-800">{item.passoutYear}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-slate-500 font-bold uppercase mb-0.5">Joining</p>
+                        <p className="text-xs font-bold text-slate-800">{item.joiningYear}</p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <p className="text-xs text-slate-500 font-semibold uppercase mb-1">Exam Name</p>
+                      <p className="text-lg font-bold text-slate-900">{item.examName}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-slate-200 inline-block px-8 text-center">
+                      <p className="text-xs text-slate-500 font-bold uppercase mb-1">Score</p>
+                      <p className="text-2xl font-black text-blue-600">{item.score}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Document Preview Section */}
-          <div className="bg-slate-100 rounded-xl overflow-hidden border border-slate-200 relative">
-            <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center text-xs font-bold text-slate-500 uppercase tracking-widest">
-              <span>Document Preview</span>
-              {(type === "placement" ? item.placementProof : item.marksheet?.url) && (
-                <a
-                  href={type === "placement" ? item.placementProof : item.marksheet.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 normal-case flex items-center gap-1"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                  Open Original
-                </a>
-              )}
-            </div>
-            <div className="min-h-[300px] flex items-center justify-center bg-white">
-              {(type === "placement" ? item.placementProof : item.marksheet?.url) ? (
-                (type === "placement" ? item.placementProof : item.marksheet.url).toLowerCase().endsWith(".pdf") ? (
-                  <iframe
-                    src={`${type === "placement" ? item.placementProof : item.marksheet.url}#view=FitH`}
-                    title="Document Preview"
-                    className="w-full h-[500px] border-none"
-                  />
+          <div className="space-y-4">
+            <h4 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              Document Previews
+            </h4>
+
+            <div className={`grid grid-cols-1 ${type === "higherStudy" && item.idCardPhoto?.url ? 'lg:grid-cols-2' : ''} gap-6`}>
+              {/* Primary Preview (Placement Proof / Marksheet) */}
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-bold text-slate-700">
+                    {type === "placement" ? "Placement Proof (PDF)" : "Marksheet"}
+                  </span>
+                  {(type === "placement" ? item.placementProof : item.marksheet?.url) && (
+                    <a href={type === "placement" ? item.placementProof : item.marksheet.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline font-semibold flex items-center gap-1">
+                      Open Original <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    </a>
+                  )}
+                </div>
+                {(type === "placement" ? item.placementProof : item.marksheet?.url) ? (
+                  <div className="h-[450px] rounded-xl border border-slate-200 bg-slate-100 overflow-hidden shadow-inner">
+                    {(type === "placement" ? item.placementProof : item.marksheet.url).toLowerCase().endsWith(".pdf") ? (
+                      <iframe
+                        src={`${type === "placement" ? item.placementProof : item.marksheet.url}#view=FitH`}
+                        className="w-full h-full border-none"
+                        title="Document Preview"
+                      />
+                    ) : (
+                      <img
+                        src={type === "placement" ? item.placementProof : item.marksheet.url}
+                        alt="Preview"
+                        className="w-full h-full object-contain p-2"
+                      />
+                    )}
+                  </div>
                 ) : (
-                  <img
-                    src={type === "placement" ? item.placementProof : item.marksheet.url}
-                    alt="Proof Preview"
-                    className="max-w-full max-h-[500px] object-contain"
-                  />
-                )
-              ) : (
-                <div className="py-12 text-slate-400 text-center">
-                  <svg className="w-16 h-16 mx-auto mb-3 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                  <p className="text-sm italic">No document proof found</p>
+                  <div className="h-64 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 bg-slate-50 italic text-sm">
+                    No document uploaded
+                  </div>
+                )}
+              </div>
+
+              {/* Secondary Preview (Higher Studies ID Card) */}
+              {type === "higherStudy" && item.idCardPhoto?.url && (
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-bold text-slate-700">ID Card Photo</span>
+                    <a href={item.idCardPhoto.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline font-semibold flex items-center gap-1">
+                      View Full <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    </a>
+                  </div>
+                  <div className="h-[450px] rounded-xl border border-slate-200 bg-slate-100 overflow-hidden shadow-inner flex items-center justify-center">
+                    <img
+                      src={item.idCardPhoto.url}
+                      alt="ID Card"
+                      className="max-w-full max-h-full object-contain p-2 hover:scale-105 transition-transform"
+                    />
+                  </div>
                 </div>
               )}
             </div>
           </div>
-
-          {/* Details Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
-            {type === "placement" ? (
-              <>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Company Name</p>
-                  <p className="text-sm font-medium text-slate-800">{item.companyName || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Role</p>
-                  <p className="text-sm font-medium text-slate-800">{item.role || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Package</p>
-                  <p className="text-sm font-medium text-slate-800">{item.package ? `${item.package} LPA` : 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Placement Year</p>
-                  <p className="text-sm font-medium text-slate-800">{item.placementYear || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Passout Year</p>
-                  <p className="text-sm font-medium text-slate-800">{item.passoutYear || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Joining Year</p>
-                  <p className="text-sm font-medium text-slate-800">{item.joiningYear || 'N/A'}</p>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Exam Name</p>
-                  <p className="text-sm font-medium text-slate-800">{item.examName || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Score</p>
-                  <p className="text-sm font-medium text-slate-800">{item.score || 'N/A'}</p>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Documents Section */}
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-            <h4 className="text-sm font-bold text-slate-900 mb-3">Attached Documents</h4>
-            <div className="flex flex-wrap gap-3">
-              {(type === "placement" ? item.placementProof : item.marksheet?.url) ? (
-                <a
-                  href={type === "placement" ? item.placementProof : item.marksheet.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm transition-all"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                  {type === "placement" ? "Placement Proof" : "Marksheet/Proof"}
-                </a>
-              ) : (
-                <span className="text-xs text-slate-400 italic">No proof uploaded</span>
-              )}
-            </div>
-          </div>
-
         </div>
 
         {/* Modal Footer */}
-        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+            className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
           >
             Close
           </button>
@@ -357,10 +505,27 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    const initForm = async () => {
+      if (!isOpen) return;
+
       if (placement) {
+        const studentObj = placement.student || placement.stuID;
+        let initialID = (typeof studentObj === "object" ? studentObj?.studentID : studentObj) || "";
+        
+        // If it's a hex ID string, try to fetch the proper studentID
+        if (/^[0-9a-fA-F]{24}$/.test(initialID)) {
+          try {
+            const res = await studentService.getSingleStudent(initialID);
+            if (res.success && res.data?.studentID) {
+              initialID = res.data.studentID;
+            }
+          } catch (err) {
+            console.error("Error resolving student ID for placement edit:", err);
+          }
+        }
+
         setFormData({
-          studentId: typeof placement.stuID === "string" ? placement.stuID : placement.stuID?.studentID || "",
+          studentId: initialID,
           companyName: placement.companyName || "",
           role: placement.role || "",
           placementType: placement.placementType || "Campus",
@@ -382,7 +547,9 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
         });
       }
       setPlacementProof(null);
-    }
+    };
+
+    initForm();
   }, [isOpen, placement]);
 
   const handleChange = (e) => {
@@ -404,11 +571,11 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
       // Handle Student ID resolution for new records
       if (!placement) {
         const isObjectId = /^[0-9a-fA-F]{24}$/.test(formData.studentId);
-        
+
         if (!isObjectId) {
           const studentRes = await studentService.getStudents({ search: formData.studentId });
           const students = studentRes.data || [];
-          
+
           const exactMatch = students.find(s => s.studentID === formData.studentId);
           if (exactMatch) {
             stuIDToUse = exactMatch._id;
@@ -456,7 +623,13 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
       onClose();
     } catch (err) {
       console.error("Error saving placement:", err);
-      toast.error(err.response?.data?.message || err.response?.data?.errors?.[0]?.message || "Failed to save record.");
+      // Improve Validation: Parse detailed messages from backend
+      const errorMessage = 
+        err.response?.data?.errors?.map(e => e.message).join(", ") || 
+        err.response?.data?.error || 
+        err.response?.data?.message || 
+        "Failed to save record.";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -547,6 +720,7 @@ export default function AdminPlacement() {
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [deletingId, setDeletingId] = useState(null);
 
   // ── Shared filter ───────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
@@ -606,7 +780,7 @@ export default function AdminPlacement() {
         packageMax: filterPackageMax ? Number(filterPackageMax) : undefined,
       };
       const response = await placementService.getAllPlacements(params);
-      
+
       const data = response.data || [];
       const total = response.total || 0;
       const totalP = response.totalPages || 1;
@@ -639,7 +813,7 @@ export default function AdminPlacement() {
         score: hsFilterScore || undefined,
       };
       const response = await higherStudiesService.getAllHigherStudies(params);
-      
+
       const data = response.data || [];
       const total = response.total || 0;
       const totalP = response.totalPages || 1;
@@ -676,6 +850,7 @@ export default function AdminPlacement() {
   const handleDeletePlacement = async (id) => {
     if (!window.confirm("Are you sure you want to delete this placement?"))
       return;
+    setDeletingId(id);
     try {
       await placementService.deletePlacement(id);
       toast.success("Placement deleted successfully!");
@@ -683,6 +858,8 @@ export default function AdminPlacement() {
     } catch (err) {
       console.error("Error deleting placement:", err);
       toast.error("Failed to delete placement.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -693,6 +870,7 @@ export default function AdminPlacement() {
       )
     )
       return;
+    setDeletingId(id);
     try {
       await higherStudiesService.deleteHigherStudy(id);
       toast.success("Higher study record deleted successfully!");
@@ -700,6 +878,8 @@ export default function AdminPlacement() {
     } catch (err) {
       console.error("Error deleting higher study:", err);
       toast.error("Failed to delete higher study record.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -944,26 +1124,26 @@ export default function AdminPlacement() {
 
             </div>
 
-              <div className="mt-3 flex gap-3">
-                <button
-                  onClick={() => fetchHigherStudies(1)}
-                  className="px-6 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Find Higher Studies
-                </button>
-                <button
-                  onClick={() => { setHsFilterYear(""); setHsFilterDivision(""); setHsFilterExamName(""); setHsFilterAcademicYear(""); setHsFilterScore(""); }}
-                  className="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  Clear Filters
-                </button>
-              </div>
+            <div className="mt-3 flex gap-3">
+              <button
+                onClick={() => fetchHigherStudies(1)}
+                className="px-6 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Find Higher Studies
+              </button>
+              <button
+                onClick={() => { setHsFilterYear(""); setHsFilterDivision(""); setHsFilterExamName(""); setHsFilterAcademicYear(""); setHsFilterScore(""); }}
+                className="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Clear Filters
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -1024,6 +1204,7 @@ export default function AdminPlacement() {
                   onView={handleViewPlacement}
                   onEdit={(placement) => { setPlacementToEdit(placement); setIsPlacementModalOpen(true); }}
                   onDelete={handleDeletePlacement}
+                  isDeleting={deletingId === p._id}
                 />
               ))
               : higherStudies.map((h) => (
@@ -1033,6 +1214,7 @@ export default function AdminPlacement() {
                   onView={handleViewHigherStudy}
                   onEdit={(hs) => { setHigherStudyToEdit(hs); setIsHigherStudyModalOpen(true); }}
                   onDelete={handleDeleteHigherStudy}
+                  isDeleting={deletingId === h._id}
                 />
               ))}
           </div>
@@ -1095,10 +1277,26 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    const initForm = async () => {
+      if (!isOpen) return;
+
       if (higherStudy) {
+        let initialID = typeof higherStudy.stuID === "string" ? higherStudy.stuID : higherStudy.stuID?.studentID || "";
+        
+        // If it's a hex ID string, try to fetch the proper studentID
+        if (/^[0-9a-fA-F]{24}$/.test(initialID)) {
+          try {
+            const res = await studentService.getSingleStudent(initialID);
+            if (res.success && res.data?.studentID) {
+              initialID = res.data.studentID;
+            }
+          } catch (err) {
+            console.error("Error resolving student ID for higher study edit:", err);
+          }
+        }
+
         setFormData({
-          studentId: typeof higherStudy.stuID === "string" ? higherStudy.stuID : higherStudy.stuID?.studentID || "",
+          studentId: initialID,
           examName: higherStudy.examName || "GATE",
           score: higherStudy.score || "",
         });
@@ -1111,7 +1309,9 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
       }
       setMarksheet(null);
       setIdCardPhoto(null);
-    }
+    };
+
+    initForm();
   }, [isOpen, higherStudy]);
 
   const handleChange = (e) => {
@@ -1134,11 +1334,11 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
       if (!higherStudy) {
         // If it's not a 24-char hex string, it's likely a human-readable ID
         const isObjectId = /^[0-9a-fA-F]{24}$/.test(formData.studentId);
-        
+
         if (!isObjectId) {
           const studentRes = await studentService.getStudents({ search: formData.studentId });
           const students = studentRes.data || [];
-          
+
           // Try exact match on studentID first
           const exactMatch = students.find(s => s.studentID === formData.studentId);
           if (exactMatch) {

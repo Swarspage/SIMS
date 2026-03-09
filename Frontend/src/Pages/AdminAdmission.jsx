@@ -32,62 +32,69 @@ function AdmissionCard({ admission, onView, onEdit, onDelete }) {
       : "Student";
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col h-full group">
-      {/* Card Header */}
-      <div className="h-28 bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group">
+      {/* Card Header - Premium Gradient */}
+      <div className="h-28 bg-gradient-to-br from-blue-700 via-indigo-700 to-violet-800 flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
         <div className="text-center z-10 text-white">
-          <p className="text-xs font-medium uppercase tracking-wider opacity-80 mb-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-1 drop-shadow-sm">
             {studentId}
           </p>
-          <h3 className="text-lg font-bold line-clamp-1">
+          <h3 className="text-base font-bold line-clamp-1 drop-shadow-md">
             {studentName}
           </h3>
         </div>
       </div>
 
       {/* Card Body */}
-      <div className="p-5 flex flex-col flex-grow">
+      <div className="p-4 flex flex-col flex-grow">
         <div className="flex items-center justify-between mb-4">
-          <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wide rounded-full border ${getStatusColor(admission?.status)}`}>
+          <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${getStatusColor(admission?.status)}`}>
             {admission?.status || "Pending"}
           </span>
-          <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+          <span className="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-1 rounded shadow-sm border border-slate-200">
             {admission?.academicYear || "N/A"}
           </span>
         </div>
 
-        <div className="space-y-3 mb-6">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-500">Course</span>
-            <span className="font-semibold text-slate-900 truncate max-w-[120px]">{admission?.course || "N/A"}</span>
+        <div className="space-y-2.5 mb-5">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-slate-400 font-bold uppercase tracking-tighter">Course</span>
+            <span className="font-bold text-slate-900 truncate max-w-[120px]">{admission?.course || "N/A"}</span>
           </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-500">Fees</span>
-            <span className="font-semibold text-slate-900">₹{admission?.fees?.toLocaleString() || "0"}</span>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-slate-400 font-bold uppercase tracking-tighter">Year & Div</span>
+            <span className="font-bold text-slate-900">{admission?.year || "N/A"} - {admission?.div || "N/A"}</span>
+          </div>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-slate-400 font-bold uppercase tracking-tighter">Fees</span>
+            <span className="font-black text-blue-600">₹{admission?.fees?.toLocaleString() || "0"}</span>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-auto grid grid-cols-3 gap-2">
+        <div className="mt-auto flex flex-col gap-2">
           <button
             onClick={() => onView && onView(admission)}
-            className="px-3 py-2 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-100 transition-colors"
+            className="w-full px-3 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-all shadow-sm active:scale-95"
           >
-            View
+            View Details
           </button>
-          <button
-            onClick={() => onEdit && onEdit(admission)}
-            className="px-3 py-2 bg-amber-50 text-amber-600 text-xs font-bold rounded-lg hover:bg-amber-100 transition-colors"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => onDelete && onDelete(admission._id)}
-            className="px-3 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 transition-colors"
-          >
-            Delete
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => onEdit && onEdit(admission)}
+              className="px-3 py-2 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-amber-100 transition-colors border border-amber-200 active:scale-95"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => onDelete && onDelete(admission._id)}
+              className="px-3 py-2 bg-red-50 text-red-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-red-100 transition-colors border border-red-200 active:scale-95"
+            >
+              Delete
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -108,12 +115,12 @@ function DetailModal({ admission, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto animate-slideUp" onClick={e => e.stopPropagation()}>
         {/* Modal Header */}
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Admission Details</h2>
-            <p className="text-xs text-slate-500 mt-0.5">ID: {admission._id}</p>
+            <p className="text-xs text-slate-500 mt-0.5 font-mono">ID: {admission._id}</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -125,86 +132,123 @@ function DetailModal({ admission, onClose }) {
 
           {/* Main Info Section */}
           <div className="flex flex-col sm:flex-row gap-6">
-            {/* Image Placeholder - Since Admission doesn't have a specific image, using Student Initials or Icon */}
             <div className="flex-shrink-0">
-              <div className="w-full sm:w-32 h-32 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden border border-slate-200 flex items-center justify-center text-white text-4xl font-bold shadow-md">
+              <div className="w-full sm:w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 overflow-hidden border border-slate-200 flex items-center justify-center text-white text-4xl font-black shadow-lg">
                 {studentName.charAt(0)}
               </div>
             </div>
 
-            {/* Basic Details */}
-            <div className="flex-1 space-y-4">
+            <div className="flex-1 space-y-4 pt-2">
               <div>
-                <h3 className="text-2xl font-bold text-slate-900">{studentName}</h3>
-                <p className="text-sm text-slate-500 font-medium">
+                <h3 className="text-2xl font-black text-slate-900 tracking-tight">{studentName}</h3>
+                <p className="text-sm text-blue-600 font-bold uppercase tracking-wider">
                   {studentId}
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${admission.status === 'approved' ? 'bg-green-50 text-green-700 border-green-100' : admission.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
+                <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${admission.status === 'approved' ? 'bg-green-50 text-green-700 border-green-100' : admission.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
                   {admission.status || "Pending"}
                 </span>
-                <span className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-full border border-slate-200">
+                <span className="px-3 py-1 bg-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-slate-200">
                   {admission.academicYear || "N/A"}
                 </span>
-                <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
+                <span className="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100">
                   {admission.course || "N/A"}
                 </span>
               </div>
             </div>
           </div>
 
-          <hr className="border-slate-100" />
-
-          {/* Information Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Roll Number</p>
-              <p className="text-sm font-medium text-slate-800">{admission.rollno || 'Not Assigned'}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1">Roll Number</p>
+              <p className="text-sm font-bold text-slate-800">{admission.rollno || 'N/A'}</p>
             </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Year & Division</p>
-              <p className="text-sm font-medium text-slate-800">{year} - {div}</p>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1">Year & Division</p>
+              <p className="text-sm font-bold text-slate-800">{year} - {div}</p>
             </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Admission Date</p>
-              <p className="text-sm font-medium text-slate-800">
-                {admission.admissionDate ? new Date(admission.admissionDate).toLocaleDateString('en-IN', { dateStyle: 'long' }) : 'N/A'}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1">Admission Date</p>
+              <p className="text-sm font-bold text-slate-800">
+                {admission.admissionDate ? new Date(admission.admissionDate).toLocaleDateString('en-IN', { dateStyle: 'medium' }) : 'N/A'}
               </p>
             </div>
           </div>
 
-          <hr className="border-slate-100" />
+          <div className="space-y-4">
+            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Financial & Scholarship</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 bg-white rounded-xl border border-slate-200">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-slate-500 font-bold">Total Fees</span>
+                  <span className="text-sm font-black text-blue-600 tracking-tight">₹{admission.fees?.toLocaleString() || "0"}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-slate-50">
+                  <span className="text-xs text-slate-500 font-bold">Scholarship</span>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${admission.isScholarshipApplied ? 'text-green-600' : 'text-slate-400'}`}>
+                    {admission.isScholarshipApplied ? 'Applied' : 'Not Applied'}
+                  </span>
+                </div>
+                {!admission.isScholarshipApplied && admission.scholarshipNotAppliedReason && (
+                   <div className="mt-2 pt-2 border-t border-slate-50">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Reason</p>
+                      <p className="text-xs text-slate-600 italic">"{admission.scholarshipNotAppliedReason}"</p>
+                   </div>
+                )}
+              </div>
 
-          {/* Financial Section (Styled like Description box) */}
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-2">Financial Information</p>
-            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-600">Total Fees</span>
-                <span className="text-base font-bold text-slate-900">₹{admission.fees?.toLocaleString() || "0"}</span>
-              </div>
-              <div className="flex justify-between items-center border-t border-slate-200 pt-2">
-                <span className="text-sm text-slate-600">Payment Status</span>
-                <span className={`text-sm font-bold ${admission.isFeesPaid ? 'text-green-600' : 'text-amber-600'}`}>
-                  {admission.isFeesPaid ? 'Paid' : 'Pending'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center border-t border-slate-200 pt-2">
-                <span className="text-sm text-slate-600">Scholarship</span>
-                <span className={`text-sm font-bold ${admission.isScholarshipApplied ? 'text-blue-600' : 'text-slate-500'}`}>
-                  {admission.isScholarshipApplied ? 'Applied' : 'None'}
-                </span>
+              <div className="p-4 bg-white rounded-xl border border-slate-200">
+                 <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-slate-500 font-bold">MahaDBT Form</span>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${admission.isMahadbtFormSubmitted ? 'text-green-600' : 'text-amber-600'}`}>
+                    {admission.isMahadbtFormSubmitted ? 'Submitted' : 'Pending'}
+                  </span>
+                </div>
+                {admission.isMahadbtFormSubmitted ? (
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-50 text-xs">
+                    <span className="text-slate-400 font-bold">Filled Date</span>
+                    <span className="text-slate-700 font-bold">{new Date(admission.mahadbtFilledDate).toLocaleDateString()}</span>
+                  </div>
+                ) : admission.mahadbtNotFilledReason && (
+                  <div className="mt-2 pt-2 border-t border-slate-50">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Reason</p>
+                    <p className="text-xs text-slate-600 italic">"{admission.mahadbtNotFilledReason}"</p>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
+
+          <div className="space-y-4">
+             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Migration Details</h4>
+             <div className="p-4 bg-white rounded-xl border border-slate-200">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold text-slate-500">Migration Certificate</span>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${admission.hasMigrationCertificate ? 'text-green-600' : 'text-amber-600'}`}>
+                    {admission.hasMigrationCertificate ? 'Available' : 'Unavailable'}
+                  </span>
+                </div>
+                {admission.hasMigrationCertificate ? (
+                   <div className="flex justify-between items-center pt-2 border-t border-slate-50 text-xs">
+                    <span className="text-slate-400 font-bold">Expected Date</span>
+                    <span className="text-slate-700 font-bold">{new Date(admission.migrationExpectedDate).toLocaleDateString()}</span>
+                  </div>
+                ) : admission.migrationNotAvailableReason && (
+                    <div className="mt-2 pt-2 border-t border-slate-50">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Reason</p>
+                      <p className="text-xs text-slate-600 italic">"{admission.migrationNotAvailableReason}"</p>
+                  </div>
+                )}
+             </div>
           </div>
 
         </div>
 
         {/* Modal Footer */}
         <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
-          <button onClick={onClose} className="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors shadow-sm text-sm">
+          <button onClick={onClose} className="px-6 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-all shadow-md active:scale-95">
             Close
           </button>
         </div>
@@ -215,12 +259,43 @@ function DetailModal({ admission, onClose }) {
 
 function EditModal({ admission, onClose, onSave }) {
   const [formData, setFormData] = useState({
-    rollno: admission?.rollno || "",
-    course: admission?.course || "",
-    fees: admission?.fees || "",
-    isScholarshipApplied: admission?.isScholarshipApplied || false,
+    rollno: "",
+    course: "",
+    year: "",
+    div: "",
+    fees: "",
+    isScholarshipApplied: false,
+    scholarshipNotAppliedReason: "",
+    isMahadbtFormSubmitted: false,
+    mahadbtFilledDate: "",
+    mahadbtNotFilledReason: "",
+    hasMigrationCertificate: false,
+    migrationExpectedDate: "",
+    migrationNotAvailableReason: "",
   });
+
   const [loading, setLoading] = useState(false);
+
+  // Sync state when admission prop changes (fixes empty form bug)
+  useEffect(() => {
+    if (admission) {
+      setFormData({
+        rollno: admission.rollno || "",
+        course: admission.course || "",
+        year: admission.year || "",
+        div: admission.div || "",
+        fees: admission.fees || "",
+        isScholarshipApplied: admission.isScholarshipApplied || false,
+        scholarshipNotAppliedReason: admission.scholarshipNotAppliedReason || "",
+        isMahadbtFormSubmitted: admission.isMahadbtFormSubmitted || false,
+        mahadbtFilledDate: admission.mahadbtFilledDate ? new Date(admission.mahadbtFilledDate).toISOString().split('T')[0] : "",
+        mahadbtNotFilledReason: admission.mahadbtNotFilledReason || "",
+        hasMigrationCertificate: admission.hasMigrationCertificate || false,
+        migrationExpectedDate: admission.migrationExpectedDate ? new Date(admission.migrationExpectedDate).toISOString().split('T')[0] : "",
+        migrationNotAvailableReason: admission.migrationNotAvailableReason || "",
+      });
+    }
+  }, [admission]);
 
   if (!admission) return null;
 
@@ -235,8 +310,17 @@ function EditModal({ admission, onClose, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    
+    // Cleanup submission data based on toggles
+    const submissionData = { ...formData };
+    if (submissionData.isScholarshipApplied) delete submissionData.scholarshipNotAppliedReason;
+    if (submissionData.isMahadbtFormSubmitted) delete submissionData.mahadbtNotFilledReason;
+    else delete submissionData.mahadbtFilledDate;
+    if (submissionData.hasMigrationCertificate) delete submissionData.migrationNotAvailableReason;
+    else delete submissionData.migrationExpectedDate;
+
     try {
-      await onSave(admission._id, formData);
+      await onSave(admission._id, submissionData);
     } catch (error) {
       console.error(error);
     } finally {
@@ -246,91 +330,117 @@ function EditModal({ admission, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-slideUp" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp" onClick={e => e.stopPropagation()}>
         <form onSubmit={handleSubmit}>
           {/* Header */}
-          <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4">
-            <h2 className="text-xl font-bold text-white">Edit Admission</h2>
-            <p className="text-amber-100 text-xs mt-0.5">ID: {admission._id}</p>
+          <div className="bg-gradient-to-r from-blue-700 to-indigo-800 px-6 py-4 sticky top-0 z-10 flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-black text-white uppercase tracking-widest">Edit Admission</h2>
+              <p className="text-blue-100 text-[10px] font-mono opacity-80 mt-0.5">ID: {admission._id}</p>
+            </div>
+            <button onClick={onClose} type="button" className="text-white/70 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
           </div>
 
-          {/* Content */}
-          <div className="p-6 space-y-5">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1.5">Roll Number</label>
-              <input
-                type="text"
-                name="rollno"
-                value={formData.rollno}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
-                placeholder="Enter roll number"
-              />
+          <div className="p-6 space-y-8">
+            {/* Section 1: Basic Info */}
+            <div className="space-y-4">
+               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Academic Information</h4>
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5 tracking-wider">Course Name</label>
+                    <input type="text" name="course" value={formData.course} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5 tracking-wider">Year</label>
+                    <select name="year" value={formData.year} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold">
+                       <option value="FY">FY</option>
+                       <option value="SY">SY</option>
+                       <option value="TY">TY</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5 tracking-wider">Div</label>
+                    <input type="text" name="div" value={formData.div} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold uppercase" maxLength="2" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5 tracking-wider">Roll No</label>
+                    <input type="text" name="rollno" value={formData.rollno} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5 tracking-wider">Fees Amout (₹)</label>
+                    <input type="number" name="fees" value={formData.fees} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" />
+                  </div>
+               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1.5">Course</label>
-              <input
-                type="text"
-                name="course"
-                value={formData.course}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
-                placeholder="Enter course name"
-                required
-              />
+            {/* Section 2: Scholarship */}
+            <div className="space-y-4">
+               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Scholarship Status</h4>
+               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" name="isScholarshipApplied" id="isScholarshipApplied" checked={formData.isScholarshipApplied} onChange={handleChange} className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    <label htmlFor="isScholarshipApplied" className="text-sm font-bold text-slate-700 uppercase tracking-tight">Scholarship Applied</label>
+                  </div>
+                  {!formData.isScholarshipApplied && (
+                    <div className="animate-fadeIn">
+                      <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Reason for Not Applying *</label>
+                      <textarea name="scholarshipNotAppliedReason" value={formData.scholarshipNotAppliedReason} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm min-h-[80px]" placeholder="Explain why scholarship wasn't applied..." />
+                    </div>
+                  )}
+               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1.5">Fees Amount (₹)</label>
-              <input
-                type="number"
-                name="fees"
-                value={formData.fees}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
-                placeholder="Enter fees amount"
-                min="0"
-                required
-              />
+            {/* Section 3: MahaDBT */}
+            <div className="space-y-4">
+               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">MahaDBT Integration</h4>
+               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" name="isMahadbtFormSubmitted" id="isMahadbtFormSubmitted" checked={formData.isMahadbtFormSubmitted} onChange={handleChange} className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    <label htmlFor="isMahadbtFormSubmitted" className="text-sm font-bold text-slate-700 uppercase tracking-tight">MahaDBT Form Submitted</label>
+                  </div>
+                  {formData.isMahadbtFormSubmitted ? (
+                    <div className="animate-fadeIn">
+                      <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Date Submitted *</label>
+                      <input type="date" name="mahadbtFilledDate" value={formData.mahadbtFilledDate} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" />
+                    </div>
+                  ) : (
+                    <div className="animate-fadeIn">
+                       <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Reason for Not Submitting *</label>
+                       <textarea name="mahadbtNotFilledReason" value={formData.mahadbtNotFilledReason} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm min-h-[80px]" placeholder="Reasons for pending MahaDBT form..." />
+                    </div>
+                  )}
+               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <input
-                type="checkbox"
-                name="isScholarshipApplied"
-                id="scholarship"
-                checked={formData.isScholarshipApplied}
-                onChange={handleChange}
-                className="w-5 h-5 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
-              />
-              <label htmlFor="scholarship" className="text-sm font-medium text-slate-700 cursor-pointer select-none">
-                Scholarship Applied
-              </label>
-            </div>
-
-            <div className="bg-yellow-50 text-yellow-800 text-xs p-3 rounded-lg flex gap-2">
-              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
-              <span>Payment status cannot be edited here.</span>
+            {/* Section 4: Migration */}
+            <div className="space-y-4">
+               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Migration Certificate</h4>
+               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" name="hasMigrationCertificate" id="hasMigrationCertificate" checked={formData.hasMigrationCertificate} onChange={handleChange} className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    <label htmlFor="hasMigrationCertificate" className="text-sm font-bold text-slate-700 uppercase tracking-tight">Migration Certificate Available</label>
+                  </div>
+                  {formData.hasMigrationCertificate ? (
+                    <div className="animate-fadeIn">
+                      <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Expected / Submission Date *</label>
+                      <input type="date" name="migrationExpectedDate" value={formData.migrationExpectedDate} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" />
+                    </div>
+                  ) : (
+                    <div className="animate-fadeIn">
+                       <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Reason Not Available *</label>
+                       <textarea name="migrationNotAvailableReason" value={formData.migrationNotAvailableReason} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm min-h-[80px]" placeholder="Explain why migration certificate is missing..." />
+                    </div>
+                  )}
+               </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors shadow-sm text-sm"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 py-2.5 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition-colors shadow-sm text-sm disabled:opacity-50 flex items-center gap-2"
-            >
-              {loading && <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />}
-              Save Changes
+          <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 rounded-b-2xl">
+            <button type="button" onClick={onClose} className="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-50 transition-all shadow-sm">Cancel</button>
+            <button type="submit" disabled={loading} className="px-8 py-2.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center gap-2">
+              {loading && <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />}
+              Save Updates
             </button>
           </div>
         </form>
@@ -348,8 +458,12 @@ export default function AdminAdmission() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [yearFilter, setYearFilter] = useState("");
+  const [divFilter, setDivFilter] = useState("");
   const [academicYearFilter, setAcademicYearFilter] = useState("");
   const [feesPaidFilter, setFeesPaidFilter] = useState("");
+  const [scholarshipFilter, setScholarshipFilter] = useState("");
+  const [mahadbtFilter, setMahadbtFilter] = useState("");
+  const [migrationFilter, setMigrationFilter] = useState("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -362,7 +476,7 @@ export default function AdminAdmission() {
 
   useEffect(() => {
     fetchAdmissions(currentPage);
-  }, [currentPage, limit]);
+  }, [currentPage, limit, statusFilter, yearFilter, divFilter, academicYearFilter, feesPaidFilter, scholarshipFilter, mahadbtFilter, migrationFilter]);
 
   const fetchAdmissions = async (page = 1) => {
     try {
@@ -373,8 +487,12 @@ export default function AdminAdmission() {
         search: searchQuery || undefined,
         status: statusFilter || undefined,
         year: yearFilter || undefined,
+        div: divFilter || undefined,
         academicYear: academicYearFilter || undefined,
         filterPaid: feesPaidFilter || undefined,
+        isScholarshipApplied: scholarshipFilter || undefined,
+        isMahadbtFormSubmitted: mahadbtFilter || undefined,
+        hasMigrationCertificate: migrationFilter || undefined,
       };
       const response = await admissionService.getAllAdmissions(params);
       
@@ -407,7 +525,8 @@ export default function AdminAdmission() {
       toast.success("Admission deleted successfully", { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error("Failed to delete admission", { id: toastId });
+      const errorMessage = err.response?.data?.message || err.response?.data?.errors?.[0]?.message || "Failed to delete admission";
+      toast.error(errorMessage, { id: toastId });
     }
   };
 
@@ -425,7 +544,8 @@ export default function AdminAdmission() {
       toast.success("Admission updated successfully", { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update admission", { id: toastId });
+      const errorMessage = err.response?.data?.message || err.response?.data?.errors?.[0]?.message || "Failed to update admission";
+      toast.error(errorMessage, { id: toastId });
     }
   };
 
@@ -472,10 +592,9 @@ export default function AdminAdmission() {
           className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
         >
           <option value="">All Years</option>
-          <option value="FE">FE</option>
-          <option value="SE">SE</option>
-          <option value="TE">TE</option>
-          <option value="BE">BE</option>
+          <option value="FY">FY</option>
+          <option value="SY">SY</option>
+          <option value="TY">TY</option>
         </select>
 
         <input
@@ -496,6 +615,82 @@ export default function AdminAdmission() {
           <option value="unpaid">Unpaid</option>
         </select>
 
+        <input
+          type="text"
+          placeholder="Division (e.g. A)"
+          value={divFilter}
+          onChange={(e) => setDivFilter(e.target.value)}
+          className="w-32 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+        />
+
+        <select
+          value={scholarshipFilter}
+          onChange={(e) => setScholarshipFilter(e.target.value)}
+          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+        >
+          <option value="">Scholarship Status</option>
+          <option value="true">Applied</option>
+          <option value="false">Not Applied</option>
+        </select>
+
+        <select
+          value={mahadbtFilter}
+          onChange={(e) => setMahadbtFilter(e.target.value)}
+          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+        >
+          <option value="">MahaDBT Status</option>
+          <option value="true">Submitted</option>
+          <option value="false">Pending</option>
+        </select>
+
+        <select
+          value={migrationFilter}
+          onChange={(e) => setMigrationFilter(e.target.value)}
+          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+        >
+          <option value="">Migration Status</option>
+          <option value="true">Available</option>
+          <option value="false">Unavailable</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder="Division (e.g. A)"
+          value={divFilter}
+          onChange={(e) => setDivFilter(e.target.value)}
+          className="w-32 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+        />
+
+        <select
+          value={scholarshipFilter}
+          onChange={(e) => setScholarshipFilter(e.target.value)}
+          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+        >
+          <option value="">Scholarship Status</option>
+          <option value="true">Applied</option>
+          <option value="false">Not Applied</option>
+        </select>
+
+        <select
+          value={mahadbtFilter}
+          onChange={(e) => setMahadbtFilter(e.target.value)}
+          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+        >
+          <option value="">MahaDBT Status</option>
+          <option value="true">Submitted</option>
+          <option value="false">Pending</option>
+        </select>
+
+        <select
+          value={migrationFilter}
+          onChange={(e) => setMigrationFilter(e.target.value)}
+          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+        >
+          <option value="">Migration Status</option>
+          <option value="true">Available</option>
+          <option value="false">Unavailable</option>
+        </select>
+
         <div className="flex gap-3">
           <button
             onClick={handleFind}
@@ -507,10 +702,19 @@ export default function AdminAdmission() {
             Find Admissions
           </button>
 
-          {(searchQuery || statusFilter || yearFilter || academicYearFilter || feesPaidFilter) && (
+          {(searchQuery || statusFilter || yearFilter || divFilter || academicYearFilter || feesPaidFilter || scholarshipFilter || mahadbtFilter || migrationFilter) && (
             <button
               onClick={() => {
-                setSearchQuery(""); setStatusFilter(""); setYearFilter(""); setAcademicYearFilter(""); setFeesPaidFilter("");
+                setSearchQuery("");
+                setStatusFilter("");
+                setYearFilter("");
+                setDivFilter("");
+                setAcademicYearFilter("");
+                setFeesPaidFilter("");
+                setScholarshipFilter("");
+                setMahadbtFilter("");
+                setMigrationFilter("");
+                fetchAdmissions(1);
               }}
               className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
             >

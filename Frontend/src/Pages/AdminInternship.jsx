@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { internshipService } from "../services/internshipService";
+import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
 import Pagination from "../Components/Common/Pagination";
 
 // InternshipCard Component - COMPACT & BEAUTIFUL
-function InternshipCard({ internship, onView, onDelete, onEdit }) {
+function InternshipCard({ internship, onView, onDelete, onEdit, isDeleting }) {
   const isPaid = internship?.stipendInfo?.isPaid ?? internship?.isPaid;
   const stipend = internship?.stipendInfo?.stipend ?? internship?.stipend;
+
+  // Student info from projected fields
+  const studentNameRaw = internship.studentName;
+  const studentName = studentNameRaw && 
+    (studentNameRaw.firstName || studentNameRaw.lastName) &&
+    `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim() !== "N/A"
+    ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim()
+    : null;
+  const studentID = internship.studentID && internship.studentID !== "N/A" ? internship.studentID : null;
+  const studentYear = internship.studentYear && internship.studentYear !== "N/A" ? internship.studentYear : null;
 
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
@@ -36,12 +47,37 @@ function InternshipCard({ internship, onView, onDelete, onEdit }) {
             {internship?.companyName?.charAt(0) || "?"}
           </div>
         )}
+        
+        {/* Top Overlay: Student ID & Year */}
+        <div className="absolute top-2 left-2 flex gap-1">
+          {studentID && (
+            <span className="px-2 py-0.5 bg-white/90 backdrop-blur-md text-[10px] font-bold text-slate-700 rounded shadow-sm border border-white/20 uppercase tracking-tighter">
+              {studentID}
+            </span>
+          )}
+          {studentYear && (
+            <span className="px-2 py-0.5 bg-blue-600/90 backdrop-blur-md text-[10px] font-bold text-white rounded shadow-sm border border-blue-500/20 uppercase tracking-tighter font-mono">
+             {studentYear}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-grow">
+        
+        {/* Student Name - PRIORITY */}
+        {studentName && (
+          <div className="mb-2">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Student</p>
+            <h4 className="text-sm font-black text-slate-900 line-clamp-1">{studentName}</h4>
+          </div>
+        )}
+
+        <div className="h-px bg-slate-100 mb-3" />
+
         {/* Company Name */}
-        <h3 className="text-sm font-bold text-slate-900 mb-1 line-clamp-1">
+        <h3 className="text-sm font-bold text-blue-600 mb-1 line-clamp-1">
           {internship?.companyName || "N/A"}
         </h3>
 
@@ -80,7 +116,7 @@ function InternshipCard({ internship, onView, onDelete, onEdit }) {
         <div className="mt-auto space-y-2">
           <button
             onClick={() => onView && onView(internship)}
-            className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
           >
             View Details
           </button>
@@ -88,15 +124,20 @@ function InternshipCard({ internship, onView, onDelete, onEdit }) {
           <div className="flex gap-2 w-full mt-2">
             <button
               onClick={() => onEdit && onEdit(internship)}
-              className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors"
+              className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors border border-amber-100"
             >
               Edit
             </button>
             <button
               onClick={() => onDelete && onDelete(internship._id)}
-              className="flex-1 px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
+              disabled={isDeleting}
+              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${
+                isDeleting 
+                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
+                  : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
+              }`}
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </button>
           </div>
         </div>
@@ -109,10 +150,15 @@ function InternshipCard({ internship, onView, onDelete, onEdit }) {
 function DetailModal({ internship, onClose }) {
   if (!internship) return null;
 
+  // Format student name
+  const studentName = internship.studentName
+    ? `${internship.studentName.firstName || ""} ${internship.studentName.middleName || ""} ${internship.studentName.lastName || ""}`.trim()
+    : "N/A";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -131,131 +177,161 @@ function DetailModal({ internship, onClose }) {
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-8">
 
-          {/* Main Info Section */}
-          <div className="flex flex-col sm:flex-row gap-6">
-            {/* Image */}
-            <div className="flex-shrink-0">
-              <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
-                <img
-                  src={internship.photoProof?.url || "https://via.placeholder.com/150?text=No+Image"}
-                  alt="Proof"
-                  className="w-full h-full object-cover"
-                />
+          {/* Top Info Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {/* Student Info Card */}
+            <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xl font-bold">
+                  {studentName.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-lg">{studentName}</h3>
+                  <p className="text-blue-600 font-semibold text-sm">{internship.studentID || "N/A"}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-white/80 p-2 rounded-lg border border-blue-100 text-center">
+                  <p className="text-[10px] uppercase text-slate-500 font-bold mb-0.5">Year</p>
+                  <p className="text-sm font-bold text-slate-800">{internship.studentYear || "N/A"}</p>
+                </div>
+                <div className="bg-white/80 p-2 rounded-lg border border-blue-100 text-center">
+                  <p className="text-[10px] uppercase text-slate-500 font-bold mb-0.5">Division</p>
+                  <p className="text-sm font-bold text-slate-800">{internship.studentDivision || "A"}</p>
+                </div>
+                <div className="bg-white/80 p-2 rounded-lg border border-blue-100 text-center">
+                  <p className="text-[10px] uppercase text-slate-500 font-bold mb-0.5">Branch</p>
+                  <p className="text-sm font-bold text-slate-800 truncate px-1">{internship.studentBranch || "N/A"}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-blue-100/50 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-xs text-slate-600">
+                  <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 00-2 2z" /></svg>
+                  {internship.studentEmail || "N/A"}
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-600">
+                  <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                  {internship.studentMobileNo || "N/A"}
+                </div>
               </div>
             </div>
 
-            {/* Basic Details */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">{internship.companyName}</h3>
-                <p className="text-sm text-slate-500">
-                  {typeof internship?.stuID === "string" ? internship.stuID : internship?.stuID?.studentID || "Student ID N/A"}
-                </p>
+            {/* Internship Summary Card */}
+            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200">
+              <h3 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-2 mb-4">Internship Overview</h3>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs text-slate-500 font-semibold uppercase mb-1">Company & Role</p>
+                  <p className="text-base font-bold text-slate-900">{internship.companyName}</p>
+                  <p className="text-sm font-medium text-slate-600 italic">{internship.role}</p>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Duration</p>
+                    <p className="text-sm font-bold text-slate-800">{internship.durationMonths} Months</p>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Status</p>
+                    {internship.stipendInfo?.isPaid ? (
+                      <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded">Paid (₹{internship.stipendInfo.stipend}/mo)</span>
+                    ) : (
+                      <span className="text-xs font-bold text-slate-600 bg-slate-200 px-2 py-0.5 rounded">Unpaid</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Timeline</p>
+                    <p className="text-xs font-semibold text-slate-700">
+                      {internship.startDate ? new Date(internship.startDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', day: 'numeric' }) : 'N/A'} - {internship.endDate ? new Date(internship.endDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', day: 'numeric' }) : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Description Section */}
+          <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
+            <h4 className="text-sm font-bold text-slate-900 mb-2">Role Description</h4>
+            <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-lg border border-slate-50">
+              {internship.description || "No description provided."}
+            </p>
+          </div>
+
+          {/* Document Preview Section */}
+          <div className="space-y-4">
+            <h4 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              Document Previews
+            </h4>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* PDF Preview */}
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-bold text-slate-700">Internship Report (PDF)</span>
+                  {internship.internshipReport?.url && (
+                    <a href={internship.internshipReport.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline font-semibold flex items-center gap-1">
+                      Open Original <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    </a>
+                  )}
+                </div>
+                {internship.internshipReport?.url ? (
+                  <div className="h-96 rounded-xl border border-slate-200 bg-slate-100 overflow-hidden shadow-inner">
+                    <iframe
+                      src={`${internship.internshipReport.url}#view=FitH`}
+                      className="w-full h-full"
+                      title="Report Preview"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-96 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 bg-slate-50 italic text-sm">
+                    No report uploaded
+                  </div>
+                )}
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
-                  {internship.internshipType}
-                </span>
-                <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full border border-purple-100">
-                  {internship.durationMonths} Months
-                </span>
-                {internship.stipendInfo?.isPaid && (
-                  <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full border border-green-100">
-                    Paid: ₹{internship.stipendInfo.stipend}/mo
-                  </span>
+              {/* Image Preview */}
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-bold text-slate-700">Photo Proof</span>
+                  {internship.photoProof?.url && (
+                    <a href={internship.photoProof.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline font-semibold flex items-center gap-1">
+                      View Full Image <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    </a>
+                  )}
+                </div>
+                {internship.photoProof?.url ? (
+                  <div className="h-96 rounded-xl border border-slate-200 bg-slate-100 overflow-hidden shadow-inner group relative">
+                    <img
+                      src={internship.photoProof.url}
+                      alt="Proof"
+                      className="w-full h-full object-contain p-2"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-96 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 bg-slate-50 italic text-sm">
+                    No image proof uploaded
+                  </div>
                 )}
               </div>
             </div>
           </div>
-
-          <hr className="border-slate-100" />
-
-          {/* Grid Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Start Date</p>
-              <p className="text-sm font-medium text-slate-800">
-                {internship.startDate ? new Date(internship.startDate).toLocaleDateString('en-IN', { dateStyle: 'long' }) : 'N/A'}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">End Date</p>
-              <p className="text-sm font-medium text-slate-800">
-                {internship.endDate ? new Date(internship.endDate).toLocaleDateString('en-IN', { dateStyle: 'long' }) : 'N/A'}
-              </p>
-            </div>
-
-            <div className="sm:col-span-2">
-              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Company Address</p>
-              <p className="text-sm font-medium text-slate-800">
-                {internship.companyAddress || 'N/A'}
-              </p>
-            </div>
-
-            <div className="sm:col-span-2">
-              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">HR Email</p>
-              <p className="text-sm font-medium text-slate-800">
-                {internship.hrEmail || 'N/A'}
-              </p>
-            </div>
-          </div>
-
-          {/* Documents Section */}
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-            <h4 className="text-sm font-bold text-slate-900 mb-3">Attached Documents</h4>
-            <div className="flex flex-wrap gap-3">
-              {internship.internshipReport?.url ? (
-                <a
-                  href={internship.internshipReport.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm transition-all"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                  Internship Report
-                </a>
-              ) : (
-                <span className="text-xs text-slate-400 italic">No report uploaded</span>
-              )}
-
-              {internship.photoProof?.url && (
-                <a
-                  href={internship.photoProof.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm transition-all"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  View Photo Proof
-                </a>
-              )}
-            </div>
-          </div>
-
-          <div className="flex justify-end mt-4">
-            {(searchQuery || filterYear || filterDivision || filterIsPaid || startDateFrom || startDateTo || endDateFrom || endDateTo) && (
-              <button
-                onClick={() => {
-                  setSearchQuery(""); setFilterYear(""); setFilterDivision(""); setFilterIsPaid("");
-                  setStartDateFrom(""); setStartDateTo(""); setEndDateFrom(""); setEndDateTo("");
-                }}
-                className="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition flex items-center gap-1"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                Clear All Filters
-              </button>
-            )}
-          </div>
         </div>
 
         {/* Modal Footer */}
-        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+            className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
           >
             Close
           </button>
@@ -286,15 +362,36 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    const initForm = async () => {
+      if (!isOpen) return;
+
       if (internship) {
+        const studentObj = internship.student || internship.stuID;
+        let initialID = (typeof studentObj === "object" ? studentObj?.studentID : studentObj) || "";
+        
+        // If it's a hex ID string, try to fetch the proper studentID
+        if (/^[0-9a-fA-F]{24}$/.test(initialID)) {
+          try {
+            const res = await studentService.getSingleStudent(initialID);
+            if (res.success && res.data?.studentID) {
+              initialID = res.data.studentID;
+            }
+          } catch (err) {
+            console.error("Error resolving student ID for internship edit:", err);
+          }
+        }
+
         setFormData({
-          studentId: typeof internship.stuID === "string" ? internship.stuID : internship.stuID?.studentID || "",
+          studentId: initialID,
           companyName: internship.companyName || "",
           role: internship.role || "",
           durationMonths: internship.durationMonths || "",
-          startDate: internship.startDate ? new Date(internship.startDate).toISOString().split('T')[0] : "",
-          endDate: internship.endDate ? new Date(internship.endDate).toISOString().split('T')[0] : "",
+          startDate: (internship.startDate && !isNaN(new Date(internship.startDate).getTime())) 
+            ? new Date(internship.startDate).toISOString().split('T')[0] 
+            : "",
+          endDate: (internship.endDate && !isNaN(new Date(internship.endDate).getTime())) 
+            ? new Date(internship.endDate).toISOString().split('T')[0] 
+            : "",
           isPaid: internship.stipendInfo?.isPaid ? "true" : "false",
           stipend: internship.stipendInfo?.stipend || "",
           description: internship.description || "",
@@ -316,7 +413,9 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
         internshipReport: null,
         photoProof: null,
       });
-    }
+    };
+
+    initForm();
   }, [isOpen, internship]);
 
   const handleChange = (e) => {
@@ -333,10 +432,39 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
     e.preventDefault();
     setSaving(true);
     try {
+      let stuIDToUse = formData.studentId;
+
+      // Handle Student ID resolution for new records
+      if (!internship) {
+        // If it's not a 24-char hex string, it's likely a human-readable ID
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(formData.studentId);
+
+        if (!isObjectId) {
+          const studentRes = await studentService.getStudents({ search: formData.studentId });
+          const students = studentRes.data || [];
+
+          // Try exact match on studentID first
+          const exactMatch = students.find(s => s.studentID === formData.studentId);
+          if (exactMatch) {
+            stuIDToUse = exactMatch._id;
+          } else if (students.length === 1) {
+            stuIDToUse = students[0]._id;
+          } else if (students.length > 1) {
+            toast.error("Multiple students found with this ID. Please be more specific.");
+            setSaving(false);
+            return;
+          } else {
+            toast.error("No student found with this ID. Please verify.");
+            setSaving(false);
+            return;
+          }
+        }
+      }
+
       const data = new FormData();
 
       // Append form fields
-      if (!internship) data.append('studentId', formData.studentId);
+      if (!internship) data.append('studentId', stuIDToUse);
       data.append('companyName', formData.companyName);
       data.append('role', formData.role);
       data.append('durationMonths', formData.durationMonths);
@@ -363,7 +491,13 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
       onClose();
     } catch (err) {
       console.error("Error saving internship:", err);
-      toast.error(err.response?.data?.message || err.response?.data?.errors?.[0]?.message || "Failed to save internship.");
+      // Improve Validation: Parse detailed messages from backend
+      const errorMessage = 
+        err.response?.data?.errors?.map(e => e.message).join(", ") || 
+        err.response?.data?.error || 
+        err.response?.data?.message || 
+        "Failed to save internship.";
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -589,6 +723,7 @@ export default function AdminInternship() {
   const [limit, setLimit] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [deletingId, setDeletingId] = useState(null);
 
   // Modal State
   const [selectedInternship, setSelectedInternship] = useState(null);
@@ -622,7 +757,7 @@ export default function AdminInternship() {
         ...appliedFilters
       };
       const response = await internshipService.getAllInternships(params);
-      
+
       const data = response.data || [];
       const total = response.total || 0;
       const totalP = response.totalPages || 1;
@@ -682,6 +817,7 @@ export default function AdminInternship() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this internship?"))
       return;
+    setDeletingId(id);
     try {
       await internshipService.deleteInternship(id);
       fetchInternships(currentPage);
@@ -689,6 +825,8 @@ export default function AdminInternship() {
     } catch (err) {
       console.error("Error deleting internship:", err);
       toast.error("Failed to delete internship.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -721,20 +859,20 @@ export default function AdminInternship() {
 
           <div className="flex gap-3 ml-auto flex-wrap">
             <button
-               onClick={() => {
-                 setAppliedFilters({
-                   search: searchQuery || undefined,
-                   year: filterYear || undefined,
-                   division: filterDivision || undefined,
-                   isPaid: filterIsPaid || undefined,
-                   startDateFrom: startDateFrom || undefined,
-                   startDateTo: startDateTo || undefined,
-                   endDateFrom: endDateFrom || undefined,
-                   endDateTo: endDateTo || undefined,
-                 });
-                 setCurrentPage(1);
-               }}
-               className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
+              onClick={() => {
+                setAppliedFilters({
+                  search: searchQuery || undefined,
+                  year: filterYear || undefined,
+                  division: filterDivision || undefined,
+                  isPaid: filterIsPaid || undefined,
+                  startDateFrom: startDateFrom || undefined,
+                  startDateTo: startDateTo || undefined,
+                  endDateFrom: endDateFrom || undefined,
+                  endDateTo: endDateTo || undefined,
+                });
+                setCurrentPage(1);
+              }}
+              className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -873,6 +1011,7 @@ export default function AdminInternship() {
                 onView={handleView}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                isDeleting={deletingId === internship?._id}
               />
             ))}
           </div>

@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
                   </p>
                 </div>
                 <p className="text-xs text-gray-400">
-                  Didn't receive it? Check your spam folder or try again.
+                  Didn't receive it? Check All mail or spam section of ur email, or try again.
                 </p>
                 <button
                   type="button"

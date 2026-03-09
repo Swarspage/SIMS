@@ -1,14 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { achievementService } from "../services/achievementService";
+import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
 import Pagination from "../Components/Common/Pagination";
 
 // Achievement Card Component - COMPACT & BEAUTIFUL
-function AchievementCard({ achievement, onView, onDelete, onEdit }) {
+function AchievementCard({ achievement, onView, onDelete, onEdit, isDeleting }) {
+  // Student info helper - checks both populated 'stuID' and aggregated 'student' field
+  const student = achievement?.student || achievement?.stuID;
+  const studentID = student?.studentID && student.studentID !== "N/A" ? student.studentID : null;
+  const studentYear = student?.year && student.year !== "N/A" ? student.year : null;
+  const studentNameRaw = student?.name;
+  const studentName = studentNameRaw && 
+    (studentNameRaw.firstName || studentNameRaw.lastName) &&
+    `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim() !== "N/A"
+    ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim()
+    : null;
+
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
       {/* Image Section */}
-      <div className="h-32 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden">
+      <div className="h-32 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden relative">
         <img
           src={
             achievement?.photographs?.eventPhoto?.url ||
@@ -17,37 +29,52 @@ function AchievementCard({ achievement, onView, onDelete, onEdit }) {
           alt={achievement?.title || "Achievement"}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
+
+        {/* Top Overlay: ID & Year */}
+        <div className="absolute top-2 left-2 flex gap-1">
+          {studentID && (
+            <span className="px-2 py-0.5 bg-white/90 backdrop-blur-md text-[10px] font-bold text-slate-700 rounded shadow-sm border border-white/20 uppercase tracking-tighter">
+              {studentID}
+            </span>
+          )}
+          {studentYear && (
+            <span className="px-2 py-0.5 bg-blue-600/90 backdrop-blur-md text-[10px] font-bold text-white rounded shadow-sm border border-blue-500/20 uppercase tracking-tighter font-mono">
+              {studentYear}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Content Section */}
       <div className="p-4 flex flex-col flex-grow">
-        {/* Student ID */}
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2 hidden">
-          {typeof achievement?.stuID === "string"
-            ? achievement.stuID
-            : achievement?.stuID?.studentID || "N/A"}
-        </p>
+        
+        {/* Student Name */}
+        {studentName && (
+          <div className="mb-2">
+             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Student</p>
+             <h4 className="text-sm font-black text-slate-900 line-clamp-1">{studentName}</h4>
+          </div>
+        )}
+
+        <div className="h-px bg-slate-100 mb-3" />
 
         {/* Title */}
-        <h3 className="text-sm font-bold text-slate-900 mb-2 line-clamp-2">
+        <h3 className="text-sm font-bold text-blue-600 mb-1 line-clamp-2">
           {achievement?.title || "No Title"}
         </h3>
 
         {/* Category Badge */}
-        <div className="mb-2">
-          <span className="inline-block px-2 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full">
-            {achievement?.category || "N/A"}
-          </span>
-        </div>
-
-        {/* Description */}
-        <p className="text-xs text-slate-600 mb-2 line-clamp-2">
-          {achievement?.description || "No description"}
-        </p>
+        {achievement?.category && (
+          <div className="mb-2">
+            <span className="inline-block px-2 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-tighter border border-blue-100">
+              {achievement.category}
+            </span>
+          </div>
+        )}
 
         {/* Achievement Type */}
         {achievement?.achievementType && (
-          <p className="text-xs font-medium text-green-600 mb-2">
+          <p className="text-xs font-black text-green-600 mb-2 flex items-center gap-1">
             {achievement.achievementType === "Winner" && "🏆 "}
             {achievement.achievementType === "Runner-up" && "🥈 "}
             {achievement.achievementType}
@@ -55,40 +82,42 @@ function AchievementCard({ achievement, onView, onDelete, onEdit }) {
         )}
 
         {/* Date */}
-        <p className="text-xs text-slate-500 mb-3">
-          {achievement?.date?.from
-            ? new Date(achievement.date.from).toLocaleDateString("en-IN", {
-              month: "short",
-              day: "numeric",
-            })
-            : achievement?.createdAt
-              ? new Date(achievement.createdAt).toLocaleDateString("en-IN", {
-                month: "short",
-                day: "numeric",
-              })
-              : "No Date"}
-        </p>
+        <div className="mb-3 pb-3 border-b border-slate-100 mt-auto">
+           <p className="text-[10px] text-slate-500 flex items-center gap-1">
+             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+             {achievement?.date?.from && !isNaN(new Date(achievement.date.from).getTime()) 
+               ? new Date(achievement.date.from).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: 'numeric' }) 
+               : "Date N/A"}
+           </p>
+        </div>
 
         {/* Action Buttons */}
-        <div className="mt-auto flex gap-2">
+        <div className="space-y-2">
           <button
             onClick={() => onView && onView(achievement)}
-            className="flex-1 px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
           >
-            View
+            View Details
           </button>
-          <button
-            onClick={() => onEdit && onEdit(achievement)}
-            className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => onDelete && onDelete(achievement._id)}
-            className="flex-1 px-3 py-2 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors"
-          >
-            Delete
-          </button>
+          <div className="flex gap-2 w-full">
+            <button
+              onClick={() => onEdit && onEdit(achievement)}
+              className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors border border-amber-100"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => onDelete && onDelete(achievement._id)}
+              disabled={isDeleting}
+              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${
+                isDeleting 
+                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
+                  : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
+              }`}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -97,149 +126,206 @@ function AchievementCard({ achievement, onView, onDelete, onEdit }) {
 
 // Detail View Modal Component
 function DetailModal({ achievement, onClose }) {
+  const [student, setStudent] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        const studentDbId = typeof achievement.stuID === 'string' ? achievement.stuID : achievement.stuID?._id;
+        if (studentDbId) {
+          const res = await studentService.getSingleStudent(studentDbId);
+          setStudent(res.data);
+        }
+      } catch (err) {
+        console.error("Error fetching student details:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudent();
+  }, [achievement]);
+
   if (!achievement) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
+      
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col relative z-10 animate-in fade-in zoom-in duration-300">
+        {/* Header */}
+        <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-20">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Achievement Details</h2>
-            <p className="text-xs text-slate-500 mt-0.5">ID: {achievement._id}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Modal Content */}
-        <div className="p-6 space-y-6">
-
-          {/* Main Info Section */}
-          <div className="flex flex-col sm:flex-row gap-6">
-            {/* Image */}
-            <div className="flex-shrink-0">
-              <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 flex items-center justify-center">
-                <img
-                  src={achievement.photographs?.eventPhoto?.url || "https://via.placeholder.com/300x200?text=No+Image"}
-                  alt="Proof"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-
-            {/* Basic Details */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">{achievement.title}</h3>
-                <p className="text-sm text-slate-500">
-                  {typeof achievement?.stuID === "string" ? achievement.stuID : achievement?.stuID?.studentID || "Student ID N/A"}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
-                  {achievement.category}
-                </span>
-                <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full border border-purple-100">
-                  {achievement.achievementType}
-                </span>
-                {achievement.level && (
-                  <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full border border-green-100">
-                    {achievement.level} Level
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <hr className="border-slate-100" />
-
-          {/* Grid Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Date</p>
-              <p className="text-sm font-medium text-slate-800">
-                {achievement?.date?.from
-                  ? new Date(achievement.date.from).toLocaleDateString("en-IN", { dateStyle: 'long' })
-                  : "N/A"
-                }
-                {achievement?.date?.to && ` - ${new Date(achievement.date.to).toLocaleDateString("en-IN", { dateStyle: 'long' })}`}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Rank/Position</p>
-              <p className="text-sm font-medium text-slate-800">
-                {achievement.rank || 'N/A'}
-              </p>
-            </div>
-
-            <div className="sm:col-span-2">
-              <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Organizing Body</p>
-              <p className="text-sm font-medium text-slate-800">
-                {achievement.org || 'N/A'}
-              </p>
-            </div>
-
-            {achievement.description && (
-              <div className="sm:col-span-2">
-                <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Description</p>
-                <p className="text-sm font-medium text-slate-800">{achievement.description}</p>
+            {achievement.category && (
+              <div className="flex items-center gap-2 mt-1">
+                 <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] font-bold rounded border border-green-100 uppercase tracking-tighter">
+                   {achievement.category}
+                 </span>
               </div>
             )}
           </div>
-
-          {/* Documents Section */}
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-            <h4 className="text-sm font-bold text-slate-900 mb-3">Attached Documents</h4>
-            <div className="flex flex-wrap gap-3">
-              {achievement.certificateURL?.url ? (
-                <a
-                  href={achievement.certificateURL.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm transition-all"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                  Certificate
-                </a>
-              ) : (
-                <span className="text-xs text-slate-400 italic">No certificate uploaded</span>
-              )}
-
-              {achievement.photographs?.eventPhoto?.url && (
-                <a
-                  href={achievement.photographs.eventPhoto.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm transition-all"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  View Photo
-                </a>
-              )}
-            </div>
-          </div>
-
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
 
-        {/* Modal Footer */}
-        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+        <div className="flex-grow overflow-y-auto">
+          <div className="p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              
+              {/* Left Column: Student & Metadata */}
+              <div className="lg:col-span-4 space-y-6">
+                 {/* Student Profile Card */}
+                 <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                  {loading ? (
+                    <div className="flex flex-col items-center py-4">
+                      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+                      <p className="text-xs text-slate-500 font-medium">Loading Student Profile...</p>
+                    </div>
+                  ) : student ? (
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-blue-200">
+                        {student.name?.firstName?.charAt(0) || student.name?.lastName?.charAt(0) || "?"}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-slate-900 antialiased leading-tight">
+                          {student.name?.firstName} {student.name?.lastName}
+                        </h3>
+                        <p className="text-blue-600 font-bold text-sm tracking-tight">{student.studentID}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] font-bold bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded uppercase">{student.year}</span>
+                          <span className="text-[10px] font-bold bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded uppercase">DIV {student.division}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                       <p className="text-sm text-slate-400">Student Profile Not Found</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Success Card */}
+                <div className="bg-emerald-600 rounded-3xl p-6 text-white shadow-xl shadow-emerald-100 relative overflow-hidden">
+                   <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
+                   <div className="relative z-10 text-center">
+                      <div className="text-4xl mb-3 drop-shadow-lg">
+                        {achievement.achievementType === "Winner" ? "🏆" : achievement.achievementType === "Runner-up" ? "🥈" : "🏵️"}
+                      </div>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100 mb-1">Achievement Status</h4>
+                      <p className="text-2xl font-black tracking-tight mb-4">{achievement.achievementType || "Participated"}</p>
+                      
+                      {(achievement.issuedBy) && (
+                        <div className="flex flex-col gap-2 items-center text-xs font-bold bg-black/10 rounded-2xl p-4">
+                           <p className="text-emerald-100/70 uppercase text-[10px] tracking-widest">Organiser / Issued By</p>
+                           <p className="text-center line-clamp-2">{achievement.issuedBy}</p>
+                        </div>
+                      )}
+                   </div>
+                </div>
+
+                {/* Level & Nature Info */}
+                <div className="grid grid-cols-2 gap-3">
+                   {achievement.level && (
+                     <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center">
+                        <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Level</p>
+                        <p className="text-sm font-bold text-slate-900">{achievement.level}</p>
+                     </div>
+                   )}
+                   {achievement.nature && (
+                     <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center">
+                        <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Nature</p>
+                        <p className="text-sm font-bold text-slate-900">{achievement.nature}</p>
+                     </div>
+                   )}
+                </div>
+
+              </div>
+
+              {/* Right Column: Previews & Details */}
+              <div className="lg:col-span-8 flex flex-col gap-6">
+                 
+                 {/* Main Carousel / Grid for Pictures */}
+                 <div className="space-y-4">
+                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full"></span>
+                      Media Gallery / Proofs
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       {/* Event Photo */}
+                       <div className="space-y-2">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Event Photo</p>
+                          <div className="bg-slate-100 rounded-2xl border aspect-[4/3] overflow-hidden group relative">
+                             {achievement.photographs?.eventPhoto?.url ? (
+                               <img src={achievement.photographs.eventPhoto.url} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" alt="Event" />
+                             ) : (
+                               <div className="w-full h-full flex items-center justify-center text-slate-300 font-bold italic">No Photo</div>
+                             )}
+                          </div>
+                       </div>
+                       
+                       {/* Certificate / News Clip */}
+                       <div className="space-y-2">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Certificate / Report</p>
+                          <div className="bg-slate-100 rounded-2xl border aspect-[4/3] overflow-hidden group relative">
+                             {achievement.photographs?.certificate?.url ? (
+                               achievement.photographs.certificate.url.toLowerCase().endsWith('.pdf') ? (
+                                 <iframe src={achievement.photographs.certificate.url} className="w-full h-full border-none" />
+                               ) : (
+                                 <img src={achievement.photographs.certificate.url} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" alt="Certificate" />
+                               )
+                             ) : (
+                               <div className="w-full h-full flex items-center justify-center text-slate-300 font-bold italic">No Document</div>
+                             )}
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+
+                 {achievement.description && (
+                   <div className="bg-slate-50 border border-slate-100 rounded-3xl p-8 flex-grow">
+                       <h4 className="text-sm font-black text-slate-900 mb-4 flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                          </span>
+                          Story & Impact
+                       </h4>
+                       <p className="text-slate-600 leading-relaxed text-sm antialiased font-medium italic">
+                          "{achievement.description}"
+                       </p>
+
+                       <div className="grid grid-cols-2 mt-8 pt-8 border-t border-slate-200 pr-12">
+                           <div>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Time Period</p>
+                              <p className="text-sm font-bold text-slate-700">
+                                 {achievement.date?.from ? new Date(achievement.date.from).toLocaleDateString() : "N/A"}
+                                 {achievement.date?.to ? ` to ${new Date(achievement.date.to).toLocaleDateString()}` : ""}
+                              </p>
+                           </div>
+                           {achievement.organizedBy && (
+                             <div className="text-right">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Organizer</p>
+                                <p className="text-sm font-bold text-slate-700">{achievement.organizedBy}</p>
+                             </div>
+                           )}
+                       </div>
+                   </div>
+                 )}
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 py-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 z-20">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+            className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-black rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
           >
-            Close
+            Close Viewer
           </button>
         </div>
       </div>
@@ -256,7 +342,7 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
     achievementType: "Participation",
     level: "",
     rank: "",
-    org: "",
+    issuedBy: "",
     dateFrom: "",
     dateTo: "",
     description: "",
@@ -272,16 +358,22 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
   useEffect(() => {
     if (isOpen) {
       if (achievement) {
+        // Fix Privacy: Ensure we show human-readable studentID, not MongoDB _id
+        const studentObj = achievement.student || achievement.stuID;
         setFormData({
-          stuID: typeof achievement.stuID === "string" ? achievement.stuID : achievement.stuID?.studentID || "",
+          stuID: (typeof studentObj === "object" ? studentObj?.studentID : studentObj) || "",
           title: achievement.title || "",
           category: achievement.category || "Coding competitions",
           achievementType: achievement.achievementType || "Participation",
           level: achievement.level || "",
           rank: achievement.rank || "",
-          org: achievement.org || "",
-          dateFrom: achievement.date?.from ? new Date(achievement.date.from).toISOString().split('T')[0] : "",
-          dateTo: achievement.date?.to ? new Date(achievement.date.to).toISOString().split('T')[0] : "",
+          issuedBy: achievement.issuedBy || "",
+          dateFrom: (achievement.date?.from && !isNaN(new Date(achievement.date.from).getTime())) 
+            ? new Date(achievement.date.from).toISOString().split('T')[0] 
+            : "",
+          dateTo: (achievement.date?.to && !isNaN(new Date(achievement.date.to).getTime())) 
+            ? new Date(achievement.date.to).toISOString().split('T')[0] 
+            : "",
           description: achievement.description || "",
         });
       } else {
@@ -292,7 +384,7 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
           achievementType: "Participation",
           level: "",
           rank: "",
-          org: "",
+          issuedBy: "",
           dateFrom: "",
           dateTo: "",
           description: "",
@@ -329,7 +421,7 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
       data.append('achievementType', formData.achievementType);
       if (formData.level) data.append('level', formData.level);
       if (formData.rank) data.append('rank', formData.rank);
-      if (formData.org) data.append('org', formData.org);
+      data.append('issuedBy', formData.issuedBy);
       if (formData.description) data.append('description', formData.description);
 
       // Date object restructuring based on backend validation logic
@@ -352,7 +444,13 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
       onClose(); // Close modal
     } catch (err) {
       console.error("Error saving achievement:", err);
-      toast.error(err.response?.data?.message || "Failed to save achievement.");
+      // Improve Validation: Parse detailed messages from backend
+      const errorMessage = 
+        err.response?.data?.errors?.map(e => e.message).join(", ") || 
+        err.response?.data?.error || 
+        err.response?.data?.message || 
+        "Failed to save achievement.";
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -415,14 +513,13 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
               >
                 <option value="Coding competitions">Coding Competitions</option>
+                <option value="Academic Topper">Academic Topper</option>
                 <option value="Committee">Committee</option>
-                <option value="Hackathons">Hackathons</option>
+                <option value="Hackathon">Hackathon</option>
                 <option value="Sports">Sports</option>
                 <option value="Cultural">Cultural</option>
                 <option value="Technical">Technical</option>
-                <option value="Research Papers">Research Papers</option>
-                <option value="MOOCs">MOOCs</option>
-                <option value="Others">Others</option>
+                <option value="Other">Other</option>
               </select>
             </div>
 
@@ -438,8 +535,6 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
                 <option value="Winner">Winner</option>
                 <option value="Runner-up">Runner-up</option>
                 <option value="Participation">Participation</option>
-                <option value="Completed">Completed</option>
-                <option value="Published">Published</option>
               </select>
             </div>
 
@@ -474,14 +569,16 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
               />
             </div>
 
-            {/* Organizing Body */}
+            {/* Issued By */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Organizing Body</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Issued By / Organiser *</label>
               <input
                 type="text"
-                name="org"
-                value={formData.org}
+                name="issuedBy"
+                required
+                value={formData.issuedBy}
                 onChange={handleChange}
+                placeholder="e.g. Google, CSI, College Name"
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -500,10 +597,11 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Date (To)</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Date (To) *</label>
                 <input
                   type="date"
                   name="dateTo"
+                  required
                   value={formData.dateTo}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -615,6 +713,7 @@ export default function AdminAchievements() {
   const [limit, setLimit] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [deletingId, setDeletingId] = useState(null);
 
   // Modal State
   const [selectedAchievement, setSelectedAchievement] = useState(null);
@@ -695,6 +794,7 @@ export default function AdminAchievements() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this achievement?"))
       return;
+    setDeletingId(id);
     try {
       await achievementService.deleteAchievement(id);
       fetchAchievements(currentPage);
@@ -702,6 +802,8 @@ export default function AdminAchievements() {
     } catch (err) {
       console.error("Error deleting achievement:", err);
       toast.error("Failed to delete achievement.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -899,6 +1001,7 @@ export default function AdminAchievements() {
                 onView={handleView}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                isDeleting={deletingId === achievement?._id}
               />
             ))}
           </div>

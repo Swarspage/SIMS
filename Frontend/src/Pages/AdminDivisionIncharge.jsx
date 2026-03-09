@@ -72,7 +72,6 @@ function DetailModal({ incharge, onClose, onEditEmail }) {
                 <div className="bg-gradient-to-r from-violet-600 to-purple-700 px-6 py-4 flex items-center justify-between">
                     <div>
                         <h2 className="text-lg font-bold text-white">Division Incharge Details</h2>
-                        <p className="text-violet-200 text-xs mt-0.5">ID: {incharge._id}</p>
                     </div>
                     <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/20 text-white transition">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -339,7 +338,7 @@ export default function AdminDivisionIncharge() {
                 ...appliedFilters
             };
             const response = await divisionInchargeService.getAll(params);
-            
+
             const data = response?.data || [];
             const total = response?.total ?? data.length; // Fallback to array length if no pagination
             const totalP = response?.totalPages ?? (limit > 0 ? Math.ceil(total / limit) : 1);
