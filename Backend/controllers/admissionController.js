@@ -9,10 +9,23 @@ const {
   getAdmissionsValidation,
 } = require("../validators/admissionValidation");
 
-const exportToExcel = require('../helpers/excel/exportToExcel');
-const { transformAdmission, admissionColumnMap } = require('../helpers/excel/exportTransformers');
+const exportToExcel = require("../helpers/excel/exportToExcel");
+const { transformAdmission, admissionColumnMap } = require("../helpers/excel/exportTransformers");
 
-//create admission => student | admin | DI
+//helper
+//Build a 400 validation-error response from Joi details 
+const validationErrorResponse = (res, details) =>
+  res.status(400).json({
+    success: false,
+    message: "Validation failed",
+    errors: details.map((e) => ({
+      field: e.path.join("."),
+      message: e.message,
+    })),
+  });
+
+
+// create admission => student | admin | DI
 const createAdmission = async (req, res) => {
   try {
     const { error, value } = admissionCreateSchema.validate(req.body, {
@@ -20,31 +33,20 @@ const createAdmission = async (req, res) => {
       stripUnknown: true,
     });
 
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: error.details.map(e => ({
-          field: e.path.join("."),
-          message: e.message,
-        })),
-      });
-    }
+    if (error) return validationErrorResponse(res, error.details);
 
     let stuID;
 
     // Role-based ownership
     if (req.user.role === "student") {
       stuID = req.user.id;
-    }
-    else if (["admin", "divisionIncharge"].includes(req.user.role)) {
+    } else if (["admin", "divisionIncharge"].includes(req.user.role)) {
       stuID = req.body.studentId;
 
       if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
         return res.status(400).json({ success: false, message: "Invalid student ID" });
       }
-    }
-    else {
+    } else {
       return res.status(403).json({ success: false, message: "Unauthorized role" });
     }
 
@@ -60,23 +62,11 @@ const createAdmission = async (req, res) => {
     ) {
       return res.status(403).json({
         success: false,
-        message: "You can access students only from your division",
+        message: "You can only manage students within your own division",
       });
     }
 
-    // Prevent duplicate admission per academic year
-    // const existing = await Admission.findOne({
-    //   stuID,
-    //   academicYear: value.academicYear,
-    // });
-
-    // if (existing) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Admission already exists for this academic year",
-    //   });
-    // }
-
+    // All validated fields from value are explicitly assigned to the model
     const admission = new Admission({
       stuID,
       rollno: value.rollno,
@@ -85,8 +75,14 @@ const createAdmission = async (req, res) => {
       isScholarshipApplied: value.isScholarshipApplied,
       scholarshipNotAppliedReason: value.scholarshipNotAppliedReason,
       academicYear: value.academicYear,
+      isMahadbtFormSubmitted: value.isMahadbtFormSubmitted,
+      mahadbtFilledDate: value.mahadbtFilledDate,
+      mahadbtNotFilledReason: value.mahadbtNotFilledReason,
+      hasMigrationCertificate: value.hasMigrationCertificate,
+      migrationExpectedDate: value.migrationExpectedDate,
+      migrationNotAvailableReason: value.migrationNotAvailableReason,
 
-      // Server-controlled fields
+      // Sourced from the student record — not trusted from client input
       year: student.year,
       div: student.division,
     });
@@ -98,39 +94,37 @@ const createAdmission = async (req, res) => {
       message: "Admission submitted successfully",
       data: admission,
     });
-
   } catch (err) {
-    //duplicates academic yr protection (unique indx)
-    if(err.code === 11000) {
-      return res.status(400).json({
-        success: false ,
-        message: "Admission already exists for this academic year for the student."
+    // Unique index violation: duplicate admission for the same academic year
+    if (err.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Admission already exists for this academic year for the student.",
       });
     }
-    console.error("Create Admission Error:", err);
+    console.error("createAdmission error:", err);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-//get student their own admissions
+
+// get student their own admissions
 const getAdmissionsByStudent = async (req, res) => {
   try {
-    if(req.user.role !== "student") {
-      return res.status(403).json({ success : false , message : "Only students can access their admissions." });
-    }
-
-    const admissions = await Admission.find({ stuID : req.user.id }).sort({ createdAt : -1 });
+    const admissions = await Admission.find({ stuID: req.user.id }).sort({ createdAt: -1 });
     return res.status(200).json({ success: true, data: admissions });
   } catch (err) {
+    console.error("getAdmissionsByStudent error:", err);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-//update admission => student | pending only
+
+// update admission => student | admin | DI | pending only
 const updateAdmission = async (req, res) => {
   try {
-
-    if (!["student", "divisionIncharge"].includes(req.user.role)) {
+    // FIX: "admin" added to the allowed roles list
+    if (!["student", "admin", "divisionIncharge"].includes(req.user.role)) {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
@@ -138,20 +132,9 @@ const updateAdmission = async (req, res) => {
       abortEarly: false,
       stripUnknown: true,
     });
+    if (error) return validationErrorResponse(res, error.details);
 
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: error.details.map(e => ({
-          field: e.path.join("."),
-          message: e.message,
-        })),
-      });
-    }
-
-    const admission = await Admission.findById(req.params.id)
-      .populate("stuID", "year division");
+    const admission = await Admission.findById(req.params.id).populate("stuID", "year division");
 
     if (!admission) {
       return res.status(404).json({ success: false, message: "Admission not found" });
@@ -188,19 +171,17 @@ const updateAdmission = async (req, res) => {
       message: "Admission updated successfully",
       data: admission,
     });
-
   } catch (err) {
-    console.error("Update Admission Error:", err);
+    console.error("updateAdmission error:", err);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
 
-//delete admission => student | pending only
+// delete admission => student | DI | pending only
 const deleteAdmission = async (req, res) => {
   try {
-    const admission = await Admission.findById(req.params.id)
-      .populate("stuID", "year division");
+    const admission = await Admission.findById(req.params.id).populate("stuID", "year division");
 
     if (!admission) {
       return res.status(404).json({ success: false, message: "Admission not found" });
@@ -234,35 +215,28 @@ const deleteAdmission = async (req, res) => {
       success: true,
       message: "Admission deleted successfully",
     });
-  } catch {
+  } catch (err) {
+    console.error("deleteAdmission error:", err);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-//get all admissions with export => admin | DI
+
+// get all admissions with optional export => admin | DI
 const getAllAdmissions = async (req, res) => {
   try {
-    if (!["admin", "divisionIncharge"].includes(req.user.role)) {
-      return res.status(403).json({ success: false, message: "Unauthorized" });
-    }
-
     const { error, value } = getAdmissionsValidation.validate(req.query);
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: error.details[0].message,
-      });
-    }
+    if (error) return validationErrorResponse(res, error.details);
 
     const isExport = req.query.export === "true";
 
-    const page = Number(value.page || 1);
+    const page = Math.max(1, Number(value.page || 1));
     const limit = Math.min(Number(value.limit || 10), 50);
     const skip = (page - 1) * limit;
 
     const query = {};
 
-    //role scope restrictions
+    // Role-scope restrictions
     if (req.user.role === "divisionIncharge") {
       query.year = req.user.year;
       query.div = req.user.division;
@@ -272,17 +246,17 @@ const getAllAdmissions = async (req, res) => {
 
     if (value.academicYear) query.academicYear = value.academicYear;
 
-    //paid/unpaid filter
+    // Paid / unpaid filter
     if (value.filterPaid === "paid") {
       query.isFeesPaid = true;
-    } else if(value.filterPaid === "unpaid") {
+    } else if (value.filterPaid === "unpaid") {
       query.isFeesPaid = false;
     }
 
-
-    //search
+    // Search across roll number, course, and academic year
     if (value.search) {
-      const regex = new RegExp(value.search, "i");
+      const escaped = value.search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+      const regex = new RegExp(escaped, "i");
       query.$or = [
         { rollno: regex },
         { course: regex },
@@ -290,34 +264,25 @@ const getAllAdmissions = async (req, res) => {
       ];
     }
 
-    //export
+    // Export branch — capped at 5,000 rows to prevent memory overload
     if (isExport) {
       const admissions = await Admission.find(query)
-        .populate("stuID" , "name branch studentID")
+        .populate("stuID", "name branch studentID")
         .sort({ createdAt: -1 })
-        .limit(5000); // limit export to 5000 records to prevent overload
+        .limit(5000);
 
       const rows = admissions.map(transformAdmission);
-
-      const buffer = await exportToExcel(
-        rows,
-        "Admissions",
-        admissionColumnMap
-      );
+      const buffer = await exportToExcel(rows, "Admissions", admissionColumnMap);
 
       res.setHeader(
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       );
-      res.setHeader(
-        "Content-Disposition",
-        'attachment; filename="admissions.xlsx"'
-      );
-
+      res.setHeader("Content-Disposition", 'attachment; filename="admissions.xlsx"');
       return res.send(buffer);
     }
 
-    //pagination
+    // Paginated branch
     const [data, total] = await Promise.all([
       Admission.find(query)
         .populate("stuID", "name branch studentID")
@@ -332,53 +297,45 @@ const getAllAdmissions = async (req, res) => {
       data,
       total,
       page,
+      limit,
       totalPages: Math.ceil(total / limit),
     });
-
   } catch (err) {
-    console.error("GetAllAdmissions Error:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    console.error("getAllAdmissions error:", err);
+    return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
 
-//update admission status => admin | DI
+// update admission status => admin | DI
 const updateAdmissionStatus = async (req, res) => {
   try {
-    if(!["admin" , "divisionIncharge"].includes(req.user.role)) {
-      return res.status(403).json({ success : false , message : "Unauthorized" });
-    }
-
     const { error } = admissionStatusSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({ success: false, message: error.details[0].message });
-    }
+    if (error) return validationErrorResponse(res, error.details);
 
-    // const admission = await Admission.findByIdAndUpdate(
-    //   req.params.id,
-    //   { status: req.body.status },
-    //   { new: true }
-    // );
     const admission = await Admission.findById(req.params.id);
 
     if (!admission) {
       return res.status(404).json({ success: false, message: "Admission not found" });
     }
 
-
-    if(admission.status !== "pending") {
+    if (admission.status !== "pending") {
       return res.status(400).json({
-        success : false ,
-        message : "Cannot change status after approval or rejection"
+        success: false,
+        message: "Cannot change status after approval or rejection",
       });
     }
 
-    if(req.user.role === "divisionIncharge"  &&  (admission.year !== req.user.year  ||  admission.div !== req.user.division )) {
-      return res.status(403).json({ success: false, message: "Unauthorized access to admission" });
+    if (
+      req.user.role === "divisionIncharge" &&
+      (admission.year !== req.user.year || admission.div !== req.user.division)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized access to this admission",
+      });
     }
+
     admission.status = req.body.status;
     await admission.save();
 
@@ -387,31 +344,35 @@ const updateAdmissionStatus = async (req, res) => {
       message: `Admission ${req.body.status} successfully`,
       data: admission,
     });
-  } catch {
+  } catch (err) {
+    console.error("updateAdmissionStatus error:", err);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-//get unpaid students => admin | DI
+
+// get unpaid students => admin | DI
 const getUnpaidStudents = async (req, res) => {
   try {
-    if(!["admin" , "divisionIncharge"].includes(req.user.role)) {
-      return res.status(403).json({success : false , message: "Unauthorized"});
-    }
     const filter = { isFeesPaid: false };
 
+    // Division Incharge sees only their own division
     if (req.user.role === "divisionIncharge") {
       filter.year = req.user.year;
       filter.div = req.user.division;
     }
 
-    const unpaid = await Admission.find(filter).populate("stuID");
+    const unpaid = await Admission.find(filter)
+      .populate("stuID", "name studentID branch year division mobileNo email")
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({ success: true, data: unpaid });
-  } catch {
+  } catch (err) {
+    console.error("getUnpaidStudents error:", err);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
 
 module.exports = {
   createAdmission,
