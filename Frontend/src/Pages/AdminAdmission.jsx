@@ -5,7 +5,7 @@ import Pagination from "../Components/Common/Pagination";
 
 // ==================== COMPONENTS ====================
 
-function AdmissionCard({ admission, onView, onEdit, onDelete }) {
+function AdmissionCard({ admission, onView, onDelete, isDeleting }) {
   const getStatusColor = (status) => {
     switch (status) {
       case "approved":
@@ -81,20 +81,17 @@ function AdmissionCard({ admission, onView, onEdit, onDelete }) {
           >
             View Details
           </button>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => onEdit && onEdit(admission)}
-              className="px-3 py-2 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-amber-100 transition-colors border border-amber-200 active:scale-95"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => onDelete && onDelete(admission._id)}
-              className="px-3 py-2 bg-red-50 text-red-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-red-100 transition-colors border border-red-200 active:scale-95"
-            >
-              Delete
-            </button>
-          </div>
+          <button
+            onClick={() => onDelete && onDelete(admission._id)}
+            disabled={isDeleting}
+            className={`w-full px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors border active:scale-95 ${
+              isDeleting 
+                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
+                : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+            }`}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </button>
         </div>
       </div>
     </div>
@@ -257,197 +254,7 @@ function DetailModal({ admission, onClose }) {
   );
 }
 
-function EditModal({ admission, onClose, onSave }) {
-  const [formData, setFormData] = useState({
-    rollno: "",
-    course: "",
-    year: "",
-    div: "",
-    fees: "",
-    isScholarshipApplied: false,
-    scholarshipNotAppliedReason: "",
-    isMahadbtFormSubmitted: false,
-    mahadbtFilledDate: "",
-    mahadbtNotFilledReason: "",
-    hasMigrationCertificate: false,
-    migrationExpectedDate: "",
-    migrationNotAvailableReason: "",
-  });
-
-  const [loading, setLoading] = useState(false);
-
-  // Sync state when admission prop changes (fixes empty form bug)
-  useEffect(() => {
-    if (admission) {
-      setFormData({
-        rollno: admission.rollno || "",
-        course: admission.course || "",
-        year: admission.year || "",
-        div: admission.div || "",
-        fees: admission.fees || "",
-        isScholarshipApplied: admission.isScholarshipApplied || false,
-        scholarshipNotAppliedReason: admission.scholarshipNotAppliedReason || "",
-        isMahadbtFormSubmitted: admission.isMahadbtFormSubmitted || false,
-        mahadbtFilledDate: admission.mahadbtFilledDate ? new Date(admission.mahadbtFilledDate).toISOString().split('T')[0] : "",
-        mahadbtNotFilledReason: admission.mahadbtNotFilledReason || "",
-        hasMigrationCertificate: admission.hasMigrationCertificate || false,
-        migrationExpectedDate: admission.migrationExpectedDate ? new Date(admission.migrationExpectedDate).toISOString().split('T')[0] : "",
-        migrationNotAvailableReason: admission.migrationNotAvailableReason || "",
-      });
-    }
-  }, [admission]);
-
-  if (!admission) return null;
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    // Cleanup submission data based on toggles
-    const submissionData = { ...formData };
-    if (submissionData.isScholarshipApplied) delete submissionData.scholarshipNotAppliedReason;
-    if (submissionData.isMahadbtFormSubmitted) delete submissionData.mahadbtNotFilledReason;
-    else delete submissionData.mahadbtFilledDate;
-    if (submissionData.hasMigrationCertificate) delete submissionData.migrationNotAvailableReason;
-    else delete submissionData.migrationExpectedDate;
-
-    try {
-      await onSave(admission._id, submissionData);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp" onClick={e => e.stopPropagation()}>
-        <form onSubmit={handleSubmit}>
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-700 to-indigo-800 px-6 py-4 sticky top-0 z-10 flex justify-between items-center">
-            <div>
-              <h2 className="text-lg font-black text-white uppercase tracking-widest">Edit Admission</h2>
-              <p className="text-blue-100 text-[10px] font-mono opacity-80 mt-0.5">ID: {admission._id}</p>
-            </div>
-            <button onClick={onClose} type="button" className="text-white/70 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
-          </div>
-
-          <div className="p-6 space-y-8">
-            {/* Section 1: Basic Info */}
-            <div className="space-y-4">
-               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Academic Information</h4>
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="col-span-2">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5 tracking-wider">Course Name</label>
-                    <input type="text" name="course" value={formData.course} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5 tracking-wider">Year</label>
-                    <select name="year" value={formData.year} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold">
-                       <option value="FY">FY</option>
-                       <option value="SY">SY</option>
-                       <option value="TY">TY</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5 tracking-wider">Div</label>
-                    <input type="text" name="div" value={formData.div} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold uppercase" maxLength="2" />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5 tracking-wider">Roll No</label>
-                    <input type="text" name="rollno" value={formData.rollno} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5 tracking-wider">Fees Amout (₹)</label>
-                    <input type="number" name="fees" value={formData.fees} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" />
-                  </div>
-               </div>
-            </div>
-
-            {/* Section 2: Scholarship */}
-            <div className="space-y-4">
-               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Scholarship Status</h4>
-               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <input type="checkbox" name="isScholarshipApplied" id="isScholarshipApplied" checked={formData.isScholarshipApplied} onChange={handleChange} className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                    <label htmlFor="isScholarshipApplied" className="text-sm font-bold text-slate-700 uppercase tracking-tight">Scholarship Applied</label>
-                  </div>
-                  {!formData.isScholarshipApplied && (
-                    <div className="animate-fadeIn">
-                      <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Reason for Not Applying *</label>
-                      <textarea name="scholarshipNotAppliedReason" value={formData.scholarshipNotAppliedReason} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm min-h-[80px]" placeholder="Explain why scholarship wasn't applied..." />
-                    </div>
-                  )}
-               </div>
-            </div>
-
-            {/* Section 3: MahaDBT */}
-            <div className="space-y-4">
-               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">MahaDBT Integration</h4>
-               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <input type="checkbox" name="isMahadbtFormSubmitted" id="isMahadbtFormSubmitted" checked={formData.isMahadbtFormSubmitted} onChange={handleChange} className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                    <label htmlFor="isMahadbtFormSubmitted" className="text-sm font-bold text-slate-700 uppercase tracking-tight">MahaDBT Form Submitted</label>
-                  </div>
-                  {formData.isMahadbtFormSubmitted ? (
-                    <div className="animate-fadeIn">
-                      <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Date Submitted *</label>
-                      <input type="date" name="mahadbtFilledDate" value={formData.mahadbtFilledDate} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" />
-                    </div>
-                  ) : (
-                    <div className="animate-fadeIn">
-                       <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Reason for Not Submitting *</label>
-                       <textarea name="mahadbtNotFilledReason" value={formData.mahadbtNotFilledReason} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm min-h-[80px]" placeholder="Reasons for pending MahaDBT form..." />
-                    </div>
-                  )}
-               </div>
-            </div>
-
-            {/* Section 4: Migration */}
-            <div className="space-y-4">
-               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Migration Certificate</h4>
-               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <input type="checkbox" name="hasMigrationCertificate" id="hasMigrationCertificate" checked={formData.hasMigrationCertificate} onChange={handleChange} className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                    <label htmlFor="hasMigrationCertificate" className="text-sm font-bold text-slate-700 uppercase tracking-tight">Migration Certificate Available</label>
-                  </div>
-                  {formData.hasMigrationCertificate ? (
-                    <div className="animate-fadeIn">
-                      <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Expected / Submission Date *</label>
-                      <input type="date" name="migrationExpectedDate" value={formData.migrationExpectedDate} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" />
-                    </div>
-                  ) : (
-                    <div className="animate-fadeIn">
-                       <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Reason Not Available *</label>
-                       <textarea name="migrationNotAvailableReason" value={formData.migrationNotAvailableReason} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm min-h-[80px]" placeholder="Explain why migration certificate is missing..." />
-                    </div>
-                  )}
-               </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 rounded-b-2xl">
-            <button type="button" onClick={onClose} className="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-50 transition-all shadow-sm">Cancel</button>
-            <button type="submit" disabled={loading} className="px-8 py-2.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center gap-2">
-              {loading && <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />}
-              Save Updates
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
+// EditModal removed as per requirement (Admin 403 issue)
 
 // ==================== MAIN PAGE ====================
 
@@ -465,14 +272,13 @@ export default function AdminAdmission() {
   const [mahadbtFilter, setMahadbtFilter] = useState("");
   const [migrationFilter, setMigrationFilter] = useState("");
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
 
   const [selectedAdmission, setSelectedAdmission] = useState(null); // For View
-  const [editingAdmission, setEditingAdmission] = useState(null); // For Edit
+  const [deletingIds, setDeletingIds] = useState([]); // Track IDs currently being deleted
 
   useEffect(() => {
     fetchAdmissions(currentPage);
@@ -518,7 +324,10 @@ export default function AdminAdmission() {
 
   const handleDeleteAdmission = async (id) => {
     if (!window.confirm("Are you sure you want to delete this admission? This action cannot be undone.")) return;
+    
+    setDeletingIds(prev => [...prev, id]);
     const toastId = toast.loading("Deleting admission...");
+    
     try {
       await admissionService.deleteAdmission(id);
       fetchAdmissions(currentPage);
@@ -527,25 +336,8 @@ export default function AdminAdmission() {
       console.error(err);
       const errorMessage = err.response?.data?.message || err.response?.data?.errors?.[0]?.message || "Failed to delete admission";
       toast.error(errorMessage, { id: toastId });
-    }
-  };
-
-  const handleUpdateAdmission = async (id, updatedData) => {
-    const toastId = toast.loading("Updating admission...");
-    try {
-      await admissionService.updateAdmission(id, updatedData);
-
-      // Update local state without refetching
-      setAdmissions(prev => prev.map(a =>
-        a._id === id ? { ...a, ...updatedData } : a
-      ));
-
-      setEditingAdmission(null); // Close modal
-      toast.success("Admission updated successfully", { id: toastId });
-    } catch (err) {
-      console.error(err);
-      const errorMessage = err.response?.data?.message || err.response?.data?.errors?.[0]?.message || "Failed to update admission";
-      toast.error(errorMessage, { id: toastId });
+    } finally {
+      setDeletingIds(prev => prev.filter(deletingId => deletingId !== id));
     }
   };
 
@@ -653,43 +445,6 @@ export default function AdminAdmission() {
           <option value="false">Unavailable</option>
         </select>
 
-        <input
-          type="text"
-          placeholder="Division (e.g. A)"
-          value={divFilter}
-          onChange={(e) => setDivFilter(e.target.value)}
-          className="w-32 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-        />
-
-        <select
-          value={scholarshipFilter}
-          onChange={(e) => setScholarshipFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-        >
-          <option value="">Scholarship Status</option>
-          <option value="true">Applied</option>
-          <option value="false">Not Applied</option>
-        </select>
-
-        <select
-          value={mahadbtFilter}
-          onChange={(e) => setMahadbtFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-        >
-          <option value="">MahaDBT Status</option>
-          <option value="true">Submitted</option>
-          <option value="false">Pending</option>
-        </select>
-
-        <select
-          value={migrationFilter}
-          onChange={(e) => setMigrationFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-        >
-          <option value="">Migration Status</option>
-          <option value="true">Available</option>
-          <option value="false">Unavailable</option>
-        </select>
 
         <div className="flex gap-3">
           <button
@@ -757,8 +512,8 @@ export default function AdminAdmission() {
                 key={admission._id}
                 admission={admission}
                 onView={setSelectedAdmission}
-                onEdit={setEditingAdmission}
                 onDelete={handleDeleteAdmission}
+                isDeleting={deletingIds.includes(admission._id)}
               />
             ))}
           </div>
@@ -786,11 +541,6 @@ export default function AdminAdmission() {
         onClose={() => setSelectedAdmission(null)}
       />
 
-      <EditModal
-        admission={editingAdmission}
-        onClose={() => setEditingAdmission(null)}
-        onSave={handleUpdateAdmission}
-      />
       <Toaster position="bottom-right" />
     </main>
   );

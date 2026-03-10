@@ -484,6 +484,27 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
         await internshipService.updateInternship(internship._id, data);
         toast.success("Internship updated successfully!");
       } else {
+        // FRONTEND DUPLICATE CHECK
+        try {
+          const existingRes = await internshipService.getStudentInternshipsByAdmin(stuIDToUse);
+          const studentInternships = existingRes.data || [];
+          
+          const isDuplicate = studentInternships.some(item => 
+            item.companyName?.trim().toLowerCase() === formData.companyName.trim().toLowerCase() &&
+            new Date(item.startDate).toISOString().split('T')[0] === formData.startDate
+          );
+
+          if (isDuplicate) {
+            toast.error("An internship with this company and start date already exists for this student.");
+            setSaving(false);
+            return;
+          }
+        } catch (err) {
+          console.error("Error checking for duplicate internships:", err);
+          // Proceed anyway if check fails, or stop? 
+          // Better to log it and proceed if it's just a frontend helper.
+        }
+
         await internshipService.createInternship(data);
         toast.success("Internship added successfully!");
       }

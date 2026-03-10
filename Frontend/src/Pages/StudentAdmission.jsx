@@ -83,26 +83,50 @@ export default function StudentAdmission() {
     setSubmitting(true);
 
     try {
-      // Filter out fields not allowed by backend validation
-      const {
-        admissionDate, // Backend might auto-set this, but we send if editable
-        isFeesPaid,    // Some logic might be backend only, but keeping structure
-        ...baseData
-      } = formData;
+      // Prepare payload - adhering strictly to backend Joi validation (admissionValidation.js)
+      const payload = {
+        rollno: String(formData.rollno).trim(),
+        year: formData.year || undefined, // Backend allows optional, but string.empty fails
+        div: formData.div ? formData.div.trim() : "",
+        course: formData.course ? formData.course.trim() : "Computer Engineering",
+        academicYear: formData.academicYear ? formData.academicYear.trim() : "",
+        fees: Number(formData.fees), // Backend requires Joi.number()
+        isScholarshipApplied: !!formData.isScholarshipApplied,
+        isMahadbtFormSubmitted: !!formData.isMahadbtFormSubmitted,
+        hasMigrationCertificate: !!formData.hasMigrationCertificate,
+      };
 
-      // Prepare payload - include fees/scholarship as per schema requirements
-      const payload = { ...baseData };
+      // Conditional Logic: Backend uses Joi.forbidden() for mutually exclusive fields
+      
+      // Scholarship logic
+      if (!payload.isScholarshipApplied) {
+        payload.scholarshipNotAppliedReason = formData.scholarshipNotAppliedReason || "";
+      }
 
-      // Handle conditional required fields to avoid sending empty strings causing validation errors
-      if (!payload.isMahadbtFormSubmitted) delete payload.mahadbtFilledDate;
-      if (payload.isMahadbtFormSubmitted) delete payload.mahadbtNotFilledReason;
-      if (!payload.hasMigrationCertificate) delete payload.migrationExpectedDate;
-      if (payload.hasMigrationCertificate) delete payload.migrationNotAvailableReason;
-      if (payload.isScholarshipApplied) delete payload.scholarshipNotAppliedReason;
+      // MahaDBT logic
+      if (payload.isMahadbtFormSubmitted) {
+        payload.mahadbtFilledDate = formData.mahadbtFilledDate || undefined;
+      } else {
+        payload.mahadbtNotFilledReason = formData.mahadbtNotFilledReason || "";
+      }
+
+      // Migration logic
+      if (payload.hasMigrationCertificate) {
+        payload.migrationExpectedDate = formData.migrationExpectedDate || undefined;
+      } else {
+        payload.migrationNotAvailableReason = formData.migrationNotAvailableReason || "";
+      }
+
+      // Cleanup undefined/empty strings that might trigger Joi errors on optional fields
+      Object.keys(payload).forEach(key => {
+        if (payload[key] === undefined || payload[key] === null) {
+          delete payload[key];
+        }
+      });
 
       if (hasData && admissionId) {
-        // Update
-        // Remove academicYear if it's not allowed in update (per previous code analysis)
+        // Update: Backend update schema is even stricter (admissionUpdateSchema)
+        // academicYear is NOT in update schema, so must be removed
         const { academicYear, ...updateData } = payload;
         await admissionService.updateAdmission(admissionId, updateData);
         toast.success("Admission updated successfully!");
@@ -119,11 +143,16 @@ export default function StudentAdmission() {
     } catch (err) {
       console.error("Error saving admission:", err);
       const resData = err.response?.data;
-      let errorMsg = resData?.message || err.message || "Failed to save admission.";
+      
+      // Improved error reporting for Joi validation failures
+      let errorMsg = resData?.message || "Failed to save admission.";
 
       if (resData?.errors && Array.isArray(resData.errors)) {
-        const details = resData.errors.map(e => `${e.field}: ${e.message}`).join(", ");
-        errorMsg += ` (${details})`;
+        // Joi returns details array in 'errors'
+        const details = resData.errors.map(e => e.message).join(" | ");
+        errorMsg = `Validation Error: ${details}`;
+      } else if (resData?.message) {
+        errorMsg = resData.message;
       }
 
       toast.error(errorMsg);

@@ -122,30 +122,38 @@ function SidebarInner({ pathname, onLinkClick, onLogout }) {
 
       {/* Nav Section - scrollable */}
       <nav className="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-1.5 custom-scrollbar">
-        {menuItems.map((item, index) => {
-          const isActive = pathname === item.path;
-          return (
-            <Link
-              key={item.name}
-              to={item.path}
-              onClick={onLinkClick}
-              style={{ animationDelay: `${index * 50}ms` }}
-              className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 transform active:scale-95
+        {menuItems
+          .filter((item) => {
+            const role = localStorage.getItem("role");
+            if (role === "division" && item.name === "Division Incharges") {
+              return false;
+            }
+            return true;
+          })
+          .map((item, index) => {
+            const isActive = pathname === item.path;
+            return (
+              <Link
+                key={item.name}
+                to={item.path}
+                onClick={onLinkClick}
+                style={{ animationDelay: `${index * 50}ms` }}
+                className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 transform active:scale-95
                 ${isActive
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-200/50 ring-1 ring-blue-700/10"
-                  : "text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-sm hover:translate-x-1"
-                }
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200/50 ring-1 ring-blue-700/10"
+                    : "text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-sm hover:translate-x-1"
+                  }
                 animate-in fade-in slide-in-from-left-4 duration-500`}
-            >
-              <span className={`flex-shrink-0 transition-transform duration-300 group-hover:scale-110 ${isActive ? "drop-shadow-sm" : ""}`}>
-                {getIcon(item.name, isActive)}
-              </span>
-              <span className="truncate transition-all duration-300 opacity-100">
-                {item.name}
-              </span>
-            </Link>
-          );
-        })}
+              >
+                <span className={`flex-shrink-0 transition-transform duration-300 group-hover:scale-110 ${isActive ? "drop-shadow-sm" : ""}`}>
+                  {getIcon(item.name, isActive)}
+                </span>
+                <span className="truncate transition-all duration-300 opacity-100">
+                  {item.name}
+                </span>
+              </Link>
+            );
+          })}
       </nav>
 
       {/* Logout Section */}

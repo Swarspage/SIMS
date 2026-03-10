@@ -387,12 +387,22 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
     useEffect(() => {
         if (isOpen) {
             if (record) {
+                // Ensure kts and marks are copied properly
+                const initialKts = Array.isArray(record.kts) ? [...record.kts] : [];
+                const initialMarks = Array.isArray(record.marks)
+                    ? record.marks.map((m) => ({ ...m }))
+                    : [];
+
                 setFormData({
-                    studentId: record?.stuID?.studentID || record?.studentID || record?.studentId || (typeof record?.stuID === "string" ? record.stuID : ""),
+                    studentId: 
+                      record?.stuID?.studentID || 
+                      record?.studentID || 
+                      record?.studentId || 
+                      (typeof record?.stuID === "string" ? record.stuID : ""),
                     semester: record.semester || "",
                     attendance: record.attendance || "",
-                    kts: record.kts ? [...record.kts] : [],
-                    marks: record.marks ? [...record.marks] : [],
+                    kts: initialKts,
+                    marks: initialMarks,
                     journalTaken: record.journalTaken || false,
                     examFormFilled: record.examFormFilled || false,
                 });
@@ -420,13 +430,16 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
         setFormData((prev) => ({ ...prev, kts: [...prev.kts, ""] }));
     };
     const handleKtChange = (index, value) => {
-        const newKts = [...formData.kts];
-        newKts[index] = value;
-        setFormData((prev) => ({ ...prev, kts: newKts }));
+        setFormData((prev) => ({
+            ...prev,
+            kts: prev.kts.map((kt, i) => (i === index ? value : kt)),
+        }));
     };
     const handleRemoveKt = (index) => {
-        const newKts = formData.kts.filter((_, i) => i !== index);
-        setFormData((prev) => ({ ...prev, kts: newKts }));
+        setFormData((prev) => ({
+            ...prev,
+            kts: prev.kts.filter((_, i) => i !== index),
+        }));
     };
 
     // Marks Handlers
@@ -434,13 +447,18 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
         setFormData((prev) => ({ ...prev, marks: [...prev.marks, { subject: "", score: "", outOf: "" }] }));
     };
     const handleMarkChange = (index, field, value) => {
-        const newMarks = [...formData.marks];
-        newMarks[index][field] = value;
-        setFormData((prev) => ({ ...prev, marks: newMarks }));
+        setFormData((prev) => ({
+            ...prev,
+            marks: prev.marks.map((m, i) =>
+                i === index ? { ...m, [field]: value } : m
+            ),
+        }));
     };
     const handleRemoveMark = (index) => {
-        const newMarks = formData.marks.filter((_, i) => i !== index);
-        setFormData((prev) => ({ ...prev, marks: newMarks }));
+        setFormData((prev) => ({
+            ...prev,
+            marks: prev.marks.filter((_, i) => i !== index),
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -719,6 +737,37 @@ export default function AdminSemesterInfo() {
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [recordToEdit, setRecordToEdit] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    // Helper to get full record since list API lacks marks
+    const fetchFullRecord = async (record) => {
+        const studentDbId = record.stuID?._id || record.stuID;
+        if (!studentDbId) return record;
+
+        try {
+            setRefreshing(true);
+            const res = await semInfoService.getStudentSemInfo(studentDbId);
+            const fullRecords = res.data || [];
+            const matchingRecord = fullRecords.find(r => r._id === record._id);
+            return matchingRecord || record;
+        } catch (err) {
+            console.error("Error refetching full record:", err);
+            return record;
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
+    const handleView = async (record) => {
+        const full = await fetchFullRecord(record);
+        setSelectedItem(full);
+    };
+
+    const handleEdit = async (record) => {
+        const full = await fetchFullRecord(record);
+        setRecordToEdit(full);
+        setIsFormModalOpen(true);
+    };
 
     useEffect(() => {
         fetchAll(currentPage);
@@ -800,7 +849,16 @@ export default function AdminSemesterInfo() {
     const filtered = records;
 
     return (
-        <main className="p-8 bg-slate-50 min-h-screen">
+        <main className="p-8 bg-slate-50 min-h-screen relative">
+            {/* Loading Overlay for Refetching */}
+            {refreshing && (
+                <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center">
+                    <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center">
+                        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+                        <p className="text-sm font-bold text-slate-700 font-sans">Syncing Detailed Records...</p>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-slate-900">Semester Information</h1>
@@ -1002,8 +1060,8 @@ export default function AdminSemesterInfo() {
                                 key={record._id}
                                 record={record}
                                 isDeleting={deletingId === record._id}
-                                onView={setSelectedItem}
-                                onEdit={(rec) => { setRecordToEdit(rec); setIsFormModalOpen(true); }}
+                                 onView={handleView}
+                                 onEdit={handleEdit}
                                 onDelete={handleDelete}
                             />
                         ))}
