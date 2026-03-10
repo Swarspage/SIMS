@@ -38,7 +38,12 @@ function AddStudentModal({ isOpen, onClose, onAdded }) {
       onClose();
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Failed to add student.");
+      const resData = err.response?.data;
+      if (resData?.errors && Array.isArray(resData.errors)) {
+        resData.errors.forEach((e) => toast.error(e.message || "Validation error"));
+      } else {
+        toast.error(resData?.message || "Failed to add student.");
+      }
     } finally {
       setSaving(false);
     }
@@ -164,7 +169,12 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
       onClose();
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Failed to update student.");
+      const resData = err.response?.data;
+      if (resData?.errors && Array.isArray(resData.errors)) {
+        resData.errors.forEach((e) => toast.error(e.message || "Validation error"));
+      } else {
+        toast.error(resData?.message || "Failed to update student.");
+      }
     } finally {
       setSaving(false);
     }
@@ -847,7 +857,7 @@ export default function AdminStudentSection() {
       const response = await studentService.importStudentIDs(file);
       const inserted = response?.summary?.inserted ?? "?";
       const skipped = response?.summary?.alreadyExists ?? 0;
-      toast.success(`✅ Student IDs imported! Created: ${inserted}${ skipped ? `, Skipped (already exist): ${skipped}` : ""}.`);
+      toast.success(`✅ Student IDs imported! Created: ${inserted}${skipped ? `, Skipped (already exist): ${skipped}` : ""}.`);
       fetchStudents();
       e.target.value = "";
     } catch (err) {

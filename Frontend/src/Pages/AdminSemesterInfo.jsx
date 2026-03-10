@@ -34,7 +34,7 @@ function DetailModal({ record, onClose }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
-      
+
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col relative z-10 animate-in fade-in zoom-in duration-300">
         {/* Header */}
         <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-20">
@@ -51,7 +51,7 @@ function DetailModal({ record, onClose }) {
         <div className="flex-grow overflow-y-auto">
           <div className="p-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              
+
               {/* Left Column: Student & Summary */}
               <div className="lg:col-span-4 space-y-6">
                 {/* Student Profile Card */}
@@ -79,26 +79,26 @@ function DetailModal({ record, onClose }) {
                     </div>
                   ) : (
                     <div className="text-center py-4">
-                       <p className="text-sm text-slate-400">Student Profile Not Found</p>
+                      <p className="text-sm text-slate-400">Student Profile Not Found</p>
                     </div>
                   )}
                 </div>
 
                 {/* Performance Status Card */}
                 <div className={`rounded-3xl p-6 text-white shadow-xl relative overflow-hidden ${attendancePct >= 75 ? 'bg-indigo-600 shadow-indigo-100' : 'bg-red-600 shadow-red-100'}`}>
-                   <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
-                   <div className="relative z-10 text-center">
-                      <div className="text-4xl mb-3 drop-shadow-lg">
-                        {attendancePct >= 75 ? "🎯" : "⚠️"}
-                      </div>
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70 mb-1 tracking-widest">Attendance Status</h4>
-                      <p className="text-3xl font-black tracking-tight mb-4">{attendancePct}%</p>
-                      
-                      <div className="flex flex-col gap-2 items-center text-xs font-bold bg-black/10 rounded-2xl p-4">
-                         <p className="text-white/70 uppercase text-[10px] tracking-widest">Compliance Status</p>
-                         <p className="text-center">{attendancePct >= 75 ? "Regular Attendance" : "Defaulter Warning!"}</p>
-                      </div>
-                   </div>
+                  <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
+                  <div className="relative z-10 text-center">
+                    <div className="text-4xl mb-3 drop-shadow-lg">
+                      {attendancePct >= 75 ? "🎯" : "⚠️"}
+                    </div>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70 mb-1 tracking-widest">Attendance Status</h4>
+                    <p className="text-3xl font-black tracking-tight mb-4">{attendancePct}%</p>
+
+                    <div className="flex flex-col gap-2 items-center text-xs font-bold bg-black/10 rounded-2xl p-4">
+                      <p className="text-white/70 uppercase text-[10px] tracking-widest">Compliance Status</p>
+                      <p className="text-center">{attendancePct >= 75 ? "Regular Attendance" : "Defaulter Warning!"}</p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Summary Grid */}
@@ -119,79 +119,79 @@ function DetailModal({ record, onClose }) {
 
                 {/* Compliance Badges */}
                 <div className="space-y-3">
-                   <div className={`p-4 rounded-2xl border flex items-center justify-between font-black italic tracking-tighter ${record.journalTaken ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
-                      <span className="text-[10px] uppercase tracking-widest">Journal Status</span>
-                      <span className="text-sm">{record.journalTaken ? "VERIFIED" : "PENDING"}</span>
-                   </div>
-                   <div className={`p-4 rounded-2xl border flex items-center justify-between font-black italic tracking-tighter ${record.examFormFilled ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
-                      <span className="text-[10px] uppercase tracking-widest">Exam Form</span>
-                      <span className="text-sm">{record.examFormFilled ? "SUBMITTED" : "NOT FILLED"}</span>
-                   </div>
+                  <div className={`p-4 rounded-2xl border flex items-center justify-between font-black italic tracking-tighter ${record.journalTaken ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
+                    <span className="text-[10px] uppercase tracking-widest">Journal Status</span>
+                    <span className="text-sm">{record.journalTaken ? "VERIFIED" : "PENDING"}</span>
+                  </div>
+                  <div className={`p-4 rounded-2xl border flex items-center justify-between font-black italic tracking-tighter ${record.examFormFilled ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
+                    <span className="text-[10px] uppercase tracking-widest">Exam Form</span>
+                    <span className="text-sm">{record.examFormFilled ? "SUBMITTED" : "NOT FILLED"}</span>
+                  </div>
                 </div>
               </div>
 
               {/* Right Column: Detailed Marks & Subjects */}
               <div className="lg:col-span-8 space-y-6">
                 <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
-                   <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                      <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest">Course Subject Performance</h4>
-                      <span className="px-2 py-1 bg-white text-[10px] font-black text-slate-500 rounded border border-slate-200">SEM {record.semester}</span>
-                   </div>
-                   
-                   <div className="overflow-x-auto">
-                      <table className="w-full text-left">
-                        <thead>
-                          <tr className="border-b border-slate-50">
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject Name</th>
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Score</th>
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Out Of</th>
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Percentage</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                          {record.marks?.map((m, i) => {
-                            const pct = m.outOf > 0 ? ((m.score / m.outOf) * 100).toFixed(1) : "0";
-                            return (
-                              <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
-                                <td className="px-6 py-4">
-                                  <p className="text-sm font-bold text-slate-900">{m.subject}</p>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                  <span className="text-sm font-black text-slate-700">{m.score}</span>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                  <span className="text-sm font-bold text-slate-400">{m.outOf}</span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                  <span className={`text-xs font-black italic tracking-tighter ${pct >= 40 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                    {pct}%
-                                  </span>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                        <tfoot className="bg-slate-50/80 border-t border-slate-100">
-                          <tr>
-                            <td className="px-6 py-4 text-sm font-black text-slate-900">Aggregate Performance</td>
-                            <td className="px-6 py-4 text-center text-sm font-black text-slate-900">{totalScore}</td>
-                            <td className="px-6 py-4 text-center text-sm font-bold text-slate-400">{totalOutOf}</td>
-                            <td className="px-6 py-4 text-right">
-                              <span className="text-sm font-black text-indigo-600 italic underline decoration-indigo-200">
-                                {totalOutOf > 0 ? ((totalScore / totalOutOf) * 100).toFixed(1) : "0"}%
-                              </span>
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                   </div>
+                  <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest">Course Subject Performance</h4>
+                    <span className="px-2 py-1 bg-white text-[10px] font-black text-slate-500 rounded border border-slate-200">SEM {record.semester}</span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-slate-50">
+                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject Name</th>
+                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Score</th>
+                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Out Of</th>
+                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Percentage</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {record.marks?.map((m, i) => {
+                          const pct = m.outOf > 0 ? ((m.score / m.outOf) * 100).toFixed(1) : "0";
+                          return (
+                            <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
+                              <td className="px-6 py-4">
+                                <p className="text-sm font-bold text-slate-900">{m.subject}</p>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <span className="text-sm font-black text-slate-700">{m.score}</span>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <span className="text-sm font-bold text-slate-400">{m.outOf}</span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <span className={`text-xs font-black italic tracking-tighter ${pct >= 40 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                  {pct}%
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot className="bg-slate-50/80 border-t border-slate-100">
+                        <tr>
+                          <td className="px-6 py-4 text-sm font-black text-slate-900">Aggregate Performance</td>
+                          <td className="px-6 py-4 text-center text-sm font-black text-slate-900">{totalScore}</td>
+                          <td className="px-6 py-4 text-center text-sm font-bold text-slate-400">{totalOutOf}</td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="text-sm font-black text-indigo-600 italic underline decoration-indigo-200">
+                              {totalOutOf > 0 ? ((totalScore / totalOutOf) * 100).toFixed(1) : "0"}%
+                            </span>
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
                 </div>
 
                 {record.kts?.length > 0 && (
                   <div className="bg-red-50/50 border border-red-100 rounded-3xl p-6">
                     <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-4 flex items-center gap-2">
-                       <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span>
-                       Active backlog / KT Subjects
+                      <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span>
+                      Active backlog / KT Subjects
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {record.kts.map((kt, i) => (
@@ -254,11 +254,11 @@ function SemInfoCard({ record, onView, onDelete, onEdit, isDeleting }) {
   const studentID = student?.studentID || record?.studentID || "N/A";
   const studentYear = student?.year || (typeof record.stuID === 'object' ? record.stuID?.year : "N/A");
   const studentNameRaw = student?.name;
-  const studentName = studentNameRaw && 
+  const studentName = studentNameRaw &&
     `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim() !== ""
     ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim()
     : null;
-  
+
   const totalScore = record.marks?.reduce((s, m) => s + m.score, 0) ?? 0;
   const totalOutOf = record.marks?.reduce((s, m) => s + m.outOf, 0) ?? 0;
   const attendancePct = record.attendance || 0;
@@ -267,78 +267,72 @@ function SemInfoCard({ record, onView, onDelete, onEdit, isDeleting }) {
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
       {/* Visual Indicator Top Bar */}
       <div className={`h-1.5 bg-gradient-to-r ${attendancePct >= 75 ? 'from-blue-500 to-indigo-600' : 'from-red-500 to-orange-600'}`}></div>
-      
+
       <div className="p-4 flex flex-col flex-grow">
         {/* Top Info: Semester & Chips */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex gap-1.5">
-             <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded uppercase tracking-tighter border border-indigo-100">
-               SEM {record.semester}
-             </span>
-             {record.isDefaulter && (
-               <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-black rounded uppercase tracking-tighter border border-red-200">
-                 DEFAULTER
-               </span>
-             )}
+            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded uppercase tracking-tighter border border-indigo-100">
+              SEM {record.semester}
+            </span>
+            {record.isDefaulter && (
+              <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-black rounded uppercase tracking-tighter border border-red-200">
+                DEFAULTER
+              </span>
+            )}
           </div>
           <span className="text-[10px] font-black text-slate-400 tracking-widest">{studentYear}</span>
         </div>
 
         {/* Student Name & ID */}
         <div className="mb-4">
-           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Student Info</p>
-           {loadingName ? (
-             <div className="h-5 bg-slate-100 animate-pulse rounded w-3/4 mb-1"></div>
-           ) : (
-             <h4 className="text-sm font-black text-slate-900 line-clamp-1">
-               {studentName || "Name Not Registered"}
-             </h4>
-           )}
-           <div className="flex items-center gap-1.5 mt-0.5">
-             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">ID:</span>
-             <span className="text-[10px] font-bold text-indigo-600">{studentID}</span>
-           </div>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Student Info</p>
+          {loadingName ? (
+            <div className="h-5 bg-slate-100 animate-pulse rounded w-3/4 mb-1"></div>
+          ) : (
+            <h4 className="text-sm font-black text-slate-900 line-clamp-1">
+              {studentName || "Name Not Registered"}
+            </h4>
+          )}
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">ID:</span>
+            <span className="text-[10px] font-bold text-indigo-600">{studentID}</span>
+          </div>
         </div>
 
         <div className="h-px bg-slate-100 mb-4" />
 
         {/* Vital Stats Grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-           <div>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Attendance</p>
-              <div className="flex items-center gap-1.5">
-                 <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all duration-500 ${attendancePct >= 75 ? 'bg-blue-600' : 'bg-red-500'}`} style={{ width: `${attendancePct}%` }}></div>
-                 </div>
-                 <span className={`text-[11px] font-black ${attendancePct >= 75 ? 'text-blue-600' : 'text-red-500'}`}>{attendancePct}%</span>
+          <div>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Attendance</p>
+            <div className="flex items-center gap-1.5">
+              <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className={`h-full rounded-full transition-all duration-500 ${attendancePct >= 75 ? 'bg-blue-600' : 'bg-red-500'}`} style={{ width: `${attendancePct}%` }}></div>
               </div>
-           </div>
-           <div>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Backlogs</p>
-              <p className={`text-[11px] font-black ${record.kts?.length > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                 {record.kts?.length || 0} Subjects
-              </p>
-           </div>
+              <span className={`text-[11px] font-black ${attendancePct >= 75 ? 'text-blue-600' : 'text-red-500'}`}>{attendancePct}%</span>
+            </div>
+          </div>
+          <div>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Backlogs</p>
+            <p className={`text-[11px] font-black ${record.kts?.length > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+              {record.kts?.length || 0} Subjects
+            </p>
+          </div>
         </div>
 
         {/* Compliance Icons/Chips */}
         <div className="flex gap-2 mb-4">
-           <div className={`flex-1 px-2 py-1 rounded-md text-[9px] font-black italic text-center border ${record.journalTaken ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
-              JRN: {record.journalTaken ? 'YES' : 'PEND'}
-           </div>
-           <div className={`flex-1 px-2 py-1 rounded-md text-[9px] font-black italic text-center border ${record.examFormFilled ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
-              EXM: {record.examFormFilled ? 'FILL' : 'PEND'}
-           </div>
-        </div>
-
-        {/* Performance Metric */}
-        <div className="mt-auto pt-3 border-t border-slate-50 flex items-center justify-between">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Score Performance</p>
-            <span className="text-xs font-black text-indigo-600">{totalScore}/{totalOutOf}</span>
+          <div className={`flex-1 px-2 py-1 rounded-md text-[9px] font-black italic text-center border ${record.journalTaken ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
+            JRN: {record.journalTaken ? 'YES' : 'PEND'}
+          </div>
+          <div className={`flex-1 px-2 py-1 rounded-md text-[9px] font-black italic text-center border ${record.examFormFilled ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
+            EXM: {record.examFormFilled ? 'FILL' : 'PEND'}
+          </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-4 space-y-2">
+        <div className=" space-y-2">
           <button
             onClick={() => onView && onView(record)}
             className="w-full px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
@@ -355,11 +349,10 @@ function SemInfoCard({ record, onView, onDelete, onEdit, isDeleting }) {
             <button
               onClick={() => onDelete && onDelete(record._id)}
               disabled={isDeleting}
-              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${
-                isDeleting 
-                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
-                  : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
-              }`}
+              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${isDeleting
+                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
+                }`}
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </button>
@@ -372,726 +365,726 @@ function SemInfoCard({ record, onView, onDelete, onEdit, isDeleting }) {
 
 // ─── Form Modal Component (Add / Edit) ────────────────────────────────────────────────────────
 function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
-    const [formData, setFormData] = useState({
-        studentId: "",
-        semester: "",
-        attendance: "",
-        kts: [],
-        marks: [],
-        journalTaken: false,
-        examFormFilled: false,
-    });
+  const [formData, setFormData] = useState({
+    studentId: "",
+    semester: "",
+    attendance: "",
+    kts: [],
+    marks: [],
+    journalTaken: false,
+    examFormFilled: false,
+  });
 
-    const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (isOpen) {
-            if (record) {
-                // Ensure kts and marks are copied properly
-                const initialKts = Array.isArray(record.kts) ? [...record.kts] : [];
-                const initialMarks = Array.isArray(record.marks)
-                    ? record.marks.map((m) => ({ ...m }))
-                    : [];
+  useEffect(() => {
+    if (isOpen) {
+      if (record) {
+        // Ensure kts and marks are copied properly
+        const initialKts = Array.isArray(record.kts) ? [...record.kts] : [];
+        const initialMarks = Array.isArray(record.marks)
+          ? record.marks.map((m) => ({ ...m }))
+          : [];
 
-                setFormData({
-                    studentId: 
-                      record?.stuID?.studentID || 
-                      record?.studentID || 
-                      record?.studentId || 
-                      (typeof record?.stuID === "string" ? record.stuID : ""),
-                    semester: record.semester || "",
-                    attendance: record.attendance || "",
-                    kts: initialKts,
-                    marks: initialMarks,
-                    journalTaken: record.journalTaken || false,
-                    examFormFilled: record.examFormFilled || false,
-                });
-            } else {
-                setFormData({
-                    studentId: "",
-                    semester: "",
-                    attendance: "",
-                    kts: [],
-                    marks: [],
-                    journalTaken: false,
-                    examFormFilled: false,
-                });
-            }
-        }
-    }, [isOpen, record]);
+        setFormData({
+          studentId:
+            record?.stuID?.studentID ||
+            record?.studentID ||
+            record?.studentId ||
+            (typeof record?.stuID === "string" ? record.stuID : ""),
+          semester: record.semester || "",
+          attendance: record.attendance || "",
+          kts: initialKts,
+          marks: initialMarks,
+          journalTaken: record.journalTaken || false,
+          examFormFilled: record.examFormFilled || false,
+        });
+      } else {
+        setFormData({
+          studentId: "",
+          semester: "",
+          attendance: "",
+          kts: [],
+          marks: [],
+          journalTaken: false,
+          examFormFilled: false,
+        });
+      }
+    }
+  }, [isOpen, record]);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    // KT Handlers
-    const handleAddKt = () => {
-        setFormData((prev) => ({ ...prev, kts: [...prev.kts, ""] }));
-    };
-    const handleKtChange = (index, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            kts: prev.kts.map((kt, i) => (i === index ? value : kt)),
-        }));
-    };
-    const handleRemoveKt = (index) => {
-        setFormData((prev) => ({
-            ...prev,
-            kts: prev.kts.filter((_, i) => i !== index),
-        }));
-    };
+  // KT Handlers
+  const handleAddKt = () => {
+    setFormData((prev) => ({ ...prev, kts: [...prev.kts, ""] }));
+  };
+  const handleKtChange = (index, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      kts: prev.kts.map((kt, i) => (i === index ? value : kt)),
+    }));
+  };
+  const handleRemoveKt = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      kts: prev.kts.filter((_, i) => i !== index),
+    }));
+  };
 
-    // Marks Handlers
-    const handleAddMark = () => {
-        setFormData((prev) => ({ ...prev, marks: [...prev.marks, { subject: "", score: "", outOf: "" }] }));
-    };
-    const handleMarkChange = (index, field, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            marks: prev.marks.map((m, i) =>
-                i === index ? { ...m, [field]: value } : m
-            ),
-        }));
-    };
-    const handleRemoveMark = (index) => {
-        setFormData((prev) => ({
-            ...prev,
-            marks: prev.marks.filter((_, i) => i !== index),
-        }));
-    };
+  // Marks Handlers
+  const handleAddMark = () => {
+    setFormData((prev) => ({ ...prev, marks: [...prev.marks, { subject: "", score: "", outOf: "" }] }));
+  };
+  const handleMarkChange = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      marks: prev.marks.map((m, i) =>
+        i === index ? { ...m, [field]: value } : m
+      ),
+    }));
+  };
+  const handleRemoveMark = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      marks: prev.marks.filter((_, i) => i !== index),
+    }));
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-        try {
-            // Clean payload
-            const payload = {
-                semester: Number(formData.semester),
-                attendance: Number(formData.attendance),
-                kts: formData.kts.filter(kt => kt.trim() !== ""),
-                marks: formData.marks.filter(m => m.subject.trim() !== "").map(m => ({
-                    subject: m.subject.trim(),
-                    score: Number(m.score),
-                    outOf: Number(m.outOf)
-                })),
-                journalTaken: formData.journalTaken,
-                examFormFilled: formData.examFormFilled
-            };
+    try {
+      // Clean payload
+      const payload = {
+        semester: Number(formData.semester),
+        attendance: Number(formData.attendance),
+        kts: formData.kts.filter(kt => kt.trim() !== ""),
+        marks: formData.marks.filter(m => m.subject.trim() !== "").map(m => ({
+          subject: m.subject.trim(),
+          score: Number(m.score),
+          outOf: Number(m.outOf)
+        })),
+        journalTaken: formData.journalTaken,
+        examFormFilled: formData.examFormFilled
+      };
 
-            if (!record) { payload.studentId = formData.studentId; }
+      if (!record) { payload.studentId = formData.studentId; }
 
-            if (record) {
-                await semInfoService.updateSemInfo(record._id, payload);
-                toast.success("Semester Info updated successfully!");
-            } else {
-                await semInfoService.addSemInfo(payload);
-                toast.success("Semester Info added successfully!");
-            }
-            onSave();
-            onClose();
-        } catch (err) {
-            console.error("Error saving SemInfo:", err);
-            toast.error(err.response?.data?.message || err.response?.data?.errors?.[0]?.message || "Failed to save record.");
-        } finally {
-            setLoading(false);
-        }
-    };
+      if (record) {
+        await semInfoService.updateSemInfo(record._id, payload);
+        toast.success("Semester Info updated successfully!");
+      } else {
+        await semInfoService.addSemInfo(payload);
+        toast.success("Semester Info added successfully!");
+      }
+      onSave();
+      onClose();
+    } catch (err) {
+      console.error("Error saving SemInfo:", err);
+      toast.error(err.response?.data?.message || err.response?.data?.errors?.[0]?.message || "Failed to save record.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-slideUp">
-                <div className="sticky top-0 z-10 p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                    <h2 className="text-xl font-bold text-slate-900">
-                        {record ? "Edit Semester Info" : "Add Semester Info"}
-                    </h2>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="p-6 space-y-8">
-                    {/* Basic Info */}
-                    <div>
-                        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Basic Info</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
-                                <input
-                                    type="text"
-                                    name="studentId"
-                                    required={!record}
-                                    value={formData.studentId}
-                                    onChange={handleChange}
-                                    placeholder="e.g. 2024COMP123"
-                                    disabled={!!record} // Prevent editing student ID if updating
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-1">Semester (1-8) *</label>
-                                <input
-                                    type="number"
-                                    name="semester"
-                                    required
-                                    min="1"
-                                    max="8"
-                                    value={formData.semester}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-1">Attendance (%) *</label>
-                                <input
-                                    type="number"
-                                    name="attendance"
-                                    required
-                                    min="0"
-                                    max="100"
-                                    value={formData.attendance}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Subject Marks Array Builder */}
-                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Subject Marks</h3>
-                            <button type="button" onClick={handleAddMark} className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-bold rounded hover:bg-blue-200">
-                                + Add Subject
-                            </button>
-                        </div>
-                        {formData.marks.length === 0 ? (
-                            <p className="text-sm text-slate-500 italic">No subjects added yet.</p>
-                        ) : (
-                            <div className="space-y-3">
-                                {formData.marks.map((mark, index) => (
-                                    <div key={index} className="flex items-center gap-3">
-                                        <input
-                                            type="text"
-                                            placeholder="Subject Name"
-                                            required
-                                            value={mark.subject}
-                                            onChange={(e) => handleMarkChange(index, "subject", e.target.value)}
-                                            className="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        />
-                                        <input
-                                            type="number"
-                                            placeholder="Score"
-                                            required
-                                            min="0"
-                                            value={mark.score}
-                                            onChange={(e) => handleMarkChange(index, "score", e.target.value)}
-                                            className="w-24 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        />
-                                        <span className="text-slate-500 font-bold">/</span>
-                                        <input
-                                            type="number"
-                                            placeholder="Out Of"
-                                            required
-                                            min="1"
-                                            value={mark.outOf}
-                                            onChange={(e) => handleMarkChange(index, "outOf", e.target.value)}
-                                            className="w-24 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        />
-                                        <button type="button" onClick={() => handleRemoveMark(index)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded">
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* KTs Array Builder */}
-                    <div className="p-4 bg-orange-50/50 border border-orange-200 rounded-xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-bold text-orange-800 uppercase tracking-widest">Active KTs</h3>
-                            <button type="button" onClick={handleAddKt} className="px-3 py-1.5 bg-orange-200 text-orange-800 text-xs font-bold rounded hover:bg-orange-300">
-                                + Add KT
-                            </button>
-                        </div>
-                        {formData.kts.length === 0 ? (
-                            <p className="text-sm text-slate-500 italic">No KTs recorded.</p>
-                        ) : (
-                            <div className="space-y-3">
-                                {formData.kts.map((kt, index) => (
-                                    <div key={index} className="flex items-center gap-3">
-                                        <input
-                                            type="text"
-                                            placeholder="Failed Subject Name"
-                                            required
-                                            value={kt}
-                                            onChange={(e) => handleKtChange(index, e.target.value)}
-                                            className="flex-1 px-3 py-2 text-sm border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                                        />
-                                        <button type="button" onClick={() => handleRemoveKt(index)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded">
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Status & Compliance */}
-                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4">Status & Compliance</h3>
-                        <div className="flex flex-wrap gap-6">
-                            <label className="flex items-center gap-3 cursor-pointer group">
-                                <div className="relative">
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.journalTaken}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, journalTaken: e.target.checked }))}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </div>
-                                <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Journal Taken</span>
-                            </label>
-
-                            <label className="flex items-center gap-3 cursor-pointer group">
-                                <div className="relative">
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.examFormFilled}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, examFormFilled: e.target.checked }))}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </div>
-                                <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Exam Form Filled</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="pt-6 flex justify-end gap-3 border-t border-slate-100">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 focus:ring-2 focus:ring-slate-300"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="px-6 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
-                        >
-                            {loading ? (
-                                <>
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    Saving...
-                                </>
-                            ) : (
-                                "Save Semester Info"
-                            )}
-                        </button>
-                    </div>
-                </form>
-            </div>
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-slideUp">
+        <div className="sticky top-0 z-10 p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+          <h2 className="text-xl font-bold text-slate-900">
+            {record ? "Edit Semester Info" : "Add Semester Info"}
+          </h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-    );
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-8">
+          {/* Basic Info */}
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Basic Info</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
+                <input
+                  type="text"
+                  name="studentId"
+                  required={!record}
+                  value={formData.studentId}
+                  onChange={handleChange}
+                  placeholder="e.g. 2024COMP123"
+                  disabled={!!record} // Prevent editing student ID if updating
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Semester (1-8) *</label>
+                <input
+                  type="number"
+                  name="semester"
+                  required
+                  min="1"
+                  max="8"
+                  value={formData.semester}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Attendance (%) *</label>
+                <input
+                  type="number"
+                  name="attendance"
+                  required
+                  min="0"
+                  max="100"
+                  value={formData.attendance}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Subject Marks Array Builder */}
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Subject Marks</h3>
+              <button type="button" onClick={handleAddMark} className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-bold rounded hover:bg-blue-200">
+                + Add Subject
+              </button>
+            </div>
+            {formData.marks.length === 0 ? (
+              <p className="text-sm text-slate-500 italic">No subjects added yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {formData.marks.map((mark, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      placeholder="Subject Name"
+                      required
+                      value={mark.subject}
+                      onChange={(e) => handleMarkChange(index, "subject", e.target.value)}
+                      className="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Score"
+                      required
+                      min="0"
+                      value={mark.score}
+                      onChange={(e) => handleMarkChange(index, "score", e.target.value)}
+                      className="w-24 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="text-slate-500 font-bold">/</span>
+                    <input
+                      type="number"
+                      placeholder="Out Of"
+                      required
+                      min="1"
+                      value={mark.outOf}
+                      onChange={(e) => handleMarkChange(index, "outOf", e.target.value)}
+                      className="w-24 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button type="button" onClick={() => handleRemoveMark(index)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* KTs Array Builder */}
+          <div className="p-4 bg-orange-50/50 border border-orange-200 rounded-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-bold text-orange-800 uppercase tracking-widest">Active KTs</h3>
+              <button type="button" onClick={handleAddKt} className="px-3 py-1.5 bg-orange-200 text-orange-800 text-xs font-bold rounded hover:bg-orange-300">
+                + Add KT
+              </button>
+            </div>
+            {formData.kts.length === 0 ? (
+              <p className="text-sm text-slate-500 italic">No KTs recorded.</p>
+            ) : (
+              <div className="space-y-3">
+                {formData.kts.map((kt, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      placeholder="Failed Subject Name"
+                      required
+                      value={kt}
+                      onChange={(e) => handleKtChange(index, e.target.value)}
+                      className="flex-1 px-3 py-2 text-sm border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                    />
+                    <button type="button" onClick={() => handleRemoveKt(index)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Status & Compliance */}
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4">Status & Compliance</h3>
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={formData.journalTaken}
+                    onChange={(e) => setFormData(prev => ({ ...prev, journalTaken: e.target.checked }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </div>
+                <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Journal Taken</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={formData.examFormFilled}
+                    onChange={(e) => setFormData(prev => ({ ...prev, examFormFilled: e.target.checked }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </div>
+                <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Exam Form Filled</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="pt-6 flex justify-end gap-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 focus:ring-2 focus:ring-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                "Save Semester Info"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 // ─── Main Admin Component ─────────────────────────────────────────────────────
 export default function AdminSemesterInfo() {
-    const [records, setRecords] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedSem, setSelectedSem] = useState("");
-    const [selectedYear, setSelectedYear] = useState("");
-    const [selectedDivision, setSelectedDivision] = useState("");
-    const [filterDefaulter, setFilterDefaulter] = useState(""); // "" or "true"
-    const [minAttendance, setMinAttendance] = useState("");
-    const [maxAttendance, setMaxAttendance] = useState("");
-    const [selectedJournal, setSelectedJournal] = useState(""); // "" or "true" or "false"
-    const [selectedExamForm, setSelectedExamForm] = useState(""); // "" or "true" or "false"
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSem, setSelectedSem] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedDivision, setSelectedDivision] = useState("");
+  const [filterDefaulter, setFilterDefaulter] = useState(""); // "" or "true"
+  const [minAttendance, setMinAttendance] = useState("");
+  const [maxAttendance, setMaxAttendance] = useState("");
+  const [selectedJournal, setSelectedJournal] = useState(""); // "" or "true" or "false"
+  const [selectedExamForm, setSelectedExamForm] = useState(""); // "" or "true" or "false"
 
-    // Applied Filters State (Snapshot for WYSIWYG)
-    const [appliedFilters, setAppliedFilters] = useState({});
+  // Applied Filters State (Snapshot for WYSIWYG)
+  const [appliedFilters, setAppliedFilters] = useState({});
 
-    // Pagination state
-    const [currentPage, setCurrentPage] = useState(1);
-    const [limit, setLimit] = useState(10);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalRecords, setTotalRecords] = useState(0);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-    const [recordToEdit, setRecordToEdit] = useState(null);
-    const [deletingId, setDeletingId] = useState(null);
-    const [refreshing, setRefreshing] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [recordToEdit, setRecordToEdit] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-    // Helper to get full record since list API lacks marks
-    const fetchFullRecord = async (record) => {
-        const studentDbId = record.stuID?._id || record.stuID;
-        if (!studentDbId) return record;
+  // Helper to get full record since list API lacks marks
+  const fetchFullRecord = async (record) => {
+    const studentDbId = record.stuID?._id || record.stuID;
+    if (!studentDbId) return record;
 
-        try {
-            setRefreshing(true);
-            const res = await semInfoService.getStudentSemInfo(studentDbId);
-            const fullRecords = res.data || [];
-            const matchingRecord = fullRecords.find(r => r._id === record._id);
-            return matchingRecord || record;
-        } catch (err) {
-            console.error("Error refetching full record:", err);
-            return record;
-        } finally {
-            setRefreshing(false);
-        }
-    };
+    try {
+      setRefreshing(true);
+      const res = await semInfoService.getStudentSemInfo(studentDbId);
+      const fullRecords = res.data || [];
+      const matchingRecord = fullRecords.find(r => r._id === record._id);
+      return matchingRecord || record;
+    } catch (err) {
+      console.error("Error refetching full record:", err);
+      return record;
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
-    const handleView = async (record) => {
-        const full = await fetchFullRecord(record);
-        setSelectedItem(full);
-    };
+  const handleView = async (record) => {
+    const full = await fetchFullRecord(record);
+    setSelectedItem(full);
+  };
 
-    const handleEdit = async (record) => {
-        const full = await fetchFullRecord(record);
-        setRecordToEdit(full);
-        setIsFormModalOpen(true);
-    };
+  const handleEdit = async (record) => {
+    const full = await fetchFullRecord(record);
+    setRecordToEdit(full);
+    setIsFormModalOpen(true);
+  };
 
-    useEffect(() => {
-        fetchAll(currentPage);
-    }, [currentPage, limit, appliedFilters]);
+  useEffect(() => {
+    fetchAll(currentPage);
+  }, [currentPage, limit, appliedFilters]);
 
-    const fetchAll = async (page = 1) => {
-        setLoading(true);
-        try {
-            const params = {
-                page,
-                limit,
-                ...appliedFilters
-            };
-            const response = await semInfoService.getAllSemInfo(params);
-            
-            const data = response.data || [];
-            const total = response.total || 0;
-            const totalP = response.totalPages || 1;
+  const fetchAll = async (page = 1) => {
+    setLoading(true);
+    try {
+      const params = {
+        page,
+        limit,
+        ...appliedFilters
+      };
+      const response = await semInfoService.getAllSemInfo(params);
 
-            setRecords(data);
-            setTotalRecords(total);
-            setTotalPages(totalP);
-            if (page === 1) setCurrentPage(1);
-            setError(null);
-        } catch (err) {
-            console.error("Error fetching semester info:", err);
-            setError("Failed to load semester info. Backend might not be running!");
-            setRecords([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+      const data = response.data || [];
+      const total = response.total || 0;
+      const totalP = response.totalPages || 1;
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Delete this semester record?")) return;
-        setDeletingId(id);
-        try {
-            await semInfoService.deleteSemInfo(id);
-            toast.success("Semester record deleted successfully!");
-            fetchAll(currentPage);
-        } catch (err) {
-            console.error("Error deleting semester info:", err);
-            toast.error("Failed to delete record.");
-        } finally {
-            setDeletingId(null);
-        }
-    };
+      setRecords(data);
+      setTotalRecords(total);
+      setTotalPages(totalP);
+      if (page === 1) setCurrentPage(1);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching semester info:", err);
+      setError("Failed to load semester info. Backend might not be running!");
+      setRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleExport = async () => {
-        if (filtered.length === 0) { toast.warn("No data to export."); return; }
-        try {
-            setLoading(true);
-            const params = {
-                ...appliedFilters
-            };
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this semester record?")) return;
+    setDeletingId(id);
+    try {
+      await semInfoService.deleteSemInfo(id);
+      toast.success("Semester record deleted successfully!");
+      fetchAll(currentPage);
+    } catch (err) {
+      console.error("Error deleting semester info:", err);
+      toast.error("Failed to delete record.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
-            const blob = await semInfoService.exportSemInfo(params);
+  const handleExport = async () => {
+    if (filtered.length === 0) { toast.warn("No data to export."); return; }
+    try {
+      setLoading(true);
+      const params = {
+        ...appliedFilters
+      };
 
-            // Create download link
-            const url = window.URL.createObjectURL(new Blob([blob]));
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `SemesterInfo_Export_${new Date().toLocaleDateString("en-IN").replace(/\//g, "-")}.xlsx`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+      const blob = await semInfoService.exportSemInfo(params);
 
-            toast.success("✅ Exported successfully!");
-        } catch (err) {
-            console.error(err);
-            toast.error("Export failed. Please try again.");
-        } finally {
-            setLoading(false);
-        }
-    };
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `SemesterInfo_Export_${new Date().toLocaleDateString("en-IN").replace(/\//g, "-")}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
-    // We now use server-side filtering, so filtered is just the records list
-    const filtered = records;
+      toast.success("✅ Exported successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Export failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <main className="p-8 bg-slate-50 min-h-screen relative">
-            {/* Loading Overlay for Refetching */}
-            {refreshing && (
-                <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center">
-                    <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center">
-                        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-3"></div>
-                        <p className="text-sm font-bold text-slate-700 font-sans">Syncing Detailed Records...</p>
-                    </div>
-                </div>
-            )}
-            {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900">Semester Information</h1>
-                <p className="text-slate-600 mt-2">
-                    Showing <span className="font-semibold text-blue-600">{totalRecords}</span> records
-                </p>
-            </div>
+  // We now use server-side filtering, so filtered is just the records list
+  const filtered = records;
 
-            {/* Filter Bar */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-8">
-                <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex-1 min-w-[240px]">
-                    <input
-                        type="text"
-                        placeholder="e.g. 2024COMP123, Sem 1"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <p className="text-[11px] text-slate-500 mt-1.5 ml-1">
-                        <span className="font-semibold text-blue-600">Tip:</span> Search by Student ID or Semester Number.
-                    </p>
-                </div>
-                    <select
-                        value={selectedSem}
-                        onChange={(e) => setSelectedSem(e.target.value)}
-                        className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    >
-                        <option value="">All Semesters</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                            <option key={s} value={s}>Semester {s}</option>
-                        ))}
-                    </select>
+  return (
+    <main className="p-8 bg-slate-50 min-h-screen relative">
+      {/* Loading Overlay for Refetching */}
+      {refreshing && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center">
+            <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p className="text-sm font-bold text-slate-700 font-sans">Syncing Detailed Records...</p>
+          </div>
+        </div>
+      )}
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900">Semester Information</h1>
+        <p className="text-slate-600 mt-2">
+          Showing <span className="font-semibold text-blue-600">{totalRecords}</span> records
+        </p>
+      </div>
 
-                    {/* Year Filter */}
-                    <select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                        className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    >
-                        <option value="">All Years</option>
-                        <option value="FE">First Year (FE)</option>
-                        <option value="SE">Second Year (SE)</option>
-                        <option value="TE">Third Year (TE)</option>
-                        <option value="BE">Final Year (BE)</option>
-                    </select>
-
-                    {/* Division Filter */}
-                    <select
-                        value={selectedDivision}
-                        onChange={(e) => setSelectedDivision(e.target.value)}
-                        className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    >
-                        <option value="">All Divs</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                    </select>
-
-                    {/* Defaulter Toggle */}
-                    <select
-                        value={filterDefaulter}
-                        onChange={(e) => setFilterDefaulter(e.target.value)}
-                        className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    >
-                        <option value="">All Students</option>
-                        <option value="true">Defaulters Only</option>
-                    </select>
-
-                    {/* Journal Status Filter */}
-                    <select
-                        value={selectedJournal}
-                        onChange={(e) => setSelectedJournal(e.target.value)}
-                        className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    >
-                        <option value="">All Journals</option>
-                        <option value="true">Completed (YES)</option>
-                        <option value="false">Pending (PEND)</option>
-                    </select>
-
-                    {/* Exam Form Status Filter */}
-                    <select
-                        value={selectedExamForm}
-                        onChange={(e) => setSelectedExamForm(e.target.value)}
-                        className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    >
-                        <option value="">All Exam Forms</option>
-                        <option value="true">Filled (FILL)</option>
-                        <option value="false">Pending (PEND)</option>
-                    </select>
-
-                    {/* Attendance Range */}
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="number"
-                            placeholder="Min %"
-                            min="0"
-                            max="100"
-                            value={minAttendance}
-                            onChange={(e) => setMinAttendance(e.target.value)}
-                            className="w-20 px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
-                        />
-                        <span className="text-slate-400 font-medium">-</span>
-                        <input
-                            type="number"
-                            placeholder="Max %"
-                            min="0"
-                            max="100"
-                            value={maxAttendance}
-                            onChange={(e) => setMaxAttendance(e.target.value)}
-                            className="w-20 px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
-                        />
-                    </div>
-
-                    <div className="flex gap-3">
-                        <button
-                            onClick={() => {
-                                setAppliedFilters({
-                                    search: searchQuery || undefined,
-                                    semester: selectedSem || undefined,
-                                    year: selectedYear || undefined,
-                                    division: selectedDivision || undefined,
-                                    isDefaulter: filterDefaulter || undefined,
-                                    journalTaken: selectedJournal || undefined,
-                                    examFormFilled: selectedExamForm || undefined,
-                                    minAttendance: minAttendance || undefined,
-                                    maxAttendance: maxAttendance || undefined,
-                                });
-                                setCurrentPage(1);
-                            }}
-                            className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            Find Records
-                        </button>
-
-                        {(searchQuery || selectedSem || selectedYear || selectedDivision || filterDefaulter || minAttendance || maxAttendance) && (
-                            <button
-                                onClick={() => {
-                                    setSearchQuery(""); setSelectedSem(""); setSelectedYear("");
-                                    setSelectedDivision(""); setFilterDefaulter("");
-                                    setSelectedJournal(""); setSelectedExamForm("");
-                                    setMinAttendance(""); setMaxAttendance("");
-                                }}
-                                className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                Clear Filters
-                            </button>
-                        )}
-                    </div>
-
-                    <button
-                        onClick={handleExport}
-                        className="px-6 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm ml-auto flex items-center gap-2"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Export to Excel
-                    </button>
-                    <button
-                        onClick={() => { setRecordToEdit(null); setIsFormModalOpen(true); }}
-                        className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center">
-                        + Add Semester Info
-                    </button>
-                </div>
-            </div>
-
-            {/* Cards */}
-            <div className="min-h-[60vh]">
-                {loading && (
-                    <div className="flex items-center justify-center h-64">
-                        <div className="text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-                            <p className="text-slate-600">Loading semester info...</p>
-                        </div>
-                    </div>
-                )}
-                {error && !loading && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg">{error}</div>
-                )}
-                {!loading && !error && filtered.length === 0 && (
-                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-16 text-center">
-                        <svg className="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                        <p className="text-slate-600 text-lg font-medium">
-                            {searchQuery || selectedSem ? "No records match your filters." : "No semester info recorded yet."}
-                        </p>
-                    </div>
-                )}
-                {!loading && !error && filtered.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filtered.map((record) => (
-                            <SemInfoCard
-                                key={record._id}
-                                record={record}
-                                isDeleting={deletingId === record._id}
-                                 onView={handleView}
-                                 onEdit={handleEdit}
-                                onDelete={handleDelete}
-                            />
-                        ))}
-                    </div>
-                )}
-
-                {/* Pagination Component */}
-                {!loading && !error && filtered.length > 0 && (
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        totalRecords={totalRecords}
-                        limit={limit}
-                        onPageChange={(page) => setCurrentPage(page)}
-                        onLimitChange={(newLimit) => {
-                            setLimit(newLimit);
-                            setCurrentPage(1);
-                        }}
-                    />
-                )}
-            </div>
-
-            {selectedItem && <DetailModal record={selectedItem} onClose={() => setSelectedItem(null)} />}
-
-            <SemInfoFormModal
-                isOpen={isFormModalOpen}
-                onClose={() => setIsFormModalOpen(false)}
-                record={recordToEdit}
-                onSave={() => fetchAll(currentPage)}
+      {/* Filter Bar */}
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-8">
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex-1 min-w-[240px]">
+            <input
+              type="text"
+              placeholder="e.g. 2024COMP123, Sem 1"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-        </main>
-    );
+            <p className="text-[11px] text-slate-500 mt-1.5 ml-1">
+              <span className="font-semibold text-blue-600">Tip:</span> Search by Student ID or Semester Number.
+            </p>
+          </div>
+          <select
+            value={selectedSem}
+            onChange={(e) => setSelectedSem(e.target.value)}
+            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+          >
+            <option value="">All Semesters</option>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+              <option key={s} value={s}>Semester {s}</option>
+            ))}
+          </select>
+
+          {/* Year Filter */}
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+          >
+            <option value="">All Years</option>
+            <option value="FE">First Year (FE)</option>
+            <option value="SE">Second Year (SE)</option>
+            <option value="TE">Third Year (TE)</option>
+            <option value="BE">Final Year (BE)</option>
+          </select>
+
+          {/* Division Filter */}
+          <select
+            value={selectedDivision}
+            onChange={(e) => setSelectedDivision(e.target.value)}
+            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+          >
+            <option value="">All Divs</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+
+          {/* Defaulter Toggle */}
+          <select
+            value={filterDefaulter}
+            onChange={(e) => setFilterDefaulter(e.target.value)}
+            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+          >
+            <option value="">All Students</option>
+            <option value="true">Defaulters Only</option>
+          </select>
+
+          {/* Journal Status Filter */}
+          <select
+            value={selectedJournal}
+            onChange={(e) => setSelectedJournal(e.target.value)}
+            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+          >
+            <option value="">All Journals</option>
+            <option value="true">Completed (YES)</option>
+            <option value="false">Pending (PEND)</option>
+          </select>
+
+          {/* Exam Form Status Filter */}
+          <select
+            value={selectedExamForm}
+            onChange={(e) => setSelectedExamForm(e.target.value)}
+            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+          >
+            <option value="">All Exam Forms</option>
+            <option value="true">Filled (FILL)</option>
+            <option value="false">Pending (PEND)</option>
+          </select>
+
+          {/* Attendance Range */}
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              placeholder="Min %"
+              min="0"
+              max="100"
+              value={minAttendance}
+              onChange={(e) => setMinAttendance(e.target.value)}
+              className="w-20 px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+            />
+            <span className="text-slate-400 font-medium">-</span>
+            <input
+              type="number"
+              placeholder="Max %"
+              min="0"
+              max="100"
+              value={maxAttendance}
+              onChange={(e) => setMaxAttendance(e.target.value)}
+              className="w-20 px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setAppliedFilters({
+                  search: searchQuery || undefined,
+                  semester: selectedSem || undefined,
+                  year: selectedYear || undefined,
+                  division: selectedDivision || undefined,
+                  isDefaulter: filterDefaulter || undefined,
+                  journalTaken: selectedJournal || undefined,
+                  examFormFilled: selectedExamForm || undefined,
+                  minAttendance: minAttendance || undefined,
+                  maxAttendance: maxAttendance || undefined,
+                });
+                setCurrentPage(1);
+              }}
+              className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Find Records
+            </button>
+
+            {(searchQuery || selectedSem || selectedYear || selectedDivision || filterDefaulter || minAttendance || maxAttendance) && (
+              <button
+                onClick={() => {
+                  setSearchQuery(""); setSelectedSem(""); setSelectedYear("");
+                  setSelectedDivision(""); setFilterDefaulter("");
+                  setSelectedJournal(""); setSelectedExamForm("");
+                  setMinAttendance(""); setMaxAttendance("");
+                }}
+                className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                Clear Filters
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={handleExport}
+            className="px-6 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm ml-auto flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export to Excel
+          </button>
+          <button
+            onClick={() => { setRecordToEdit(null); setIsFormModalOpen(true); }}
+            className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center">
+            + Add Semester Info
+          </button>
+        </div>
+      </div>
+
+      {/* Cards */}
+      <div className="min-h-[60vh]">
+        {loading && (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+              <p className="text-slate-600">Loading semester info...</p>
+            </div>
+          </div>
+        )}
+        {error && !loading && (
+          <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg">{error}</div>
+        )}
+        {!loading && !error && filtered.length === 0 && (
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-16 text-center">
+            <svg className="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <p className="text-slate-600 text-lg font-medium">
+              {searchQuery || selectedSem ? "No records match your filters." : "No semester info recorded yet."}
+            </p>
+          </div>
+        )}
+        {!loading && !error && filtered.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filtered.map((record) => (
+              <SemInfoCard
+                key={record._id}
+                record={record}
+                isDeleting={deletingId === record._id}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Pagination Component */}
+        {!loading && !error && filtered.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            limit={limit}
+            onPageChange={(page) => setCurrentPage(page)}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setCurrentPage(1);
+            }}
+          />
+        )}
+      </div>
+
+      {selectedItem && <DetailModal record={selectedItem} onClose={() => setSelectedItem(null)} />}
+
+      <SemInfoFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        record={recordToEdit}
+        onSave={() => fetchAll(currentPage)}
+      />
+    </main>
+  );
 }

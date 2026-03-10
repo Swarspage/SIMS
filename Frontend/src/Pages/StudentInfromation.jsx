@@ -157,15 +157,14 @@ export default function StudentInformation() {
     } catch (err) {
       console.error("Error saving student info:", err);
       const resData = err.response?.data;
-      let errorMsg = resData?.message || err.message || "Failed to save information.";
-
+      const errorMsg = resData?.message || err.message || "Failed to save information.";
       if (resData?.errors && Array.isArray(resData.errors)) {
-        // Joi validation errors usually come as { field: "name", message: "..." }
-        const details = resData.errors.map(e => e.message).join(" ");
-        errorMsg += ` ${details}`;
+        resData.errors.forEach((errObj) => {
+          toast.error(errObj.message || "Validation error");
+        });
+      } else {
+        toast.error(errorMsg);
       }
-
-      toast.error(errorMsg);
       window.scrollTo(0, 0);
     } finally {
       setSubmitting(false);

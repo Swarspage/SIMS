@@ -84,11 +84,10 @@ function AdmissionCard({ admission, onView, onDelete, isDeleting }) {
           <button
             onClick={() => onDelete && onDelete(admission._id)}
             disabled={isDeleting}
-            className={`w-full px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors border active:scale-95 ${
-              isDeleting 
-                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
+            className={`w-full px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors border active:scale-95 ${isDeleting
+                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
                 : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-            }`}
+              }`}
           >
             {isDeleting ? "Deleting..." : "Delete"}
           </button>
@@ -189,15 +188,15 @@ function DetailModal({ admission, onClose }) {
                   </span>
                 </div>
                 {!admission.isScholarshipApplied && admission.scholarshipNotAppliedReason && (
-                   <div className="mt-2 pt-2 border-t border-slate-50">
-                      <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Reason</p>
-                      <p className="text-xs text-slate-600 italic">"{admission.scholarshipNotAppliedReason}"</p>
-                   </div>
+                  <div className="mt-2 pt-2 border-t border-slate-50">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Reason</p>
+                    <p className="text-xs text-slate-600 italic">"{admission.scholarshipNotAppliedReason}"</p>
+                  </div>
                 )}
               </div>
 
               <div className="p-4 bg-white rounded-xl border border-slate-200">
-                 <div className="flex justify-between items-center mb-1">
+                <div className="flex justify-between items-center mb-1">
                   <span className="text-xs text-slate-500 font-bold">MahaDBT Form</span>
                   <span className={`text-[10px] font-black uppercase tracking-widest ${admission.isMahadbtFormSubmitted ? 'text-green-600' : 'text-amber-600'}`}>
                     {admission.isMahadbtFormSubmitted ? 'Submitted' : 'Pending'}
@@ -219,26 +218,26 @@ function DetailModal({ admission, onClose }) {
           </div>
 
           <div className="space-y-4">
-             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Migration Details</h4>
-             <div className="p-4 bg-white rounded-xl border border-slate-200">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-slate-500">Migration Certificate</span>
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${admission.hasMigrationCertificate ? 'text-green-600' : 'text-amber-600'}`}>
-                    {admission.hasMigrationCertificate ? 'Available' : 'Unavailable'}
-                  </span>
+            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Migration Details</h4>
+            <div className="p-4 bg-white rounded-xl border border-slate-200">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-slate-500">Migration Certificate</span>
+                <span className={`text-[10px] font-black uppercase tracking-widest ${admission.hasMigrationCertificate ? 'text-green-600' : 'text-amber-600'}`}>
+                  {admission.hasMigrationCertificate ? 'Available' : 'Unavailable'}
+                </span>
+              </div>
+              {admission.hasMigrationCertificate ? (
+                <div className="flex justify-between items-center pt-2 border-t border-slate-50 text-xs">
+                  <span className="text-slate-400 font-bold">Expected Date</span>
+                  <span className="text-slate-700 font-bold">{new Date(admission.migrationExpectedDate).toLocaleDateString()}</span>
                 </div>
-                {admission.hasMigrationCertificate ? (
-                   <div className="flex justify-between items-center pt-2 border-t border-slate-50 text-xs">
-                    <span className="text-slate-400 font-bold">Expected Date</span>
-                    <span className="text-slate-700 font-bold">{new Date(admission.migrationExpectedDate).toLocaleDateString()}</span>
-                  </div>
-                ) : admission.migrationNotAvailableReason && (
-                    <div className="mt-2 pt-2 border-t border-slate-50">
-                      <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Reason</p>
-                      <p className="text-xs text-slate-600 italic">"{admission.migrationNotAvailableReason}"</p>
-                  </div>
-                )}
-             </div>
+              ) : admission.migrationNotAvailableReason && (
+                <div className="mt-2 pt-2 border-t border-slate-50">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Reason</p>
+                  <p className="text-xs text-slate-600 italic">"{admission.migrationNotAvailableReason}"</p>
+                </div>
+              )}
+            </div>
           </div>
 
         </div>
@@ -262,6 +261,8 @@ export default function AdminAdmission() {
   const [admissions, setAdmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Supported filters per backend getAdmissionsValidation schema
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [yearFilter, setYearFilter] = useState("");
@@ -281,8 +282,9 @@ export default function AdminAdmission() {
   const [deletingIds, setDeletingIds] = useState([]); // Track IDs currently being deleted
 
   useEffect(() => {
+    // Only auto-fetch on pagination/limit changes to minimize API hits
     fetchAdmissions(currentPage);
-  }, [currentPage, limit, statusFilter, yearFilter, divFilter, academicYearFilter, feesPaidFilter, scholarshipFilter, mahadbtFilter, migrationFilter]);
+  }, [currentPage, limit]);
 
   const fetchAdmissions = async (page = 1) => {
     try {
@@ -301,7 +303,7 @@ export default function AdminAdmission() {
         hasMigrationCertificate: migrationFilter || undefined,
       };
       const response = await admissionService.getAllAdmissions(params);
-      
+
       const data = response.data || [];
       const total = response.total || 0;
       const totalP = response.totalPages || 1;
@@ -324,10 +326,10 @@ export default function AdminAdmission() {
 
   const handleDeleteAdmission = async (id) => {
     if (!window.confirm("Are you sure you want to delete this admission? This action cannot be undone.")) return;
-    
+
     setDeletingIds(prev => [...prev, id]);
     const toastId = toast.loading("Deleting admission...");
-    
+
     try {
       await admissionService.deleteAdmission(id);
       fetchAdmissions(currentPage);
@@ -341,8 +343,12 @@ export default function AdminAdmission() {
     }
   };
 
-  // FILTER LOGIC - Manual Trigger
+  // FILTER LOGIC - Manual Trigger Only
+  // NOTE FOR BACKEND DEV: The following filters are currently disabled/hidden because the backend API 
+  // (getAllAdmissions controller & getAdmissionsValidation schema) does not yet support them:
+  // Status, Division, Scholarship, MahaDBT, and Migration.
   const handleFind = () => {
+    setCurrentPage(1);
     fetchAdmissions(1);
   };
 
@@ -355,103 +361,107 @@ export default function AdminAdmission() {
         </p>
       </div>
 
-      {/* FILTER BAR flex-wrap */}
+      {/* FILTER BAR */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-8 flex flex-wrap gap-4 items-center">
-        <div className="flex-1 relative min-w-[200px]">
+        <div className="flex-1 relative min-w-[300px]">
           <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
           <input
             type="text"
             placeholder="Search by ID, Course, Roll No..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-bold placeholder:font-normal"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-        >
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-        
-        <select
-          value={yearFilter}
-          onChange={(e) => setYearFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-        >
-          <option value="">All Years</option>
-          <option value="FY">FY</option>
-          <option value="SY">SY</option>
-          <option value="TY">TY</option>
-        </select>
 
-        <input
-          type="text"
-          placeholder="Academic Year (e.g. 2024-25)"
-          value={academicYearFilter}
-          onChange={(e) => setAcademicYearFilter(e.target.value)}
-          className="w-48 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
-        />
+        <div className="flex flex-wrap gap-3 items-center">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+          >
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
 
-        <select
-          value={feesPaidFilter}
-          onChange={(e) => setFeesPaidFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-        >
-          <option value="">All Fee Status</option>
-          <option value="paid">Paid</option>
-          <option value="unpaid">Unpaid</option>
-        </select>
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+          >
+            <option value="">All Years</option>
+            <option value="FY">FY</option>
+            <option value="SY">SY</option>
+            <option value="TY">TY</option>
+          </select>
 
-        <input
-          type="text"
-          placeholder="Division (e.g. A)"
-          value={divFilter}
-          onChange={(e) => setDivFilter(e.target.value)}
-          className="w-32 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-        />
+          <select
+            value={divFilter}
+            onChange={(e) => setDivFilter(e.target.value)}
+            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+          >
+            <option value="">All Divisions</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+          </select>
 
-        <select
-          value={scholarshipFilter}
-          onChange={(e) => setScholarshipFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-        >
-          <option value="">Scholarship Status</option>
-          <option value="true">Applied</option>
-          <option value="false">Not Applied</option>
-        </select>
+          <input
+            type="text"
+            placeholder="Academic Year (e.g. 2024-25)"
+            value={academicYearFilter}
+            onChange={(e) => setAcademicYearFilter(e.target.value)}
+            className="w-48 px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-bold shadow-sm placeholder:font-normal"
+          />
 
-        <select
-          value={mahadbtFilter}
-          onChange={(e) => setMahadbtFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-        >
-          <option value="">MahaDBT Status</option>
-          <option value="true">Submitted</option>
-          <option value="false">Pending</option>
-        </select>
+          <select
+            value={feesPaidFilter}
+            onChange={(e) => setFeesPaidFilter(e.target.value)}
+            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+          >
+            <option value="">All Fee Status</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+          </select>
 
-        <select
-          value={migrationFilter}
-          onChange={(e) => setMigrationFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-        >
-          <option value="">Migration Status</option>
-          <option value="true">Available</option>
-          <option value="false">Unavailable</option>
-        </select>
+          <select
+            value={scholarshipFilter}
+            onChange={(e) => setScholarshipFilter(e.target.value)}
+            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+          >
+            <option value="">Scholarship Status</option>
+            <option value="true">Applied</option>
+            <option value="false">Not Applied</option>
+          </select>
 
+          <select
+            value={mahadbtFilter}
+            onChange={(e) => setMahadbtFilter(e.target.value)}
+            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+          >
+            <option value="">MahaDBT Status</option>
+            <option value="true">Submitted</option>
+            <option value="false">Not Submitted</option>
+          </select>
 
-        <div className="flex gap-3">
+          <select
+            value={migrationFilter}
+            onChange={(e) => setMigrationFilter(e.target.value)}
+            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+          >
+            <option value="">Migration Status</option>
+            <option value="true">Has Certificate</option>
+            <option value="false">Missing Certificate</option>
+          </select>
+        </div>
+
+        <div className="flex gap-3 ml-auto">
           <button
             onClick={handleFind}
-            className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
+            className="px-8 py-3 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95 flex items-center gap-2 group"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 group-hover:scale-125 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             Find Admissions
@@ -469,16 +479,18 @@ export default function AdminAdmission() {
                 setScholarshipFilter("");
                 setMahadbtFilter("");
                 setMigrationFilter("");
+                setCurrentPage(1);
                 fetchAdmissions(1);
               }}
-              className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
+              className="px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95 flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              Clear All
+              Clear
             </button>
           )}
         </div>
       </div>
+
 
       {/* CONTENT */}
       <div className="min-h-[50vh]">

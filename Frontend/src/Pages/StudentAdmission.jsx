@@ -97,7 +97,7 @@ export default function StudentAdmission() {
       };
 
       // Conditional Logic: Backend uses Joi.forbidden() for mutually exclusive fields
-      
+
       // Scholarship logic
       if (!payload.isScholarshipApplied) {
         payload.scholarshipNotAppliedReason = formData.scholarshipNotAppliedReason || "";
@@ -143,7 +143,7 @@ export default function StudentAdmission() {
     } catch (err) {
       console.error("Error saving admission:", err);
       const resData = err.response?.data;
-      
+
       // Improved error reporting for Joi validation failures
       let errorMsg = resData?.message || "Failed to save admission.";
 
