@@ -286,21 +286,21 @@ export default function AdminAdmission() {
     fetchAdmissions(currentPage);
   }, [currentPage, limit]);
 
-  const fetchAdmissions = async (page = 1, overrides = {}) => {
+  const fetchAdmissions = async (page = 1) => {
     try {
       setLoading(true);
       const params = {
         page,
         limit,
-        search: overrides.search !== undefined ? overrides.search : (searchQuery || undefined),
-        status: overrides.status !== undefined ? overrides.status : (statusFilter || undefined),
-        year: overrides.year !== undefined ? overrides.year : (yearFilter || undefined),
-        div: overrides.div !== undefined ? overrides.div : (divFilter || undefined),
-        academicYear: overrides.academicYear !== undefined ? overrides.academicYear : (academicYearFilter || undefined),
-        filterPaid: overrides.filterPaid !== undefined ? overrides.filterPaid : (feesPaidFilter || undefined),
-        isScholarshipApplied: overrides.isScholarshipApplied !== undefined ? overrides.isScholarshipApplied : (scholarshipFilter || undefined),
-        isMahadbtFormSubmitted: overrides.isMahadbtFormSubmitted !== undefined ? overrides.isMahadbtFormSubmitted : (mahadbtFilter || undefined),
-        hasMigrationCertificate: overrides.hasMigrationCertificate !== undefined ? overrides.hasMigrationCertificate : (migrationFilter || undefined),
+        search: searchQuery || undefined,
+        status: statusFilter || undefined,
+        year: yearFilter || undefined,
+        div: divFilter || undefined,
+        academicYear: academicYearFilter || undefined,
+        filterPaid: feesPaidFilter || undefined,
+        isScholarshipApplied: scholarshipFilter || undefined,
+        isMahadbtFormSubmitted: mahadbtFilter || undefined,
+        hasMigrationCertificate: migrationFilter || undefined,
       };
       const response = await admissionService.getAllAdmissions(params);
 
@@ -312,37 +312,15 @@ export default function AdminAdmission() {
       setTotalRecords(total);
       setTotalPages(totalP);
       if (page === 1) setCurrentPage(1);
-      setTotalRecords(response.data.totalRecords);
+      setError(null);
     } catch (err) {
       console.error("Error fetching admissions:", err);
-      setError(err.response?.data?.message || "Failed to fetch admissions");
-      toast.error(err.response?.data?.message || "Failed to fetch admissions");
+      setError("Failed to load admissions. Please try again.");
+      setAdmissions([]);
     } finally {
       setLoading(false);
     }
   };
-
-  const filteredAdmissions = admissions.filter((admission) => {
-    if (statusFilter && admission.status !== statusFilter) return false;
-    if (divFilter && admission.div !== divFilter) return false;
-
-    if (scholarshipFilter) {
-      const isApplied = scholarshipFilter === "true";
-      if (admission.isScholarshipApplied !== isApplied) return false;
-    }
-
-    if (mahadbtFilter) {
-      const isSubmitted = mahadbtFilter === "true";
-      if (admission.isMahadbtFormSubmitted !== isSubmitted) return false;
-    }
-
-    if (migrationFilter) {
-      const hasCertificate = migrationFilter === "true";
-      if (admission.hasMigrationCertificate !== hasCertificate) return false;
-    }
-
-    return true;
-  });
 
   // HANDLERS
 
@@ -427,8 +405,6 @@ export default function AdminAdmission() {
             <option value="">All Divisions</option>
             <option value="A">A</option>
             <option value="B">B</option>
-            <option value="C">C</option>
-            <option value="D">D</option>
           </select>
 
           <input
@@ -504,17 +480,7 @@ export default function AdminAdmission() {
                 setMahadbtFilter("");
                 setMigrationFilter("");
                 setCurrentPage(1);
-                fetchAdmissions(1, {
-                  search: undefined,
-                  status: undefined,
-                  year: undefined,
-                  div: undefined,
-                  academicYear: undefined,
-                  filterPaid: undefined,
-                  isScholarshipApplied: undefined,
-                  isMahadbtFormSubmitted: undefined,
-                  hasMigrationCertificate: undefined
-                });
+                fetchAdmissions(1);
               }}
               className="px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95 flex items-center gap-2"
             >
@@ -541,7 +507,7 @@ export default function AdminAdmission() {
           </div>
         )}
 
-        {!loading && !error && filteredAdmissions.length === 0 && (
+        {!loading && !error && admissions.length === 0 && (
           <div className="bg-white p-16 text-center rounded-xl border border-slate-200 border-dashed">
             <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
@@ -551,9 +517,9 @@ export default function AdminAdmission() {
           </div>
         )}
 
-        {!loading && !error && filteredAdmissions.length > 0 && (
+        {!loading && !error && admissions.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredAdmissions.map((admission) => (
+            {admissions.map((admission) => (
               <AdmissionCard
                 key={admission._id}
                 admission={admission}
@@ -566,7 +532,7 @@ export default function AdminAdmission() {
         )}
 
         {/* Pagination Component */}
-        {!loading && !error && filteredAdmissions.length > 0 && (
+        {!loading && !error && admissions.length > 0 && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
