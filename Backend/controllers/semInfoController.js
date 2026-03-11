@@ -25,16 +25,26 @@ const addSemInfo = async (req, res) => {
     if (req.user.role === "student") {
       stuID = req.user.id;
     } else if (["admin", "divisionIncharge"].includes(req.user.role)) {
-      stuID = req.body.studentId;
+      const rawStudentId = req.body.studentId;
 
-      if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
-        return res.status(400).json({ success: false, message: "Invalid student ID" });
+      if (!rawStudentId) {
+        return res.status(400).json({ success: false, message: "studentId is required" });
       }
 
-      const student = await Student.findById(stuID);
+      // Support both MongoDB ObjectId and custom studentID field
+      let student;
+      if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
+        student = await Student.findById(rawStudentId);
+      }
+      if (!student) {
+        student = await Student.findOne({ studentID: rawStudentId });
+      }
+
       if (!student) {
         return res.status(404).json({ success: false, message: "Student not found" });
       }
+
+      stuID = student._id;
 
       // DI restriction
       if (
@@ -450,14 +460,15 @@ const getStudentSemInfos = async (req, res) => {
   try {
     const { studentId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(studentId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid student ID",
-      });
+    // Support both MongoDB ObjectId and custom studentID field
+    let student;
+    if (mongoose.Types.ObjectId.isValid(studentId)) {
+      student = await Student.findById(studentId);
+    }
+    if (!student) {
+      student = await Student.findOne({ studentID: studentId });
     }
 
-    const student = await Student.findById(studentId);
     if (!student) {
       return res.status(404).json({
         success: false,
@@ -476,7 +487,7 @@ const getStudentSemInfos = async (req, res) => {
       });
     }
 
-    const data = await SemesterInfo.find({ stuID: studentId })
+    const data = await SemesterInfo.find({ stuID: student._id })
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, data });

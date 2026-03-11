@@ -36,34 +36,49 @@ const createAdmission = async (req, res) => {
     if (error) return validationErrorResponse(res, error.details);
 
     let stuID;
+    let student;   //resolved in all role branches
 
     // Role-based ownership
     if (req.user.role === "student") {
-      stuID = req.user.id;
-    } else if (["admin", "divisionIncharge"].includes(req.user.role)) {
-      stuID = req.body.studentId;
-
-      if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
-        return res.status(400).json({ success: false, message: "Invalid student ID" });
+      student = await Student.findById(req.user.id);
+      if (!student) {
+        return res.status(404).json({ success: false, message: "Student not found" });
       }
-    } else {
-      return res.status(403).json({ success: false, message: "Unauthorized role" });
-    }
+      stuID = student._id;
+    } else if (["admin", "divisionIncharge"].includes(req.user.role)) {
+      const rawStudentId = req.body.studentId;
 
-    const student = await Student.findById(stuID);
-    if (!student) {
-      return res.status(404).json({ success: false, message: "Student not found" });
-    }
+      if (!rawStudentId) {
+        return res.status(400).json({ success: false, message: "studentId is required" });
+      }
 
-    // Division Incharge restriction
-    if (
-      req.user.role === "divisionIncharge" &&
-      (student.year !== req.user.year || student.division !== req.user.division)
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only manage students within your own division",
-      });
+      // Support both MongoDB ObjectId and custom studentID field
+      if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
+        // Try MongoDB _id first
+        student = await Student.findById(rawStudentId);
+      }
+      // If not found by _id (or wasn't a valid ObjectId), fall back to custom studentID field
+      if (!student) {
+        student = await Student.findOne({ studentID: rawStudentId });
+      }
+
+      if (!student) {
+        return res.status(404).json({ success: false, message: "Student not found" });
+      }
+
+      stuID = student._id;
+
+      // For Division Incharge, ensure the student belongs to their division
+      // Division Incharge restriction
+      if (
+        req.user.role === "divisionIncharge" &&
+        (student.year !== req.user.year || student.division !== req.user.division)
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only manage students within your own division",
+        });
+      }
     }
 
     // All validated fields from value are explicitly assigned to the model

@@ -34,6 +34,10 @@ const createActivity = async (req, res) => {
   let dbSaved = false;
 
   try {
+
+    //studentId is required in body for admin/di, but will be ignored for students (overridden by req.user.id)
+    const { studentId } = req.body;
+
     /* Joi Validation */
     const { error, value } = activityCreateSchema.validate(req.body, {
       abortEarly: false,
@@ -58,22 +62,51 @@ const createActivity = async (req, res) => {
       stuID = req.user.id;
     }
     else if (["admin", "divisionIncharge"].includes(req.user.role)) {
-      stuID = req.body.studentId;
+      // stuID = req.body.studentId;
+      // stuID = studentId;
 
-      if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
+      // if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
+      //   return res.status(400).json({
+      //     success: false,
+      //     message: "Invalid student ID",
+      //   });
+      // }
+
+      // const student = await Student.findById(stuID);
+      // if (!student) {
+      //   return res.status(404).json({
+      //     success: false,
+      //     message: "Student not found",
+      //   });
+      // }
+
+      const rawStudentId = studentId;
+
+      if (!rawStudentId) {
         return res.status(400).json({
           success: false,
-          message: "Invalid student ID",
+          message: "Student ID is required",
         });
       }
 
-      const student = await Student.findById(stuID);
+      // Support both MongoDB ObjectId and studentID (e.g. "2024FHIT009")
+      let student;
+      if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
+        student = await Student.findById(rawStudentId);
+      } else {
+        student = await Student.findOne({ studentID: rawStudentId });
+      }
+
       if (!student) {
         return res.status(404).json({
           success: false,
           message: "Student not found",
         });
       }
+
+      stuID = student._id;
+
+      //end
 
       if (
         req.user.role === "divisionIncharge" &&

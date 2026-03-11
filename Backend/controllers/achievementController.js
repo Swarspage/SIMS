@@ -77,16 +77,30 @@ const createAchievement = async (req, res) => {
     if (req.user.role === "student") {
       stuID = req.user.id;
     } else if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
-      stuID = req.body.studentId;
+      // stuID = req.body.studentId;
+      const rawStudentID = req.body.studentId;
 
-      if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
-        return res.status(400).json({ success: false, message: "Invalid student ID" });
+      if (!rawStudentID) {
+        return res.status(400).json({ success: false, message: "Student ID is required" });
       }
 
-      const student = await Student.findById(stuID);
+      // Support both MongoDB ObjectId and studentID 
+      let student;
+      if (mongoose.Types.ObjectId.isValid(rawStudentID)) {
+        student = await Student.findById(rawStudentID);
+      }
+
+      //search by studentID field if not found via ObjectId
+      if (!student) {
+        student = await Student.findOne({ studentID: rawStudentID });
+      }
+
       if (!student) {
         return res.status(404).json({ success: false, message: "Student not found" });
       }
+
+      stuID = student._id;
+    
 
       if (
         req.user.role === "divisionIncharge" &&
