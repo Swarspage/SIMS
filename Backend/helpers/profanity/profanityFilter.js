@@ -103,9 +103,24 @@ function containsProfanity(text) {
 
   if (!text) return false;
 
-  const normalized = normalizeText(text);
+  const words = text.toLowerCase().split(/\W+/);
 
-  return LeoProfanity.check(text) || LeoProfanity.check(normalized);
+  for (const w of words) {
+    if (LeoProfanity.check(w)) {
+      return true;
+    }
+  }
+
+  const normalized = normalizeText(text);
+  const badWords = LeoProfanity.list();
+
+  for (const word of badWords) {
+    if (normalized.includes(word)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 module.exports = {
