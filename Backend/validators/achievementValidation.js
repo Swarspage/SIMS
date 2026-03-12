@@ -325,6 +325,12 @@ const getAchievementsValidation = Joi.object({
       "number.max": "Limit cannot exceed 50."
     }),
 
+  achievementType: Joi.string()
+    .trim()
+    .valid("Participation", "Winner", "Runnerup")
+    .optional()
+    .messages({ "any.only": "Achievement type must be one of Participation, Winner, or Runnerup." }),
+
   export: Joi.string().valid("true", "false").optional()
 
 }).options({ stripUnknown: true, convert: true, abortEarly: false });
