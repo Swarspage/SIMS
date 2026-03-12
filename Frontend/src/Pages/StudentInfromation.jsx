@@ -343,30 +343,53 @@ export default function StudentInformation() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
               {/* Photo Upload - Spans 2 cols on small, 1 on large, but let's make it sit nicely */}
-              <div className="md:col-span-2 lg:col-span-4 flex flex-col sm:flex-row items-center gap-6 mb-4">
-                <div className="relative group">
-                  <div className="w-32 h-32 rounded-full overflow-hidden bg-slate-100 border-4 border-white shadow-md">
-                    {photoPreview ? (
-                      <img src={photoPreview} alt="Student" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400">
-                        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                    )}
+              {/* Enhanced Photo Upload Section */}
+              <div className="md:col-span-2 lg:col-span-4 bg-blue-50/50 border border-blue-100 rounded-2xl p-6 mb-4">
+                <div className="flex flex-col sm:flex-row items-center gap-8">
+                  <div className="relative group">
+                    <div className="w-40 h-40 rounded-full overflow-hidden bg-white border-4 border-white shadow-xl ring-4 ring-blue-50 transition-transform duration-300 group-hover:scale-[1.02]">
+                      {photoPreview ? (
+                        <img src={photoPreview} alt="Student" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
+                          <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Preview</span>
+                        </div>
+                      )}
+                    </div>
+                    <label className="absolute bottom-2 right-2 bg-blue-600 text-white p-3 rounded-full shadow-2xl cursor-pointer hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 ring-4 ring-white">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                    </label>
                   </div>
-                  <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full shadow-lg cursor-pointer hover:bg-blue-700 transition-transform hover:scale-110">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                  </label>
-                </div>
-                <div className="text-center sm:text-left">
-                  <h3 className="font-medium text-slate-900">Profile Photo</h3>
-                  <p className="text-sm text-slate-500 mt-1">Upload a clear passport size photo.<br />Max size 500KB. Formats: JPG, PNG.</p>
+
+                  <div className="text-center sm:text-left flex-1">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      Required Document
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 leading-tight">Your Profile Photo</h3>
+                    <p className="text-slate-600 mt-2 max-w-md">
+                      Please upload a professional, clear passport-sized photograph. This photo will be used for your official identity card and academic records.
+                    </p>
+                    <div className="flex flex-wrap gap-4 mt-5">
+                      <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                        Max Size: <span className="font-bold text-slate-700 ml-1">500 KB</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                        Formats: <span className="font-bold text-slate-700 ml-1">JPG, PNG</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

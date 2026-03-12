@@ -5,7 +5,7 @@ import Pagination from "../Components/Common/Pagination";
 
 // ==================== COMPONENTS ====================
 
-function AdmissionCard({ admission, onView, onDelete, isDeleting }) {
+function AdmissionCard({ admission, onView, onEdit, onDelete, isDeleting }) {
   const getStatusColor = (status) => {
     switch (status) {
       case "approved":
@@ -75,12 +75,20 @@ function AdmissionCard({ admission, onView, onDelete, isDeleting }) {
 
         {/* Action Buttons */}
         <div className="mt-auto flex flex-col gap-2">
-          <button
-            onClick={() => onView && onView(admission)}
-            className="w-full px-3 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-all shadow-sm active:scale-95"
-          >
-            View Details
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => onView && onView(admission)}
+              className="px-3 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+            >
+              View Details
+            </button>
+            <button
+              onClick={() => onEdit && onEdit(admission)}
+              className="px-3 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all shadow-sm active:scale-95"
+            >
+              Edit
+            </button>
+          </div>
           <button
             onClick={() => onDelete && onDelete(admission._id)}
             disabled={isDeleting}
@@ -253,7 +261,244 @@ function DetailModal({ admission, onClose }) {
   );
 }
 
-// EditModal removed as per requirement (Admin 403 issue)
+
+function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    year: "", div: "", rollno: "", course: "", fees: "", status: "",
+    isScholarshipApplied: false, scholarshipNotAppliedReason: "",
+    isMahadbtFormSubmitted: false, mahadbtFilledDate: "", mahadbtNotFilledReason: "",
+    hasMigrationCertificate: false, migrationExpectedDate: "", migrationNotAvailableReason: ""
+  });
+
+  useEffect(() => {
+    if (admission && isOpen) {
+      setForm({
+        year: admission.year || "",
+        div: admission.div || "",
+        rollno: admission.rollno || "",
+        course: admission.course || "",
+        fees: admission.fees || "",
+        status: admission.status || "pending",
+        isScholarshipApplied: !!admission.isScholarshipApplied,
+        scholarshipNotAppliedReason: admission.scholarshipNotAppliedReason || "",
+        isMahadbtFormSubmitted: !!admission.isMahadbtFormSubmitted,
+        mahadbtFilledDate: admission.mahadbtFilledDate ? new Date(admission.mahadbtFilledDate).toISOString().split('T')[0] : "",
+        mahadbtNotFilledReason: admission.mahadbtNotFilledReason || "",
+        hasMigrationCertificate: !!admission.hasMigrationCertificate,
+        migrationExpectedDate: admission.migrationExpectedDate ? new Date(admission.migrationExpectedDate).toISOString().split('T')[0] : "",
+        migrationNotAvailableReason: admission.migrationNotAvailableReason || ""
+      });
+    }
+  }, [admission, isOpen]);
+
+  if (!isOpen || !admission) return null;
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      
+      // Calculate what actually changed so we only send necessary updates.
+      // This prevents Joi validation errors for empty strings when you haven't filled a field.
+      const updateData = {};
+      Object.keys(form).forEach(key => {
+        if (key === 'status') return;
+        
+        let originalValue = admission[key];
+        // Handle dates for comparison
+        if (key === 'mahadbtFilledDate' || key === 'migrationExpectedDate') {
+          originalValue = originalValue ? new Date(originalValue).toISOString().split('T')[0] : "";
+        }
+        if (typeof form[key] === 'boolean') {
+          originalValue = !!originalValue;
+        }
+
+        // Only include fields that modified and are not empty
+        if (form[key] !== originalValue && form[key] !== "") {
+          updateData[key] = form[key];
+        }
+      });
+
+      // 1. MUST UPDATE ADMISSION DATA FIRST!
+      // If we update status first to 'approved', the backend instantly blocks subsequent data updates.
+      if (Object.keys(updateData).length > 0) {
+        await admissionService.updateAdmission(admission._id, updateData);
+      }
+
+      // 2. NOW UPDATE STATUS
+      if (form.status !== admission.status) {
+        await admissionService.updateAdmissionStatus(admission._id, form.status);
+      }
+
+      toast.success("✅ Admission updated successfully.");
+      onSaved();
+      onClose();
+    } catch (err) {
+      console.error(err);
+      const resData = err.response?.data;
+      if (resData?.errors && Array.isArray(resData.errors)) {
+        resData.errors.forEach((e) => toast.error(e.message || "Validation error"));
+      } else {
+        toast.error(resData?.message || "Failed to update admission.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputClass = "w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200 shadow-sm";
+  const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] border border-white/20">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg shadow-inner">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-800">Edit Admission Record</h3>
+              <p className="text-sm text-slate-500 font-medium font-mono">ID: {admission._id}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors focus:ring-2 focus:ring-slate-300 focus:outline-none">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        {admission.status !== 'pending' && (
+          <div className="mx-6 mt-6 p-4 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl flex items-start gap-4 shadow-sm">
+            <svg className="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+              <h4 className="font-bold">Backend Limitation: Read-Only Record</h4>
+              <p className="text-sm mt-1">
+                Because this admission has been <strong>{admission.status.toUpperCase()}</strong>, the server strictly forbids any further updates (Bad Request 400). You cannot change these details below.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 bg-slate-50/30">
+          <div className="p-6 sm:p-8 space-y-10">
+            {/* Section: Basic Info & Status */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-6 w-1.5 bg-blue-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Basic Info & Status</h4>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                  <label className={labelClass}>Approval Status</label>
+                  <select name="status" value={form.status} onChange={handleInputChange} className={`${inputClass} font-bold text-blue-700`}>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                <div><label className={labelClass}>Course</label><input type="text" name="course" value={form.course} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Full Year</label>
+                  <select name="year" value={form.year} onChange={handleInputChange} className={inputClass}>
+                    <option value="FY">FY</option><option value="SY">SY</option><option value="TY">TY</option>
+                  </select>
+                </div>
+                <div><label className={labelClass}>Division</label><input type="text" name="div" value={form.div} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Roll Number</label><input type="text" name="rollno" value={form.rollno} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Fees Amount (₹)</label><input type="number" name="fees" value={form.fees} onChange={handleInputChange} className={inputClass} /></div>
+              </div>
+            </section>
+
+            {/* Section: Scholarship & MahaDBT */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-6 w-1.5 bg-purple-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Scholarship & MahaDBT</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-bold text-slate-700">Scholarship Applied?</label>
+                    <input type="checkbox" name="isScholarshipApplied" checked={form.isScholarshipApplied} onChange={handleInputChange} className="w-5 h-5 accent-blue-600 rounded" />
+                  </div>
+                  {!form.isScholarshipApplied && (
+                    <div>
+                      <label className={labelClass}>Reason if Not Applied</label>
+                      <textarea name="scholarshipNotAppliedReason" value={form.scholarshipNotAppliedReason} onChange={handleInputChange} className={`${inputClass} min-h-[80px]`} placeholder="Specify reason..." />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-bold text-slate-700">MahaDBT Form Submitted?</label>
+                    <input type="checkbox" name="isMahadbtFormSubmitted" checked={form.isMahadbtFormSubmitted} onChange={handleInputChange} className="w-5 h-5 accent-purple-600 rounded" />
+                  </div>
+                  {form.isMahadbtFormSubmitted ? (
+                    <div>
+                      <label className={labelClass}>Form Submission Date</label>
+                      <input type="date" name="mahadbtFilledDate" value={form.mahadbtFilledDate} onChange={handleInputChange} className={inputClass} />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className={labelClass}>Reason if Not Submitted</label>
+                      <textarea name="mahadbtNotFilledReason" value={form.mahadbtNotFilledReason} onChange={handleInputChange} className={`${inputClass} min-h-[80px]`} placeholder="Specify reason..." />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* Section: Migration Details */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-6 w-1.5 bg-orange-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Migration Details</h4>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold text-slate-700">Has Migration Certificate?</label>
+                  <input type="checkbox" name="hasMigrationCertificate" checked={form.hasMigrationCertificate} onChange={handleInputChange} className="w-5 h-5 accent-orange-600 rounded" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {form.hasMigrationCertificate ? (
+                    <div className="sm:col-span-2">
+                      <label className={labelClass}>Migration Expected/Received Date</label>
+                      <input type="date" name="migrationExpectedDate" value={form.migrationExpectedDate} onChange={handleInputChange} className={inputClass} />
+                    </div>
+                  ) : (
+                    <div className="sm:col-span-2">
+                      <label className={labelClass}>Reason if Unavailable</label>
+                      <textarea name="migrationNotAvailableReason" value={form.migrationNotAvailableReason} onChange={handleInputChange} className={`${inputClass} min-h-[80px]`} placeholder="Specify reason..." />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-6 flex justify-end gap-4">
+            <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">Cancel</button>
+            <button 
+              type="submit" 
+              disabled={saving || admission.status !== 'pending'} 
+              className="px-10 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+            >
+              {saving ? "Saving Changes..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 // ==================== MAIN PAGE ====================
 
@@ -279,6 +524,8 @@ export default function AdminAdmission() {
   const [totalRecords, setTotalRecords] = useState(0);
 
   const [selectedAdmission, setSelectedAdmission] = useState(null); // For View
+  const [editingAdmission, setEditingAdmission] = useState(null); // For Edit
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deletingIds, setDeletingIds] = useState([]); // Track IDs currently being deleted
 
   useEffect(() => {
@@ -293,15 +540,15 @@ export default function AdminAdmission() {
         page,
         limit,
         search: searchQuery || undefined,
-        status: statusFilter || undefined,
         year: yearFilter || undefined,
-        div: divFilter || undefined,
         academicYear: academicYearFilter || undefined,
         filterPaid: feesPaidFilter || undefined,
-        isScholarshipApplied: scholarshipFilter || undefined,
-        isMahadbtFormSubmitted: mahadbtFilter || undefined,
-        hasMigrationCertificate: migrationFilter || undefined,
+        status: statusFilter || undefined,
+        isScholarshipApplied: scholarshipFilter !== "" ? scholarshipFilter === "true" : undefined,
+        isMahadbtFormSubmitted: mahadbtFilter !== "" ? mahadbtFilter === "true" : undefined,
+        hasMigrationCertificate: migrationFilter !== "" ? migrationFilter === "true" : undefined,
       };
+      
       const response = await admissionService.getAllAdmissions(params);
 
       const data = response.data || [];
@@ -323,6 +570,11 @@ export default function AdminAdmission() {
   };
 
   // HANDLERS
+
+  const handleEdit = (admission) => {
+    setEditingAdmission(admission);
+    setIsEditModalOpen(true);
+  };
 
   const handleDeleteAdmission = async (id) => {
     if (!window.confirm("Are you sure you want to delete this admission? This action cannot be undone.")) return;
@@ -361,17 +613,19 @@ export default function AdminAdmission() {
         </p>
       </div>
 
-      {/* FILTER BAR */}
+      {/* FILTER BAR - Only showing filters supported by Backend Joi Schema */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-8 flex flex-wrap gap-4 items-center">
-        <div className="flex-1 relative min-w-[300px]">
-          <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          <input
-            type="text"
-            placeholder="Search by ID, Course, Roll No..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-bold placeholder:font-normal"
-          />
+        <div className="flex-1 min-w-[300px]">
+          <div className="relative">
+            <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <input
+              type="text"
+              placeholder="Search by Course or Academic Year..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-bold placeholder:font-normal"
+            />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-3 items-center">
@@ -380,7 +634,7 @@ export default function AdminAdmission() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
           >
-            <option value="">All Status</option>
+            <option value="">All Statuses</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
@@ -390,21 +644,12 @@ export default function AdminAdmission() {
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}
             className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+            title="Note: Backend currently expects FY, SY, TY instead of SE, TE, BE"
           >
             <option value="">All Years</option>
             <option value="FY">FY</option>
             <option value="SY">SY</option>
             <option value="TY">TY</option>
-          </select>
-
-          <select
-            value={divFilter}
-            onChange={(e) => setDivFilter(e.target.value)}
-            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
-          >
-            <option value="">All Divisions</option>
-            <option value="A">A</option>
-            <option value="B">B</option>
           </select>
 
           <input
@@ -420,7 +665,7 @@ export default function AdminAdmission() {
             onChange={(e) => setFeesPaidFilter(e.target.value)}
             className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
           >
-            <option value="">All Fee Status</option>
+            <option value="">All Fee Statuses</option>
             <option value="paid">Paid</option>
             <option value="unpaid">Unpaid</option>
           </select>
@@ -430,7 +675,7 @@ export default function AdminAdmission() {
             onChange={(e) => setScholarshipFilter(e.target.value)}
             className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
           >
-            <option value="">Scholarship Status</option>
+            <option value="">Scholarship</option>
             <option value="true">Applied</option>
             <option value="false">Not Applied</option>
           </select>
@@ -440,7 +685,7 @@ export default function AdminAdmission() {
             onChange={(e) => setMahadbtFilter(e.target.value)}
             className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
           >
-            <option value="">MahaDBT Status</option>
+            <option value="">MahaDBT Form</option>
             <option value="true">Submitted</option>
             <option value="false">Not Submitted</option>
           </select>
@@ -450,9 +695,9 @@ export default function AdminAdmission() {
             onChange={(e) => setMigrationFilter(e.target.value)}
             className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
           >
-            <option value="">Migration Status</option>
-            <option value="true">Has Certificate</option>
-            <option value="false">Missing Certificate</option>
+            <option value="">Migration Cert.</option>
+            <option value="true">Available</option>
+            <option value="false">Not Available</option>
           </select>
         </div>
 
@@ -467,15 +712,14 @@ export default function AdminAdmission() {
             Find Admissions
           </button>
 
-          {(searchQuery || statusFilter || yearFilter || divFilter || academicYearFilter || feesPaidFilter || scholarshipFilter || mahadbtFilter || migrationFilter) && (
+          {(searchQuery || yearFilter || academicYearFilter || feesPaidFilter || statusFilter || scholarshipFilter || mahadbtFilter || migrationFilter) && (
             <button
               onClick={() => {
                 setSearchQuery("");
-                setStatusFilter("");
                 setYearFilter("");
-                setDivFilter("");
                 setAcademicYearFilter("");
                 setFeesPaidFilter("");
+                setStatusFilter("");
                 setScholarshipFilter("");
                 setMahadbtFilter("");
                 setMigrationFilter("");
@@ -524,6 +768,7 @@ export default function AdminAdmission() {
                 key={admission._id}
                 admission={admission}
                 onView={setSelectedAdmission}
+                onEdit={handleEdit}
                 onDelete={handleDeleteAdmission}
                 isDeleting={deletingIds.includes(admission._id)}
               />
@@ -551,6 +796,13 @@ export default function AdminAdmission() {
       <DetailModal
         admission={selectedAdmission}
         onClose={() => setSelectedAdmission(null)}
+      />
+
+      <EditAdmissionModal
+        isOpen={isEditModalOpen}
+        admission={editingAdmission}
+        onClose={() => setIsEditModalOpen(false)}
+        onSaved={() => fetchAdmissions(currentPage)}
       />
 
       <Toaster position="bottom-right" />

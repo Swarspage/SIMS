@@ -1,10 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { activityService } from "../services/activityService";
-import { achievementService } from "../services/achievementService";
-import { internshipService } from "../services/internshipService";
-import { placementService } from "../services/placementService";
-import { higherStudiesService } from "../services/higherStudiesService";
+import { dashboardService } from "../services/dashboardService";
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -17,8 +13,8 @@ export default function StudentDashboard() {
   });
 
   const [recentActivities, setRecentActivities] = useState([]);
-  const [activityByCategory, setActivityByCategory] = useState({});
-  const [achievementByCategory, setAchievementByCategory] = useState({});
+  const [activityDistribution, setActivityDistribution] = useState([]);
+  const [achievementDistribution, setAchievementDistribution] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -27,94 +23,19 @@ export default function StudentDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      // ... your original data fetch logic (unchanged) ...
-      let activities = [];
-      let achievements = [];
-      let hasInternship = false;
-      let hasPlacement = false;
-      let hasHigherStudies = false;
+      const data = await dashboardService.getStudentDashboard();
 
-      // Activities
-      try {
-        const activityResponse = await activityService.getActivityByStu();
-        activities =
-          activityResponse.data ||
-          activityResponse.activities ||
-          activityResponse ||
-          [];
-      } catch (err) { }
-
-      // Achievements
-      try {
-        const achievementResponse =
-          await achievementService.getAchievementsByStu();
-        achievements =
-          achievementResponse.data ||
-          achievementResponse.achievements ||
-          achievementResponse ||
-          [];
-      } catch (err) { }
-
-      // Internship
-      try {
-        const internshipResponse = await internshipService.getOwnInternships();
-        const internships =
-          internshipResponse.data ||
-          internshipResponse.internships ||
-          internshipResponse ||
-          [];
-        hasInternship = internships.length > 0;
-      } catch (err) { }
-
-      // Placement
-      try {
-        const placementResponse = await placementService.getOwnPlacements();
-        const placements =
-          placementResponse.data ||
-          placementResponse.placements ||
-          placementResponse ||
-          [];
-        hasPlacement = placements.length > 0;
-      } catch (err) { }
-
-      // HigherStudies
-      try {
-        const higherStudiesResponse =
-          await higherStudiesService.getOwnHigherStudies();
-        const higherStudies =
-          higherStudiesResponse.data ||
-          higherStudiesResponse.higherStudies ||
-          higherStudiesResponse ||
-          [];
-        hasHigherStudies = higherStudies.length > 0;
-      } catch (err) { }
-
-      // Process categories
-      const activityCategories = {};
-      activities.forEach((activity) => {
-        activityCategories[activity.type] =
-          (activityCategories[activity.type] || 0) + 1;
-      });
-      const achievementCategories = {};
-      achievements.forEach((achievement) => {
-        achievementCategories[achievement.category] =
-          (achievementCategories[achievement.category] || 0) + 1;
-      });
-      const recent = activities.slice(-5).reverse();
-
-      setStats({
-        totalActivities: activities.length,
-        totalAchievements: achievements.length,
-        internshipStatus: hasInternship ? "Done" : "Pending",
-        placementStatus: hasPlacement ? "Placed" : "Not Placed",
-        higherStudiesStatus: hasHigherStudies ? "Applied" : "Not Applied",
-      });
-
-      setRecentActivities(recent);
-      setActivityByCategory(activityCategories);
-      setAchievementByCategory(achievementCategories);
+      if (data && data.stats) {
+        setStats(data.stats);
+        setActivityDistribution(data.activityDistribution || []);
+        setAchievementDistribution(data.achievementDistribution || []);
+        
+        // Note: Recent activities list is not currently provided by the consolidated API.
+        // We could fetch it separately if needed, but for minimal hits, we leave it empty.
+        setRecentActivities([]);
+      }
     } catch (error) {
-      // error handling
+       console.error("Error fetching student dashboard data:", error);
     } finally {
       setLoading(false);
     }
@@ -334,23 +255,23 @@ export default function StudentDashboard() {
             Activities by Category
           </h3>
           <div className="space-y-3">
-            {Object.entries(activityByCategory).length > 0 ? (
-              Object.entries(activityByCategory).map(([category, count]) => (
-                <div key={category}>
+            {activityDistribution.length > 0 ? (
+              activityDistribution.map((item) => (
+                <div key={item._id}>
                   <div className="flex justify-between mb-1">
                     <span className="text-xs sm:text-sm font-medium text-slate-700">
-                      {category}
+                      {item._id || "Other"}
                     </span>
                     <span className="text-xs sm:text-sm font-bold text-blue-600">
-                      {count}
+                      {item.count}
                     </span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2">
                     <div
-                      className="bg-blue-600 h-2 rounded-full"
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-500"
                       style={{
-                        width: `${(count /
-                            Math.max(...Object.values(activityByCategory))) *
+                        width: `${(item.count /
+                            Math.max(...activityDistribution.map(d => d.count))) *
                           100
                           }%`,
                       }}
@@ -371,23 +292,23 @@ export default function StudentDashboard() {
             Achievements by Category
           </h3>
           <div className="space-y-3">
-            {Object.entries(achievementByCategory).length > 0 ? (
-              Object.entries(achievementByCategory).map(([category, count]) => (
-                <div key={category}>
+            {achievementDistribution.length > 0 ? (
+              achievementDistribution.map((item) => (
+                <div key={item._id}>
                   <div className="flex justify-between mb-1">
                     <span className="text-xs sm:text-sm font-medium text-slate-700">
-                      {category}
+                      {item._id || "Other"}
                     </span>
                     <span className="text-xs sm:text-sm font-bold text-green-600">
-                      {count}
+                      {item.count}
                     </span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2">
                     <div
-                      className="bg-green-600 h-2 rounded-full"
+                      className="bg-green-600 h-2 rounded-full transition-all duration-500"
                       style={{
-                        width: `${(count /
-                            Math.max(...Object.values(achievementByCategory))) *
+                        width: `${(item.count /
+                            Math.max(...achievementDistribution.map(d => d.count))) *
                           100
                           }%`,
                       }}

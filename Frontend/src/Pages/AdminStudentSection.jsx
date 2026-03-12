@@ -180,95 +180,140 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
     }
   };
 
+  const inputClass = "w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200 shadow-sm";
+  const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h3 className="text-xl font-bold text-slate-800">Edit Student: {student?.studentID}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh] border border-white/20">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shadow-inner">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-800">Edit Student Profile</h3>
+              <p className="text-sm text-slate-500 font-medium">ID: {student?.studentID}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors focus:ring-2 focus:ring-slate-300 focus:outline-none">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto bg-slate-50/50 flex-1">
-          {/* Section: Personal Info */}
-          <h4 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-4 border-b pb-2">Personal Information</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">First Name</label><input type="text" name="firstName" value={form.firstName} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Middle Name</label><input type="text" name="middleName" value={form.middleName} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Last Name</label><input type="text" name="lastName" value={form.lastName} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Mother's Name</label><input type="text" name="motherName" value={form.motherName} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Date of Birth</label><input type="date" name="dob" value={form.dob} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Blood Group</label>
-              <select name="bloodGroup" value={form.bloodGroup} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm">
-                <option value="">Select</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option>
-              </select>
-            </div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
-              <select name="category" value={form.category} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm">
-                <option value="">Select</option><option value="Open">Open</option><option value="EWS">EWS</option><option value="EBC">EBC</option><option value="OBC">OBC</option><option value="SC">SC</option><option value="ST">ST</option><option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Section: Academic Info */}
-          <h4 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-4 border-b pb-2">Academic Information</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">PRN</label><input type="text" name="PRN" value={form.PRN} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Year</label>
-              <select name="year" value={form.year} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm">
-                <option value="">Select</option><option value="SE">SE</option><option value="TE">TE</option><option value="BE">BE</option>
-              </select>
-            </div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Division</label>
-              <select name="division" value={form.division} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm">
-                <option value="">Select</option><option value="A">A</option><option value="B">B</option><option value="C">C</option>
-              </select>
-            </div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Academic Year</label><input type="text" name="academicYear" placeholder="2024-2025" value={form.academicYear} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">ABC ID</label><input type="text" name="abcId" value={form.abcId} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-          </div>
-
-          {/* Section: Contact & Profiles */}
-          <h4 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-4 border-b pb-2">Contact Details & Photo</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Mobile No</label><input type="text" name="mobileNo" value={form.mobileNo} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Parent Mobile No</label><input type="text" name="parentMobileNo" value={form.parentMobileNo} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label className="block text-xs font-semibold text-slate-700 mb-1">Parent Email</label><input type="email" name="parentEmail" value={form.parentEmail} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div className="md:col-span-3">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Update Student Photo (Optional)</label>
-              <input type="file" accept="image/png, image/jpeg, image/jpg" onChange={e => setPhoto(e.target.files[0])} className="w-full px-3 py-2 border rounded-lg text-sm bg-white" />
-            </div>
-          </div>
-
-          {/* Section: Addresses */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
-            <div>
-              <h4 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-4 border-b pb-2">Current Address</h4>
-              <div className="space-y-3">
-                <div><label className="block text-xs font-semibold text-slate-700 mb-1">Street</label><input type="text" name="currentStreet" value={form.currentStreet} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><label className="block text-xs font-semibold text-slate-700 mb-1">City</label><input type="text" name="currentCity" value={form.currentCity} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-                  <div><label className="block text-xs font-semibold text-slate-700 mb-1">Pincode</label><input type="text" name="pincode" value={form.pincode} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
+        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 bg-slate-50/30">
+          <div className="p-6 sm:p-8 space-y-10">
+            {/* Section: Personal Info */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-6 w-1.5 bg-blue-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Personal Information</h4>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div><label className={labelClass}>First Name</label><input type="text" name="firstName" value={form.firstName} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Middle Name</label><input type="text" name="middleName" value={form.middleName} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Last Name</label><input type="text" name="lastName" value={form.lastName} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Mother's Name</label><input type="text" name="motherName" value={form.motherName} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Date of Birth</label><input type="date" name="dob" value={form.dob} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Blood Group</label>
+                  <select name="bloodGroup" value={form.bloodGroup} onChange={handleInputChange} className={inputClass}>
+                    <option value="">Select</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option>
+                  </select>
+                </div>
+                <div><label className={labelClass}>Category</label>
+                  <select name="category" value={form.category} onChange={handleInputChange} className={inputClass}>
+                    <option value="">Select</option><option value="Open">Open</option><option value="EWS">EWS</option><option value="EBC">EBC</option><option value="OBC">OBC</option><option value="SC">SC</option><option value="ST">ST</option><option value="Other">Other</option>
+                  </select>
                 </div>
               </div>
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-4 border-b pb-2">Native Address</h4>
-              <div className="space-y-3">
-                <div><label className="block text-xs font-semibold text-slate-700 mb-1">Street</label><input type="text" name="nativeStreet" value={form.nativeStreet} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><label className="block text-xs font-semibold text-slate-700 mb-1">City</label><input type="text" name="nativeCity" value={form.nativeCity} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-                  <div><label className="block text-xs font-semibold text-slate-700 mb-1">Pincode</label><input type="text" name="nativePincode" value={form.nativePincode} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
+            </section>
+
+            {/* Section: Academic Info */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-6 w-1.5 bg-emerald-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Academic Information</h4>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div><label className={labelClass}>PRN Number</label><input type="text" name="PRN" value={form.PRN} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Year</label>
+                  <select name="year" value={form.year} onChange={handleInputChange} className={inputClass}>
+                    <option value="">Select</option><option value="SE">SE</option><option value="TE">TE</option><option value="BE">BE</option>
+                  </select>
+                </div>
+                <div><label className={labelClass}>Division</label>
+                  <select name="division" value={form.division} onChange={handleInputChange} className={inputClass}>
+                    <option value="">Select</option><option value="A">A</option><option value="B">B</option><option value="C">C</option>
+                  </select>
+                </div>
+                <div><label className={labelClass}>Academic Year</label><input type="text" name="academicYear" placeholder="2024-2025" value={form.academicYear} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>ABC ID</label><input type="text" name="abcId" value={form.abcId} onChange={handleInputChange} className={inputClass} /></div>
+              </div>
+            </section>
+
+            {/* Section: Contact & Profiles */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-6 w-1.5 bg-purple-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Contact Details & Photo</h4>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                <div><label className={labelClass}>Mobile No</label><input type="text" name="mobileNo" value={form.mobileNo} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Parent Mobile No</label><input type="text" name="parentMobileNo" value={form.parentMobileNo} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Parent Email</label><input type="email" name="parentEmail" value={form.parentEmail} onChange={handleInputChange} className={inputClass} /></div>
+                <div className="sm:col-span-2 md:col-span-3">
+                  <label className={labelClass}>Update Student Photo (Optional)</label>
+                  <input type="file" accept="image/png, image/jpeg, image/jpg" onChange={e => setPhoto(e.target.files[0])} className={`${inputClass} !p-2 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer`} />
                 </div>
               </div>
-            </div>
+            </section>
+
+            {/* Section: Addresses */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-6 w-1.5 bg-orange-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Addresses</h4>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Current Address */}
+                <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                  <h5 className="font-bold text-slate-700 mb-5 flex items-center gap-2">
+                    <div className="p-1.5 bg-orange-100 rounded-lg text-orange-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></div> Current Address
+                  </h5>
+                  <div className="space-y-5">
+                    <div><label className={labelClass}>Street</label><input type="text" name="currentStreet" value={form.currentStreet} onChange={handleInputChange} className={inputClass} /></div>
+                    <div className="grid grid-cols-2 gap-5">
+                      <div><label className={labelClass}>City</label><input type="text" name="currentCity" value={form.currentCity} onChange={handleInputChange} className={inputClass} /></div>
+                      <div><label className={labelClass}>Pincode</label><input type="text" name="pincode" value={form.pincode} onChange={handleInputChange} className={inputClass} /></div>
+                    </div>
+                  </div>
+                </div>
+                {/* Native Address */}
+                <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                  <h5 className="font-bold text-slate-700 mb-5 flex items-center gap-2">
+                    <div className="p-1.5 bg-indigo-100 rounded-lg text-indigo-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div> Native Address
+                  </h5>
+                  <div className="space-y-5">
+                    <div><label className={labelClass}>Street</label><input type="text" name="nativeStreet" value={form.nativeStreet} onChange={handleInputChange} className={inputClass} /></div>
+                    <div className="grid grid-cols-2 gap-5">
+                      <div><label className={labelClass}>City</label><input type="text" name="nativeCity" value={form.nativeCity} onChange={handleInputChange} className={inputClass} /></div>
+                      <div><label className={labelClass}>Pincode</label><input type="text" name="nativePincode" value={form.nativePincode} onChange={handleInputChange} className={inputClass} /></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
 
-          <div className="sticky bottom-0 bg-slate-50 border-t border-slate-200 mt-6 pt-4 pb-2 flex justify-end gap-3 translate-y-4">
-            <button type="button" onClick={onClose} className="px-5 py-2.5 font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
-            <button type="submit" disabled={saving} className="px-5 py-2.5 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm">
-              {saving ? "Saving Changes..." : "Save Changes"}
+          {/* Action Footer */}
+          <div className="sticky bottom-0 bg-white/90 backdrop-blur-md border-t border-slate-200 p-5 sm:p-6 flex justify-end gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all focus:outline-none focus:ring-4 focus:ring-slate-100">Cancel</button>
+            <button type="submit" disabled={saving} className="px-8 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-500/30 flex items-center gap-2">
+              {saving ? (
+                <><svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Saving Changes...</>
+              ) : (
+                <><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Save Changes</>
+              )}
             </button>
           </div>
         </form>
@@ -826,14 +871,29 @@ export default function AdminStudentSection() {
   };
 
   // If viewing a student profile, show full page view
-  if (viewMode === "profile" && selectedStudent && !isEditModalOpen) {
+  if (viewMode === "profile" && selectedStudent) {
     return (
-      <StudentProfileView
-        student={selectedStudent}
-        onBack={handleBackToList}
-        onEdit={handleEditStudent}
-        onDelete={handleDeleteStudent}
-      />
+      <>
+        <StudentProfileView
+          student={selectedStudent}
+          onBack={handleBackToList}
+          onEdit={handleEditStudent}
+          onDelete={handleDeleteStudent}
+        />
+        {/* Render edit modal on top so the profile view is visible underneath */}
+        <EditStudentModal
+          isOpen={isEditModalOpen}
+          student={selectedStudent}
+          onClose={() => setIsEditModalOpen(false)}
+          onSaved={() => {
+            fetchStudents();
+            // Optional: update selectedStudent or wait for fetchStudents to refresh it
+            // if we needed to but fetchStudents will refresh the list. 
+            // Better to go back to list on edit or show updated info
+            // For now just relying on fetchStudents
+          }}
+        />
+      </>
     );
   }
 
@@ -905,15 +965,7 @@ export default function AdminStudentSection() {
   };
 
 
-  // If viewing a student profile, show full page view
-  if (viewMode === "profile" && selectedStudent) {
-    return (
-      <StudentProfileView
-        student={selectedStudent}
-        onBack={handleBackToList}
-      />
-    );
-  }
+  // Handle viewing profile was previously duplicated here and has been removed
 
   // Otherwise show the list view
   return (

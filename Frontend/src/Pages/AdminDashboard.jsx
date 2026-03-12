@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { studentService } from "../services/studentService";
-import { activityService } from "../services/activityService";
-import { achievementService } from "../services/achievementService";
-import { internshipService } from "../services/internshipService";
-import { placementService } from "../services/placementService";
+import { dashboardService } from "../services/dashboardService";
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -13,11 +9,12 @@ export default function AdminDashboard() {
     totalAchievements: 0,
     totalInternships: 0,
     totalPlacements: 0,
+    totalHigherStudies: 0
   });
 
   const [recentActivities, setRecentActivities] = useState([]);
-  const [activityByCategory, setActivityByCategory] = useState({});
-  const [achievementByCategory, setAchievementByCategory] = useState({});
+  const [placementByType, setPlacementByType] = useState([]);
+  const [achievementByCategory, setAchievementByCategory] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -26,71 +23,22 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      const role = localStorage.getItem("role");
+      let data;
 
-      // Concurrent data fetching for better performance
-      const [
-        studentsRes,
-        activitiesRes,
-        achievementsRes,
-        internshipsRes,
-        placementsRes,
-      ] = await Promise.allSettled([
-        studentService.getAllStudents(),
-        activityService.getAllActivities(),
-        achievementService.getAllAchievements(),
-        internshipService.getAllInternships(),
-        placementService.getAllPlacements(),
-      ]);
+      if (role === "admin") {
+        data = await dashboardService.getAdminDashboard();
+      } else if (role === "division" || role === "divisionIncharge") {
+        data = await dashboardService.getDivisionDashboard();
+      }
 
-      // Helper to safely extract data from responses
-      const getData = (result) => {
-        if (result.status === "fulfilled") {
-          const res = result.value;
-          return res.data || res.activities || res.achievements || res.placements || res.internships || res || [];
-        }
-        return [];
-      };
-
-      const students = getData(studentsRes);
-      const activities = getData(activitiesRes);
-      const achievements = getData(achievementsRes);
-      const internships = getData(internshipsRes);
-      const placements = getData(placementsRes);
-
-      // Process Categories
-      const activityCategories = {};
-      activities.forEach((activity) => {
-        const type = activity.type || "Other";
-        activityCategories[type] = (activityCategories[type] || 0) + 1;
-      });
-
-      const achievementCategories = {};
-      achievements.forEach((achievement) => {
-        const category = achievement.category || "Other";
-        achievementCategories[category] = (achievementCategories[category] || 0) + 1;
-      });
-
-      // Recent Activities (Global)
-      // Assuming activities have a 'date' or 'createdAt' field
-      const sortedActivities = [...activities].sort((a, b) => {
-        return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
-      });
-      const recent = sortedActivities.slice(0, 5);
-
-      setStats({
-        totalStudents: students.length,
-        totalActivities: activities.length,
-        totalAchievements: achievements.length,
-        totalInternships: internships.length,
-        totalPlacements: placements.length,
-      });
-
-      setRecentActivities(recent);
-      setActivityByCategory(activityCategories);
-      setAchievementByCategory(achievementCategories);
-
+      if (data && data.stats) {
+        setStats(data.stats);
+        setPlacementByType(data.placementsByType || []);
+        setAchievementByCategory(data.achievementsByCategory || []);
+      }
     } catch (error) {
-      console.error("Error fetching admin dashboard data:", error);
+      console.error("Error fetching dashboard data:", error);
     } finally {
       setLoading(false);
     }
@@ -194,31 +142,46 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Total Higher Studies */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-600 mb-1">Higher Studies</p>
+              <p className="text-3xl font-bold text-amber-600">{stats.totalHigherStudies || 0}</p>
+            </div>
+            <div className="bg-amber-100 rounded-full p-4">
+              <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C6.228 6.228 2 10.228 2 15s4.228 8.772 10 8.772 10-4.228 10-8.772c0-4.772-4.228-8.747-10-8.747z" />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Activity Distribution */}
+        {/* Placement Distribution */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Activities by Type</h3>
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Placements by Type</h3>
           <div className="space-y-4">
-            {Object.entries(activityByCategory).length > 0 ? (
-              Object.entries(activityByCategory).map(([category, count]) => (
-                <div key={category}>
+            {placementByType.length > 0 ? (
+              placementByType.map((item) => (
+                <div key={item._id}>
                   <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium text-slate-700">{category}</span>
-                    <span className="text-sm font-bold text-blue-600">{count}</span>
+                    <span className="text-sm font-medium text-slate-700">{item._id || "Other"}</span>
+                    <span className="text-sm font-bold text-blue-600">{item.count}</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2.5">
                     <div
                       className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
-                      style={{ width: `${(count / Math.max(...Object.values(activityByCategory))) * 100}%` }}
+                      style={{ width: `${(item.count / Math.max(...placementByType.map(p => p.count))) * 100}%` }}
                     ></div>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-slate-500 text-sm">No data available.</p>
+              <p className="text-slate-500 text-sm">No placement data available.</p>
             )}
           </div>
         </div>
@@ -227,23 +190,23 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Achievements by Category</h3>
           <div className="space-y-4">
-            {Object.entries(achievementByCategory).length > 0 ? (
-              Object.entries(achievementByCategory).map(([category, count]) => (
-                <div key={category}>
+            {achievementByCategory.length > 0 ? (
+              achievementByCategory.map((item) => (
+                <div key={item._id}>
                   <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium text-slate-700">{category}</span>
-                    <span className="text-sm font-bold text-green-600">{count}</span>
+                    <span className="text-sm font-medium text-slate-700">{item._id || "Other"}</span>
+                    <span className="text-sm font-bold text-green-600">{item.count}</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2.5">
                     <div
                       className="bg-green-600 h-2.5 rounded-full transition-all duration-500"
-                      style={{ width: `${(count / Math.max(...Object.values(achievementByCategory))) * 100}%` }}
+                      style={{ width: `${(item.count / Math.max(...achievementByCategory.map(a => a.count))) * 100}%` }}
                     ></div>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-slate-500 text-sm">No data available.</p>
+              <p className="text-slate-500 text-sm">No achievement data available.</p>
             )}
           </div>
         </div>

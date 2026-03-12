@@ -246,15 +246,6 @@ export default function StudentAdmission() {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
                   <InfoItem label="Total Fees" value={`₹ ${formData.fees}`} />
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wide mb-1">Fee Status</p>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${formData.isFeesPaid
-                      ? "bg-green-100 text-green-800"
-                      : "bg-orange-100 text-orange-800"
-                      }`}>
-                      {formData.isFeesPaid ? "Paid" : "Pending / Partial"}
-                    </span>
-                  </div>
                   <InfoItem label="Scholarship Applied" value={formData.isScholarshipApplied ? "Yes" : `No - ${formData.scholarshipNotAppliedReason}`} fullWidth />
                 </div>
               </div>
