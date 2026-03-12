@@ -6,7 +6,7 @@ const Student = require("../models/Student");
 // const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary");
 const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
 const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
-const { activityCreateSchema, activityUpdateSchema } = require("../validators/activitiesValidation");
+const { activityCreateSchema, activityUpdateSchema , getActivitiesValidation } = require("../validators/activitiesValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformActivity, activityColumnMap } = require('../helpers/excel/exportTransformers');
 
@@ -243,10 +243,15 @@ const getActivities = async (req, res) => {
 //get all activities with export option
 const getAllActivities = async (req, res) => {
   try {
-    const { year, division, search, page = 1, limit = 10 } = req.query;
-    const isExport = req.query.export === "true";
+    const { error , value } = getActivitiesValidation.validate(req.query);
+    if(error) return validationErrorResponse(res, error.details);
 
-    const skip = (page - 1) * Math.min(limit, 20);
+    const isExport = req.query.export === "true";
+    const page = Math.max(1 , Number(value.page || 1));
+    const limit = Math.min(Number(value.limit || 10), 50);    //single capped value is used everywhwre
+    const skip = (page - 1) * limit;
+
+    const { year, division, search } = value;
 
     const pipeline = [
       {
@@ -294,6 +299,8 @@ const getAllActivities = async (req, res) => {
     if (isExport) {
       const activities = await Activity.aggregate([
         ...pipeline,
+        { $sort: { createdAt: -1 } }, // sort before project so createdAt is still available
+        { $limit: 5000 },             // row cap to prevent memory overload
         {
           $project: {
             type: 1,
@@ -313,7 +320,6 @@ const getAllActivities = async (req, res) => {
             studentMobileNo: "$student.mobileNo",
           },
         },
-        { $sort: { createdAt: -1 } },
       ]);
 
       const rows = activities.map(transformActivity);
@@ -344,7 +350,7 @@ const getAllActivities = async (req, res) => {
           data: [
             { $sort: { createdAt: -1 } },
             { $skip: skip },
-            { $limit: Number(limit) },
+            { $limit: (limit) },   //uses the sm capped limit as skip
           ],
           total: [{ $count: "count" }],
         },
@@ -357,7 +363,8 @@ const getAllActivities = async (req, res) => {
       success: true,
       data: result[0].data,
       total,
-      page: Number(page),
+      page,
+      limit,
       totalPages: Math.ceil(total / limit),
     });
 
@@ -371,8 +378,7 @@ const getAllActivities = async (req, res) => {
 };
 
 
-/* ----------------------------- UPDATE ACTIVITY ----------------------------- */
-
+//update activity
 const updateActivity = async (req, res) => {
   let uploadedFiles;
   let dbSaved = false;

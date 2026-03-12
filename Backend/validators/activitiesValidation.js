@@ -133,7 +133,53 @@ const activityUpdateSchema = Joi.object({
     abortEarly: false   // reports all validation errors, not just the first one
   });
 
+
+const getActivitiesValidation = Joi.object({
+  year: Joi.string()
+    .trim()
+    .valid("FY", "SY", "TY")
+    .optional()
+    .messages({ "any.only": "Year must be one of FY, SY, or TY." }),
+
+  division: Joi.string()
+    .trim()
+    .pattern(textWithNumberRegex)
+    .max(10)
+    .optional()
+    .messages({
+      "string.pattern.base": "Division contains invalid characters.",
+      "string.max": "Division cannot exceed 10 characters."
+    }),
+
+  search: Joi.string()
+    .trim()
+    .pattern(textWithNumberRegex)
+    .max(100)
+    .optional()
+    .messages({
+      "string.max": "Search cannot exceed 100 characters.",
+      "string.pattern.base": "Search contains invalid characters."
+    }),
+
+  page: Joi.number().integer().min(1).optional()
+    .messages({
+      "number.base": "Page must be a number.",
+      "number.min": "Page must be at least 1."
+    }),
+
+  limit: Joi.number().integer().min(1).max(50).optional()
+    .messages({
+      "number.base": "Limit must be a number.",
+      "number.max": "Limit cannot exceed 50."
+    }),
+
+  export: Joi.string().valid("true", "false").optional()
+
+}).options({ stripUnknown: true, convert: true, abortEarly: false });
+
+
 module.exports = {
   activityCreateSchema,
-  activityUpdateSchema
+  activityUpdateSchema ,
+  getActivitiesValidation,
 };
