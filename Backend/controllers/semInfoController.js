@@ -5,6 +5,16 @@ const { semInfoCreateSchema , semInfoUpdateSchema , getSemInfosValidation } = re
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformSemesterInfo, semesterInfoColumnMap } = require('../helpers/excel/exportTransformers');
 
+//validation err response helper
+const validationErrorResponse = (res, details) =>
+  res.status(400).json({
+    success: false,
+    message: "Validation failed",
+    errors: details.map((e) => ({
+      field: e.path.join("."),
+      message: e.message,
+    })),
+  });
 
 // // Helper to calculate defaulter
 // const calculateDefaulter = (attendance, kts) => {

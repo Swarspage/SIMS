@@ -10,7 +10,16 @@ const { createAchievementSchema, updateAchievementSchema , getAchievementsValida
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformAchievement, achievementColumnMap } = require('../helpers/excel/exportTransformers');
 
-
+/* VALIDATION ERROR RESPONSE HELPER */
+const validationErrorResponse = (res, details) =>
+  res.status(400).json({
+    success: false,
+    message: "Validation failed",
+    errors: details.map((e) => ({
+      field: e.path.join("."),
+      message: e.message,
+    })),
+  });
 
 /* FILE CONFIG */
 

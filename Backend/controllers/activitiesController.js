@@ -11,6 +11,17 @@ const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformActivity, activityColumnMap } = require('../helpers/excel/exportTransformers');
 
 
+//validation err helper
+const validationErrorResponse = (res, details) =>
+  res.status(400).json({
+    success: false,
+    message: "Validation failed",
+    errors: details.map((e) => ({
+      field: e.path.join("."),
+      message: e.message,
+    })),
+  });
+
 /* FILE CONFIG */
 
 const fileConfigs = [
@@ -244,7 +255,8 @@ const getActivities = async (req, res) => {
 const getAllActivities = async (req, res) => {
   try {
     const { error , value } = getActivitiesValidation.validate(req.query);
-    if(error) return validationErrorResponse(res, error.details);
+    if(error) 
+      return validationErrorResponse(res, error.details);
 
     const isExport = req.query.export === "true";
     const page = Math.max(1 , Number(value.page || 1));
