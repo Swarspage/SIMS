@@ -2,7 +2,7 @@
 const Joi = require("../helpers/profanity/joiWithProfanity");
 const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
 
-//create admission => student
+//create admission
 const admissionCreateSchema = Joi.object({
   year: Joi.string()
     .trim()
@@ -375,6 +375,32 @@ const getAdmissionsValidation = Joi.object({
     .optional()
     .messages({
       "any.only": "Filter paid must be either 'paid' or 'unpaid'."
+    }),
+
+  status: Joi.string()
+    .trim()
+    .valid("pending", "approved", "rejected")
+    .optional()
+    .messages({
+      "any.only": "Status must be one of pending, approved, or rejected."
+    }),
+
+  isScholarshipApplied: Joi.boolean()
+    .optional()
+    .messages({
+      "boolean.base": "Scholarship applied must be true or false."
+    }),
+
+  isMahadbtFormSubmitted: Joi.boolean()
+    .optional()
+    .messages({
+      "boolean.base": "MahaDBT form submitted must be true or false."
+    }),
+
+  hasMigrationCertificate: Joi.boolean()
+    .optional()
+    .messages({
+      "boolean.base": "Migration certificate must be true or false."
     })
 }).options({
   stripUnknown: true,

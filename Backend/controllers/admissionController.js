@@ -268,6 +268,20 @@ const getAllAdmissions = async (req, res) => {
       query.isFeesPaid = false;
     }
 
+     // Status filter
+    if (value.status) query.status = value.status;
+ 
+    // Boolean filters — check explicitly for undefined so `false` values are not skipped
+    if (value.isScholarshipApplied !== undefined) {
+      query.isScholarshipApplied = value.isScholarshipApplied;
+    }
+    if (value.isMahadbtFormSubmitted !== undefined) {
+      query.isMahadbtFormSubmitted = value.isMahadbtFormSubmitted;
+    }
+    if (value.hasMigrationCertificate !== undefined) {
+      query.hasMigrationCertificate = value.hasMigrationCertificate;
+    }
+
     // Search across roll number, course, and academic year
     if (value.search) {
       const escaped = value.search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
