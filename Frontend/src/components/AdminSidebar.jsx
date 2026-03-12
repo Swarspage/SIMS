@@ -110,13 +110,16 @@ function SidebarInner({ pathname, onLinkClick, onLogout }) {
           alt="logo"
           className="w-20 h-20 object-contain transition-all duration-500"
         />
-        <div className="mt-4 flex flex-col items-center animate-in fade-in slide-in-from-top-2 duration-700">
-          <p className="text-[10px] font-bold text-center text-slate-400 uppercase tracking-widest leading-tight">
+        <div className="mt-5 flex flex-col items-center animate-in fade-in slide-in-from-top-4 duration-1000">
+          <h2 className="text-[11px] font-black text-center text-transparent bg-clip-text bg-gradient-to-r from-slate-700 to-slate-400 uppercase tracking-[0.2em] leading-relaxed drop-shadow-sm px-2">
             Datta Meghe College Of Engineering
-          </p>
-          <span className="text-[10px] font-semibold text-blue-600 mt-2 bg-blue-50/80 backdrop-blur-sm border border-blue-100 px-3 py-1 rounded-full shadow-sm">
-            {roleLabel}
-          </span>
+          </h2>
+          <div className="mt-3 relative group overflow-hidden rounded-full p-[1px]">
+            <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-70 group-hover:opacity-100 transition-opacity duration-500 blur-[2px]" />
+            <span className="relative text-[10px] font-bold text-blue-700 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full shadow-sm flex items-center justify-center transition-all duration-300 group-hover:bg-white/80">
+              {roleLabel}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -137,20 +140,31 @@ function SidebarInner({ pathname, onLinkClick, onLogout }) {
                 key={item.name}
                 to={item.path}
                 onClick={onLinkClick}
-                style={{ animationDelay: `${index * 50}ms` }}
-                className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 transform active:scale-95
+                className={`group relative flex items-center gap-3.5 px-4 py-3 rounded-2xl text-[13px] font-bold transition-all duration-500 overflow-hidden
                 ${isActive
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200/50 ring-1 ring-blue-700/10"
-                    : "text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-sm hover:translate-x-1"
+                    ? "text-white shadow-[0_8px_30px_rgb(59,130,246,0.3)] ring-1 ring-white/20 scale-[1.02] translate-x-1"
+                    : "text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 hover:shadow-soft hover:translate-x-2"
                   }
-                animate-in fade-in slide-in-from-left-4 duration-500`}
+                animate-in fade-in slide-in-from-left-4`}
               >
-                <span className={`flex-shrink-0 transition-transform duration-300 group-hover:scale-110 ${isActive ? "drop-shadow-sm" : ""}`}>
+                {/* Background gradient for active state */}
+                {isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 opacity-90 transition-transform duration-500 group-hover:scale-105" />
+                )}
+
+                <span className={`relative z-10 flex-shrink-0 transition-all duration-500 ${isActive ? "drop-shadow-md scale-110" : "group-hover:scale-110 group-hover:-rotate-3"}`}>
                   {getIcon(item.name, isActive)}
                 </span>
-                <span className="truncate transition-all duration-300 opacity-100">
+                <span className="relative z-10 truncate tracking-wide">
                   {item.name}
                 </span>
+
+                {/* Active right arrow indicator */}
+                {isActive && (
+                  <span className="absolute right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                    <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -160,20 +174,22 @@ function SidebarInner({ pathname, onLinkClick, onLogout }) {
       <div className="p-4 border-t border-slate-200/50 bg-slate-50/30">
         <button
           onClick={onLogout}
-          className="group w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold
-            bg-red-50/50 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-red-200/50
-            active:scale-95"
+          className="relative group w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl text-[13px] font-bold overflow-hidden transition-all duration-500
+            text-red-500 bg-red-50/50 hover:text-white shadow-sm hover:shadow-[0_8px_30px_rgb(239,68,68,0.3)] hover:-translate-y-0.5 active:scale-95"
         >
+          {/* Hover Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-rose-500 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]" />
+
           <svg
-            className="w-5 h-5 flex-shrink-0 transition-transform duration-300 group-hover:-translate-x-1"
+            className="relative z-10 w-5 h-5 flex-shrink-0 transition-all duration-500 group-hover:-translate-x-1.5 group-hover:rotate-12"
             stroke="currentColor"
             fill="none"
             strokeWidth="2"
             viewBox="0 0 24 24"
           >
-            <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          <span className="transition-all duration-300 opacity-100">Logout</span>
+          <span className="relative z-10 tracking-wider uppercase">Logout</span>
         </button>
       </div>
     </div>
@@ -231,7 +247,7 @@ export default function AdminSidebar() {
 
       {/* ── Desktop sidebar ──────────────────────────────────── */}
       <aside
-        className="hidden md:flex flex-col sticky top-0 h-screen bg-white/80 backdrop-blur-xl border-r border-slate-200/50 shadow-sm transition-all duration-500 ease-in-out flex-shrink-0 z-30 w-72"
+        className="hidden md:flex flex-col sticky top-0 h-screen bg-white/60 backdrop-blur-3xl border-r border-slate-200/50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-all duration-500 ease-in-out flex-shrink-0 z-30 w-[280px]"
       >
         <SidebarInner pathname={pathname} onLinkClick={() => { }} onLogout={handleLogout} />
       </aside>

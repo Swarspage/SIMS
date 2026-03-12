@@ -8,21 +8,21 @@ export default function StudentProfileSidebar({ student, isOpen, onClose }) {
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/50 z-40 transition-opacity backdrop-blur-sm"
+        className="fixed inset-0 bg-gray-900/40 z-40 transition-opacity backdrop-blur-[2px]"
         onClick={onClose}
       ></div>
 
       {/* Sidebar Panel */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-sm sm:max-w-md bg-white/90 backdrop-blur-2xl shadow-[-10px_0_30px_rgba(0,0,0,0.1)] z-50 overflow-y-auto animate-in slide-in-from-right duration-500 flex flex-col border-l border-white/20">
+      <div className="fixed right-0 top-0 h-full w-full max-w-sm sm:max-w-md bg-white/95 backdrop-blur-3xl shadow-[-20px_0_60px_-15px_rgba(0,0,0,0.1)] z-50 overflow-y-auto animate-in slide-in-from-right duration-500 flex flex-col border-l border-gray-100">
         {/* Header */}
-        <div className="sticky top-0 bg-white/50 backdrop-blur-md z-10 p-6 flex items-center justify-between border-b border-slate-200/50">
+        <div className="sticky top-0 bg-white/80 backdrop-blur-xl z-20 p-6 flex items-center justify-between border-b border-gray-100 rounded-tl-2xl">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Student Profile</h2>
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Detailed Information</p>
+            <h2 className="text-[20px] font-black text-gray-900 tracking-tight">Student Profile</h2>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.1em] mt-0.5">Detailed Information</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-all duration-300 hover:rotate-90"
+            className="p-2.5 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-900 rounded-xl transition-all duration-300 hover:rotate-90 hover:scale-105 active:scale-95"
           >
             <svg
               className="h-5 w-5"
@@ -44,24 +44,24 @@ export default function StudentProfileSidebar({ student, isOpen, onClose }) {
         <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
           {/* Profile Image and Name Section */}
           <div className="text-center animate-in fade-in zoom-in-95 duration-700">
-            <div className="relative inline-block group">
-              <div className="absolute -inset-1.5 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+            <div className="relative inline-block group mb-5">
+              <div className="absolute -inset-2 bg-gradient-to-tr from-blue-500 via-indigo-500 to-blue-400 rounded-full blur-md opacity-30 group-hover:opacity-50 transition duration-700"></div>
               <img
                 src={student.studentPhoto?.url || avatar}
                 alt={student.name?.firstName}
-                className="relative w-32 h-32 rounded-full mx-auto object-cover border-4 border-white shadow-xl mb-4"
+                className="relative w-32 h-32 rounded-full mx-auto object-cover border-[4px] border-white shadow-[0_8px_30px_rgb(0,0,0,0.08)] group-hover:scale-[1.02] transition-transform duration-500"
               />
             </div>
-            <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            <h3 className="text-[24px] font-black text-gray-900 tracking-tight leading-tight">
               {student.name?.firstName} {student.name?.middleName || ""}{" "}
               {student.name?.lastName}
             </h3>
-            <p className="text-sm font-mono text-blue-600 font-semibold mt-1">{student.studentID}</p>
+            <p className="text-[13px] font-bold text-blue-600 tracking-wider mt-1 bg-blue-50 w-fit mx-auto px-3 py-0.5 rounded-md border border-blue-100/50">{student.studentID}</p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <span className="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded-full border border-blue-100 shadow-sm">
+              <span className="px-3 py-1 bg-white text-gray-700 text-[10px] font-black uppercase tracking-widest rounded-lg border border-gray-200 shadow-sm">
                 {student.year}
               </span>
-              <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-bold uppercase tracking-wider rounded-full border border-indigo-100 shadow-sm">
+              <span className="px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-lg border border-blue-100 shadow-sm">
                 {student.branch}
               </span>
             </div>
@@ -125,12 +125,12 @@ export default function StudentProfileSidebar({ student, isOpen, onClose }) {
         </div>
 
         {/* Footer Action Button */}
-        <div className="sticky bottom-0 bg-white/80 backdrop-blur-md border-t border-slate-200/50 p-6">
+        <div className="sticky bottom-0 bg-white/90 backdrop-blur-xl border-t border-gray-100 p-6 pb-8">
           <button
             onClick={onClose}
-            className="group relative w-full px-6 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl overflow-hidden shadow-lg shadow-slate-200 transition-all hover:bg-slate-800 active:scale-95"
+            className="group relative w-full px-6 py-3.5 bg-gray-900 text-white text-[13px] tracking-wide font-bold rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 hover:bg-gray-800 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.18)] active:scale-[0.98]"
           >
-            <div className="absolute inset-0 w-3 bg-white/20 skew-x-[-20deg] group-hover:left-full transition-all duration-500 -left-10"></div>
+            <div className="absolute inset-0 w-8 bg-white/20 skew-x-[-20deg] group-hover:left-[120%] transition-all duration-700 -left-10 ease-out"></div>
             Close Profile
           </button>
         </div>
@@ -142,12 +142,12 @@ export default function StudentProfileSidebar({ student, isOpen, onClose }) {
 // Utility Components for better UI organization
 function ProfileSection({ title, icon, children }) {
   return (
-    <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow duration-300">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg">
+    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:border-blue-100/50 transition-all duration-500">
+      <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-gray-50">
+        <div className="p-1.5 bg-blue-50/80 text-blue-600 rounded-[10px] ring-1 ring-blue-100/50">
           {icon}
         </div>
-        <h4 className="text-xs font-bold text-slate-800 uppercase tracking-widest">{title}</h4>
+        <h4 className="text-[11px] font-black text-gray-800 uppercase tracking-widest">{title}</h4>
       </div>
       {children}
     </div>
@@ -156,17 +156,17 @@ function ProfileSection({ title, icon, children }) {
 
 function DetailItem({ label, value, isCopyable = false }) {
   return (
-    <div>
-      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+    <div className="group/item">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">
         {label}
       </label>
-      <div className="flex items-center gap-2 mt-0.5">
-        <p className="text-sm font-semibold text-slate-700 leading-snug">
+      <div className="flex items-center gap-2 group-hover/item:translate-x-0.5 transition-transform duration-300">
+        <p className="text-[13px] font-semibold text-gray-800 leading-snug break-words">
           {value || "N/A"}
         </p>
         {isCopyable && value && (
-          <button className="text-slate-300 hover:text-blue-500 transition-colors p-1" title="Copy">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button className="text-gray-300 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all p-1.5 opacity-0 group-hover/item:opacity-100" title="Copy">
+            <svg className="w-[14px] h-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
           </button>

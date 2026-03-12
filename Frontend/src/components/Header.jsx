@@ -70,76 +70,81 @@ export default function Header({ showSearch = false }) {
   const userRole = localStorage.getItem("role") || "student";
 
   return (
-    <header className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-8 py-3 bg-white/80 backdrop-blur-lg border-b border-slate-200/40 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_4px_6px_-2px_rgba(0,0,0,0.05)] sticky top-0 z-40 w-full gap-3 sm:gap-0 transition-all duration-300">
+    <header className="flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 py-4 bg-white/70 backdrop-blur-2xl border-b border-gray-200/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] sticky top-0 z-40 w-full gap-4 sm:gap-0 transition-all duration-500 rounded-b-xl sm:rounded-none">
       {/* Left: Welcome Section */}
       <div className="flex flex-col justify-center items-center sm:items-start w-full sm:w-auto animate-in fade-in slide-in-from-left duration-700">
-        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-          <span>Welcome</span>
-          <span className="text-blue-600">
-            {loading ? "..." : `, ${studentData?.name?.firstName || "User"}`}
+        <h1 className="text-xl sm:text-[22px] font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+          <span>Welcome back,</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">
+            {loading ? "..." : `${studentData?.name?.firstName || "User"}`}
           </span>
         </h1>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+        <div className="flex items-center gap-2.5 mt-1.5">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+          </span>
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] leading-none">
              {userRole === 'student' ? `ID: ${displayID}` : `ROLE: ${userRole}`}
           </span>
         </div>
       </div>
 
       {/* Right: Icons and Profile */}
-      <div className="flex items-center gap-3 sm:gap-6 w-full sm:w-auto justify-center sm:justify-end animate-in fade-in slide-in-from-right duration-700">
+      <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-center sm:justify-end animate-in fade-in slide-in-from-right duration-700">
         {/* Actions Group */}
-        <div className="flex items-center gap-1.5 bg-slate-100/50 p-1 rounded-xl border border-slate-200/30">
-          <button className="group relative p-2 text-slate-500 hover:text-blue-600 hover:bg-white rounded-lg transition-all duration-300 hover:shadow-sm">
-            <BellIcon className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white ring-2 ring-rose-500/20"></span>
+        <div className="flex items-center gap-2 bg-gray-50/80 backdrop-blur-md p-1.5 rounded-2xl border border-gray-200/60 shadow-sm">
+          <button className="group relative p-2.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all duration-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] active:scale-95">
+            <BellIcon className="h-[20px] w-[20px] transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
+            <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
           </button>
-          <button className="group relative p-2 text-slate-500 hover:text-blue-600 hover:bg-white rounded-lg transition-all duration-300 hover:shadow-sm">
-            <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5 transition-transform duration-300 group-hover:-translate-y-0.5" />
+          <button className="group relative p-2.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all duration-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] active:scale-95">
+            <ChatBubbleOvalLeftEllipsisIcon className="h-[20px] w-[20px] transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:scale-110" />
           </button>
         </div>
 
-        <div className="hidden sm:block h-8 w-px bg-slate-200/60 mx-1"></div>
+        <div className="hidden sm:block h-10 w-px bg-gray-200/50 mx-1"></div>
 
         {/* Profile Section with Hover Popup */}
         <div className="relative group">
-          <div className="flex items-center gap-3 p-1.5 pr-4 bg-slate-50/50 border border-slate-200/60 rounded-2xl cursor-pointer group-hover:bg-white group-hover:shadow-md group-hover:border-blue-200 transition-all duration-300">
+          <div className="flex items-center gap-3.5 p-1.5 pr-5 bg-white border border-gray-100 rounded-full cursor-pointer hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-blue-100 transition-all duration-500">
             <div className="relative">
-              <div className="absolute inset-0 bg-blue-500 rounded-full blur opacity-0 group-hover:opacity-20 transition duration-300"></div>
+              <div className="absolute inset-0 bg-blue-500 rounded-full blur-md opacity-0 group-hover:opacity-30 transition duration-500"></div>
               <img
                 src={photoUrl}
                 alt="profile"
-                className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-white shadow-sm ring-1 ring-slate-200 group-hover:ring-blue-400 transition-all duration-300"
+                className="relative w-10 h-10 rounded-full object-cover border-[3px] border-white shadow-sm transition-all duration-500 group-hover:scale-105"
               />
             </div>
-            <div className="flex-col hidden xs:flex">
-              <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+            <div className="flex-col hidden xs:flex justify-center">
+              <span className="text-[13px] font-bold text-gray-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300 tracking-wide">
                 {loading ? "..." : studentName}
               </span>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">DMCE</span>
-                <span className="text-[10px] text-slate-400">•</span>
-                <span className="text-[10px] text-slate-400 font-medium lowercase capitalize">{userRole}</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-1.5 py-0.5 rounded flex items-center">DMCE</span>
+                <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">{userRole}</span>
               </div>
             </div>
+            <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-transform duration-500 group-hover:rotate-180 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
           </div>
 
           {/* Hover Popup Menu */}
-          <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 overflow-hidden invisible group-hover:visible opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50">
+          <div className="absolute right-0 mt-3 w-72 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100/50 p-2 overflow-hidden invisible group-hover:visible opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] z-50 origin-top-right scale-95 group-hover:scale-100">
             {/* Header / User Info */}
-            <div className="flex items-center gap-3 p-4 bg-slate-50/80 rounded-xl mb-2">
-               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-200">
-                  <img src={photoUrl} alt="profile bigger" className="w-full h-full object-cover" />
-               </div>
-               <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-900 truncate">{studentName}</p>
-                  <p className="text-[11px] text-slate-500 font-medium truncate">{displayID}</p>
+            <div className="flex my-2 mx-2">
+               <div className="flex items-center gap-4 p-4 w-full bg-gradient-to-br from-blue-50 to-indigo-50/30 rounded-xl border border-blue-100/50">
+                   <div className="w-14 h-14 rounded-full overflow-hidden border-[3px] border-white shadow-sm relative group-hover:shadow-md transition-shadow">
+                      <img src={photoUrl} alt="profile bigger" className="w-full h-full object-cover" />
+                   </div>
+                   <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <p className="text-[15px] font-black text-gray-900 truncate tracking-tight">{studentName}</p>
+                      <p className="text-[12px] font-bold text-blue-600 mt-0.5 bg-white w-fit px-2 py-0.5 rounded-md shadow-sm border border-blue-50">{displayID}</p>
+                   </div>
                </div>
             </div>
 
             {/* Menu Items */}
-            <div className="space-y-1">
+            <div className="space-y-1 mt-1 p-1">
               <button 
                 onClick={() => navigate(userRole === 'admin' || userRole === 'division' || userRole === 'divisionIncharge' ? '/admin/dashboard' : '/student/dashboard')}
                 className="w-full flex items-center gap-3 px-3 py-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium"
