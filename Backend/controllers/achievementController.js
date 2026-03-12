@@ -6,7 +6,7 @@ const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary
 const cloudinary = require("../config/cloudinaryConfig");
 const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
 const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
-const { createAchievementSchema, updateAchievementSchema } = require("../validators/achievementValidation");
+const { createAchievementSchema, updateAchievementSchema , getAchievementsValidation} = require("../validators/achievementValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformAchievement, achievementColumnMap } = require('../helpers/excel/exportTransformers');
 
@@ -35,8 +35,7 @@ const fileConfigs = [
   },
 ];
 
-/* ----------------------------- CREATE ACHIEVEMENT ----------------------------- */
-
+// create achievement
 const createAchievement = async (req, res) => {
   let uploadedFiles;
   let dbSaved = false;
@@ -160,8 +159,7 @@ const createAchievement = async (req, res) => {
   }
 };
 
-/* ------------------------- GET LOGGED-IN STUDENT DATA -------------------------- */
-
+//get logged in student data
 const getOwnAchievements = async (req, res) => {
   try {
     const achievements = await Achievement.find({ stuID: req.user.id })
@@ -177,10 +175,16 @@ const getOwnAchievements = async (req, res) => {
 //getall achievements with export option
 const getAllAchievements = async (req, res) => {
   try {
-    const { year, division, category, search, page = 1, limit = 10 } = req.query;
-    const isExport = req.query.export === "true";
+    const { error, value } = getAchievementsValidation.validate(req.query);
+    if (error) return validationErrorResponse(res, error.details);
 
-    const skip = (page - 1) * Math.min(limit, 20);
+    const isExport = value.export === "true";
+    const page = Math.max(1, Number(value.page || 1));
+    const limit = Math.min(Number(value.limit || 10), 50); // single capped value
+    const skip = (page - 1) * limit;
+
+    const { year, division, category, search } = value;
+
 
     const pipeline = [
       {
@@ -225,6 +229,8 @@ const getAllAchievements = async (req, res) => {
     if (isExport) {
       const achievements = await Achievement.aggregate([
         ...pipeline,
+        { $sort: { createdAt: -1 } }, 
+        { $limit: 5000 }, 
         {
           $project: {
             category: 1,
@@ -249,7 +255,6 @@ const getAllAchievements = async (req, res) => {
             studentMobileNo: "$student.mobileNo",
           },
         },
-        { $sort: { createdAt: -1 } },
       ]);
 
       const rows = achievements.map(transformAchievement);
@@ -280,7 +285,7 @@ const getAllAchievements = async (req, res) => {
           data: [
             { $sort: { createdAt: -1 } },
             { $skip: skip },
-            { $limit: Number(limit) },
+            { $limit: (limit) },
           ],
           total: [{ $count: "count" }],
         },
@@ -303,8 +308,7 @@ const getAllAchievements = async (req, res) => {
 };
 
 
-/* -------------------- GET ACHIEVEMENTS BY STUDENT (ADMIN/DI) ------------------- */
-
+//get achievement by student (admin | DI )
 const getStudentAchievements = async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -330,8 +334,7 @@ const getStudentAchievements = async (req, res) => {
   }
 };
 
-/* ------------------------------- UPDATE -------------------------------- */
-
+//update achievement
 const updateAchievement = async (req, res) => {
   let newPublicIds = [];
   let dbSaved = false;
@@ -447,8 +450,7 @@ const updateAchievement = async (req, res) => {
   }
 };
 
-/* ------------------------------- DELETE -------------------------------- */
-
+//delete achievement
 const deleteAchievement = async (req, res) => {
   try {
     const { id } = req.params;
