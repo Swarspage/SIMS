@@ -183,7 +183,7 @@ const getAllAchievements = async (req, res) => {
     const limit = Math.min(Number(value.limit || 10), 50); // single capped value
     const skip = (page - 1) * limit;
 
-    const { year, division, category, search } = value;
+    const { year, division, category, achievementType, search } = value;
 
 
     const pipeline = [
@@ -211,6 +211,7 @@ const getAllAchievements = async (req, res) => {
     }
 
     if (category) match.category = category;
+    if (achievementType) match.achievementType = achievementType;
 
     if (search) {
       const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
