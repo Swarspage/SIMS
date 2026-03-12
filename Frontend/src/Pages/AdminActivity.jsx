@@ -6,18 +6,6 @@ import Pagination from "../Components/Common/Pagination";
 
 // Activity Card Component - COMPACT & BEAUTIFUL
 function ActivityCard({ activity, onView, onDelete, onEdit, isDeleting }) {
-  const getTypeColor = (type) => {
-    switch (type) {
-      case "Committee":
-        return "bg-blue-50 text-blue-700";
-      case "Sports":
-        return "bg-green-50 text-green-700";
-      case "Hackathon":
-        return "bg-purple-50 text-purple-700";
-      default:
-        return "bg-slate-50 text-slate-700";
-    }
-  };
 
   // Student info helper - checks both populated 'stuID' and aggregated 'student' field
   const student = activity?.student || activity?.stuID;
@@ -90,22 +78,9 @@ function ActivityCard({ activity, onView, onDelete, onEdit, isDeleting }) {
         <div className="h-px bg-slate-100 mb-3" />
 
         {/* Activity Title */}
-        <h3 className="text-sm font-bold text-blue-600 mb-1 line-clamp-2">
+        <h3 className="text-sm font-bold text-blue-600 mb-2 line-clamp-2">
           {activity?.title || "No Title"}
         </h3>
-
-        {/* Type Badge */}
-        {activity?.type && (
-          <div className="mb-2">
-            <span
-              className={`inline-block px-2 py-1 text-[10px] font-bold rounded-full uppercase tracking-tighter border border-slate-100 ${getTypeColor(
-                activity.type
-              )}`}
-            >
-              {activity.type}
-            </span>
-          </div>
-        )}
 
         {/* Description */}
         <p className="text-xs text-slate-600 mb-2 line-clamp-1">
@@ -248,14 +223,14 @@ function DetailModal({ activity, onClose }) {
                       <p className="text-xs text-blue-100/80 mb-0.5">Title</p>
                       <p className="text-lg font-bold leading-tight">{activity.title}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs text-blue-100/80 mb-0.5">Type</p>
-                        <p className="text-sm font-bold bg-white/20 backdrop-blur-md rounded-lg px-2 py-1 inline-block">{activity.type}</p>
-                      </div>
+                    <div className="grid grid-cols-1 gap-4">
                       <div>
                         <p className="text-xs text-blue-100/80 mb-0.5">Date</p>
-                        <p className="text-sm font-bold">{activity.date ? new Date(activity.date).toLocaleDateString() : "N/A"}</p>
+                        <p className="text-sm font-bold">
+                          {activity.date?.from ? new Date(activity.date.from).toLocaleDateString() : "N/A"}
+                          {" — "}
+                          {activity.date?.to ? new Date(activity.date.to).toLocaleDateString() : "Present"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -341,11 +316,11 @@ function DetailModal({ activity, onClose }) {
 }
 
 // Form Modal Component (Add / Edit)
+// Form Modal Component (Add / Edit) - PREMIUM RE-DESIGN
 function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
   const [formData, setFormData] = useState({
     studentId: "",
     title: "",
-    type: "Committee",
     dateFrom: "",
     dateTo: "",
     description: "",
@@ -356,12 +331,10 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
   useEffect(() => {
     if (isOpen) {
       if (activity) {
-        // Fix Privacy: Ensure we show human-readable studentID, not MongoDB _id
         const studentObj = activity.student || activity.stuID;
         setFormData({
           studentId: (typeof studentObj === "object" ? studentObj?.studentID : studentObj) || "",
           title: activity.title || "",
-          type: activity.type || "Committee",
           dateFrom: (activity.date?.from && !isNaN(new Date(activity.date.from).getTime()))
             ? new Date(activity.date.from).toISOString().split('T')[0]
             : "",
@@ -374,7 +347,6 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
         setFormData({
           studentId: "",
           title: "",
-          type: "Committee",
           dateFrom: "",
           dateTo: "",
           description: "",
@@ -407,6 +379,9 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
           data.append(key, formData[key]);
         }
       });
+      // Admin Hardcode: activity Type is always "Committee"
+      data.append("type", "Committee");
+
       if (certificate) {
         data.append("certificate", certificate);
       }
@@ -418,11 +393,10 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
         await activityService.createActivity(data);
         toast.success("Activity added successfully!");
       }
-      onSave(); // Refresh list
-      onClose(); // Close modal
+      onSave(); 
+      onClose(); 
     } catch (err) {
       console.error("Error saving activity:", err);
-      // Improve Validation: Parse detailed messages from backend
       const errorMessage =
         err.response?.data?.errors?.map(e => e.message).join(", ") ||
         err.response?.data?.error ||
@@ -437,125 +411,165 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-slideUp">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h2 className="text-xl font-bold text-slate-900">
-            {activity ? "Edit Activity" : "Add New Activity"}
-          </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose} />
+      
+      <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-xl overflow-hidden relative z-10 animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
+        {/* Premium Header */}
+        <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-indigo-800 px-8 py-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 -m-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 -m-8 w-24 h-24 bg-blue-400/20 rounded-full blur-2xl"></div>
+          
+          <div className="relative flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-black text-white tracking-tight">
+                {activity ? "Edit Activity" : "Create New Activity"}
+              </h2>
+              <p className="text-blue-100/70 text-xs font-semibold uppercase tracking-widest mt-1">Committee Records Management</p>
+            </div>
+            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/80">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
-            <input
-              type="text"
-              name="studentId"
-              required
-              value={formData.studentId}
-              onChange={handleChange}
-              placeholder="e.g. 2024COMP123"
-              disabled={!!activity} // Prevent editing student ID if updating
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Title *</label>
-            <input
-              type="text"
-              name="title"
-              required
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Type *</label>
-              <select
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="Committee">Committee</option>
-                <option value="Sports">Sports</option>
-                <option value="Hackathon">Hackathon</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Start Date *</label>
+        <form onSubmit={handleSubmit} className="p-8 space-y-5 bg-white">
+          {/* Student ID Field - Styled with Icon */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Identity Confirmation</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600 text-slate-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+              </div>
               <input
-                type="date"
-                name="dateFrom"
+                type="text"
+                name="studentId"
                 required
-                value={formData.dateFrom}
+                value={formData.studentId}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter Student ID (e.g. 2024COMP123)"
+                disabled={!!activity}
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-slate-700 placeholder:text-slate-300 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all outline-none disabled:bg-slate-50 disabled:text-slate-400"
               />
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">End Date *</label>
+            {activity && <p className="text-[9px] text-amber-600 font-bold ml-1 italic opacity-80">* Identity cannot be modified during editing</p>}
+          </div>
+
+          {/* Activity Title - Featured Input */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Activity Title</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              </div>
               <input
-                type="date"
-                name="dateTo"
+                type="text"
+                name="title"
                 required
-                value={formData.dateTo}
+                value={formData.title}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g. Annual Technical Symposium Organising Committee"
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-slate-700 placeholder:text-slate-300 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all outline-none"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Description</label>
+          {/* Date Range - Compact Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Commencement Date</label>
+              <div className="relative group">
+                <input
+                  type="date"
+                  name="dateFrom"
+                  required
+                  value={formData.dateFrom}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:bg-white focus:border-blue-600 transition-all outline-none"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Completion Date</label>
+              <div className="relative group">
+                <input
+                  type="date"
+                  name="dateTo"
+                  required
+                  value={formData.dateTo}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:bg-white focus:border-blue-600 transition-all outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Narrative Description</label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows="3"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="Describe roles, responsibilities, and achievements..."
+              className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-slate-700 placeholder:text-slate-300 focus:bg-white focus:border-blue-600 transition-all outline-none resize-none"
             ></textarea>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Certificate (Optional)
-            </label>
-            <input
-              type="file"
-              accept=".pdf, image/*"
-              onChange={handleFileChange}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
-            />
+          {/* Certificate Selection Box - Custom Styled */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Proof of Participation</label>
+            <div className="relative">
+              <input
+                type="file"
+                id="cert-upload"
+                accept=".pdf, image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <label 
+                htmlFor="cert-upload"
+                className="flex items-center justify-center gap-3 w-full p-4 border-2 border-dashed border-slate-200 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group"
+              >
+                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-black text-slate-700 group-hover:text-blue-700 transition-colors">
+                    {certificate ? certificate.name : "Click to select certificate"}
+                  </p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">PDF, PNG or JPG (Max 5MB)</p>
+                </div>
+              </label>
+            </div>
           </div>
 
-          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+          {/* Action Footer */}
+          <div className="pt-4 flex gap-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200"
+              className="flex-1 px-6 py-4 rounded-2xl bg-slate-100 text-slate-500 text-sm font-black hover:bg-slate-200 transition-colors uppercase tracking-widest"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="flex-[2] px-6 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white text-sm font-black shadow-xl shadow-blue-200 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 uppercase tracking-widest flex items-center justify-center gap-2"
             >
-              {saving ? "Saving..." : "Save Activity"}
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                  Commit Activity
+                </>
+              )}
             </button>
           </div>
         </form>
@@ -570,7 +584,6 @@ export default function AdminActivity() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedDivision, setSelectedDivision] = useState("");
 
@@ -586,27 +599,34 @@ export default function AdminActivity() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [activityToEdit, setActivityToEdit] = useState(null);
 
+  const [appliedFilters, setAppliedFilters] = useState({});
+
   // Fetch activities from backend when component loads or pagination changes
   useEffect(() => {
     fetchActivities(currentPage);
-  }, [currentPage, limit]);
+  }, [currentPage, limit, appliedFilters]);
 
   const fetchActivities = async (page = 1) => {
     setLoading(true);
     try {
+      // Exclude 'year' from backend params to prevent 400 Joi validation errors
+      const { year, ...safeFilters } = appliedFilters;
+      
       const params = {
         page,
         limit,
-        search: searchQuery || undefined,
-        type: selectedType || undefined,
-        year: selectedYear || undefined,
-        division: selectedDivision || undefined,
+        ...safeFilters,
       };
       const response = await activityService.getAllActivities(params);
 
-      const data = response.data || [];
-      const total = response.total || 0;
-      const totalP = response.totalPages || 1;
+      // Perform client-side 'year' filtering because backend is strictly hardcoded to FY/SY/TY while DB is SE/TE/BE
+      let data = response.data || [];
+      if (year) {
+        data = data.filter((activity) => activity?.student?.year === year || activity?.studentYear === year);
+      }
+
+      const total = year ? data.length : (response.total || 0);
+      const totalP = year ? Math.ceil(data.length / limit) || 1 : (response.totalPages || 1);
 
       setActivities(data);
       setTotalRecords(total);
@@ -625,7 +645,6 @@ export default function AdminActivity() {
   const handleExport = async () => {
     try {
       const params = {};
-      if (selectedType) params.type = selectedType;
       if (searchQuery) params.search = searchQuery;
 
       const blob = await activityService.exportActivities(params);
@@ -707,27 +726,14 @@ export default function AdminActivity() {
             </p>
           </div>
 
-          {/* Type Filter */}
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
-          >
-            <option value="">All Types</option>
-            <option value="Committee">Committee</option>
-            <option value="Sports">Sports</option>
-            <option value="Hackathon">Hackathon</option>
-            <option value="Other">Other</option>
-          </select>
 
-          {/* Year Filter */}
+          {/* Client-Side Year Filter */}
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
             className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
           >
             <option value="">All Years</option>
-            <option value="FE">First Year (FE)</option>
             <option value="SE">Second Year (SE)</option>
             <option value="TE">Third Year (TE)</option>
             <option value="BE">Final Year (BE)</option>
@@ -747,7 +753,14 @@ export default function AdminActivity() {
 
           <div className="flex gap-3">
             <button
-              onClick={() => fetchActivities(1)}
+              onClick={() => {
+                setAppliedFilters({
+                  search: searchQuery || undefined,
+                  year: selectedYear || undefined,
+                  division: selectedDivision || undefined,
+                });
+                setCurrentPage(1);
+              }}
               className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -756,13 +769,14 @@ export default function AdminActivity() {
               Find Activities
             </button>
 
-            {(searchQuery || selectedType || selectedYear || selectedDivision) && (
+            {(searchQuery || selectedYear || selectedDivision) && (
               <button
                 onClick={() => {
                   setSearchQuery("");
-                  setSelectedType("");
                   setSelectedYear("");
                   setSelectedDivision("");
+                  setAppliedFilters({});
+                  setCurrentPage(1);
                 }}
                 className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
               >

@@ -49,42 +49,55 @@ function AddStudentModal({ isOpen, onClose, onAdded }) {
     }
   };
 
+  const inputClass = "w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200 shadow-sm";
+  const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h3 className="text-xl font-bold text-slate-800">Add New Student</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] animate-slideUp">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+          <div className="flex items-center gap-3">
+             <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+             </div>
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight">Add New Student</h3>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto bg-white">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
+            <label className={labelClass}>Student ID *</label>
             <input
               type="text"
               required
               placeholder="e.g. 2024COMP123"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className={inputClass}
               value={form.studentID}
               onChange={(e) => setForm({ ...form, studentID: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Email *</label>
+            <label className={labelClass}>Email Address *</label>
             <input
               type="email"
               required
               placeholder="student@example.com"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className={inputClass}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </div>
-          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
-            <button type="button" onClick={onClose} className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200">Cancel</button>
-            <button type="submit" disabled={saving} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
-              {saving ? "Adding..." : "Add Student"}
+          <div className="pt-6 flex justify-end gap-3 border-t border-slate-100">
+            <button type="button" onClick={onClose} className="px-5 py-2.5 font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
+            <button type="submit" disabled={saving} className="px-6 py-2.5 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Adding...
+                </>
+              ) : "Add Student"}
             </button>
           </div>
         </form>
@@ -184,32 +197,32 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
   const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh] border border-white/20">
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shadow-inner">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[95vh] animate-slideUp">
+        <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white/95 backdrop-blur-md sticky top-0 z-20">
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 shadow-sm">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-800">Edit Student Profile</h3>
-              <p className="text-sm text-slate-500 font-medium">ID: {student?.studentID}</p>
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Edit Student Profile</h3>
+              <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-0.5">ID: <span className="text-blue-600">{student?.studentID}</span></p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors focus:ring-2 focus:ring-slate-300 focus:outline-none">
+          <button onClick={onClose} className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 bg-slate-50/30">
-          <div className="p-6 sm:p-8 space-y-10">
+        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 bg-white">
+          <div className="p-8 space-y-10">
             {/* Section: Personal Info */}
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <div className="h-6 w-1.5 bg-blue-500 rounded-full"></div>
                 <h4 className="text-lg font-bold text-slate-800">Personal Information</h4>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
                 <div><label className={labelClass}>First Name</label><input type="text" name="firstName" value={form.firstName} onChange={handleInputChange} className={inputClass} /></div>
                 <div><label className={labelClass}>Middle Name</label><input type="text" name="middleName" value={form.middleName} onChange={handleInputChange} className={inputClass} /></div>
                 <div><label className={labelClass}>Last Name</label><input type="text" name="lastName" value={form.lastName} onChange={handleInputChange} className={inputClass} /></div>
@@ -234,7 +247,7 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
                 <div className="h-6 w-1.5 bg-emerald-500 rounded-full"></div>
                 <h4 className="text-lg font-bold text-slate-800">Academic Information</h4>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
                 <div><label className={labelClass}>PRN Number</label><input type="text" name="PRN" value={form.PRN} onChange={handleInputChange} className={inputClass} /></div>
                 <div><label className={labelClass}>Year</label>
                   <select name="year" value={form.year} onChange={handleInputChange} className={inputClass}>
@@ -257,13 +270,13 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
                 <div className="h-6 w-1.5 bg-purple-500 rounded-full"></div>
                 <h4 className="text-lg font-bold text-slate-800">Contact Details & Photo</h4>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
                 <div><label className={labelClass}>Mobile No</label><input type="text" name="mobileNo" value={form.mobileNo} onChange={handleInputChange} className={inputClass} /></div>
                 <div><label className={labelClass}>Parent Mobile No</label><input type="text" name="parentMobileNo" value={form.parentMobileNo} onChange={handleInputChange} className={inputClass} /></div>
                 <div><label className={labelClass}>Parent Email</label><input type="email" name="parentEmail" value={form.parentEmail} onChange={handleInputChange} className={inputClass} /></div>
                 <div className="sm:col-span-2 md:col-span-3">
                   <label className={labelClass}>Update Student Photo (Optional)</label>
-                  <input type="file" accept="image/png, image/jpeg, image/jpg" onChange={e => setPhoto(e.target.files[0])} className={`${inputClass} !p-2 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer`} />
+                  <input type="file" accept="image/png, image/jpeg, image/jpg" onChange={e => setPhoto(e.target.files[0])} className={`${inputClass} !p-3 cursor-pointer file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 transition-all`} />
                 </div>
               </div>
             </section>
@@ -276,11 +289,11 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Current Address */}
-                <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                  <h5 className="font-bold text-slate-700 mb-5 flex items-center gap-2">
-                    <div className="p-1.5 bg-orange-100 rounded-lg text-orange-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></div> Current Address
+                <div className="bg-slate-50/50 p-6 sm:p-7 rounded-2xl border border-slate-200">
+                  <h5 className="font-bold text-slate-800 mb-5 flex items-center gap-3">
+                    <div className="p-2 bg-orange-100 rounded-xl text-orange-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></div> Current Address
                   </h5>
-                  <div className="space-y-5">
+                  <div className="space-y-5 flex-1 content-start h-full">
                     <div><label className={labelClass}>Street</label><input type="text" name="currentStreet" value={form.currentStreet} onChange={handleInputChange} className={inputClass} /></div>
                     <div className="grid grid-cols-2 gap-5">
                       <div><label className={labelClass}>City</label><input type="text" name="currentCity" value={form.currentCity} onChange={handleInputChange} className={inputClass} /></div>
@@ -289,9 +302,9 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
                   </div>
                 </div>
                 {/* Native Address */}
-                <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                  <h5 className="font-bold text-slate-700 mb-5 flex items-center gap-2">
-                    <div className="p-1.5 bg-indigo-100 rounded-lg text-indigo-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div> Native Address
+                <div className="bg-slate-50/50 p-6 sm:p-7 rounded-2xl border border-slate-200">
+                  <h5 className="font-bold text-slate-800 mb-5 flex items-center gap-3">
+                    <div className="p-2 bg-indigo-100 rounded-xl text-indigo-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div> Native Address
                   </h5>
                   <div className="space-y-5">
                     <div><label className={labelClass}>Street</label><input type="text" name="nativeStreet" value={form.nativeStreet} onChange={handleInputChange} className={inputClass} /></div>
@@ -306,11 +319,11 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
           </div>
 
           {/* Action Footer */}
-          <div className="sticky bottom-0 bg-white/90 backdrop-blur-md border-t border-slate-200 p-5 sm:p-6 flex justify-end gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-            <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all focus:outline-none focus:ring-4 focus:ring-slate-100">Cancel</button>
-            <button type="submit" disabled={saving} className="px-8 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-500/30 flex items-center gap-2">
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 py-6 px-8 flex justify-end gap-4 mt-8">
+            <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">Cancel</button>
+            <button type="submit" disabled={saving} className="px-10 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2">
               {saving ? (
-                <><svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Saving Changes...</>
+                <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Saving Changes...</>
               ) : (
                 <><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Save Changes</>
               )}

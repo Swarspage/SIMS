@@ -89,8 +89,8 @@ function AdmissionCard({ admission, onView, onEdit, onDelete, isDeleting }) {
             onClick={() => onDelete && onDelete(admission._id)}
             disabled={isDeleting}
             className={`w-full px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors border active:scale-95 ${isDeleting
-                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+              ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+              : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
               }`}
           >
             {isDeleting ? "Deleting..." : "Delete"}
@@ -253,6 +253,212 @@ function DetailModal({ admission, onClose }) {
   );
 }
 
+function AddAdmissionModal({ isOpen, onClose, onAdded }) {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    studentId: "",
+    academicYear: "",
+    div: "", rollno: "", course: "Computer Engineering", fees: "",
+    isScholarshipApplied: false, scholarshipNotAppliedReason: "",
+    isMahadbtFormSubmitted: false, mahadbtFilledDate: "", mahadbtNotFilledReason: "",
+    hasMigrationCertificate: false, migrationExpectedDate: "", migrationNotAvailableReason: ""
+  });
+
+  if (!isOpen) return null;
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+
+      const submitData = { ...form };
+      // Clean up irrelevant fields based on booleans to prevent Joi errors
+      if (submitData.isScholarshipApplied) {
+        delete submitData.scholarshipNotAppliedReason;
+      }
+      if (submitData.isMahadbtFormSubmitted) {
+        delete submitData.mahadbtNotFilledReason;
+      } else {
+        delete submitData.mahadbtFilledDate;
+      }
+      if (submitData.hasMigrationCertificate) {
+        delete submitData.migrationNotAvailableReason;
+      } else {
+        delete submitData.migrationExpectedDate;
+      }
+
+      await admissionService.createAdmission(submitData);
+
+      toast.success("✅ Admission added successfully.");
+      onAdded();
+      onClose();
+      // Reset form
+      setForm({
+        studentId: "", academicYear: "",
+        div: "", rollno: "", course: "Computer Engineering", fees: "",
+        isScholarshipApplied: false, scholarshipNotAppliedReason: "",
+        isMahadbtFormSubmitted: false, mahadbtFilledDate: "", mahadbtNotFilledReason: "",
+        hasMigrationCertificate: false, migrationExpectedDate: "", migrationNotAvailableReason: ""
+      });
+    } catch (err) {
+      console.error(err);
+      const resData = err.response?.data;
+      if (resData?.errors && Array.isArray(resData.errors)) {
+        resData.errors.forEach((e) => toast.error(e.message || "Validation error"));
+      } else {
+        toast.error(resData?.message || "Failed to add admission.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputClass = "w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200 shadow-sm";
+  const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] border border-white/20 animate-fadeIn">
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg shadow-inner">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-800">Add New Admission</h3>
+              <p className="text-sm text-slate-500 font-medium font-mono">Create admission record</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors focus:ring-2 focus:ring-slate-300 focus:outline-none">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 bg-slate-50/30">
+          <div className="p-6 sm:p-8 space-y-10">
+            {/* Section: Basic Info */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-6 w-1.5 bg-blue-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Basic Info</h4>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                  <label className={labelClass}>Student ID <span className="text-red-500">*</span></label>
+                  <input type="text" name="studentId" value={form.studentId} onChange={handleInputChange} required className={inputClass} placeholder="e.g. 211P041" />
+                </div>
+                <div>
+                  <label className={labelClass}>Academic Year <span className="text-red-500">*</span></label>
+                  <input type="text" name="academicYear" value={form.academicYear} onChange={handleInputChange} required pattern="\d{4}-\d{4}" title="Format: YYYY-YYYY" className={inputClass} placeholder="e.g. 2023-2024" />
+                </div>
+                <div>
+                  <label className={labelClass}>Course <span className="text-red-500">*</span></label>
+                  <input type="text" name="course" value={form.course} onChange={handleInputChange} required className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Division <span className="text-red-500">*</span></label>
+                  <input type="text" name="div" value={form.div} onChange={handleInputChange} required className={inputClass} placeholder="e.g. A" />
+                </div>
+                <div>
+                  <label className={labelClass}>Roll Number <span className="text-red-500">*</span></label>
+                  <input type="text" name="rollno" value={form.rollno} onChange={handleInputChange} required pattern="\d+" title="Only digits allowed" className={inputClass} placeholder="e.g. 101" />
+                </div>
+                <div>
+                  <label className={labelClass}>Fees Amount (₹) <span className="text-red-500">*</span></label>
+                  <input type="number" name="fees" value={form.fees} onChange={handleInputChange} required min="0" className={inputClass} placeholder="e.g. 150000" />
+                </div>
+              </div>
+            </section>
+
+            {/* Section: Scholarship & MahaDBT */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-6 w-1.5 bg-purple-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Scholarship & MahaDBT</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-bold text-slate-700">Scholarship Applied?</label>
+                    <input type="checkbox" name="isScholarshipApplied" checked={form.isScholarshipApplied} onChange={handleInputChange} className="w-5 h-5 accent-blue-600 rounded" />
+                  </div>
+                  {!form.isScholarshipApplied && (
+                    <div>
+                      <label className={labelClass}>Reason if Not Applied <span className="text-red-500">*</span></label>
+                      <textarea name="scholarshipNotAppliedReason" value={form.scholarshipNotAppliedReason} onChange={handleInputChange} required={!form.isScholarshipApplied} minLength="5" className={`${inputClass} min-h-[80px]`} placeholder="Specify reason..." />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-bold text-slate-700">MahaDBT Form Submitted?</label>
+                    <input type="checkbox" name="isMahadbtFormSubmitted" checked={form.isMahadbtFormSubmitted} onChange={handleInputChange} className="w-5 h-5 accent-purple-600 rounded" />
+                  </div>
+                  {form.isMahadbtFormSubmitted ? (
+                    <div>
+                      <label className={labelClass}>Form Submission Date <span className="text-red-500">*</span></label>
+                      <input type="date" name="mahadbtFilledDate" value={form.mahadbtFilledDate} onChange={handleInputChange} required={form.isMahadbtFormSubmitted} className={inputClass} />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className={labelClass}>Reason if Not Submitted <span className="text-red-500">*</span></label>
+                      <textarea name="mahadbtNotFilledReason" value={form.mahadbtNotFilledReason} onChange={handleInputChange} required={!form.isMahadbtFormSubmitted} minLength="5" className={`${inputClass} min-h-[80px]`} placeholder="Specify reason..." />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* Section: Migration Details */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-6 w-1.5 bg-orange-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Migration Details</h4>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold text-slate-700">Has Migration Certificate?</label>
+                  <input type="checkbox" name="hasMigrationCertificate" checked={form.hasMigrationCertificate} onChange={handleInputChange} className="w-5 h-5 accent-orange-600 rounded" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {form.hasMigrationCertificate ? (
+                    <div className="sm:col-span-2">
+                      <label className={labelClass}>Migration Expected/Received Date <span className="text-red-500">*</span></label>
+                      <input type="date" name="migrationExpectedDate" value={form.migrationExpectedDate} onChange={handleInputChange} required={form.hasMigrationCertificate} className={inputClass} />
+                    </div>
+                  ) : (
+                    <div className="sm:col-span-2">
+                      <label className={labelClass}>Reason if Unavailable <span className="text-red-500">*</span></label>
+                      <textarea name="migrationNotAvailableReason" value={form.migrationNotAvailableReason} onChange={handleInputChange} required={!form.hasMigrationCertificate} minLength="5" className={`${inputClass} min-h-[80px]`} placeholder="Specify reason..." />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-6 flex justify-end gap-4">
+            <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">Cancel</button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-10 py-3 font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+            >
+              {saving ? "Saving..." : "Add Admission"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 
 function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
   const [saving, setSaving] = useState(false);
@@ -295,13 +501,13 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
     e.preventDefault();
     try {
       setSaving(true);
-      
+
       // Calculate what actually changed so we only send necessary updates.
       // This prevents Joi validation errors for empty strings when you haven't filled a field.
       const updateData = {};
       Object.keys(form).forEach(key => {
         if (key === 'status') return;
-        
+
         let originalValue = admission[key];
         // Handle dates for comparison
         if (key === 'mahadbtFilledDate' || key === 'migrationExpectedDate') {
@@ -463,9 +669,9 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
 
           <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-6 flex justify-end gap-4">
             <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">Cancel</button>
-            <button 
-              type="submit" 
-              disabled={saving} 
+            <button
+              type="submit"
+              disabled={saving}
               className="px-10 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               {saving ? "Saving Changes..." : "Save Changes"}
@@ -489,7 +695,6 @@ export default function AdminAdmission() {
   const [statusFilter, setStatusFilter] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [divFilter, setDivFilter] = useState("");
-  const [academicYearFilter, setAcademicYearFilter] = useState("");
   const [scholarshipFilter, setScholarshipFilter] = useState("");
   const [mahadbtFilter, setMahadbtFilter] = useState("");
   const [migrationFilter, setMigrationFilter] = useState("");
@@ -502,6 +707,7 @@ export default function AdminAdmission() {
   const [selectedAdmission, setSelectedAdmission] = useState(null); // For View
   const [editingAdmission, setEditingAdmission] = useState(null); // For Edit
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false); // For Add
   const [deletingIds, setDeletingIds] = useState([]); // Track IDs currently being deleted
 
   useEffect(() => {
@@ -537,13 +743,12 @@ export default function AdminAdmission() {
         limit,
         search: trimmedSearch || undefined,
         year: yearFilter || undefined,
-        academicYear: academicYearFilter || undefined,
         status: statusFilter || undefined,
         isScholarshipApplied: scholarshipFilter !== "" ? scholarshipFilter === "true" : undefined,
         isMahadbtFormSubmitted: mahadbtFilter !== "" ? mahadbtFilter === "true" : undefined,
         hasMigrationCertificate: migrationFilter !== "" ? migrationFilter === "true" : undefined,
       };
-      
+
       const response = await admissionService.getAllAdmissions(params);
 
       const data = response.data || [];
@@ -641,22 +846,12 @@ export default function AdminAdmission() {
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}
             className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
-            title="Note: Backend currently expects FY, SY, TY instead of SE, TE, BE"
           >
             <option value="">All Years</option>
             <option value="FY">FY</option>
             <option value="SY">SY</option>
             <option value="TY">TY</option>
           </select>
-
-          <input
-            type="text"
-            placeholder="Academic Year (e.g. 2024-25)"
-            value={academicYearFilter}
-            onChange={(e) => setAcademicYearFilter(e.target.value)}
-            className="w-48 px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-bold shadow-sm placeholder:font-normal"
-          />
-
 
           <select
             value={scholarshipFilter}
@@ -691,27 +886,34 @@ export default function AdminAdmission() {
 
         <div className="flex gap-3 ml-auto">
           <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-6 py-3 bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 flex items-center gap-2 whitespace-nowrap"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+            Add Admission
+          </button>
+
+          <button
             onClick={handleFind}
-            className="px-8 py-3 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95 flex items-center gap-2 group"
+            className="px-8 py-3 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95 flex items-center gap-2 group whitespace-nowrap"
           >
             <svg className="w-4 h-4 group-hover:scale-125 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            Find Admissions
+            Find Sessions
           </button>
 
-          {(searchQuery || yearFilter || academicYearFilter || statusFilter || scholarshipFilter || mahadbtFilter || migrationFilter) && (
+          {(searchQuery || yearFilter || statusFilter || scholarshipFilter || mahadbtFilter || migrationFilter) && (
             <button
               onClick={() => {
                 setSearchQuery("");
                 setYearFilter("");
-                setAcademicYearFilter("");
                 setStatusFilter("");
                 setScholarshipFilter("");
                 setMahadbtFilter("");
                 setMigrationFilter("");
                 setCurrentPage(1);
-                
+
                 // Immediately fetch with empty params to bypass stale state values
                 setLoading(true);
                 admissionService.getAllAdmissions({ page: 1, limit }).then(response => {
@@ -787,6 +989,15 @@ export default function AdminAdmission() {
       </div>
 
       {/* MODALS */}
+      <AddAdmissionModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdded={() => {
+          setCurrentPage(1);
+          fetchAdmissions(1);
+        }}
+      />
+
       <DetailModal
         admission={selectedAdmission}
         onClose={() => setSelectedAdmission(null)}

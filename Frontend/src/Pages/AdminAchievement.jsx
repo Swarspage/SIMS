@@ -223,22 +223,24 @@ function DetailModal({ achievement, onClose }) {
                   </div>
                 </div>
 
-                {/* Level & Nature Info */}
-                <div className="grid grid-cols-2 gap-3">
-                  {achievement.level && (
-                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center">
-                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Level</p>
-                      <p className="text-sm font-bold text-slate-900">{achievement.level}</p>
-                    </div>
-                  )}
-                  {achievement.nature && (
-                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center">
-                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Nature</p>
-                      <p className="text-sm font-bold text-slate-900">{achievement.nature}</p>
-                    </div>
-                  )}
-                </div>
+                {/* Level & Nature - REMOVED since they don't exist in DB schema */}
 
+                {/* Team Members Section */}
+                {achievement.teamMembers && achievement.teamMembers.length > 0 && (
+                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5">
+                    <p className="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest flex items-center gap-2">
+                       <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                       Team Members
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {achievement.teamMembers.map((member, idx) => (
+                        <span key={idx} className="px-3 py-1 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg shadow-sm capitalize">
+                          {member}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right Column: Previews & Details */}
@@ -251,7 +253,7 @@ function DetailModal({ achievement, onClose }) {
                     Media Gallery / Proofs
                   </h4>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Event Photo */}
                     <div className="space-y-2">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Event Photo</p>
@@ -264,9 +266,9 @@ function DetailModal({ achievement, onClose }) {
                       </div>
                     </div>
 
-                    {/* Certificate / News Clip */}
+                    {/* Certificate */}
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Certificate / Report</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Event Certificate</p>
                       <div className="bg-slate-100 rounded-2xl border aspect-[4/3] overflow-hidden group relative">
                         {achievement.photographs?.certificate?.url ? (
                           achievement.photographs.certificate.url.toLowerCase().endsWith('.pdf') ? (
@@ -279,6 +281,20 @@ function DetailModal({ achievement, onClose }) {
                         )}
                       </div>
                     </div>
+
+                    {/* Course Certificate */}
+                    {achievement.course_certificate?.url && (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Course Certificate</p>
+                        <div className="bg-slate-100 rounded-2xl border aspect-[4/3] overflow-hidden group relative">
+                          {achievement.course_certificate.url.toLowerCase().endsWith('.pdf') ? (
+                            <iframe src={achievement.course_certificate.url} className="w-full h-full border-none" />
+                          ) : (
+                            <img src={achievement.course_certificate.url} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" alt="Course Certificate" />
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -294,18 +310,21 @@ function DetailModal({ achievement, onClose }) {
                       "{achievement.description}"
                     </p>
 
-                    <div className="grid grid-cols-2 mt-8 pt-8 border-t border-slate-200 pr-12">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8 pt-8 border-t border-slate-200">
                       <div>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Time Period</p>
                         <p className="text-sm font-bold text-slate-700">
-                          {achievement.date?.from ? new Date(achievement.date.from).toLocaleDateString() : "N/A"}
-                          {achievement.date?.to ? ` to ${new Date(achievement.date.to).toLocaleDateString()}` : ""}
+                          {achievement.date?.from ? new Date(achievement.date.from).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }) : "N/A"}
+                          {achievement.date?.to ? ` to ${new Date(achievement.date.to).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })}` : ""}
                         </p>
                       </div>
-                      {achievement.organizedBy && (
-                        <div className="text-right">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Organizer</p>
-                          <p className="text-sm font-bold text-slate-700">{achievement.organizedBy}</p>
+                      
+                      {achievement.certification_course && (
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Certification / Course Details</p>
+                          <p className="text-sm font-bold text-slate-700 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg border border-emerald-100 inline-block line-clamp-1">
+                            {achievement.certification_course}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -339,12 +358,12 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
     title: "",
     category: "Coding competitions",
     achievementType: "Participation",
-    level: "",
-    rank: "",
     issuedBy: "",
     dateFrom: "",
     dateTo: "",
     description: "",
+    teamMembers: "", // comma separated string for frontend input
+    certification_course: "",
   });
 
   const [files, setFiles] = useState({
@@ -364,8 +383,6 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
           title: achievement.title || "",
           category: achievement.category || "Coding competitions",
           achievementType: achievement.achievementType || "Participation",
-          level: achievement.level || "",
-          rank: achievement.rank || "",
           issuedBy: achievement.issuedBy || "",
           dateFrom: (achievement.date?.from && !isNaN(new Date(achievement.date.from).getTime()))
             ? new Date(achievement.date.from).toISOString().split('T')[0]
@@ -374,6 +391,8 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
             ? new Date(achievement.date.to).toISOString().split('T')[0]
             : "",
           description: achievement.description || "",
+          teamMembers: achievement.teamMembers ? achievement.teamMembers.join(", ") : "",
+          certification_course: achievement.certification_course || "",
         });
       } else {
         setFormData({
@@ -381,12 +400,12 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
           title: "",
           category: "Coding competitions",
           achievementType: "Participation",
-          level: "",
-          rank: "",
           issuedBy: "",
           dateFrom: "",
           dateTo: "",
           description: "",
+          teamMembers: "",
+          certification_course: "",
         });
       }
       setFiles({
@@ -418,14 +437,21 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
       data.append('title', formData.title);
       data.append('category', formData.category);
       data.append('achievementType', formData.achievementType);
-      if (formData.level) data.append('level', formData.level);
-      if (formData.rank) data.append('rank', formData.rank);
       data.append('issuedBy', formData.issuedBy);
-      if (formData.description) data.append('description', formData.description);
+      data.append('description', formData.description);
 
       // Date object restructuring based on backend validation logic
       data.append('dateFrom', formData.dateFrom);
       data.append('dateTo', formData.dateTo);
+
+      if (formData.teamMembers) {
+        const membersArr = formData.teamMembers.split(',').map(m => m.trim()).filter(Boolean);
+        membersArr.forEach(member => data.append('teamMembers', member));
+      }
+
+      if (formData.certification_course) {
+        data.append('certification_course', formData.certification_course);
+      }
 
       // Append files
       if (files.eventPhoto) data.append('eventPhoto', files.eventPhoto);
@@ -457,233 +483,257 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
 
   if (!isOpen) return null;
 
+  const inputClass = "w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200 shadow-sm";
+  const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-slideUp">
-        <div className="sticky top-0 z-10 p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h2 className="text-xl font-bold text-slate-900">
-            {achievement ? "Edit Achievement" : "Add New Achievement"}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto animate-slideUp">
+        <div className="sticky top-0 z-20 px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white/95 backdrop-blur-md">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+            {achievement ? "Edit Achievement Details" : "Add New Achievement"}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            {/* Student ID */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
-              <input
-                type="text"
-                name="stuID"
-                required
-                value={formData.stuID}
-                onChange={handleChange}
-                placeholder="e.g. 2024COMP123"
-                disabled={!!achievement} // Prevent editing student ID if updating
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
-              />
+        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+          
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-blue-600 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Primary Details</h4>
             </div>
-
-            {/* Title */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Title *</label>
-              <input
-                type="text"
-                name="title"
-                required
-                value={formData.title}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Category */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Category *</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="Coding competitions">Coding Competitions</option>
-                <option value="Academic Topper">Academic Topper</option>
-                <option value="Committee">Committee</option>
-                <option value="Hackathon">Hackathon</option>
-                <option value="Sports">Sports</option>
-                <option value="Cultural">Cultural</option>
-                <option value="Technical">Technical</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            {/* Achievement Type */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Type *</label>
-              <select
-                name="achievementType"
-                value={formData.achievementType}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="Winner">Winner</option>
-                <option value="Runner-up">Runner-up</option>
-                <option value="Participation">Participation</option>
-              </select>
-            </div>
-
-            {/* Level */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Level</label>
-              <select
-                name="level"
-                value={formData.level}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Level</option>
-                <option value="Department">Department</option>
-                <option value="College">College</option>
-                <option value="State">State</option>
-                <option value="National">National</option>
-                <option value="International">International</option>
-              </select>
-            </div>
-
-            {/* Rank */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Rank/Position</label>
-              <input
-                type="text"
-                name="rank"
-                value={formData.rank}
-                onChange={handleChange}
-                placeholder="e.g. 1st, 2nd, Top 10"
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Issued By */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Issued By / Organiser *</label>
-              <input
-                type="text"
-                name="issuedBy"
-                required
-                value={formData.issuedBy}
-                onChange={handleChange}
-                placeholder="e.g. Google, CSI, College Name"
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Dates */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              {/* Student ID */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Date (From) *</label>
+                <label className={labelClass}>Student ID *</label>
                 <input
-                  type="date"
-                  name="dateFrom"
+                  type="text"
+                  name="stuID"
                   required
-                  value={formData.dateFrom}
+                  value={formData.stuID}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. 2024COMP123"
+                  disabled={!!achievement}
+                  className={`${inputClass} disabled:opacity-60 disabled:cursor-not-allowed`}
                 />
               </div>
+
+              {/* Title */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Date (To) *</label>
+                <label className={labelClass}>Title *</label>
                 <input
-                  type="date"
-                  name="dateTo"
+                  type="text"
+                  name="title"
                   required
-                  value={formData.dateTo}
+                  value={formData.title}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. Smart India Hackathon 2024"
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className={labelClass}>Category *</label>
+                <select
+                  name="category"
+                  required
+                  value={formData.category}
+                  onChange={handleChange}
+                  className={inputClass}
+                >
+                  <option value="Coding competitions">Coding Competitions</option>
+                  <option value="Academic Topper">Academic Topper</option>
+                  <option value="Committee">Committee</option>
+                  <option value="Hackathon">Hackathon</option>
+                  <option value="Sports">Sports</option>
+                  <option value="Cultural">Cultural</option>
+                  <option value="Technical">Technical</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {/* Achievement Type */}
+              <div>
+                <label className={labelClass}>Achievement Type *</label>
+                <select
+                  name="achievementType"
+                  required
+                  value={formData.achievementType}
+                  onChange={handleChange}
+                  className={inputClass}
+                >
+                  <option value="Winner">Winner</option>
+                  <option value="Runner-up">Runner-up</option>
+                  <option value="Participation">Participation</option>
+                </select>
+              </div>
+
+              {/* Issued By */}
+              <div>
+                <label className={labelClass}>Issued By / Organiser *</label>
+                <input
+                  type="text"
+                  name="issuedBy"
+                  required
+                  value={formData.issuedBy}
+                  onChange={handleChange}
+                  placeholder="e.g. Google, AICTE, College Name"
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Date (From) *</label>
+                  <input
+                    type="date"
+                    name="dateFrom"
+                    required
+                    value={formData.dateFrom}
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Date (To) *</label>
+                  <input
+                    type="date"
+                    name="dateTo"
+                    required
+                    value={formData.dateTo}
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-indigo-500 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Additional Context</h4>
+            </div>
+            
+            <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-6">
+              {/* Description */}
+              <div>
+                <label className={labelClass}>Description *</label>
+                <textarea
+                  name="description"
+                  required
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows="3"
+                  placeholder="Describe the achievement in detail..."
+                  className={inputClass}
+                ></textarea>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>Team Members (Optional)</label>
+                  <input
+                    type="text"
+                    name="teamMembers"
+                    value={formData.teamMembers}
+                    onChange={handleChange}
+                    placeholder="E.g. John Doe, Jane Smith"
+                    className={inputClass}
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1.5 ml-1">Comma-separated names</p>
+                </div>
+                
+                <div>
+                  <label className={labelClass}>Certification / Course Details (Optional)</label>
+                  <input
+                    type="text"
+                    name="certification_course"
+                    value={formData.certification_course}
+                    onChange={handleChange}
+                    placeholder="E.g. AWS Certified Solutions Architect"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-emerald-500 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Media Uploads</h4>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              {/* Event Photo */}
+              <div>
+                <label className={labelClass}>Event Photo {!achievement && "*"}</label>
+                <input
+                  type="file"
+                  name="eventPhoto"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  required={!achievement}
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none transition-all cursor-pointer"
+                />
+              </div>
+
+              {/* Certificate */}
+              <div>
+                <label className={labelClass}>Event Certificate {!achievement && "*"}</label>
+                <input
+                  type="file"
+                  name="certificate"
+                  accept=".pdf, image/*"
+                  onChange={handleFileChange}
+                  required={!achievement}
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none transition-all cursor-pointer"
+                />
+              </div>
+
+              {/* Course Certificate */}
+              <div>
+                <label className={labelClass}>Course Certificate (Optional)</label>
+                <input
+                  type="file"
+                  name="course_certificate"
+                  accept=".pdf, image/*"
+                  onChange={handleFileChange}
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 focus:outline-none transition-all cursor-pointer"
                 />
               </div>
             </div>
+            {!achievement && <p className="text-xs text-amber-600 mt-3 font-semibold px-2 flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Event Photo and Event Certificate are strictly required when creating a new achievement.</p>}
+          </section>
 
-            {/* Description */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows="3"
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              ></textarea>
-            </div>
-
-            {/* Event Photo */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Event Photo (Optional)
-              </label>
-              <input
-                type="file"
-                name="eventPhoto"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
-              />
-            </div>
-
-            {/* Certificate */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Event Certificate (Optional)
-              </label>
-              <input
-                type="file"
-                name="certificate"
-                accept=".pdf, image/*"
-                onChange={handleFileChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
-              />
-            </div>
-
-            {/* Course Certificate */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Course Certificate (For MOOCs/Courses)
-              </label>
-              <input
-                type="file"
-                name="course_certificate"
-                accept=".pdf, image/*"
-                onChange={handleFileChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
-              />
-            </div>
-
-          </div>
-
-          <div className="pt-6 flex justify-end gap-3 border-t border-slate-100">
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 py-6 flex justify-end gap-4 mt-8">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 focus:ring-2 focus:ring-slate-300"
+              className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
+              className="px-10 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               {saving ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Saving...
+                  Saving Changes...
                 </>
               ) : (
-                "Save Achievement"
+                achievement ? "Update Achievement" : "Add Achievement"
               )}
             </button>
           </div>
@@ -727,16 +777,24 @@ export default function AdminAchievements() {
   const fetchAchievements = async (page = 1) => {
     setLoading(true);
     try {
+      // Exclude 'year' from backend params to prevent 400 Joi validation errors
+      const { year, ...safeFilters } = appliedFilters;
+      
       const params = {
         page,
         limit,
-        ...appliedFilters
+        ...safeFilters
       };
       const response = await achievementService.getAllAchievements(params);
 
-      const data = response.data || [];
-      const total = response.total || 0;
-      const totalP = response.totalPages || 1;
+      // Perform client-side 'year' filtering because backend is strictly hardcoded to FY/SY/TY while DB is SE/TE/BE
+      let data = response.data || [];
+      if (year) {
+        data = data.filter((achievement) => achievement?.student?.year === year || achievement?.studentYear === year);
+      }
+
+      const total = year ? data.length : (response.total || 0);
+      const totalP = year ? Math.ceil(data.length / limit) || 1 : (response.totalPages || 1);
 
       setAchievements(data);
       setTotalRecords(total);
@@ -863,21 +921,21 @@ export default function AdminAchievements() {
             className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
           >
             <option value="">All Types</option>
-            <option value="Winner">🏆 Winner</option>
-            <option value="Runner-up">🥈 Runner-up</option>
+            <option value="Winner">Winner</option>
+            <option value="Runnerup">Runner-up</option>
             <option value="Participation">Participation</option>
           </select>
 
-          {/* Year Filter */}
+          {/* Client-Side Year Filter */}
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
             className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
           >
             <option value="">All Years</option>
-            <option value="FY">First Year (FY)</option>
-            <option value="SY">Second Year (SY)</option>
-            <option value="TY">Third Year (TY)</option>
+            <option value="SE">Second Year (SE)</option>
+            <option value="TE">Third Year (TE)</option>
+            <option value="BE">Final Year (BE)</option>
           </select>
 
           {/* Division Filter */}
@@ -902,7 +960,7 @@ export default function AdminAchievements() {
                 setAppliedFilters({
                   search: searchQuery || undefined,
                   category: selectedCategory || undefined,
-                  type: selectedType || undefined,
+                  achievementType: selectedType || undefined,
                   year: selectedYear || undefined,
                   division: selectedDivision || undefined,
                 });
@@ -919,8 +977,13 @@ export default function AdminAchievements() {
             {(searchQuery || selectedCategory || selectedType || selectedYear || selectedDivision) && (
               <button
                 onClick={() => {
-                  setSearchQuery(""); setSelectedCategory(""); setSelectedType("");
-                  setSelectedYear(""); setSelectedDivision("");
+                  setSearchQuery("");
+                  setSelectedCategory("");
+                  setSelectedType("");
+                  setSelectedYear("");
+                  setSelectedDivision("");
+                  setAppliedFilters({});
+                  setCurrentPage(1);
                 }}
                 className="px-4 py-2.5 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
               >

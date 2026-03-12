@@ -525,204 +525,241 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
 
   if (!isOpen) return null;
 
+  const inputClass = "w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200 shadow-sm";
+  const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-slideUp">
-        <div className="sticky top-0 z-10 p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h2 className="text-xl font-bold text-slate-900">
-            {internship ? "Edit Internship" : "Add New Internship"}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto animate-slideUp">
+        <div className="sticky top-0 z-20 px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white/95 backdrop-blur-md">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+            {internship ? "Edit Internship Details" : "Add New Internship"}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            {/* Student ID */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
-              <input
-                type="text"
-                name="studentId"
-                required={!internship}
-                value={formData.studentId}
-                onChange={handleChange}
-                placeholder="e.g. 2024COMP123"
-                disabled={!!internship} // Prevent editing student ID if updating
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
-              />
+        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+          
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-blue-600 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Primary Details</h4>
             </div>
-
-            {/* Company Name */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Company Name *</label>
-              <input
-                type="text"
-                name="companyName"
-                required
-                value={formData.companyName}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Role */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Role/Position *</label>
-              <input
-                type="text"
-                name="role"
-                required
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Duration */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Duration (Months) *</label>
-              <input
-                type="number"
-                name="durationMonths"
-                required
-                min="1"
-                max="6"
-                value={formData.durationMonths}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Dates */}
-            <div className="grid grid-cols-2 gap-4 col-span-1 md:col-span-2">
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              {/* Student ID */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Start Date *</label>
+                <label className={labelClass}>Student ID *</label>
                 <input
-                  type="date"
-                  name="startDate"
-                  required
-                  max={new Date().toISOString().split('T')[0]} // Not in future visually
-                  value={formData.startDate}
+                  type="text"
+                  name="studentId"
+                  required={!internship}
+                  value={formData.studentId}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. 2024COMP123"
+                  disabled={!!internship} // Prevent editing student ID if updating
+                  className={`${inputClass} disabled:opacity-60 disabled:cursor-not-allowed`}
                 />
               </div>
+
+              {/* Company Name */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">End Date *</label>
+                <label className={labelClass}>Company Name *</label>
                 <input
-                  type="date"
-                  name="endDate"
+                  type="text"
+                  name="companyName"
                   required
-                  max={new Date().toISOString().split('T')[0]}
-                  value={formData.endDate}
+                  value={formData.companyName}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. Google, Microsoft, TCS"
+                  className={inputClass}
                 />
               </div>
-            </div>
 
-            {/* Paid Status & Stipend */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Paid / Unpaid *</label>
-              <select
-                name="isPaid"
-                value={formData.isPaid}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="false">Unpaid</option>
-                <option value="true">Paid</option>
-              </select>
-            </div>
-
-            {formData.isPaid === "true" && (
+              {/* Role */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Stipend Amount (per month) *</label>
+                <label className={labelClass}>Role/Position *</label>
+                <input
+                  type="text"
+                  name="role"
+                  required
+                  value={formData.role}
+                  onChange={handleChange}
+                  placeholder="e.g. Frontend Developer Intern"
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Duration */}
+              <div>
+                <label className={labelClass}>Duration (Months) *</label>
                 <input
                   type="number"
-                  name="stipend"
+                  name="durationMonths"
                   required
                   min="1"
-                  value={formData.stipend}
+                  max="12"
+                  value={formData.durationMonths}
                   onChange={handleChange}
-                  placeholder="₹"
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. 3"
+                  className={inputClass}
                 />
               </div>
-            )}
 
-            {/* Description */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Description *</label>
-              <textarea
-                name="description"
-                required
-                minLength="10"
-                maxLength="300"
-                value={formData.description}
-                onChange={handleChange}
-                rows="3"
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              ></textarea>
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-4 col-span-1 md:col-span-2">
+                <div>
+                  <label className={labelClass}>Start Date *</label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    required
+                    max={new Date().toISOString().split('T')[0]} // Not in future visually
+                    value={formData.startDate}
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>End Date *</label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    required
+                    max={new Date().toISOString().split('T')[0]}
+                    value={formData.endDate}
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-indigo-500 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Compensation & Role Details</h4>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              {/* Paid Status & Stipend */}
+              <div>
+                <label className={labelClass}>Paid / Unpaid *</label>
+                <select
+                  name="isPaid"
+                  value={formData.isPaid}
+                  onChange={handleChange}
+                  className={inputClass}
+                >
+                  <option value="false">Unpaid</option>
+                  <option value="true">Paid</option>
+                </select>
+              </div>
+
+              {formData.isPaid === "true" ? (
+                <div>
+                  <label className={labelClass}>Stipend Amount (Monthly) *</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
+                    <input
+                      type="number"
+                      name="stipend"
+                      required
+                      min="1"
+                      value={formData.stipend}
+                      onChange={handleChange}
+                      placeholder="e.g. 10000"
+                      className={`${inputClass} pl-8`}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="hidden md:block"></div>
+              )}
+
+              {/* Description */}
+              <div className="col-span-1 md:col-span-2">
+                <label className={labelClass}>Role Description *</label>
+                <textarea
+                  name="description"
+                  required
+                  minLength="10"
+                  maxLength="500"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows="3"
+                  placeholder="Describe your responsibilities and achievements..."
+                  className={inputClass}
+                ></textarea>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-emerald-500 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Verification Proofs</h4>
             </div>
 
-            {/* Internship Report */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Internship Report (PDF) {!internship && "*"}
-              </label>
-              <input
-                type="file"
-                name="internshipReport"
-                accept=".pdf"
-                required={!internship}
-                onChange={handleFileChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              {/* Internship Report */}
+              <div>
+                <label className={labelClass}>
+                  Internship Report (.pdf) {!internship && "*"}
+                </label>
+                <input
+                  type="file"
+                  name="internshipReport"
+                  accept=".pdf"
+                  required={!internship}
+                  onChange={handleFileChange}
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none transition-all cursor-pointer"
+                />
+              </div>
+
+              {/* Photo Proof */}
+              <div>
+                <label className={labelClass}>
+                  Photo Proof (Image) {!internship && "*"}
+                </label>
+                <input
+                  type="file"
+                  name="photoProof"
+                  accept="image/jpeg, image/png, image/jpg"
+                  required={!internship}
+                  onChange={handleFileChange}
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 focus:outline-none transition-all cursor-pointer"
+                />
+              </div>
             </div>
+            {!internship && <p className="text-xs text-amber-600 mt-3 font-semibold px-2 flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Internship Report and Photo Proof are strictly required when adding a new internship.</p>}
+          </section>
 
-            {/* Photo Proof */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Photo Proof (Image) {!internship && "*"}
-              </label>
-              <input
-                type="file"
-                name="photoProof"
-                accept="image/jpeg, image/png, image/jpg"
-                required={!internship}
-                onChange={handleFileChange}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
-              />
-            </div>
-
-          </div>
-
-          <div className="pt-6 flex justify-end gap-3 border-t border-slate-100">
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 py-6 flex justify-end gap-4 mt-8">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 focus:ring-2 focus:ring-slate-300"
+              className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
+              className="px-10 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               {saving ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Saving...
+                  Saving Changes...
                 </>
               ) : (
-                "Save Internship"
+                internship ? "Update Internship" : "Add Internship"
               )}
             </button>
           </div>

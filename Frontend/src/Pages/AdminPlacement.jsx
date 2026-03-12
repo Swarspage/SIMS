@@ -637,68 +637,107 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
 
   if (!isOpen) return null;
 
+  const inputClass = "w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200 shadow-sm";
+  const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp">
-        <div className="sticky top-0 z-10 p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h2 className="text-xl font-bold text-slate-900">
-            {placement ? "Edit Placement" : "Add Placement"}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto animate-slideUp">
+        <div className="sticky top-0 z-20 px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white/95 backdrop-blur-md">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+            {placement ? "Edit Placement Details" : "Add New Placement"}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
-              <input type="text" name="studentId" required={!placement} disabled={!!placement} value={formData.studentId} onChange={handleChange} placeholder="2024COMP123" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100" />
+        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+          
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-blue-600 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Primary Details</h4>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Company Name *</label>
-              <input type="text" name="companyName" required value={formData.companyName} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <div>
+                <label className={labelClass}>Student ID *</label>
+                <input type="text" name="studentId" required={!placement} disabled={!!placement} value={formData.studentId} onChange={handleChange} placeholder="e.g. 2024COMP123" className={`${inputClass} disabled:opacity-60 disabled:cursor-not-allowed`} />
+              </div>
+              <div>
+                <label className={labelClass}>Company Name *</label>
+                <input type="text" name="companyName" required value={formData.companyName} onChange={handleChange} placeholder="e.g. Google, Microsoft, TCS" className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Job Role *</label>
+                <input type="text" name="role" required value={formData.role} onChange={handleChange} placeholder="e.g. Software Engineer" className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Placement Type *</label>
+                <select name="placementType" required value={formData.placementType} onChange={handleChange} className={inputClass}>
+                  <option value="Campus">Campus</option>
+                  <option value="Off-Campus">Off-Campus</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Job Role *</label>
-              <input type="text" name="role" required value={formData.role} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Placement Type *</label>
-              <select name="placementType" required value={formData.placementType} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="Campus">Campus</option>
-                <option value="Off-Campus">Off-Campus</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Package (LPA) *</label>
-              <input type="number" step="0.01" min="1" max="100" name="package" required value={formData.package} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Placement Year *</label>
-              <input type="text" name="placementYear" placeholder="2023-24" required value={formData.placementYear} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Passout Year *</label>
-              <input type="text" name="passoutYear" placeholder="2023-24" required value={formData.passoutYear} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Joining Year *</label>
-              <input type="text" name="joiningYear" placeholder="2023-24" required value={formData.joiningYear} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
-            </div>
-          </div>
+          </section>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Placement Proof (PDF) {placement ? "(Optional override)" : "*"}</label>
-            <input type="file" accept="application/pdf" onChange={handleFileChange} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-          </div>
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-indigo-500 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Compensation & Timeline</h4>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <div>
+                <label className={labelClass}>Package (LPA) *</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
+                  <input type="number" step="0.01" min="1" max="100" name="package" required value={formData.package} onChange={handleChange} placeholder="e.g. 12.5" className={`${inputClass} pl-8`} />
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Placement Year *</label>
+                <input type="text" name="placementYear" placeholder="e.g. 2023-24" required value={formData.placementYear} onChange={handleChange} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Passout Year *</label>
+                <input type="text" name="passoutYear" placeholder="e.g. 2024" required value={formData.passoutYear} onChange={handleChange} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Joining Year *</label>
+                <input type="text" name="joiningYear" placeholder="e.g. 2024" required value={formData.joiningYear} onChange={handleChange} className={inputClass} />
+              </div>
+            </div>
+          </section>
 
-          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
-            <button type="button" onClick={onClose} className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200">Cancel</button>
-            <button type="submit" disabled={loading} className="px-6 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
-              {loading ? "Saving..." : "Save Placement"}
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-emerald-500 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Verification Proof</h4>
+            </div>
+
+            <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <label className={labelClass}>Placement Proof (.pdf) {!placement && "*"}</label>
+              <input type="file" accept="application/pdf" onChange={handleFileChange} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 focus:outline-none transition-all cursor-pointer" />
+              {!placement && <p className="text-xs text-amber-600 mt-3 font-semibold px-2 flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Placement Proof is strictly required when adding a new placement.</p>}
+            </div>
+          </section>
+
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 py-6 flex justify-end gap-4 mt-8">
+            <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">Cancel</button>
+            <button type="submit" disabled={loading} className="px-10 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2">
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving Changes...
+                </>
+              ) : (
+                placement ? "Update Placement" : "Add Placement"
+              )}
             </button>
           </div>
         </form>
@@ -981,11 +1020,11 @@ export default function AdminPlacement() {
           <div className="flex gap-3 ml-auto flex-wrap">
             <button onClick={() => setActiveTab("placements")}
               className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${activeTab === "placements" ? "bg-blue-600 text-white shadow-sm" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}>📊 Placements</button>
+                }`}>Placements</button>
 
             <button onClick={() => setActiveTab("higherStudies")}
               className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${activeTab === "higherStudies" ? "bg-blue-600 text-white shadow-sm" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}>🎓 Higher Studies</button>
+                }`}>Higher Studies</button>
 
             <button onClick={handleExport}
               className="px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm flex items-center gap-2">
@@ -1078,6 +1117,7 @@ export default function AdminPlacement() {
                   setFilterYear(""); setFilterDivision(""); setFilterPlacementType("");
                   setFilterPlacementYear(""); setFilterPassoutYear(""); setFilterJoiningYear("");
                   setFilterPackageMin(""); setFilterPackageMax("");
+                  fetchPlacements(1);
                 }}
                 className="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
               >
@@ -1144,7 +1184,10 @@ export default function AdminPlacement() {
                 Find Higher Studies
               </button>
               <button
-                onClick={() => { setHsFilterYear(""); setHsFilterDivision(""); setHsFilterExamName(""); setHsFilterAcademicYear(""); setHsFilterScore(""); }}
+                onClick={() => { 
+                  setHsFilterYear(""); setHsFilterDivision(""); setHsFilterExamName(""); setHsFilterAcademicYear(""); setHsFilterScore(""); 
+                  fetchHigherStudies(1);
+                }}
                 className="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1406,58 +1449,84 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
 
   if (!isOpen) return null;
 
+  const inputClass = "w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200 shadow-sm";
+  const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slideUp">
-        <div className="sticky top-0 z-10 p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h2 className="text-xl font-bold text-slate-900">
-            {higherStudy ? "Edit Higher Study" : "Add Higher Study"}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto animate-slideUp">
+        <div className="sticky top-0 z-20 px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white/95 backdrop-blur-md">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+            {higherStudy ? "Edit Higher Study Details" : "Add New Higher Study"}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
-              <input type="text" name="studentId" required={!higherStudy} disabled={!!higherStudy} value={formData.studentId} onChange={handleChange} placeholder="2024COMP123" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100" />
+        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+          
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-blue-600 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Exam Details</h4>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Exam Name *</label>
-              <select name="examName" required value={formData.examName} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="GATE">GATE</option>
-                <option value="CAT">CAT</option>
-                <option value="GRE">GRE</option>
-                <option value="TOEFL">TOEFL</option>
-                <option value="IELTS">IELTS</option>
-                <option value="UPSC">UPSC</option>
-              </select>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <div>
+                <label className={labelClass}>Student ID *</label>
+                <input type="text" name="studentId" required={!higherStudy} disabled={!!higherStudy} value={formData.studentId} onChange={handleChange} placeholder="e.g. 2024COMP123" className={`${inputClass} disabled:opacity-60 disabled:cursor-not-allowed`} />
+              </div>
+              <div>
+                <label className={labelClass}>Exam Name *</label>
+                <select name="examName" required value={formData.examName} onChange={handleChange} className={inputClass}>
+                  <option value="GATE">GATE</option>
+                  <option value="CAT">CAT</option>
+                  <option value="GRE">GRE</option>
+                  <option value="TOEFL">TOEFL</option>
+                  <option value="IELTS">IELTS</option>
+                  <option value="UPSC">UPSC</option>
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className={labelClass}>Score *</label>
+                <input type="text" name="score" required value={formData.score} onChange={handleChange} placeholder="e.g. 98.5 percentile or 750" className={inputClass} />
+              </div>
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Score *</label>
-              <input type="text" name="score" required value={formData.score} onChange={handleChange} placeholder="e.g. 98.5 percentile or 750" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
-            </div>
-          </div>
+          </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Marksheet (PDF/Image) {higherStudy ? "(Optional override)" : "*"}</label>
-              <input type="file" onChange={(e) => handleFileChange(e, setMarksheet)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-emerald-500 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Verification Proofs</h4>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">ID Card Photo (Optional)</label>
-              <input type="file" onChange={(e) => handleFileChange(e, setIdCardPhoto)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-            </div>
-          </div>
 
-          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
-            <button type="button" onClick={onClose} className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200">Cancel</button>
-            <button type="submit" disabled={loading} className="px-6 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
-              {loading ? "Saving..." : "Save Higher Study"}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <div>
+                <label className={labelClass}>Marksheet (.pdf / image) {!higherStudy && "*"}</label>
+                <input type="file" onChange={(e) => handleFileChange(e, setMarksheet)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none transition-all cursor-pointer" />
+              </div>
+              <div>
+                <label className={labelClass}>ID Card Photo (Optional)</label>
+                <input type="file" onChange={(e) => handleFileChange(e, setIdCardPhoto)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 focus:outline-none transition-all cursor-pointer" />
+              </div>
+            </div>
+            {!higherStudy && <p className="text-xs text-amber-600 mt-3 font-semibold px-2 flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Marksheet is strictly required when adding a new record.</p>}
+          </section>
+
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 py-6 flex justify-end gap-4 mt-8">
+            <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">Cancel</button>
+            <button type="submit" disabled={loading} className="px-10 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2">
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving Changes...
+                </>
+              ) : (
+                higherStudy ? "Update Higher Study" : "Add Higher Study"
+              )}
             </button>
           </div>
         </form>

@@ -388,10 +388,10 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
 
         setFormData({
           studentId:
-            record?.stuID?.studentID ||
             record?.studentID ||
+            record?.stuID?.studentID ||
             record?.studentId ||
-            (typeof record?.stuID === "string" ? record.stuID : ""),
+            (typeof record?.stuID === "string" && record.stuID.length !== 24 ? record.stuID : ""),
           semester: record.semester || "",
           attendance: record.attendance || "",
           kts: initialKts,
@@ -494,27 +494,35 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
 
   if (!isOpen) return null;
 
+  const inputClass = "w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200 shadow-sm";
+  const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-slideUp">
-        <div className="sticky top-0 z-10 p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h2 className="text-xl font-bold text-slate-900">
-            {record ? "Edit Semester Info" : "Add Semester Info"}
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto animate-slideUp">
+        <div className="sticky top-0 z-20 px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white/95 backdrop-blur-md">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+            {record ? "Edit Semester Info" : "Add New Semester Info"}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-8">
+        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+          
           {/* Basic Info */}
-          <div>
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Basic Info</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-blue-600 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Basic Info</h4>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Student ID *</label>
+                <label className={labelClass}>Student ID *</label>
                 <input
                   type="text"
                   name="studentId"
@@ -522,12 +530,12 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
                   value={formData.studentId}
                   onChange={handleChange}
                   placeholder="e.g. 2024COMP123"
-                  disabled={!!record} // Prevent editing student ID if updating
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+                  disabled={!!record}
+                  className={`${inputClass} disabled:opacity-60 disabled:cursor-not-allowed`}
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Semester (1-8) *</label>
+                <label className={labelClass}>Semester (1-8) *</label>
                 <input
                   type="number"
                   name="semester"
@@ -536,163 +544,198 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
                   max="8"
                   value={formData.semester}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Attendance (%) *</label>
-                <input
-                  type="number"
-                  name="attendance"
-                  required
-                  min="0"
-                  max="100"
-                  value={formData.attendance}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
+                <label className={labelClass}>Attendance (%) *</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="attendance"
+                    required
+                    min="0"
+                    max="100"
+                    value={formData.attendance}
+                    onChange={handleChange}
+                    className={`${inputClass} pr-8`}
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">%</span>
+                </div>
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Subject Marks Array Builder */}
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Subject Marks</h3>
-              <button type="button" onClick={handleAddMark} className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-bold rounded hover:bg-blue-200">
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-1.5 bg-indigo-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Subject Marks</h4>
+              </div>
+              <button type="button" onClick={handleAddMark} className="px-4 py-2 bg-indigo-50 text-indigo-700 text-sm font-bold rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors shadow-sm">
                 + Add Subject
               </button>
             </div>
-            {formData.marks.length === 0 ? (
-              <p className="text-sm text-slate-500 italic">No subjects added yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {formData.marks.map((mark, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <input
-                      type="text"
-                      placeholder="Subject Name"
-                      required
-                      value={mark.subject}
-                      onChange={(e) => handleMarkChange(index, "subject", e.target.value)}
-                      className="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Score"
-                      required
-                      min="0"
-                      value={mark.score}
-                      onChange={(e) => handleMarkChange(index, "score", e.target.value)}
-                      className="w-24 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
-                    <span className="text-slate-500 font-bold">/</span>
-                    <input
-                      type="number"
-                      placeholder="Out Of"
-                      required
-                      min="1"
-                      value={mark.outOf}
-                      onChange={(e) => handleMarkChange(index, "outOf", e.target.value)}
-                      className="w-24 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button type="button" onClick={() => handleRemoveMark(index)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+
+            <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              {formData.marks.length === 0 ? (
+                <p className="text-sm text-slate-500 italic text-center py-4">No subjects added yet. Click "+ Add Subject" to begin.</p>
+              ) : (
+                <div className="space-y-4">
+                  {formData.marks.map((mark, index) => (
+                    <div key={index} className="flex flex-wrap md:flex-nowrap items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative group">
+                      <div className="flex-1 w-full md:w-auto">
+                        <label className={`${labelClass} hidden md:block opacity-0 group-hover:opacity-100 transition-opacity`}>Subject Name</label>
+                        <input
+                          type="text"
+                          placeholder="Subject Name"
+                          required
+                          value={mark.subject}
+                          onChange={(e) => handleMarkChange(index, "subject", e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
+                      <div className="w-1/3 md:w-32">
+                        <label className={`${labelClass} hidden md:block opacity-0 group-hover:opacity-100 transition-opacity`}>Score</label>
+                        <input
+                          type="number"
+                          placeholder="Score"
+                          required
+                          min="0"
+                          value={mark.score}
+                          onChange={(e) => handleMarkChange(index, "score", e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
+                      <span className="text-slate-300 font-extrabold text-2xl hidden md:block mt-[1.3rem]">/</span>
+                      <div className="w-1/3 md:w-32">
+                        <label className={`${labelClass} hidden md:block opacity-0 group-hover:opacity-100 transition-opacity`}>Out Of</label>
+                        <input
+                          type="number"
+                          placeholder="Out Of"
+                          required
+                          min="1"
+                          value={mark.outOf}
+                          onChange={(e) => handleMarkChange(index, "outOf", e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
+                      <button type="button" onClick={() => handleRemoveMark(index)} className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors md:mt-[1.3rem]">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
 
           {/* KTs Array Builder */}
-          <div className="p-4 bg-orange-50/50 border border-orange-200 rounded-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-bold text-orange-800 uppercase tracking-widest">Active KTs</h3>
-              <button type="button" onClick={handleAddKt} className="px-3 py-1.5 bg-orange-200 text-orange-800 text-xs font-bold rounded hover:bg-orange-300">
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-1.5 bg-orange-500 rounded-full"></div>
+                <h4 className="text-lg font-bold text-slate-800">Active KTs</h4>
+              </div>
+              <button type="button" onClick={handleAddKt} className="px-4 py-2 bg-orange-50 text-orange-700 text-sm font-bold rounded-lg border border-orange-100 hover:bg-orange-100 transition-colors shadow-sm">
                 + Add KT
               </button>
             </div>
-            {formData.kts.length === 0 ? (
-              <p className="text-sm text-slate-500 italic">No KTs recorded.</p>
-            ) : (
-              <div className="space-y-3">
-                {formData.kts.map((kt, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <input
-                      type="text"
-                      placeholder="Failed Subject Name"
-                      required
-                      value={kt}
-                      onChange={(e) => handleKtChange(index, e.target.value)}
-                      className="flex-1 px-3 py-2 text-sm border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                    />
-                    <button type="button" onClick={() => handleRemoveKt(index)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+
+            <div className="bg-orange-50/30 p-6 rounded-2xl border border-orange-100">
+              {formData.kts.length === 0 ? (
+                <p className="text-sm text-slate-500 italic text-center py-4">No KTs recorded.</p>
+              ) : (
+                <div className="space-y-4">
+                  {formData.kts.map((kt, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <input
+                        type="text"
+                        placeholder="Failed Subject Name"
+                        required
+                        value={kt}
+                        onChange={(e) => handleKtChange(index, e.target.value)}
+                        className={`${inputClass} border-orange-200 focus:ring-orange-500/50 focus:border-orange-500`}
+                      />
+                      <button type="button" onClick={() => handleRemoveKt(index)} className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
 
           {/* Status & Compliance */}
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4">Status & Compliance</h3>
-            <div className="flex flex-wrap gap-6">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={formData.journalTaken}
-                    onChange={(e) => setFormData(prev => ({ ...prev, journalTaken: e.target.checked }))}
-                    className="sr-only peer"
-                  />
-                  <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </div>
-                <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Journal Taken</span>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={formData.examFormFilled}
-                    onChange={(e) => setFormData(prev => ({ ...prev, examFormFilled: e.target.checked }))}
-                    className="sr-only peer"
-                  />
-                  <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </div>
-                <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Exam Form Filled</span>
-              </label>
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-6 w-1.5 bg-emerald-500 rounded-full"></div>
+              <h4 className="text-lg font-bold text-slate-800">Requirements & Compliance</h4>
             </div>
-          </div>
 
-          {/* Actions */}
-          <div className="pt-6 flex justify-end gap-3 border-t border-slate-100">
+            <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <div className="flex flex-col sm:flex-row gap-8">
+                <label className="flex items-center gap-4 cursor-pointer group bg-white p-4 pr-6 border border-slate-200 rounded-xl shadow-sm hover:border-blue-300 transition-colors">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={formData.journalTaken}
+                      onChange={(e) => setFormData(prev => ({ ...prev, journalTaken: e.target.checked }))}
+                      className="sr-only peer"
+                    />
+                    <div className="w-12 h-7 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2.5px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
+                  </div>
+                  <div>
+                    <span className="block text-sm font-bold text-slate-800">Journal Verification</span>
+                    <span className="text-[10px] uppercase tracking-widest text-slate-500">{formData.journalTaken ? 'Verified' : 'Pending'}</span>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-4 cursor-pointer group bg-white p-4 pr-6 border border-slate-200 rounded-xl shadow-sm hover:border-blue-300 transition-colors">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={formData.examFormFilled}
+                      onChange={(e) => setFormData(prev => ({ ...prev, examFormFilled: e.target.checked }))}
+                      className="sr-only peer"
+                    />
+                    <div className="w-12 h-7 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2.5px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
+                  </div>
+                  <div>
+                    <span className="block text-sm font-bold text-slate-800">Exam Form Submission</span>
+                    <span className="text-[10px] uppercase tracking-widest text-slate-500">{formData.examFormFilled ? 'Submitted' : 'Not Filled'}</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 py-6 flex justify-end gap-4 mt-8">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 focus:ring-2 focus:ring-slate-300"
+              className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
+              className="px-10 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Saving...
+                  Saving Changes...
                 </>
               ) : (
-                "Save Semester Info"
+                record ? "Update Semester Info" : "Add Semester Info"
               )}
             </button>
           </div>
@@ -739,9 +782,20 @@ export default function AdminSemesterInfo() {
 
     try {
       setRefreshing(true);
-      const res = await semInfoService.getStudentSemInfo(studentDbId);
-      const fullRecords = res.data || [];
-      const matchingRecord = fullRecords.find(r => r._id === record._id);
+      // Fetch sem info and student profile details (to get readable studentID)
+      const [semRes, studentRes] = await Promise.all([
+        semInfoService.getStudentSemInfo(studentDbId),
+        studentService.getSingleStudent(studentDbId)
+      ]);
+
+      const fullRecords = semRes.data || [];
+      let matchingRecord = fullRecords.find(r => r._id === record._id);
+      
+      if (matchingRecord) {
+        // Ensure the readable studentID is available at the top level for the form
+        matchingRecord.studentID = studentRes.data?.studentID;
+      }
+
       return matchingRecord || record;
     } catch (err) {
       console.error("Error refetching full record:", err);
