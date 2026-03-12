@@ -996,7 +996,7 @@ export default function AdminStudentSection() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="e.g. 2024COMP001, John Doe, 224101..."
+                placeholder="Search by first, last, or parents' names..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm"
@@ -1006,7 +1006,7 @@ export default function AdminStudentSection() {
               </svg>
             </div>
             <p className="text-[11px] text-slate-500 mt-2 ml-1">
-              <span className="font-semibold text-blue-600">Tip:</span> Search by Student ID, PRN, First/Last Name, or Email.
+              <span className="font-semibold text-blue-600">Note:</span> The search box filters by <span className="font-bold text-slate-700">First Name</span>, <span className="font-bold text-slate-700">Father's Name</span>, <span className="font-bold text-slate-700">Last Name</span>, and <span className="font-bold text-slate-700">Mother's Name</span>. For other details (like Student ID, PRN, or City), please use the <span className="font-bold text-blue-600 underline">Advanced Filters</span> below.
             </p>
           </div>
 

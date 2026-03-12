@@ -11,7 +11,7 @@ function InternshipCard({ internship, onView, onDelete, onEdit, isDeleting }) {
 
   // Student info from projected fields
   const studentNameRaw = internship.studentName;
-  const studentName = studentNameRaw && 
+  const studentName = studentNameRaw &&
     (studentNameRaw.firstName || studentNameRaw.lastName) &&
     `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim() !== "N/A"
     ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim()
@@ -47,7 +47,7 @@ function InternshipCard({ internship, onView, onDelete, onEdit, isDeleting }) {
             {internship?.companyName?.charAt(0) || "?"}
           </div>
         )}
-        
+
         {/* Top Overlay: Student ID & Year */}
         <div className="absolute top-2 left-2 flex gap-1">
           {studentID && (
@@ -57,7 +57,7 @@ function InternshipCard({ internship, onView, onDelete, onEdit, isDeleting }) {
           )}
           {studentYear && (
             <span className="px-2 py-0.5 bg-blue-600/90 backdrop-blur-md text-[10px] font-bold text-white rounded shadow-sm border border-blue-500/20 uppercase tracking-tighter font-mono">
-             {studentYear}
+              {studentYear}
             </span>
           )}
         </div>
@@ -65,7 +65,7 @@ function InternshipCard({ internship, onView, onDelete, onEdit, isDeleting }) {
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-grow">
-        
+
         {/* Student Name - PRIORITY */}
         {studentName && (
           <div className="mb-2">
@@ -131,11 +131,10 @@ function InternshipCard({ internship, onView, onDelete, onEdit, isDeleting }) {
             <button
               onClick={() => onDelete && onDelete(internship._id)}
               disabled={isDeleting}
-              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${
-                isDeleting 
-                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" 
+              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${isDeleting
+                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
                   : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
-              }`}
+                }`}
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </button>
@@ -368,7 +367,7 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
       if (internship) {
         const studentObj = internship.student || internship.stuID;
         let initialID = (typeof studentObj === "object" ? studentObj?.studentID : studentObj) || "";
-        
+
         // If it's a hex ID string, try to fetch the proper studentID
         if (/^[0-9a-fA-F]{24}$/.test(initialID)) {
           try {
@@ -386,11 +385,11 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
           companyName: internship.companyName || "",
           role: internship.role || "",
           durationMonths: internship.durationMonths || "",
-          startDate: (internship.startDate && !isNaN(new Date(internship.startDate).getTime())) 
-            ? new Date(internship.startDate).toISOString().split('T')[0] 
+          startDate: (internship.startDate && !isNaN(new Date(internship.startDate).getTime()))
+            ? new Date(internship.startDate).toISOString().split('T')[0]
             : "",
-          endDate: (internship.endDate && !isNaN(new Date(internship.endDate).getTime())) 
-            ? new Date(internship.endDate).toISOString().split('T')[0] 
+          endDate: (internship.endDate && !isNaN(new Date(internship.endDate).getTime()))
+            ? new Date(internship.endDate).toISOString().split('T')[0]
             : "",
           isPaid: internship.stipendInfo?.isPaid ? "true" : "false",
           stipend: internship.stipendInfo?.stipend || "",
@@ -488,8 +487,8 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
         try {
           const existingRes = await internshipService.getStudentInternshipsByAdmin(stuIDToUse);
           const studentInternships = existingRes.data || [];
-          
-          const isDuplicate = studentInternships.some(item => 
+
+          const isDuplicate = studentInternships.some(item =>
             item.companyName?.trim().toLowerCase() === formData.companyName.trim().toLowerCase() &&
             new Date(item.startDate).toISOString().split('T')[0] === formData.startDate
           );
@@ -513,10 +512,10 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
     } catch (err) {
       console.error("Error saving internship:", err);
       // Improve Validation: Parse detailed messages from backend
-      const errorMessage = 
-        err.response?.data?.errors?.map(e => e.message).join(", ") || 
-        err.response?.data?.error || 
-        err.response?.data?.message || 
+      const errorMessage =
+        err.response?.data?.errors?.map(e => e.message).join(", ") ||
+        err.response?.data?.error ||
+        err.response?.data?.message ||
         "Failed to save internship.";
       toast.error(errorMessage);
     } finally {
@@ -868,13 +867,13 @@ export default function AdminInternship() {
           <div className="flex-1 min-w-[240px]">
             <input
               type="text"
-              placeholder="e.g. Google, 2024COMP123, Software Engineer"
+              placeholder="Search by company, role, or student name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
             <p className="text-[11px] text-slate-500 mt-1.5 ml-1">
-              <span className="font-semibold text-blue-600">Tip:</span> Search by Company Name, Student ID, or Role.
+              <span className="font-semibold text-blue-600">Note:</span> The search box filters by <strong className="text-slate-700">Company Name</strong>, <strong className="text-slate-700">Role</strong>, <strong className="text-slate-700">Description</strong>, and <strong className="text-slate-700">Student Name</strong>.
             </p>
           </div>
 

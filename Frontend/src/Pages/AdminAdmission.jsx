@@ -67,10 +67,6 @@ function AdmissionCard({ admission, onView, onEdit, onDelete, isDeleting }) {
             <span className="text-slate-400 font-bold uppercase tracking-tighter">Year & Div</span>
             <span className="font-bold text-slate-900">{admission?.year || "N/A"} - {admission?.div || "N/A"}</span>
           </div>
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-400 font-bold uppercase tracking-tighter">Fees</span>
-            <span className="font-black text-blue-600">₹{admission?.fees?.toLocaleString() || "0"}</span>
-          </div>
         </div>
 
         {/* Action Buttons */}
@@ -185,10 +181,6 @@ function DetailModal({ admission, onClose }) {
             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Financial & Scholarship</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 bg-white rounded-xl border border-slate-200">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs text-slate-500 font-bold">Total Fees</span>
-                  <span className="text-sm font-black text-blue-600 tracking-tight">₹{admission.fees?.toLocaleString() || "0"}</span>
-                </div>
                 <div className="flex justify-between items-center pt-2 border-t border-slate-50">
                   <span className="text-xs text-slate-500 font-bold">Scholarship</span>
                   <span className={`text-[10px] font-black uppercase tracking-widest ${admission.isScholarshipApplied ? 'text-green-600' : 'text-slate-400'}`}>
@@ -398,7 +390,6 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
                 </div>
                 <div><label className={labelClass}>Division</label><input type="text" name="div" value={form.div} onChange={handleInputChange} className={inputClass} /></div>
                 <div><label className={labelClass}>Roll Number</label><input type="text" name="rollno" value={form.rollno} onChange={handleInputChange} className={inputClass} /></div>
-                <div><label className={labelClass}>Fees Amount (₹)</label><input type="number" name="fees" value={form.fees} onChange={handleInputChange} className={inputClass} /></div>
               </div>
             </section>
 
@@ -499,7 +490,6 @@ export default function AdminAdmission() {
   const [yearFilter, setYearFilter] = useState("");
   const [divFilter, setDivFilter] = useState("");
   const [academicYearFilter, setAcademicYearFilter] = useState("");
-  const [feesPaidFilter, setFeesPaidFilter] = useState("");
   const [scholarshipFilter, setScholarshipFilter] = useState("");
   const [mahadbtFilter, setMahadbtFilter] = useState("");
   const [migrationFilter, setMigrationFilter] = useState("");
@@ -520,15 +510,34 @@ export default function AdminAdmission() {
   }, [currentPage, limit]);
 
   const fetchAdmissions = async (page = 1) => {
+    const trimmedSearch = searchQuery.trim();
+    if (trimmedSearch) {
+      if (/^\d+$/.test(trimmedSearch)) {
+        setError("Purely numeric searches (like Roll Number) are not supported by the server. Please search by Course or Academic Year (e.g. '2024-2025').");
+        setAdmissions([]);
+        setTotalRecords(0);
+        setTotalPages(1);
+        setLoading(false);
+        return;
+      }
+      if (!/^[A-Za-z0-9\s.,!?'-]+$/.test(trimmedSearch)) {
+        setError("Search contains invalid characters. Only letters, numbers, and basic punctuation are allowed.");
+        setAdmissions([]);
+        setTotalRecords(0);
+        setTotalPages(1);
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       setLoading(true);
       const params = {
         page,
         limit,
-        search: searchQuery || undefined,
+        search: trimmedSearch || undefined,
         year: yearFilter || undefined,
         academicYear: academicYearFilter || undefined,
-        filterPaid: feesPaidFilter || undefined,
         status: statusFilter || undefined,
         isScholarshipApplied: scholarshipFilter !== "" ? scholarshipFilter === "true" : undefined,
         isMahadbtFormSubmitted: mahadbtFilter !== "" ? mahadbtFilter === "true" : undefined,
@@ -548,7 +557,9 @@ export default function AdminAdmission() {
       setError(null);
     } catch (err) {
       console.error("Error fetching admissions:", err);
-      setError("Failed to load admissions. Please try again.");
+      const resData = err.response?.data;
+      const serverMsg = resData?.errors?.[0]?.message || resData?.message || "Failed to load admissions. Please try again.";
+      setError(serverMsg);
       setAdmissions([]);
     } finally {
       setLoading(false);
@@ -603,13 +614,16 @@ export default function AdminAdmission() {
             <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             <input
               type="text"
-              placeholder="Search by Course or Academic Year..."
+              placeholder="Search by course or academic year..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-bold placeholder:font-normal"
             />
           </div>
-        </div>
+          <p className="text-[10px] text-slate-500 mt-1.5 ml-1">
+            <span className="font-semibold text-blue-600">Note:</span> The search box filters by <strong className="text-slate-700">Course</strong> and <strong className="text-slate-700">Academic Year</strong>.
+            <span className="block mt-0.5 text-slate-400 italic">Numeric queries (like Roll Number) are blocked server-side.</span>
+          </p>        </div>
 
         <div className="flex flex-wrap gap-3 items-center">
           <select
@@ -643,15 +657,6 @@ export default function AdminAdmission() {
             className="w-48 px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-bold shadow-sm placeholder:font-normal"
           />
 
-          <select
-            value={feesPaidFilter}
-            onChange={(e) => setFeesPaidFilter(e.target.value)}
-            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
-          >
-            <option value="">All Fee Statuses</option>
-            <option value="paid">Paid</option>
-            <option value="unpaid">Unpaid</option>
-          </select>
 
           <select
             value={scholarshipFilter}
@@ -695,13 +700,12 @@ export default function AdminAdmission() {
             Find Admissions
           </button>
 
-          {(searchQuery || yearFilter || academicYearFilter || feesPaidFilter || statusFilter || scholarshipFilter || mahadbtFilter || migrationFilter) && (
+          {(searchQuery || yearFilter || academicYearFilter || statusFilter || scholarshipFilter || mahadbtFilter || migrationFilter) && (
             <button
               onClick={() => {
                 setSearchQuery("");
                 setYearFilter("");
                 setAcademicYearFilter("");
-                setFeesPaidFilter("");
                 setStatusFilter("");
                 setScholarshipFilter("");
                 setMahadbtFilter("");

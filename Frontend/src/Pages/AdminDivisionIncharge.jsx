@@ -436,13 +436,13 @@ export default function AdminDivisionIncharge() {
                     </svg>
                     <input
                         type="text"
-                        placeholder="e.g. Prof. Smith, smith@college.edu, A"
+                        placeholder="Search by name or email..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition text-sm"
+                        className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition text-sm font-bold placeholder:font-normal"
                     />
                     <p className="text-[10px] text-slate-500 mt-1.5 ml-1">
-                        <span className="font-semibold text-violet-600">Tip:</span> Search by Name, Email, or assigned Division.
+                        <span className="font-semibold text-violet-600">Note:</span> Search box scans for <strong className="text-slate-700">Name</strong> and <strong className="text-slate-700">Email</strong>.
                     </p>
                 </div>
 

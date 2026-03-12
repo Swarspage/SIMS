@@ -866,13 +866,13 @@ export default function AdminSemesterInfo() {
           <div className="flex-1 min-w-[240px]">
             <input
               type="text"
-              placeholder="e.g. 2024COMP123, Sem 1"
+              placeholder="Search by student name or ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-bold placeholder:font-normal"
             />
-            <p className="text-[11px] text-slate-500 mt-1.5 ml-1">
-              <span className="font-semibold text-blue-600">Tip:</span> Search by Student ID or Semester Number.
+            <p className="text-[10px] text-slate-500 mt-1.5 ml-1">
+              <span className="font-semibold text-blue-600">Note:</span> The search box filters by <strong className="text-slate-700">Student Name</strong> and <strong className="text-slate-700">Student ID</strong>.
             </p>
           </div>
           <select

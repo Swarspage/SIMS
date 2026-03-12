@@ -960,14 +960,23 @@ export default function AdminPlacement() {
 
         {/* Row 1 — Search + Tab buttons + Export */}
         <div className="flex flex-wrap gap-4 items-center mb-5">
-          <input
-            type="text"
-            placeholder={`Search by ${activeTab === "placements" ? "company, role, student ID" : "university, degree, student ID"
-              }...`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white flex-1 min-w-[240px] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          />
+          <div className="flex-1 min-w-[240px]">
+            <input
+              type="text"
+              placeholder={`Search by ${activeTab === "placements" ? "company, role, or student name" : "exam name or student name"
+                }...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            />
+            <p className="text-[11px] text-slate-500 mt-1.5 ml-1">
+              <span className="font-semibold text-blue-600">Note:</span> {activeTab === "placements" ? (
+                <>Search filters by <strong className="text-slate-700">Company Name</strong>, <strong className="text-slate-700">Role</strong>, <strong className="text-slate-700">Student ID</strong>, and <strong className="text-slate-700">Student Name</strong>.</>
+              ) : (
+                <>Search filters by <strong className="text-slate-700">Exam Name</strong>, <strong className="text-slate-700">Student ID</strong>, and <strong className="text-slate-700">Student Name</strong>.</>
+              )}
+            </p>
+          </div>
 
           <div className="flex gap-3 ml-auto flex-wrap">
             <button onClick={() => setActiveTab("placements")}
