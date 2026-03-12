@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const SemesterInfo = require("../models/SemesterInfo");
 const Student = require("../models/Student");
-const { semInfoCreateSchema , semInfoUpdateSchema } = require("../validators/seminfoValidation");
+const { semInfoCreateSchema , semInfoUpdateSchema , getSemInfosValidation } = require("../validators/seminfoValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformSemesterInfo, semesterInfoColumnMap } = require('../helpers/excel/exportTransformers');
 
@@ -223,6 +223,14 @@ const deleteSemInfo = async (req, res) => {
 const getAllSemInfos = async (req, res) => {
   try {
 
+    const { error, value } = getSemInfosValidation.validate(req.query);
+    if (error) return validationErrorResponse(res, error.details);
+
+    const isExport = value.export === "true";
+    const pageNum = Math.max(1, Number(value.page || 1));
+    const limitNum = Math.min(Number(value.limit || 10), 50);
+    const skip = (pageNum - 1) * limitNum;
+
     const {
       semester,
       isDefaulter,
@@ -233,17 +241,12 @@ const getAllSemInfos = async (req, res) => {
       year,
       division,
       search,
-      page,
-      limit,
-      export: exportFlag
-    } = req.query;
+      // page,
+      // limit,
+      // export: exportFlag
+    } = value;
 
-    const isExport = exportFlag === "true";
-
-    const pageNum = Number(page) || 1;
-    const limitNum = Math.min(Number(limit) || 10, 20);
-    const skip = (pageNum - 1) * limitNum;
-
+    
     const pipeline = [];
 
     // JOIN STUDENT
@@ -276,30 +279,26 @@ const getAllSemInfos = async (req, res) => {
       if (division) match["student.division"] = division.trim();
     }
 
+    
     // SEMESTER
-    if (semester) match.semester = Number(semester);
+    if (semester !== undefined) match.semester = semester; // already a Number from Joi
 
     // BOOLEAN FILTERS
-    if (isDefaulter === "true") match.isDefaulter = true;
-    if (isDefaulter === "false") match.isDefaulter = false;
+    if (isDefaulter !== undefined) match.isDefaulter = isDefaulter;
+    if (journalTaken !== undefined) match.journalTaken = journalTaken;
+    if (examFormFilled !== undefined) match.examFormFilled = examFormFilled;
 
-    if (journalTaken === "true") match.journalTaken = true;
-    if (journalTaken === "false") match.journalTaken = false;
-
-    if (examFormFilled === "true") match.examFormFilled = true;
-    if (examFormFilled === "false") match.examFormFilled = false;
-
-    // ATTENDANCE RANGE
-    if (minAttendance || maxAttendance) {
+    
+   // ATTENDANCE RANGE
+    if (minAttendance !== undefined || maxAttendance !== undefined) {
       match.attendance = {};
-
-      if (minAttendance) match.attendance.$gte = Number(minAttendance);
-      if (maxAttendance) match.attendance.$lte = Number(maxAttendance);
+      if (minAttendance !== undefined) match.attendance.$gte = minAttendance;
+      if (maxAttendance !== undefined) match.attendance.$lte = maxAttendance;
     }
 
     // SEARCH
     if (search) {
-      const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#]/g, "");
+      const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
       match.$or = [
         { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
@@ -373,6 +372,7 @@ const getAllSemInfos = async (req, res) => {
       const semInfos = await SemesterInfo.aggregate([
         ...pipeline,
         { $sort: { createdAt: -1 } },
+        { $limit: 5000 },
         { $project: exportFields }
       ]);
 
@@ -440,7 +440,7 @@ const getAllSemInfos = async (req, res) => {
   }
 };
 
-
+//getownsemInfo
 const getOwnSemInfos = async (req, res) => {
   try {
     const data = await SemesterInfo.find({ stuID: req.user.id })

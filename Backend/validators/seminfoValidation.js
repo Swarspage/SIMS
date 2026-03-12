@@ -158,7 +158,99 @@ const semInfoUpdateSchema = Joi.object({
     abortEarly: false
   });
 
+
+//getSeminfo
+const getSemInfosValidation = Joi.object({
+  year: Joi.string()
+    .trim()
+    .valid("FY", "SY", "TY")
+    .optional()
+    .messages({ "any.only": "Year must be one of FY, SY, or TY." }),
+
+  division: Joi.string()
+    .trim()
+    .pattern(textWithNumberRegex)
+    .max(10)
+    .optional()
+    .messages({
+      "string.pattern.base": "Division contains invalid characters.",
+      "string.max": "Division cannot exceed 10 characters."
+    }),
+
+  semester: Joi.number()
+    .integer()
+    .min(1)
+    .max(8)
+    .optional()
+    .messages({
+      "number.base": "Semester must be a valid number.",
+      "number.integer": "Semester must be an integer.",
+      "number.min": "Semester must be at least 1.",
+      "number.max": "Semester cannot exceed 8."
+    }),
+
+  isDefaulter: Joi.boolean()
+    .optional()
+    .messages({ "boolean.base": "isDefaulter must be true or false." }),
+
+  journalTaken: Joi.boolean()
+    .optional()
+    .messages({ "boolean.base": "journalTaken must be true or false." }),
+
+  examFormFilled: Joi.boolean()
+    .optional()
+    .messages({ "boolean.base": "examFormFilled must be true or false." }),
+
+  minAttendance: Joi.number()
+    .min(0)
+    .max(100)
+    .optional()
+    .messages({
+      "number.base": "minAttendance must be a valid number.",
+      "number.min": "minAttendance cannot be negative.",
+      "number.max": "minAttendance cannot exceed 100."
+    }),
+
+  maxAttendance: Joi.number()
+    .min(0)
+    .max(100)
+    .greater(Joi.ref("minAttendance"))
+    .optional()
+    .messages({
+      "number.base": "maxAttendance must be a valid number.",
+      "number.max": "maxAttendance cannot exceed 100.",
+      "number.greater": "maxAttendance must be greater than minAttendance."
+    }),
+
+  search: Joi.string()
+    .trim()
+    .pattern(textWithNumberRegex)
+    .max(100)
+    .optional()
+    .messages({
+      "string.max": "Search cannot exceed 100 characters.",
+      "string.pattern.base": "Search contains invalid characters."
+    }),
+
+  page: Joi.number().integer().min(1).optional()
+    .messages({
+      "number.base": "Page must be a number.",
+      "number.min": "Page must be at least 1."
+    }),
+
+  limit: Joi.number().integer().min(1).max(50).optional()
+    .messages({
+      "number.base": "Limit must be a number.",
+      "number.max": "Limit cannot exceed 50."
+    }),
+
+  export: Joi.string().valid("true", "false").optional()
+
+}).options({ stripUnknown: true, convert: true, abortEarly: false });
+
+
 module.exports = {
   semInfoCreateSchema,
-  semInfoUpdateSchema
+  semInfoUpdateSchema , 
+  getSemInfosValidation,
 };
