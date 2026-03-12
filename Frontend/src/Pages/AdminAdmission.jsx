@@ -373,20 +373,6 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
           </button>
         </div>
 
-        {admission.status !== 'pending' && (
-          <div className="mx-6 mt-6 p-4 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl flex items-start gap-4 shadow-sm">
-            <svg className="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div>
-              <h4 className="font-bold">Backend Limitation: Read-Only Record</h4>
-              <p className="text-sm mt-1">
-                Because this admission has been <strong>{admission.status.toUpperCase()}</strong>, the server strictly forbids any further updates (Bad Request 400). You cannot change these details below.
-              </p>
-            </div>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 bg-slate-50/30">
           <div className="p-6 sm:p-8 space-y-10">
             {/* Section: Basic Info & Status */}
@@ -488,7 +474,7 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
             <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">Cancel</button>
             <button 
               type="submit" 
-              disabled={saving || admission.status !== 'pending'} 
+              disabled={saving} 
               className="px-10 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               {saving ? "Saving Changes..." : "Save Changes"}
@@ -596,9 +582,6 @@ export default function AdminAdmission() {
   };
 
   // FILTER LOGIC - Manual Trigger Only
-  // NOTE FOR BACKEND DEV: The following filters are currently disabled/hidden because the backend API 
-  // (getAllAdmissions controller & getAdmissionsValidation schema) does not yet support them:
-  // Status, Division, Scholarship, MahaDBT, and Migration.
   const handleFind = () => {
     setCurrentPage(1);
     fetchAdmissions(1);
@@ -724,7 +707,14 @@ export default function AdminAdmission() {
                 setMahadbtFilter("");
                 setMigrationFilter("");
                 setCurrentPage(1);
-                fetchAdmissions(1);
+                
+                // Immediately fetch with empty params to bypass stale state values
+                setLoading(true);
+                admissionService.getAllAdmissions({ page: 1, limit }).then(response => {
+                  setAdmissions(response.data || []);
+                  setTotalRecords(response.total || 0);
+                  setTotalPages(response.totalPages || 1);
+                }).catch(console.error).finally(() => setLoading(false));
               }}
               className="px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95 flex items-center gap-2"
             >

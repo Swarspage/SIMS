@@ -411,12 +411,12 @@ export default function StudentAchievements() {
                         <option value="Coding competitions">
                           Coding Competitions
                         </option>
+                        <option value="Academic Topper">Academic Topper</option>
                         <option value="Committee">Committee</option>
                         <option value="Hackathon">Hackathon</option>
                         <option value="Sports">Sports</option>
                         <option value="Cultural">Cultural</option>
                         <option value="Technical">Technical</option>
-                        <option value="Academic Topper">Academic Topper</option>
                         <option value="Other">Other</option>
                       </select>
 
