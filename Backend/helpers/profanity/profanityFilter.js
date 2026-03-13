@@ -87,8 +87,11 @@ function normalizeText(text) {
     // remove spaces between characters
     .replace(/\s+/g, "")
 
-    // remove punctuation
-    .replace(/[._\-*@#!$%^&()+=]/g, "")
+    // convert symbols to letters
+    .replace(/@/g, "a")
+    .replace(/\$/g, "s")
+    .replace(/!/g, "i")
+    .replace(/\|/g, "i")
 
     // convert numbers to letters
     .replace(/0/g, "o")
@@ -96,29 +99,47 @@ function normalizeText(text) {
     .replace(/3/g, "e")
     .replace(/4/g, "a")
     .replace(/5/g, "s")
-    .replace(/7/g, "t");
+    .replace(/7/g, "t")
+
+    // remove separators
+    .replace(/[\s._\-*@#!$%^&()+=/\\]/g, "")
+
+    // collapse repeated letters
+    // beeeeehenchood -> behenchod
+    .replace(/(.)\1+/g, "$1");
 }
+
 
 function containsProfanity(text) {
 
+  text = text.trim();
+
+  console.log("Checking:", text);
+
   if (!text) return false;
 
-  const words = text.toLowerCase().split(/\W+/);
+  // split text into words
+  const words = text
+    .toLowerCase()
+    .split(/[\s.,!?@#\-_/()]+/)
+    .filter(Boolean);
 
   for (const w of words) {
-    if (LeoProfanity.check(w)) {
-      return true;
-    }
+
+  // check original word
+  if (LeoProfanity.check(w)) {
+    console.log("Matched word:", w);
+    return true;
   }
 
-  const normalized = normalizeText(text);
-  const badWords = LeoProfanity.list();
+  const normalizedWord = normalizeText(w);
 
-  for (const word of badWords) {
-    if (normalized.includes(word)) {
-      return true;
-    }
+  // check normalized word
+  if (LeoProfanity.check(normalizedWord)) {
+    console.log("Matched normalized:", normalizedWord);
+    return true;
   }
+}
 
   return false;
 }
