@@ -22,15 +22,33 @@ const storage = multer.diskStorage({
 
 	// -----------------Random filename using crypto---------------------
 	// Prevents: File overwrite attacks, Predictable filenames, Security guessing, etc 
+	// filename: (req, file, cb) => {
+	// 	const uniqueName =
+	// 	crypto.randomBytes(16).toString("hex") +
+	// 	"-" +
+	// 	Date.now() +
+	// 	path.extname(file.originalname).toLowerCase();
+
+	// 	cb(null, uniqueName);
+	// },
+
 	filename: (req, file, cb) => {
+
+		const originalName = path.basename(file.originalname).toLowerCase()
+			.replace(/\s+/g, "_")
+			.replace(/[^a-zA-Z0-9._-]/g, "") || "file"; 
+
+		const studentID = req.user?.studentID || "user"; // what if admin uploads? then req.user.studentID will not be availablle
+
 		const uniqueName =
-		crypto.randomBytes(16).toString("hex") +
-		"-" +
-		Date.now() +
-		path.extname(file.originalname).toLowerCase();
+			crypto.randomBytes(8).toString("hex") +
+			"-" +
+			studentID +
+			"-" +
+			originalName;
 
 		cb(null, uniqueName);
-	},
+	}
 });
 
 // ----------------MIME + Extension double Validation-------------------
