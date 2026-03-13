@@ -9,10 +9,10 @@ const studentSchema = new mongoose.Schema({
         motherName : { type : String , } ,
     },
 
-    PRN: { type: String, unique : true },
+    PRN: { type: String, unique : true, sparse : true },
     studentID: { type: String, unique: true},
 
-    email: { type: String, unique: true, },
+    email: { type: String, unique: true, sparse : true },
     password: { type: String },
     
     //new authentication fields for password reset
