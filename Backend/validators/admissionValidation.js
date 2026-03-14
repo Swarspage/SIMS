@@ -232,7 +232,7 @@ const admissionUpdateSchema = Joi.object({
         "string.min": "Reason must be at least 5 characters long.",
         "string.empty": "Reason cannot be empty."
       }),
-    otherwise: Joi.optional()
+    otherwise: Joi.forbidden()
   }),
 
   isMahadbtFormSubmitted: Joi.boolean()
@@ -245,7 +245,7 @@ const admissionUpdateSchema = Joi.object({
       "any.required": "MahaDBT form filled date is required.",
       "date.base": "MahaDBT form filled date must be a valid date."
     }),
-    otherwise: Joi.optional()
+    otherwise: Joi.forbidden()
   }),
 
   mahadbtNotFilledReason: Joi.when("isMahadbtFormSubmitted", {
@@ -259,7 +259,7 @@ const admissionUpdateSchema = Joi.object({
         "string.min": "Reason must be at least 5 characters long.",
         "string.empty": "Reason cannot be empty."
       }),
-    otherwise: Joi.optional()
+    otherwise: Joi.forbidden()
   }),
 
   hasMigrationCertificate: Joi.boolean()
@@ -272,7 +272,7 @@ const admissionUpdateSchema = Joi.object({
       "any.required": "Migration expected date is required.",
       "date.base": "Migration expected date must be a valid date."
     }),
-    otherwise: Joi.optional()
+    otherwise: Joi.forbidden()
   }),
 
   migrationNotAvailableReason: Joi.when("hasMigrationCertificate", {
@@ -286,7 +286,7 @@ const admissionUpdateSchema = Joi.object({
         "string.min": "Reason must be at least 5 characters long.",
         "string.empty": "Reason cannot be empty."
       }),
-    otherwise: Joi.optional()
+    otherwise: Joi.forbidden()
   })
 })
   .min(1)

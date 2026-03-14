@@ -53,12 +53,12 @@ const createAdmission = async (req, res) => {
       }
 
       // Support both MongoDB ObjectId and custom studentID field
+      // Only fall back to findOne when rawStudentId is NOT a valid ObjectId,
+      // preventing a wasted query (an ObjectId string never matches studentID field)
+      let student;
       if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
-        // Try MongoDB _id first
         student = await Student.findById(rawStudentId);
-      }
-      // If not found by _id (or wasn't a valid ObjectId), fall back to custom studentID field
-      if (!student) {
+      } else {
         student = await Student.findOne({ studentID: rawStudentId });
       }
 

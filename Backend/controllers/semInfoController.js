@@ -16,19 +16,21 @@ const validationErrorResponse = (res, details) =>
     })),
   });
 
-// // Helper to calculate defaulter
-// const calculateDefaulter = (attendance, kts) => {
-//   return attendance < 75 || (kts && kts.length > 0);
-// };
-
-const calculateDefaulter = (attendance) => {
-  return attendance < 75;
+const calculateDefaulter = (attendance, kts) => {
+  return attendance < 75 || (Array.isArray(kts) && kts.length > 0);
 };
 
 
 //create sem info student or admin/DI
 const addSemInfo = async (req, res) => {
   try {
+    // VALIDATION FIRST — before any DB work
+    const { error, value } = semInfoCreateSchema.validate(req.body, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
+    if (error) return validationErrorResponse(res, error.details);
+
     let stuID;
 
     // Role handling
@@ -42,6 +44,7 @@ const addSemInfo = async (req, res) => {
       }
 
       // Support both MongoDB ObjectId and custom studentID field
+      // Use else-if to avoid a redundant DB call when ObjectId lookup already failed
       let student;
       if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
         student = await Student.findById(rawStudentId);
@@ -71,16 +74,7 @@ const addSemInfo = async (req, res) => {
       return res.status(403).json({ success: false, message: "Unauthorized role" });
     }
 
-    // validation
-    const { error } = semInfoCreateSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: error.details[0].message,
-      });
-    }
-
-    const { semester, attendance, kts, marks } = req.body;
+    const { semester, attendance, kts, marks } = value;
 
     const semInfo = new SemesterInfo({
       stuID,
@@ -88,7 +82,7 @@ const addSemInfo = async (req, res) => {
       attendance,
       kts,
       marks,
-      isDefaulter: calculateDefaulter(attendance),
+      isDefaulter: calculateDefaulter(attendance, kts),
     });
 
     await semInfo.save();
@@ -155,9 +149,6 @@ const updateSemInfo = async (req, res) => {
         message: error.details[0].message,
       });
     }
-
-    console.log(req.body);
-console.log(typeof req.body.journalTaken);
 
     // UPDATE DATA
     Object.assign(semInfo, req.body);
@@ -474,8 +465,7 @@ const getStudentSemInfos = async (req, res) => {
     let student;
     if (mongoose.Types.ObjectId.isValid(studentId)) {
       student = await Student.findById(studentId);
-    }
-    if (!student) {
+    } else {
       student = await Student.findOne({ studentID: studentId });
     }
 

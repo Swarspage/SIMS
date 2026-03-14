@@ -101,6 +101,8 @@ const createActivity = async (req, res) => {
       }
 
       // Support both MongoDB ObjectId and studentID (e.g. "2024FHIT009")
+      // Only fall back to findOne when rawStudentId is NOT a valid ObjectId,
+      // preventing a wasted query (an ObjectId string never matches studentID field)
       let student;
       if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
         student = await Student.findById(rawStudentId);
@@ -266,6 +268,8 @@ const getAllActivities = async (req, res) => {
     const { year, division, search } = value;
 
     const pipeline = [
+      // Filter by type BEFORE $lookup to reduce the number of documents joined
+      { $match: { type: "Committee" } },
       {
         $lookup: {
           from: "students",
@@ -277,7 +281,7 @@ const getAllActivities = async (req, res) => {
       { $unwind: "$student" },
     ];
 
-    const match = { type: "Committee" };
+    const match = {};
 
     //role filter
     if (req.user.role === "divisionIncharge") {
@@ -541,8 +545,7 @@ const deleteActivity = async (req, res) => {
   }
 };
 
-/* ----------------------------- EXPORT ----------------------------- */
-
+//exports
 module.exports = {
   createActivity,
   getActivityByStu,

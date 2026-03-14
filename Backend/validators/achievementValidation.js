@@ -327,9 +327,9 @@ const getAchievementsValidation = Joi.object({
 
   achievementType: Joi.string()
     .trim()
-    .valid("Participation", "Winner", "Runnerup")
+    .valid("Participation", "Winner", "Runner-up")
     .optional()
-    .messages({ "any.only": "Achievement type must be one of Participation, Winner, or Runnerup." }),
+    .messages({ "any.only": "Achievement type must be one of Participation, Winner, or Runner-up." }),
 
   export: Joi.string().valid("true", "false").optional()
 
