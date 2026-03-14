@@ -129,10 +129,14 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/division/login" element={<DivisionInchargeLogin />} /> {/* ✅ NEW ROUTE */}
+        <Route path="/admin/forgot-password" element={<ForgotPasswordPage role="admin" />} />
+        <Route path="/admin/reset-password/:token" element={<ResetPasswordPage role="admin" />} />
+        <Route path="/division/login" element={<DivisionInchargeLogin />} />
+        <Route path="/division-incharge/forgot-password" element={<ForgotPasswordPage role="division" />} />
+        <Route path="/division-incharge/reset-password/:token" element={<ResetPasswordPage role="division" />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage role="student" />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage role="student" />} />
 
         {/* Admin Routes - PROTECTED */}
         {/* Note: Updated requiredRole to allow 'division' role to access admin dashboard */}

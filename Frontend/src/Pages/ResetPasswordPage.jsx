@@ -6,7 +6,7 @@ import dmceLogo from "../assets/dmce_logo_new.png";
 const PASSWORD_HINT =
   "8-14 characters with uppercase, lowercase, number & special character (@$!%*?&/)";
 
-export default function ResetPasswordPage() {
+export default function ResetPasswordPage({ role = "student" }) {
   const navigate = useNavigate();
   const { token } = useParams();
   const [newPassword, setNewPassword] = useState("");
@@ -16,6 +16,10 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  // Determine back link and role label
+  const loginLink = role === "admin" ? "/admin/login" : role === "division" ? "/division/login" : "/login";
+  const roleLabel = role === "admin" ? "Admin" : role === "division" ? "Incharge" : "";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,9 +32,15 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      await authService.resetPassword(token, newPassword);
+      if (role === "admin") {
+        await authService.adminResetPassword(token, newPassword);
+      } else if (role === "division") {
+        await authService.divisionResetPassword(token, newPassword);
+      } else {
+        await authService.resetPassword(token, newPassword);
+      }
       setSuccess(true);
-      setTimeout(() => navigate("/login"), 3000);
+      setTimeout(() => navigate(loginLink), 3000);
     } catch (err) {
       const msg =
         err.response?.data?.message ||
@@ -51,7 +61,7 @@ export default function ResetPasswordPage() {
             <div className="inline-flex items-center justify-center mb-6">
               <img src={dmceLogo} alt="DMCE Logo" className="h-20 w-auto object-contain" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Set New Password</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Set New {roleLabel} Password</h1>
             <p className="text-gray-500 text-sm">
               Enter your new password below.
             </p>
@@ -69,7 +79,7 @@ export default function ResetPasswordPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Password Reset Successful!</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{roleLabel} Password Reset Successful!</h3>
                   <p className="text-gray-600 text-sm">
                     Your password has been updated. Redirecting you to login...
                   </p>
@@ -169,7 +179,7 @@ export default function ResetPasswordPage() {
             <div className="bg-gray-50 px-8 py-4 border-t border-gray-200 text-center">
               <button
                 type="button"
-                onClick={() => navigate("/login")}
+                onClick={() => navigate(loginLink)}
                 className="text-sm font-medium text-gray-500 hover:text-[#1D3EA1] transition-colors flex items-center justify-center gap-1 mx-auto"
               >
                 ← Back to Login

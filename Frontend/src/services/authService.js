@@ -49,15 +49,39 @@ export const authService = {
     return response.data;
   },
 
-  // Forgot Password
+  // Forgot Password (Student)
   forgotPassword: async (email) => {
     const response = await API.post("/auth/forgot-password", { email });
     return response.data;
   },
 
-  // Reset Password
+  // Reset Password (Student)
   resetPassword: async (token, newPassword) => {
     const response = await API.post(`/auth/reset-password/${token}`, { newPassword });
+    return response.data;
+  },
+
+  // Admin Forgot Password
+  adminForgotPassword: async (email) => {
+    const response = await API.post("/auth/admin/forgot-password", { email });
+    return response.data;
+  },
+
+  // Admin Reset Password
+  adminResetPassword: async (token, newPassword) => {
+    const response = await API.post(`/auth/admin/reset-password/${token}`, { newPassword });
+    return response.data;
+  },
+
+  // Division Incharge Forgot Password
+  divisionForgotPassword: async (email) => {
+    const response = await API.post("/auth/division-incharge/forgot-password", { email });
+    return response.data;
+  },
+
+  // Division Incharge Reset Password
+  divisionResetPassword: async (token, newPassword) => {
+    const response = await API.post(`/auth/division-incharge/reset-password/${token}`, { newPassword });
     return response.data;
   },
 

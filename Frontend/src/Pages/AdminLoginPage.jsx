@@ -109,12 +109,18 @@ export default function AdminLoginPage() {
 
             {/* Password Input */}
             <div className="mb-6">
-              <label
-                htmlFor="password"
-                className="block text-sm font-semibold text-gray-700 mb-2"
-              >
-                Password
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/forgot-password")}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition"
+                >
+                  Forgot Password?
+                </button>
+              </div>
               <div className="relative">
                 <input
                   id="password"

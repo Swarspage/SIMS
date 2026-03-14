@@ -3,19 +3,29 @@ import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 import dmceLogo from "../assets/dmce_logo_new.png";
 
-export default function ForgotPasswordPage() {
+export default function ForgotPasswordPage({ role = "student" }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  // Determine back link and role label
+  const backToLoginLink = role === "admin" ? "/admin/login" : role === "division" ? "/division/login" : "/login";
+  const roleLabel = role === "admin" ? "Admin" : role === "division" ? "Division Incharge" : "";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await authService.forgotPassword(email);
+      if (role === "admin") {
+        await authService.adminForgotPassword(email);
+      } else if (role === "division") {
+        await authService.divisionForgotPassword(email);
+      } else {
+        await authService.forgotPassword(email);
+      }
       setSuccess(true);
     } catch (err) {
       const msg =
@@ -37,7 +47,7 @@ export default function ForgotPasswordPage() {
             <div className="inline-flex items-center justify-center mb-6">
               <img src={dmceLogo} alt="DMCE Logo" className="h-20 w-auto object-contain" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Forgot Password</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{roleLabel} Forgot Password</h1>
             <p className="text-gray-500 text-sm">
               Enter your registered email address and we'll send you a reset link.
             </p>
@@ -120,7 +130,7 @@ export default function ForgotPasswordPage() {
           <div className="bg-gray-50 px-8 py-4 border-t border-gray-200 text-center">
             <button
               type="button"
-              onClick={() => navigate("/login")}
+              onClick={() => navigate(backToLoginLink)}
               className="text-sm font-medium text-gray-500 hover:text-[#1D3EA1] transition-colors flex items-center justify-center gap-1 mx-auto"
             >
               ← Back to Login
