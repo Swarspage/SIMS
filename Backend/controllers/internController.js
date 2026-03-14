@@ -770,7 +770,6 @@ const updateInternship = async (req, res) => {
 
             newPublicIds.push(uploadedFiles.photoProof.publicId);
         }
-        console.log(updatedData);
 
         if (
             Object.keys(updatedData).length === 0 &&

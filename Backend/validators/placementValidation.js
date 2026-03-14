@@ -135,7 +135,7 @@ const updatePlacementSchema = Joi.object({
 		"any.invalid": "Year must follow format like 2023-24 where end year is start year + 1."
 	}),
 
-}).min(1)	// at least one field is required to update
+})
 .options({
 	stripUnknown: true,   // removes extra fields
 	convert: true,         // string -> number conversion allowed

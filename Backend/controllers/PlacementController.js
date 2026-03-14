@@ -218,24 +218,21 @@ const updatePlacement = async (req, res) => {
 
 		// File Handling
 
+		let oldPublicIdToDelete = null;
+
 		if (req.files && Object.keys(req.files).length > 0) {
 
 			uploadedFiles = await validateAndUploadFiles(req.files, fileConfigs);
 
 			if (uploadedFiles.placementProof) {
-				const oldPublicId = existingPlacement.placementProof?.publicId;
+
+				// Store old file id but DO NOT delete yet
+				oldPublicIdToDelete = existingPlacement.placementProof?.publicId;
 
 				updatedData.placementProof = {
 					url: uploadedFiles.placementProof.url,
 					publicId: uploadedFiles.placementProof.publicId
 				};
-
-				// delete old
-				if (oldPublicId) {
-					await deleteFromCloudinary(oldPublicId).catch((err) => {
-						console.error(`Error in updatePlacement -Failed to delete old placementProof id = ${oldPublicId}:`, err);
-					});
-				}
 			}
 		}
 
@@ -243,21 +240,33 @@ const updatePlacement = async (req, res) => {
 			return res.status(400).json({ success: false, message: "No valid fields provided for update" });
 		}
 
-
 		const updatedPlacement = await Placement.findByIdAndUpdate(
 			placementId,
 			{ $set: updatedData },
 			{ new: true, runValidators: true }
 		);
 
-		if(!updatedPlacement){
-			return res.status(404).json({success : false, message : "Placement not found."});
+		if (!updatedPlacement) {
+			return res.status(404).json({ success: false, message: "Placement not found." });
 		}
 
 		dbSaved = true;
 
-		return res.status(200).json({ success: true, message: "Placement updated successfully", data: updatedPlacement });
+		// Delete old Cloudinary file ONLY after DB success
+		if (oldPublicIdToDelete) {
+			await deleteFromCloudinary(oldPublicIdToDelete).catch((err) => {
+				console.error(
+					`Error deleting old placementProof (id=${oldPublicIdToDelete}) after DB update:`,
+					err
+				);
+			});
+		}
 
+		return res.status(200).json({
+			success: true,
+			message: "Placement updated successfully",
+			data: updatedPlacement
+		});
 	} catch (err) {
 
 		console.error("Error in updatePlacement controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
