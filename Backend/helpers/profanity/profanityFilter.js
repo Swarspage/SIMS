@@ -121,9 +121,7 @@ function containsProfanity(text) {
   // remove leading and trailing spaces
   // prevents cases like "   fuck   "
   text = text.trim();
-
-  console.log("Checking:", text);
-
+  
   // if text is empty after trimming, nothing to check
   if (!text) return false;
 
@@ -148,7 +146,6 @@ function containsProfanity(text) {
     // direct profanity check on the original word
     // catches simple cases like "fuck", "shit", etc.
     if (LeoProfanity.check(w)) {
-      console.log("Matched word:", w);
       return true;
     }
 
@@ -163,7 +160,6 @@ function containsProfanity(text) {
     // check again after normalization
     // catches tricks like "f*ck", "f@ck", "b-h-e-n-c-h-o-d"
     if (LeoProfanity.check(normalizedWord)) {
-      console.log("Matched normalized:", normalizedWord);
       return true;
     }
 

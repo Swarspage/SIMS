@@ -153,6 +153,229 @@ const createInternship = async (req, res) => {
 };
 
 
+// Update Internship
+const updateInternship = async (req, res) => {
+
+    let dbSaved = false;
+
+    // Track newly uploaded public IDs (for cleanup if DB fails)
+    let newPublicIds = [];
+
+    try {
+
+        const { internshipId } = req.params;
+
+        if (!internshipId) {
+            return res.status(400).json({ success: false, message: "Internship ID is required" });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(internshipId)) {
+            return res.status(400).json({ success: false, message: "Invalid internship ID format" });
+        }
+
+        let query = Internship.findById(internshipId);
+        if (req.user.role !== "student") {
+            query = query.populate("stuID", "year division");
+        }
+
+        const existingInternship = await query; // execute once
+        if (!existingInternship) {
+            return res.status(404).json({ success: false, message: "Internship not found" });
+        }
+
+        if (req.user.role === "student") {
+            if (existingInternship.stuID.toString() !== req.user.id.toString()) {
+                return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
+            }
+        } else if (req.user.role === "divisionIncharge") {
+            if (existingInternship.stuID.year !== req.user.year || existingInternship.stuID.division !== req.user.division) {
+                return res.status(403).json({ success: false, message: "You can only access students in your division." });
+            }
+        } else if (req.user.role !== "admin") {
+            return res.status(403).json({ success: false, message: "Wrong Role." });
+        }
+
+        if (
+            (!req.body || Object.keys(req.body).length === 0) &&
+            (!req.files || Object.keys(req.files).length === 0)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "No data provided to update"
+            });
+        }
+
+
+        const { error , value:updatedData } = updateInternshipValidationSchema.validate(req.body, { abortEarly: false });
+
+        if (error) {
+            const validationErrors = error.details.map(err => ({
+                field: err.path[0],
+                message: err.message
+            }));
+
+            return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
+        }
+
+
+        // determine final isPaid value
+        const finalIsPaid =
+            updatedData.isPaid !== undefined
+                ? updatedData.isPaid
+                : existingInternship.stipendInfo?.isPaid;
+
+        // determine stipend value
+        const stipend =
+            updatedData.stipend !== undefined
+                ? updatedData.stipend
+                : existingInternship.stipendInfo?.stipend;
+
+
+        // VALIDATION
+        if (finalIsPaid === true && (stipend === undefined || stipend === null)) {
+            return res.status(400).json({
+                success: false,
+                message: "Stipend amount required if internship is paid"
+            });
+        }
+
+        if (finalIsPaid === false && updatedData.stipend !== undefined) {
+            return res.status(400).json({
+                success: false,
+                message: "Stipend cannot be provided for unpaid internship"
+            });
+        }
+
+
+        // build stipendInfo object
+        updatedData.stipendInfo = {
+            isPaid: finalIsPaid,
+            ...(finalIsPaid && { stipend })
+        };
+
+        // remove flat fields
+        delete updatedData.isPaid;
+        delete updatedData.stipend;
+
+
+        const finalStartDate =
+        updatedData.startDate ?? existingInternship.startDate;
+
+        const finalEndDate =
+            updatedData.endDate ?? existingInternship.endDate;
+
+        const finalDuration =
+            updatedData.durationMonths ?? existingInternship.durationMonths;
+
+        const diffDays = (new Date(finalEndDate) - new Date(finalStartDate)) / (1000 * 60 * 60 * 24);
+        const diffMonths = Math.round(diffDays / 30) || 0;
+
+        if (diffMonths !== finalDuration) {
+            return res.status(400).json({
+                success:false,
+                message:"Duration does not match startDate and endDate"
+            });
+        }
+
+        /* FILE HANDLING LOGIC */
+
+        const filteredFiles = {};
+
+        if (req.files?.internshipReport?.length > 0) {
+            filteredFiles.internshipReport = req.files.internshipReport;
+        }
+
+        if (req.files?.photoProof?.length > 0) {
+            filteredFiles.photoProof = req.files.photoProof;
+        }
+
+        const activeConfigs = fileConfigs.filter(cfg => filteredFiles[cfg.fieldName]);
+
+        let uploadedFiles = {};
+
+        if (Object.keys(filteredFiles).length > 0) {
+            uploadedFiles = await validateAndUploadFiles(filteredFiles, activeConfigs);
+        }
+
+        /* HANDLE NEW FILES */
+
+        let oldPublicIds = [];
+
+        if (uploadedFiles.internshipReport) {
+
+            const oldPublicId = existingInternship.internshipReport?.publicId;
+            if (oldPublicId) oldPublicIds.push(oldPublicId);
+
+            updatedData.internshipReport = {
+                url: uploadedFiles.internshipReport.url,
+                publicId: uploadedFiles.internshipReport.publicId
+            };
+
+            newPublicIds.push(uploadedFiles.internshipReport.publicId);
+        }
+
+        if (uploadedFiles.photoProof) {
+
+            const oldPublicId = existingInternship.photoProof?.publicId;
+            if (oldPublicId) oldPublicIds.push(oldPublicId);
+
+            updatedData.photoProof = {
+                url: uploadedFiles.photoProof.url,
+                publicId: uploadedFiles.photoProof.publicId
+            };
+
+            newPublicIds.push(uploadedFiles.photoProof.publicId);
+        }
+
+        if (
+            Object.keys(updatedData).length === 0 &&
+            Object.keys(uploadedFiles).length === 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "No data provided to update"
+            });
+        }
+
+
+        /* DB UPDATE */
+
+        const updatedInternship = await Internship.findByIdAndUpdate(
+            internshipId,
+            { $set: updatedData },
+            { new: true, runValidators: true }
+        );
+
+        dbSaved = true;
+
+
+        /* DELETE OLD FILES AFTER DB SUCCESS */
+
+        if (oldPublicIds.length > 0) {
+            deleteMultipleFromCloudinary(oldPublicIds).catch((err) => {
+                console.warn("Error deleting old internship files:", err);
+            });
+        }
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Internship updated successfully",
+            data: updatedInternship
+        });
+
+
+    } catch (err) {
+        console.error("Error in updateInternship controller: ",  "\ntime = ", new Date().toISOString(), "\nError: ", err );
+
+        if (!dbSaved && newPublicIds.length > 0) {
+            await deleteMultipleFromCloudinary(newPublicIds);
+        }
+
+        return res.status(500).json({ success: false, message: "Some Error Occured. Please Try Again Later." });
+    }
+};
+
 const getInternships = async (req, res) => {
     try {
         // const { year, division, search, page, limit, isPaid, export : exportFlag, startDateFrom, startDateTo, endDateFrom, endDateTo } = req.query;
@@ -596,229 +819,6 @@ const getSingleInternship = async (req, res) => {
     }
 };
 
-
-// Update Internship
-const updateInternship = async (req, res) => {
-
-    let dbSaved = false;
-
-    // Track newly uploaded public IDs (for cleanup if DB fails)
-    let newPublicIds = [];
-
-    try {
-
-        const { internshipId } = req.params;
-
-        if (!internshipId) {
-            return res.status(400).json({ success: false, message: "Internship ID is required" });
-        }
-
-        if (!mongoose.Types.ObjectId.isValid(internshipId)) {
-            return res.status(400).json({ success: false, message: "Invalid internship ID format" });
-        }
-
-        let query = Internship.findById(internshipId);
-        if (req.user.role !== "student") {
-            query = query.populate("stuID", "year division");
-        }
-
-        const existingInternship = await query; // execute once
-        if (!existingInternship) {
-            return res.status(404).json({ success: false, message: "Internship not found" });
-        }
-
-        if (req.user.role === "student") {
-            if (existingInternship.stuID.toString() !== req.user.id.toString()) {
-                return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
-            }
-        } else if (req.user.role === "divisionIncharge") {
-            if (existingInternship.stuID.year !== req.user.year || existingInternship.stuID.division !== req.user.division) {
-                return res.status(403).json({ success: false, message: "You can only access students in your division." });
-            }
-        } else if (req.user.role !== "admin") {
-            return res.status(403).json({ success: false, message: "Wrong Role." });
-        }
-
-        if (
-            (!req.body || Object.keys(req.body).length === 0) &&
-            (!req.files || Object.keys(req.files).length === 0)
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "No data provided to update"
-            });
-        }
-
-
-        const { error , value:updatedData } = updateInternshipValidationSchema.validate(req.body, { abortEarly: false });
-
-        if (error) {
-            const validationErrors = error.details.map(err => ({
-                field: err.path[0],
-                message: err.message
-            }));
-
-            return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
-        }
-
-
-        // determine final isPaid value
-        const finalIsPaid =
-            updatedData.isPaid !== undefined
-                ? updatedData.isPaid
-                : existingInternship.stipendInfo?.isPaid;
-
-        // determine stipend value
-        const stipend =
-            updatedData.stipend !== undefined
-                ? updatedData.stipend
-                : existingInternship.stipendInfo?.stipend;
-
-
-        // VALIDATION
-        if (finalIsPaid === true && (stipend === undefined || stipend === null)) {
-            return res.status(400).json({
-                success: false,
-                message: "Stipend amount required if internship is paid"
-            });
-        }
-
-        if (finalIsPaid === false && updatedData.stipend !== undefined) {
-            return res.status(400).json({
-                success: false,
-                message: "Stipend cannot be provided for unpaid internship"
-            });
-        }
-
-
-        // build stipendInfo object
-        updatedData.stipendInfo = {
-            isPaid: finalIsPaid,
-            ...(finalIsPaid && { stipend })
-        };
-
-        // remove flat fields
-        delete updatedData.isPaid;
-        delete updatedData.stipend;
-
-
-        const finalStartDate =
-        updatedData.startDate ?? existingInternship.startDate;
-
-        const finalEndDate =
-            updatedData.endDate ?? existingInternship.endDate;
-
-        const finalDuration =
-            updatedData.durationMonths ?? existingInternship.durationMonths;
-
-        const diffDays = (new Date(finalEndDate) - new Date(finalStartDate)) / (1000 * 60 * 60 * 24);
-        const diffMonths = Math.round(diffDays / 30) || 0;
-
-        if (diffMonths !== finalDuration) {
-            return res.status(400).json({
-                success:false,
-                message:"Duration does not match startDate and endDate"
-            });
-        }
-
-        /* FILE HANDLING LOGIC */
-
-        const filteredFiles = {};
-
-        if (req.files?.internshipReport?.length > 0) {
-            filteredFiles.internshipReport = req.files.internshipReport;
-        }
-
-        if (req.files?.photoProof?.length > 0) {
-            filteredFiles.photoProof = req.files.photoProof;
-        }
-
-        const activeConfigs = fileConfigs.filter(cfg => filteredFiles[cfg.fieldName]);
-
-        let uploadedFiles = {};
-
-        if (Object.keys(filteredFiles).length > 0) {
-            uploadedFiles = await validateAndUploadFiles(filteredFiles, activeConfigs);
-        }
-
-        /* HANDLE NEW FILES */
-
-        let oldPublicIds = [];
-
-        if (uploadedFiles.internshipReport) {
-
-            const oldPublicId = existingInternship.internshipReport?.publicId;
-            if (oldPublicId) oldPublicIds.push(oldPublicId);
-
-            updatedData.internshipReport = {
-                url: uploadedFiles.internshipReport.url,
-                publicId: uploadedFiles.internshipReport.publicId
-            };
-
-            newPublicIds.push(uploadedFiles.internshipReport.publicId);
-        }
-
-        if (uploadedFiles.photoProof) {
-
-            const oldPublicId = existingInternship.photoProof?.publicId;
-            if (oldPublicId) oldPublicIds.push(oldPublicId);
-
-            updatedData.photoProof = {
-                url: uploadedFiles.photoProof.url,
-                publicId: uploadedFiles.photoProof.publicId
-            };
-
-            newPublicIds.push(uploadedFiles.photoProof.publicId);
-        }
-
-        if (
-            Object.keys(updatedData).length === 0 &&
-            Object.keys(uploadedFiles).length === 0
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "No data provided to update"
-            });
-        }
-
-
-        /* DB UPDATE */
-
-        const updatedInternship = await Internship.findByIdAndUpdate(
-            internshipId,
-            { $set: updatedData },
-            { new: true, runValidators: true }
-        );
-
-        dbSaved = true;
-
-
-        /* DELETE OLD FILES AFTER DB SUCCESS */
-
-        if (oldPublicIds.length > 0) {
-            deleteMultipleFromCloudinary(oldPublicIds).catch((err) => {
-                console.warn("Error deleting old internship files:", err);
-            });
-        }
-
-
-        return res.status(200).json({
-            success: true,
-            message: "Internship updated successfully",
-            data: updatedInternship
-        });
-
-
-    } catch (err) {
-        console.error("Error in updateInternship controller: ",  "\ntime = ", new Date().toISOString(), "\nError: ", err );
-
-        if (!dbSaved && newPublicIds.length > 0) {
-            await deleteMultipleFromCloudinary(newPublicIds);
-        }
-
-        return res.status(500).json({ success: false, message: "Some Error Occured. Please Try Again Later." });
-    }
-};
 
 
 // DELETE a specific internship --make ti atomic lateron

@@ -778,7 +778,7 @@ const updateStudent = async (req, res) => {
     // Verify for division Incharge
     if (req.user.role === "divisionIncharge") {
 
-      if (student.division !== req.user.division) {
+      if ( student.year !== req.user.year || student.division !== req.user.division ) {
         return res.status(403).json({ success: false, message: "You can only update your division's student details." });
       }
     }

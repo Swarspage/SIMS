@@ -93,9 +93,13 @@ const createHigherStudy = async (req, res) => {
             });
         }
 
-        if (!req.files || Object.keys(req.files).length === 0) {
-			return res.status(400).json({ success: false, message: "Marksheet and Id card Photo required." });
-		}
+
+        if (!req.files?.marksheet || !req.files?.idCardPhoto) {
+            return res.status(400).json({
+                success: false,
+                message: "Both marksheet and ID card photo are required."
+            });
+        }
 
         uploadedFiles = await validateAndUploadFiles(req.files, fileConfigs);
 
@@ -119,6 +123,101 @@ const createHigherStudy = async (req, res) => {
             await deleteMultipleFromCloudinary(publicIds);
         }
         return res.status(500).json({ success: false, message: err.message || "Server Error" });
+    }
+};
+
+// UPDATE HIGHER STUDY --student or divisionIncharge or admin
+const updateHigherStudy = async (req, res) => {
+    let dbSaved = false;
+    let newPublicIds = [];
+
+    try {
+        const { higherStudyId } = req.params;
+        if (!higherStudyId || !mongoose.Types.ObjectId.isValid(higherStudyId)) return res.status(400).json({ success: false, message: "Invalid higherStudy ID" });
+
+
+        // Role Based Access
+        let query = HigherStudies.findById(higherStudyId);
+        if (req.user.role !== "student") {
+            query = query.populate("stuID", "name branch year division");
+        }
+
+        const existingStudy = await query; // execute once
+        if (!existingStudy) {
+            return res.status(404).json({ success: false, message: "HigherStudy not found" });
+        }
+
+        if (req.user.role === "student") {
+            if (existingStudy.stuID.toString() !== req.user.id.toString()) {
+                return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
+            }
+        } else if (req.user.role === "divisionIncharge") {
+            if (existingStudy.stuID.year !== req.user.year || existingStudy.stuID.division !== req.user.division) {
+                return res.status(403).json({ success: false, message: "You can only access students in your division." });
+            }
+        } else if (req.user.role !== "admin") {
+            return res.status(403).json({ success: false, message: "Wrong Role." });
+        }
+
+        const { examName, score } = req.body;
+        const { error, value } = updateHigherStudySchema.validate({ examName, score }, { abortEarly: false });
+        if (error) {
+            const validationErrors = error.details.map(err => ({ field: err.path[0], message: err.message }));
+            return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
+        }
+
+        const updatedData = value;
+
+        const filteredFiles = {};
+        if (req.files?.marksheet?.length > 0) filteredFiles.marksheet = req.files.marksheet;
+        if (req.files?.idCardPhoto?.length > 0) filteredFiles.idCardPhoto = req.files.idCardPhoto;
+
+        const activeConfigs = fileConfigs.filter(cfg => filteredFiles[cfg.fieldName]);
+        let uploadedFiles = {};
+        if (Object.keys(filteredFiles).length > 0) uploadedFiles = await validateAndUploadFiles(filteredFiles, activeConfigs);
+
+        const oldPublicIdsToDelete = [];
+
+        if (uploadedFiles.marksheet) {
+            updatedData.marksheet = uploadedFiles.marksheet;
+
+            if (existingStudy.marksheet?.publicId) {
+                oldPublicIdsToDelete.push(existingStudy.marksheet.publicId);
+            }
+
+            newPublicIds.push(uploadedFiles.marksheet.publicId);
+        }
+
+        if (uploadedFiles.idCardPhoto) {
+            updatedData.idCardPhoto = uploadedFiles.idCardPhoto;
+
+            if (existingStudy.idCardPhoto?.publicId) {
+                oldPublicIdsToDelete.push(existingStudy.idCardPhoto.publicId);
+            }
+
+            newPublicIds.push(uploadedFiles.idCardPhoto.publicId);
+        }
+
+        if (Object.keys(updatedData).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No valid fields provided for update"
+            });
+        }
+        const updatedStudy = await HigherStudies.findByIdAndUpdate(higherStudyId, { $set: updatedData }, { new: true, runValidators: true });
+        dbSaved = true;
+
+        // delete old files AFTER DB success
+        if (oldPublicIdsToDelete.length > 0) {
+            deleteMultipleFromCloudinary(oldPublicIdsToDelete).catch((err) => {console.warn("Error in updateHigherStudy : ", err);});
+        }
+
+        return res.status(200).json({ success: true, message: "Higher study record updated.", data: updatedStudy });
+
+    } catch (err) {
+        console.error("Error in updateHigherStudy:", err);
+        if (!dbSaved && newPublicIds.length > 0) await deleteMultipleFromCloudinary(newPublicIds);
+        return res.status(500).json({ success: false, message: "Server Error" });
     }
 };
 
@@ -458,87 +557,6 @@ const getHigherStudiesByStudent = async (req, res) => {
     }
 };
 
-// UPDATE HIGHER STUDY --student or divisionIncharge or admin
-const updateHigherStudy = async (req, res) => {
-    let dbSaved = false;
-    let newPublicIds = [];
-
-    try {
-        const { higherStudyId } = req.params;
-        if (!higherStudyId || !mongoose.Types.ObjectId.isValid(higherStudyId)) return res.status(400).json({ success: false, message: "Invalid higherStudy ID" });
-
-
-        // Role Based Access
-        let query = HigherStudies.findById(higherStudyId);
-        if (req.user.role !== "student") {
-            query = query.populate("stuID", "name branch year division");
-        }
-
-        const existingStudy = await query; // execute once
-        if (!existingStudy) {
-            return res.status(404).json({ success: false, message: "HigherStudy not found" });
-        }
-
-        if (req.user.role === "student") {
-            if (existingStudy.stuID.toString() !== req.user.id.toString()) {
-                return res.status(403).json({ success: false, message: "Resource does not belong to logged in student." });
-            }
-        } else if (req.user.role === "divisionIncharge") {
-            if (existingStudy.stuID.year !== req.user.year || existingStudy.stuID.division !== req.user.division) {
-                return res.status(403).json({ success: false, message: "You can only access students in your division." });
-            }
-        } else if (req.user.role !== "admin") {
-            return res.status(403).json({ success: false, message: "Wrong Role." });
-        }
-
-        const { examName, score } = req.body;
-        const { error, value } = updateHigherStudySchema.validate({ examName, score }, { abortEarly: false });
-        if (error) {
-            const validationErrors = error.details.map(err => ({ field: err.path[0], message: err.message }));
-            return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
-        }
-
-        const updatedData = value;
-
-        const filteredFiles = {};
-        if (req.files?.marksheet?.length > 0) filteredFiles.marksheet = req.files.marksheet;
-        if (req.files?.idCardPhoto?.length > 0) filteredFiles.idCardPhoto = req.files.idCardPhoto;
-
-        const activeConfigs = fileConfigs.filter(cfg => filteredFiles[cfg.fieldName]);
-        let uploadedFiles = {};
-        if (Object.keys(filteredFiles).length > 0) uploadedFiles = await validateAndUploadFiles(filteredFiles, activeConfigs);
-
-        const oldPublicIdsToDelete = [];
-
-        if (uploadedFiles.marksheet) {
-            updatedData.marksheet = uploadedFiles.marksheet;
-            if (existingStudy.marksheet?.publicId)
-                oldPublicIdsToDelete.push(existingStudy.marksheet.publicId);
-            newPublicIds.push(uploadedFiles.marksheet.publicId);
-        }
-
-        if (uploadedFiles.idCardPhoto) {
-            updatedData.idCardPhoto = uploadedFiles.idCardPhoto;
-            if (existingStudy.idCardPhoto?.publicId)
-                oldPublicIdsToDelete.push(existingStudy.idCardPhoto.publicId);
-            newPublicIds.push(uploadedFiles.idCardPhoto.publicId);
-        }
-        const updatedStudy = await HigherStudies.findByIdAndUpdate(higherStudyId, { $set: updatedData }, { new: true, runValidators: true });
-        dbSaved = true;
-
-        // delete old files AFTER DB success
-        if (oldPublicIdsToDelete.length > 0) {
-            deleteMultipleFromCloudinary(oldPublicIdsToDelete).catch((err) => {console.warn("Error in updateHigherStudy : ", err);});
-        }
-
-        return res.status(200).json({ success: true, message: "Higher study record updated.", data: updatedStudy });
-
-    } catch (err) {
-        console.error("Error in updateHigherStudy:", err);
-        if (!dbSaved && newPublicIds.length > 0) await deleteMultipleFromCloudinary(newPublicIds);
-        return res.status(500).json({ success: false, message: "Server Error" });
-    }
-};
 
 // DELETE HIGHER STUDY --admin or divisionIncharge or student
 const deleteHigherStudy = async (req, res) => {
