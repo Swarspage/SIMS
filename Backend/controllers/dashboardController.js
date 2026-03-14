@@ -92,7 +92,7 @@ exports.divisionDashboard = async (req, res) => {
 
   } catch (error) {
     console.error("Division dashboard error:", error);
-    res.status(500).json({ message: "Dashboard error" });
+    res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
   }
 };
 
@@ -168,7 +168,7 @@ exports.adminDashboard = async (req, res) => {
 
   } catch (error) {
     console.error("Admin dashboard error:", error);
-    res.status(500).json({ message: "Dashboard error" });
+    res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
   }
 };
 
@@ -237,6 +237,6 @@ exports.studentDashboard = async (req, res) => {
 
   } catch (error) {
     console.error("Student dashboard error:", error);
-    res.status(500).json({ message: "Dashboard error" });
+    res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
   }
 };

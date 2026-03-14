@@ -90,7 +90,7 @@ const addSingleDivisionIncharge = async (req, res) => {
     console.error("Add Division Incharge Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Error adding Division Incharge"
+      message: "Internal Server Error. Please Try Again Later"
     });
   }
 };
@@ -120,7 +120,7 @@ const getMyProfile = async (req,res)=>{
 
 	} catch (error) {
 		console.error("Get Single Error:", error);
-		return res.status(500).json({ success: false, message: "Error fetching Division Incharge" });
+		return res.status(500).json({ success: false, message: "Internal Server Error. Please Try Again Later" });
 	}
 };
 
@@ -148,7 +148,7 @@ const getSingleDivisionInchargeById = async (req, res) => {
 
 	} catch (error) {
 		console.error("Get Single Error:", error);
-		return res.status(500).json({ success: false, message: "Error fetching Division Incharge" });
+		return res.status(500).json({ success: false, message: "Internal Server Error. Please Try Again Later" });
 	}
 };
 
@@ -163,7 +163,7 @@ const getAllDivisionIncharges = async (req, res) => {
     console.error("Error fetching division incharges:", error);
     return res.status(500).json({
       success: false,
-      message: "Error fetching division incharges"
+      message: "Internal Server Error. Please Try Again Later"
     });
   }
 };
@@ -236,7 +236,7 @@ const changeDivisionInchargeDetails = async (req, res) => {
     console.error("Update Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Error updating Division Incharge",
+      message: "Internal Server Error. Please Try Again Later",
     });
   }
 };
@@ -310,7 +310,7 @@ const changeEmailOfDivisionIncharge = async (req, res) => {
     console.error("Change Email Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Error changing email",
+      message: "Internal Server Error. Please Try Again Later",
     });
   }
 };
@@ -345,7 +345,7 @@ const deleteDivisionIncharge = async (req, res) => {
     console.error("Error deleting division incharge:", error);
     return res.status(500).json({
       success: false,
-      message: "Error deleting division incharge"
+      message: "Internal Server Error. Please Try Again Later."
     });
   }
 };
@@ -406,7 +406,6 @@ const loginDivisionIncharge = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error logging in",
-      error: error.message
     });
   }
 };

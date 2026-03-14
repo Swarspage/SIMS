@@ -122,7 +122,7 @@ const createHigherStudy = async (req, res) => {
             const publicIds = Object.values(uploadedFiles).map(f => f.publicId);
             await deleteMultipleFromCloudinary(publicIds);
         }
-        return res.status(500).json({ success: false, message: err.message || "Server Error" });
+        return res.status(500).json({ success: false, message: "Server Error" });
     }
 };
 
@@ -257,7 +257,7 @@ const getSingleHigherStudy = async (req, res) => {
         return res.status(200).json({ success: true, data: higherStudy });
     } catch (err) {
         console.error("Error in getSingleHigherStudy:", err);
-        return res.status(500).json({ success: false, message: err.message || "Server Error" });
+        return res.status(500).json({ success: false, message: "Server Error" });
     }
 };
 
@@ -427,7 +427,7 @@ const getHigherStudies = async (req, res) => {
 
     } catch (err) {
         console.error("Error in getHigherStudies:", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occurred. Please Try Again Later." });
+        return res.status(500).json({ success: false, message: "Some Error Occurred. Please Try Again Later." });
     }
 };
 

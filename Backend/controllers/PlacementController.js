@@ -126,7 +126,7 @@ const createPlacement = async (req, res) => {
 			await deleteMultipleFromCloudinary(publicIds);
 		}
 
-		return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please try again later." });
+		return res.status(500).json({ success: false, message: "Server Error. Please try again later." });
 	}
 };
 
@@ -277,7 +277,7 @@ const updatePlacement = async (req, res) => {
 			await deleteMultipleFromCloudinary(publicIds);
 		}
 
-		return res.status(500).json({ success: false, message: err.message || "Some Error Occurred. Please try again later." });
+		return res.status(500).json({ success: false, message: "Some Error Occurred. Please try again later." });
 	}
 };
 
@@ -466,7 +466,7 @@ const getPlacements = async (req, res) => {
 
 	} catch (err) {
 		console.error("Error in getPlacements controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-		return res.status(500).json({ success: false, message: err.message || "Some Error Occurred. Please Try Again Later." });
+		return res.status(500).json({ success: false, message: "Some Error Occurred. Please Try Again Later." });
 	}
 };
 
@@ -526,7 +526,7 @@ const deletePlacement = async (req, res) => {
 		return res.status(200).json({ success: true, message: "Placement deleted successfully" });
 	} catch (err) {
 		console.error("Error in deletePlacement controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message:  "Server Error. Please Try Again Later." });
     }
 	
 };
@@ -655,7 +655,7 @@ const getPlacements2 = async (req, res) => {
 
 	} catch (err) {
 		console.error("Error in getPlacements controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-		return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+		return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
 	}
 };
 
@@ -680,7 +680,7 @@ const getOwnPlacements = async (req, res) => {
 		return res.status(200).json({ success: true, data: placements });
 	} catch (err) {
 		console.error("Error in getOwnPlacements controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
     
 	}
 };
@@ -709,7 +709,7 @@ const getPlacementsByStudentId = async (req, res) => {
 		return res.status(200).json({ success: true, data: placements });
 	} catch (err) {
 		console.error("Error in getPlacementsByStudentId controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
 	}
 };
 
@@ -752,7 +752,7 @@ const getSinglePlacement = async (req, res) => {
 		return res.status(200).json({ success: true, data: existingPlacement });
 	} catch (err) {
 		console.error("Error in getSinglePlacement controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message:  "Server Error. Please Try Again Later." });
 	}
 };
 

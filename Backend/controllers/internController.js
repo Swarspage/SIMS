@@ -148,7 +148,7 @@ const createInternship = async (req, res) => {
             await deleteMultipleFromCloudinary(publicIds);
         }
 
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
     }
 };
 
@@ -372,7 +372,7 @@ const updateInternship = async (req, res) => {
             await deleteMultipleFromCloudinary(newPublicIds);
         }
 
-        return res.status(500).json({ success: false, message: "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
     }
 };
 
@@ -570,7 +570,7 @@ const getInternships = async (req, res) => {
 
     } catch (err) {
         console.error("Error in getInternships controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occurred. Please Try Again Later." });
+        return res.status(500).json({ success: false, message: "Some Error Occurred. Please Try Again Later." });
     }
 };
 
@@ -711,7 +711,7 @@ const getInternships2 = async (req, res) => {
 
     } catch (err) {
         console.error("Error in getInternships controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
     }
 };
 
@@ -727,7 +727,7 @@ const getOwnInternships = async (req, res) => {
         return res.status(200).json({ success: true, data: internships });
     } catch (err) {
         console.error("Error in getOwnInternships controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
     }
 };
 
@@ -769,7 +769,7 @@ const getStudentInternshipsByAdmin = async (req, res) => {
         return res.status(200).json({ success: true, data: internships });
     } catch (err) {
         console.error("Error in getInternships controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
     }
 };
 
@@ -815,7 +815,7 @@ const getSingleInternship = async (req, res) => {
         return res.status(200).json({ success: true, data: internship });
     } catch (err) {
         console.error("Error in getSingleInternship controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message: "Server Error. Please Try Again Later." });
     }
 };
 
@@ -884,7 +884,7 @@ const deleteInternship = async (req, res) => {
 
     } catch (err) {
         console.error("Error in deleteInternship controller: ", "\ntime = ", new Date().toISOString(), "\nError: ", err);
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message :  "Server Error. Please Try Again Later." });
     }
 };
 

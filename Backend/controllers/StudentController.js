@@ -763,7 +763,7 @@ const addStudentDetails = async (req, res) => {
       await deleteMultipleFromCloudinary(publicIds);
     }
 
-    return res.status(500).json({ success: false, message: err.message || "Internal Server Error" });
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
