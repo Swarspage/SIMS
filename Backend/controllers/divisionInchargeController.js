@@ -351,66 +351,65 @@ const deleteDivisionIncharge = async (req, res) => {
 };
 
 // yeh hatane wala controller yaha se hatane waali baat karo swar se
-// const loginDivisionIncharge = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
+const loginDivisionIncharge = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-//     if (!email || !password) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Please provide email and password"
-//       });
-//     }
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email and password"
+      });
+    }
 
-//     // Find division incharge
-//     const divisionIncharge = await DivisionIncharge.findOne({ email });
-//     if (!divisionIncharge) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Invalid credentials"
-//       });
-//     }
+    // Find division incharge
+    const divisionIncharge = await DivisionIncharge.findOne({ email });
+    if (!divisionIncharge) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials"
+      });
+    }
 
-//     // Check password
-//     const isMatch = await bcrypt.compare(password, divisionIncharge.password);
-//     if (!isMatch) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Invalid credentials"
-//       });
-//     }
+    // Check password
+    const isMatch = await bcrypt.compare(password, divisionIncharge.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials"
+      });
+    }
 
-//     // Create Token
-//     const jwt = require("jsonwebtoken");
-//     const token = jwt.sign(
-//       { id: divisionIncharge._id, role: "divisionIncharge", division: divisionIncharge.division, year: divisionIncharge.year },
-//       process.env.JWT_SECRET,
-//       { expiresIn: "1d" }
-//     );
+    // Create Token
+    const jwt = require("jsonwebtoken");
+    const token = jwt.sign(
+      { id: divisionIncharge._id, role: "divisionIncharge", division: divisionIncharge.division, year: divisionIncharge.year },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
-//     res.status(200).json({
-//       success: true,
-//       token,
-//       user: {
-//         id: divisionIncharge._id,
-//         name: divisionIncharge.name,
-//         email: divisionIncharge.email,
-//         role: "divisionIncharge",
-//         division: divisionIncharge.division,
-//         year: divisionIncharge.year
-//       }
-//     });
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: divisionIncharge._id,
+        name: divisionIncharge.name,
+        email: divisionIncharge.email,
+        role: "divisionIncharge",
+        division: divisionIncharge.division,
+        year: divisionIncharge.year
+      }
+    });
 
-//   } catch (error) {
-//     console.error("Login Error:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Error logging in",
-//       error: error.message
-//     });
-//   }
-// };
-
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error logging in",
+      error: error.message
+    });
+  }
+};
 
 // isko hum use hi nahi kar rhe - bulk import route is no longer in use
 const importDivisionInchargeFromExcel = async (req, res) => {
@@ -583,7 +582,7 @@ const importDivisionInchargeFromExcel = async (req, res) => {
 module.exports = {
   importDivisionInchargeFromExcel,
   addSingleDivisionIncharge,
-  // loginDivisionIncharge,
+  loginDivisionIncharge,
   getMyProfile,
   getSingleDivisionInchargeById,
   getAllDivisionIncharges,
