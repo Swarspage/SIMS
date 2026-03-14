@@ -1,31 +1,41 @@
-
-const fs = require("fs").promises;
-
-
-const upload=require("../../middlewares/multer.js");
-
-const cloudinary=require("../../config/cloudinaryConfig.js");
-
-
-
+const cloudinary = require("../../config/cloudinaryConfig.js");
+const { insertFailedCloudinaryDeletion } = require("../failedCloudinaryDeletetion/insertFailedCloudinaryDeletion.js");
 
 const deleteFromCloudinary = async (publicId) => {
-	if (!publicId) return;
+
+	if (!publicId || typeof publicId !== "string" || publicId.trim() === "") {
+		return;
+	}
 
 	try {
+
 		const result = await cloudinary.uploader.destroy(publicId);
 
 		if (result.result === "ok" || result.result === "not found") {
 			console.log(`✅ Cloudinary deletion successful: ${publicId}`);
-		} else {
-			console.error(`⚠️ Cloudinary deletion issue for ${publicId}:`, result);
-			throw new Error(`Cloudinary deletion failed for ${publicId}`);
+			return;
 		}
+
+		console.error(`⚠️ Cloudinary deletion issue for ${publicId}:`, result);
+
+		await insertFailedCloudinaryDeletion([
+			{
+				publicId,
+				reason: result.result || "Unknown error"
+			}
+		]);
+
 	} catch (err) {
+
 		console.error("❌ Cloudinary deletion error:", err);
-		throw err;
+
+		await insertFailedCloudinaryDeletion([
+			{
+				publicId,
+				reason: err.message
+			}
+		]);
 	}
 };
 
-
-module.exports = {deleteFromCloudinary};
+module.exports = { deleteFromCloudinary };

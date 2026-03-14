@@ -1,4 +1,5 @@
 const cloudinary = require("../../config/cloudinaryConfig");
+const {insertFailedCloudinaryDeletion} = require("../failedCloudinaryDeletetion/insertFailedCloudinaryDeletion")
 
 const deleteMultipleFromCloudinary = async (publicIds = []) => {
 
@@ -26,15 +27,28 @@ const deleteMultipleFromCloudinary = async (publicIds = []) => {
             }
         }
 
+        // Store failed deletions automatically
+        if (failed.length > 0) {
+            await insertFailedCloudinaryDeletion(failed);
+        }
+
         return { deleted, failed };
 
     } catch (err) {
         console.error("Cloudinary bulk deletion error:", err);
 
         // If the whole bulk request fails, mark all as failed
+        const failed = validPublicIds.map(id => ({
+            publicId: id,
+            reason: err.message
+        }));
+
+        // Store failures in DB
+        await insertFailedCloudinaryDeletion(failed);
+
         return {
             deleted: [],
-            failed: validPublicIds.map(id => ({ publicId: id, reason: err.message }))
+            failed
         };
     }
 };

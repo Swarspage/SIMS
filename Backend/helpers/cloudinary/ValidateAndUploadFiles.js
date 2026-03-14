@@ -1,7 +1,7 @@
 const fs = require("fs").promises;
 const cloudinary = require("../../config/cloudinaryConfig");
 const { deleteMultipleFromCloudinary } = require("./DeleteMultipleFromCloudinary");
-
+const { insertFailedCloudinaryDeletion } = require("../failedCloudinaryDeletetion/insertFailedCloudinaryDeletion");
 
 
 const validateAndUploadFiles = async (filesObj, fileConfigs) => {
@@ -52,7 +52,9 @@ const validateAndUploadFiles = async (filesObj, fileConfigs) => {
                 uploadedPublicIds.push(result.public_id);
 
             } catch (err) {
+
                 throw new Error(`Failed to upload ${fieldName}: ${err.message}`);
+                
             }finally {
                 //delete temp file in every case whether upload was successful or not.
                 await fs.unlink(file.path).catch((err) => {
@@ -67,7 +69,15 @@ const validateAndUploadFiles = async (filesObj, fileConfigs) => {
 
     } catch (err) {
         //  ROLLBACK 
-        await deleteMultipleFromCloudinary(uploadedPublicIds);
+        if (uploadedPublicIds.length > 0) {
+
+            const result = await deleteMultipleFromCloudinary(uploadedPublicIds);
+
+            if (result.failed.length > 0) {
+                await insertFailedCloudinaryDeletion(result.failed);
+            }
+        }
+
         throw err;
     }
 };
