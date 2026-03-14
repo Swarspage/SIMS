@@ -606,8 +606,9 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
         payload.append("placementProof", placementProof);
       }
 
+      let response;
       if (placement) {
-        await placementService.updatePlacement(placement._id, payload);
+        response = await placementService.updatePlacement(placement._id, payload);
         toast.success("Placement updated successfully!");
       } else {
         if (!placementProof) {
@@ -615,11 +616,11 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
           setLoading(false);
           return;
         }
-        await placementService.createPlacement(payload);
+        response = await placementService.createPlacement(payload);
         toast.success("Placement added successfully!");
       }
 
-      onSave();
+      onSave(response.data || response);
       onClose();
     } catch (err) {
       console.error("Error saving placement:", err);
@@ -886,14 +887,36 @@ export default function AdminPlacement() {
     setModalType(null);
   };
 
+  const handleSavePlacement = (updatedItem) => {
+    if (placementToEdit) {
+      setPlacements((prev) =>
+        prev.map((p) => (p._id === updatedItem._id ? updatedItem : p))
+      );
+    } else {
+      fetchPlacements(currentPage);
+    }
+  };
+
+  const handleSaveHigherStudy = (updatedItem) => {
+    if (higherStudyToEdit) {
+      setHigherStudies((prev) =>
+        prev.map((h) => (h._id === updatedItem._id ? updatedItem : h))
+      );
+    } else {
+      fetchHigherStudies(currentPage);
+    }
+  };
+
   const handleDeletePlacement = async (id) => {
     if (!window.confirm("Are you sure you want to delete this placement?"))
       return;
     setDeletingId(id);
     try {
       await placementService.deletePlacement(id);
+      // Remove from local state
+      setPlacements((prev) => prev.filter((p) => p._id !== id));
+      setTotalRecords((prev) => prev - 1);
       toast.success("Placement deleted successfully!");
-      fetchPlacements();
     } catch (err) {
       console.error("Error deleting placement:", err);
       toast.error("Failed to delete placement.");
@@ -912,8 +935,10 @@ export default function AdminPlacement() {
     setDeletingId(id);
     try {
       await higherStudiesService.deleteHigherStudy(id);
+      // Remove from local state
+      setHigherStudies((prev) => prev.filter((h) => h._id !== id));
+      setTotalRecords((prev) => prev - 1);
       toast.success("Higher study record deleted successfully!");
-      fetchHigherStudies();
     } catch (err) {
       console.error("Error deleting higher study:", err);
       toast.error("Failed to delete higher study record.");
@@ -1302,7 +1327,7 @@ export default function AdminPlacement() {
         isOpen={isPlacementModalOpen}
         placement={placementToEdit}
         onClose={() => setIsPlacementModalOpen(false)}
-        onSave={() => fetchPlacements()}
+        onSave={handleSavePlacement}
       />
 
       {/* Higher Study Form Modal */}
@@ -1310,7 +1335,7 @@ export default function AdminPlacement() {
         isOpen={isHigherStudyModalOpen}
         higherStudy={higherStudyToEdit}
         onClose={() => setIsHigherStudyModalOpen(false)}
-        onSave={() => fetchHigherStudies()}
+        onSave={handleSaveHigherStudy}
       />
     </main>
   );
@@ -1424,8 +1449,9 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
         payload.append("idCardPhoto", idCardPhoto);
       }
 
+      let response;
       if (higherStudy) {
-        await higherStudiesService.updateHigherStudy(higherStudy._id, payload);
+        response = await higherStudiesService.updateHigherStudy(higherStudy._id, payload);
         toast.success("Higher study record updated successfully!");
       } else {
         if (!marksheet) {
@@ -1433,11 +1459,11 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
           setLoading(false);
           return;
         }
-        await higherStudiesService.createHigherStudy(payload);
+        response = await higherStudiesService.createHigherStudy(payload);
         toast.success("Higher study record added successfully!");
       }
 
-      onSave();
+      onSave(response.data || response);
       onClose();
     } catch (err) {
       console.error("Error saving higher study:", err);

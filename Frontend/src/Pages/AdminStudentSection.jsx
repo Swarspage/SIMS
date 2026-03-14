@@ -33,7 +33,7 @@ function AddStudentModal({ isOpen, onClose, onAdded }) {
 
       // Call the existing import endpoint with our 1-row file
       const response = await studentService.importStudentIDs(file);
-      
+
       const inserted = response?.summary?.inserted ?? 0;
       if (inserted > 0) {
         toast.success("✅ Student added successfully!");
@@ -65,9 +65,9 @@ function AddStudentModal({ isOpen, onClose, onAdded }) {
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] animate-slideUp">
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <div className="flex items-center gap-3">
-             <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
-             </div>
+            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+            </div>
             <h3 className="text-xl font-bold text-slate-900 tracking-tight">Add New Student</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors">
@@ -174,9 +174,9 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
         formData.append("studentPhoto", photo);
       }
 
-      await studentService.updateStudent(student._id, formData);
+      const response = await studentService.updateStudent(student._id, formData);
       toast.success("✅ Student updated successfully.");
-      onSaved();
+      onSaved(response.data || response);
       onClose();
     } catch (err) {
       console.error(err);
@@ -848,6 +848,24 @@ export default function AdminStudentSection() {
     }
   };
 
+  const handleSaveStudent = (updatedItem) => {
+    setStudents((prev) => {
+      const exists = prev.some((s) => s._id === updatedItem._id);
+      if (exists) {
+        return prev.map((s) => (s._id === updatedItem._id ? updatedItem : s));
+      } else {
+        // For new students, keep refetch for now as AddStudent involves complex imports
+        fetchStudents(currentPage);
+        return prev;
+      }
+    });
+
+    // Also update selected student if in profile view
+    if (selectedStudent && selectedStudent._id === updatedItem._id) {
+      setSelectedStudent(updatedItem);
+    }
+  };
+
   // handleDeleteStudent logic
   const handleDeleteStudent = async (studentId) => {
     if (!window.confirm("Are you sure you want to delete this student completely? This action cannot be undone.")) return;
@@ -855,7 +873,14 @@ export default function AdminStudentSection() {
     try {
       await studentService.deleteStudent(studentId);
       toast.success("✅ Student deleted successfully.");
-      fetchStudents();
+      // Remove from local state
+      setStudents((prev) => prev.filter((s) => s._id !== studentId));
+      setTotalRecords((prev) => prev - 1);
+
+      // If we are in profile view, go back to list
+      if (viewMode === "profile" && selectedStudent?._id === studentId) {
+        handleBackToList();
+      }
     } catch (err) {
       console.error("Delete Error:", err);
       toast.error(err.response?.data?.message || "Failed to delete student.");
@@ -896,13 +921,7 @@ export default function AdminStudentSection() {
           isOpen={isEditModalOpen}
           student={selectedStudent}
           onClose={() => setIsEditModalOpen(false)}
-          onSaved={() => {
-            fetchStudents();
-            // Optional: update selectedStudent or wait for fetchStudents to refresh it
-            // if we needed to but fetchStudents will refresh the list. 
-            // Better to go back to list on edit or show updated info
-            // For now just relying on fetchStudents
-          }}
+          onSaved={handleSaveStudent}
         />
       </>
     );
@@ -1284,7 +1303,7 @@ export default function AdminStudentSection() {
         isOpen={isEditModalOpen}
         student={selectedStudent}
         onClose={() => setIsEditModalOpen(false)}
-        onSaved={fetchStudents}
+        onSaved={handleSaveStudent}
       />
     </main>
   );

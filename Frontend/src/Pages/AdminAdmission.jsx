@@ -292,10 +292,10 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
         delete submitData.migrationExpectedDate;
       }
 
-      await admissionService.createAdmission(submitData);
+      const response = await admissionService.createAdmission(submitData);
 
       toast.success("✅ Admission added successfully.");
-      onAdded();
+      onAdded(response.data || response);
       onClose();
       // Reset form
       setForm({
@@ -530,12 +530,21 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
       }
 
       // 2. NOW UPDATE STATUS
+      let finalResponse;
       if (form.status !== admission.status) {
-        await admissionService.updateAdmissionStatus(admission._id, form.status);
+        finalResponse = await admissionService.updateAdmissionStatus(admission._id, form.status);
+      } else if (Object.keys(updateData).length > 0) {
+        // If status didn't change but data did, we need a response for state update
+        // The updateAdmission might return the data, but let's be safe.
+        finalResponse = await admissionService.updateAdmission(admission._id, updateData);
+      } else {
+        // Nothing changed
+        onClose();
+        return;
       }
 
       toast.success("✅ Admission updated successfully.");
-      onSaved();
+      onSaved(finalResponse?.data || finalResponse || admission);
       onClose();
     } catch (err) {
       console.error(err);
@@ -778,6 +787,19 @@ export default function AdminAdmission() {
     setIsEditModalOpen(true);
   };
 
+  const handleSaveAdmission = (updatedItem) => {
+    setAdmissions((prev) => {
+      const exists = prev.some((a) => a._id === updatedItem._id);
+      if (exists) {
+        return prev.map((a) => (a._id === updatedItem._id ? updatedItem : a));
+      } else {
+        // For new admissions, refetch to maintain sorting/pagination
+        fetchAdmissions(currentPage);
+        return prev;
+      }
+    });
+  };
+
   const handleDeleteAdmission = async (id) => {
     if (!window.confirm("Are you sure you want to delete this admission? This action cannot be undone.")) return;
 
@@ -786,7 +808,9 @@ export default function AdminAdmission() {
 
     try {
       await admissionService.deleteAdmission(id);
-      fetchAdmissions(currentPage);
+      // Remove from local state
+      setAdmissions((prev) => prev.filter((a) => a._id !== id));
+      setTotalRecords((prev) => prev - 1);
       toast.success("Admission deleted successfully", { id: toastId });
     } catch (err) {
       console.error(err);
@@ -992,10 +1016,7 @@ export default function AdminAdmission() {
       <AddAdmissionModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAdded={() => {
-          setCurrentPage(1);
-          fetchAdmissions(1);
-        }}
+        onAdded={handleSaveAdmission}
       />
 
       <DetailModal
@@ -1007,7 +1028,7 @@ export default function AdminAdmission() {
         isOpen={isEditModalOpen}
         admission={editingAdmission}
         onClose={() => setIsEditModalOpen(false)}
-        onSaved={() => fetchAdmissions(currentPage)}
+        onSaved={handleSaveAdmission}
       />
 
       <Toaster position="bottom-right" />

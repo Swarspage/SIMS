@@ -110,8 +110,8 @@ function AchievementCard({ achievement, onView, onDelete, onEdit, isDeleting }) 
               onClick={() => onDelete && onDelete(achievement._id)}
               disabled={isDeleting}
               className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${isDeleting
-                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                  : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
+                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
                 }`}
             >
               {isDeleting ? "Deleting..." : "Delete"}
@@ -229,8 +229,8 @@ function DetailModal({ achievement, onClose }) {
                 {achievement.teamMembers && achievement.teamMembers.length > 0 && (
                   <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5">
                     <p className="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest flex items-center gap-2">
-                       <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
-                       Team Members
+                      <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+                      Team Members
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {achievement.teamMembers.map((member, idx) => (
@@ -253,7 +253,7 @@ function DetailModal({ achievement, onClose }) {
                     Media Gallery / Proofs
                   </h4>
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Event Photo */}
                     <div className="space-y-2">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Event Photo</p>
@@ -318,7 +318,7 @@ function DetailModal({ achievement, onClose }) {
                           {achievement.date?.to ? ` to ${new Date(achievement.date.to).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })}` : ""}
                         </p>
                       </div>
-                      
+
                       {achievement.certification_course && (
                         <div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Certification / Course Details</p>
@@ -458,14 +458,16 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
       if (files.certificate) data.append('certificate', files.certificate);
       if (files.course_certificate) data.append('course_certificate', files.course_certificate);
 
+      let response;
       if (achievement) {
-        await achievementService.updateAchievement(achievement._id, data);
+        response = await achievementService.updateAchievement(achievement._id, data);
         toast.success("Achievement updated successfully!");
       } else {
-        await achievementService.createAchievement(data);
+        response = await achievementService.createAchievement(data);
         toast.success("Achievement added successfully!");
       }
-      onSave(); // Refresh list
+      // Pass the response data (updated/new achievement) back to the handler
+      onSave(response.data || response);
       onClose(); // Close modal
     } catch (err) {
       console.error("Error saving achievement:", err);
@@ -501,7 +503,7 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          
+
           <section>
             <div className="flex items-center gap-2 mb-6">
               <div className="h-6 w-1.5 bg-blue-600 rounded-full"></div>
@@ -621,7 +623,7 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
               <div className="h-6 w-1.5 bg-indigo-500 rounded-full"></div>
               <h4 className="text-lg font-bold text-slate-800">Additional Context</h4>
             </div>
-            
+
             <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-6">
               {/* Description */}
               <div>
@@ -650,7 +652,7 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
                   />
                   <p className="text-[10px] text-slate-500 mt-1.5 ml-1">Comma-separated names</p>
                 </div>
-                
+
                 <div>
                   <label className={labelClass}>Certification / Course Details (Optional)</label>
                   <input
@@ -779,7 +781,7 @@ export default function AdminAchievements() {
     try {
       // Exclude 'year' from backend params to prevent 400 Joi validation errors
       const { year, ...safeFilters } = appliedFilters;
-      
+
       const params = {
         page,
         limit,
@@ -848,13 +850,27 @@ export default function AdminAchievements() {
     setIsFormModalOpen(true);
   };
 
+  const handleSaveAchievement = (updatedItem) => {
+    if (achievementToEdit) {
+      // Local update for edits
+      setAchievements((prev) =>
+        prev.map((a) => (a._id === updatedItem._id ? updatedItem : a))
+      );
+    } else {
+      // For new achievements, a refetch is safer to maintain sorting/pagination
+      fetchAchievements(currentPage);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this achievement?"))
       return;
     setDeletingId(id);
     try {
       await achievementService.deleteAchievement(id);
-      fetchAchievements(currentPage);
+      // Remove from local state
+      setAchievements((prev) => prev.filter((a) => a._id !== id));
+      setTotalRecords((prev) => prev - 1);
       toast.success("Achievement deleted successfully!");
     } catch (err) {
       console.error("Error deleting achievement:", err);
@@ -1099,7 +1115,7 @@ export default function AdminAchievements() {
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
         achievement={achievementToEdit}
-        onSave={() => fetchAchievements(currentPage)}
+        onSave={handleSaveAchievement}
       />
     </main>
   );

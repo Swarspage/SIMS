@@ -100,15 +100,25 @@ const Home = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
-            <div className="hidden md:block relative group">
-              <button className="px-6 py-2 text-sm font-bold text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-all shine-effect">
-                Login
+            <div className="hidden md:flex items-center space-x-3">
+              <button 
+                onClick={() => navigate("/login")} 
+                className="px-4 py-2 text-xs font-bold text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-all shine-effect"
+              >
+                Student
               </button>
-              <div className="absolute right-0 mt-2 w-48 glass-card rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 border border-white/10 overflow-hidden">
-                <button onClick={() => navigate("/student-login")} className="w-full px-4 py-3 text-left text-sm hover:bg-white/10 transition-colors">Student Login</button>
-                <button onClick={() => navigate("/admin-login")} className="w-full px-4 py-3 text-left text-sm hover:bg-white/10 transition-colors border-t border-white/5">Admin Login</button>
-                <button onClick={() => navigate("/division-login")} className="w-full px-4 py-3 text-left text-sm hover:bg-white/10 transition-colors border-t border-white/5">Division Login</button>
-              </div>
+              <button 
+                onClick={() => navigate("/admin/login")} 
+                className="px-4 py-2 text-xs font-bold text-white bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all"
+              >
+                Admin
+              </button>
+              <button 
+                onClick={() => navigate("/division/login")} 
+                className="px-4 py-2 text-xs font-bold text-white bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all"
+              >
+                Division
+              </button>
             </div>
             <button className="p-2 text-white md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,9 +141,9 @@ const Home = () => {
             </a>
             <div className="pt-4 space-y-2 border-t border-white/10">
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-2">Portals</p>
-              <button onClick={() => navigate("/student-login")} className="w-full py-3 bg-blue-600/20 hover:bg-blue-600/30 rounded-xl font-bold transition-colors">Student Login</button>
-              <button onClick={() => navigate("/admin-login")} className="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold transition-colors">Admin Login</button>
-              <button onClick={() => navigate("/division-login")} className="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold transition-colors">Division Login</button>
+              <button onClick={() => navigate("/login")} className="w-full py-3 bg-blue-600/20 hover:bg-blue-600/30 rounded-xl font-bold transition-colors">Student Login</button>
+              <button onClick={() => navigate("/admin/login")} className="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold transition-colors">Admin Login</button>
+              <button onClick={() => navigate("/division/login")} className="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold transition-colors">Division Login</button>
             </div>
           </div>
         )}

@@ -125,8 +125,8 @@ function ActivityCard({ activity, onView, onDelete, onEdit, isDeleting }) {
               onClick={() => onDelete && onDelete(activity._id)}
               disabled={isDeleting}
               className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${isDeleting
-                  ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                  : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
+                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
                 }`}
             >
               {isDeleting ? "Deleting..." : "Delete"}
@@ -386,15 +386,16 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
         data.append("certificate", certificate);
       }
 
+      let response;
       if (activity) {
-        await activityService.updateActivity(activity._id, data);
+        response = await activityService.updateActivity(activity._id, data);
         toast.success("Activity updated successfully!");
       } else {
-        await activityService.createActivity(data);
+        response = await activityService.createActivity(data);
         toast.success("Activity added successfully!");
       }
-      onSave(); 
-      onClose(); 
+      onSave(response.data || response);
+      onClose();
     } catch (err) {
       console.error("Error saving activity:", err);
       const errorMessage =
@@ -413,13 +414,13 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose} />
-      
+
       <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-xl overflow-hidden relative z-10 animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
         {/* Premium Header */}
         <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-indigo-800 px-8 py-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 -m-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 -m-8 w-24 h-24 bg-blue-400/20 rounded-full blur-2xl"></div>
-          
+
           <div className="relative flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-black text-white tracking-tight">
@@ -528,7 +529,7 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
                 onChange={handleFileChange}
                 className="hidden"
               />
-              <label 
+              <label
                 htmlFor="cert-upload"
                 className="flex items-center justify-center gap-3 w-full p-4 border-2 border-dashed border-slate-200 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group"
               >
@@ -611,7 +612,7 @@ export default function AdminActivity() {
     try {
       // Exclude 'year' from backend params to prevent 400 Joi validation errors
       const { year, ...safeFilters } = appliedFilters;
-      
+
       const params = {
         page,
         limit,
@@ -679,13 +680,27 @@ export default function AdminActivity() {
     setIsFormModalOpen(true);
   };
 
+  const handleSaveActivity = (updatedItem) => {
+    if (activityToEdit) {
+      // Local update for edits
+      setActivities((prev) =>
+        prev.map((a) => (a._id === updatedItem._id ? updatedItem : a))
+      );
+    } else {
+      // For new activities, a refetch is safer to maintain sorting/pagination
+      fetchActivities(currentPage);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this activity?"))
       return;
     setDeletingId(id);
     try {
       await activityService.deleteActivity(id);
-      fetchActivities(currentPage);
+      // Remove from local state
+      setActivities((prev) => prev.filter((a) => a._id !== id));
+      setTotalRecords((prev) => prev - 1);
       toast.success("Activity deleted successfully");
     } catch (err) {
       console.error("Error deleting activity:", err);
@@ -905,7 +920,7 @@ export default function AdminActivity() {
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
         activity={activityToEdit}
-        onSave={() => fetchActivities(currentPage)}
+        onSave={handleSaveActivity}
       />
     </main>
   );

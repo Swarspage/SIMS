@@ -321,7 +321,6 @@ export default function AdminDivisionIncharge() {
 
     // Import/Export state
     const [importing, setImporting] = useState(false);
-    const [exporting, setExporting] = useState(false);
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -414,9 +413,6 @@ export default function AdminDivisionIncharge() {
         }
     };
 
-    const handleExport = async () => {
-        toast.warn("⚠️ Export feature for Division Incharges is not yet available in the backend.");
-    };
 
     return (
         <main className="p-8 bg-slate-50 min-h-screen">
@@ -479,26 +475,7 @@ export default function AdminDivisionIncharge() {
                     Add Incharge
                 </button>
 
-                {/* Export Button */}
-                <button
-                    onClick={handleExport}
-                    disabled={exporting}
-                    className="px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                    {exporting ? (
-                        <>
-                            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                            Exporting...
-                        </>
-                    ) : (
-                        <>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Export
-                        </>
-                    )}
-                </button>
+
 
                 {/* Import Button */}
                 <button

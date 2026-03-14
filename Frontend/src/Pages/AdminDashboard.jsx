@@ -36,6 +36,22 @@ export default function AdminDashboard() {
         setStats(data.stats);
         setPlacementByType(data.placementsByType || []);
         setAchievementByCategory(data.achievementsByCategory || []);
+
+        // Map recentAchievements to recentActivities format
+        if (data.recentAchievements) {
+          const mappedActivities = data.recentAchievements.map(ach => ({
+            title: ach.title,
+            description: ach.description,
+            type: ach.category,
+            date: ach.date?.from || ach.createdAt,
+            studentName: typeof ach.stuID?.name === "object"
+              ? `${ach.stuID.name.firstName || ""} ${ach.stuID.name.lastName || ""}`.trim() || "Student"
+              : ach.stuID?.name || "Student"
+          }));
+          setRecentActivities(mappedActivities);
+        } else {
+          setRecentActivities([]);
+        }
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
