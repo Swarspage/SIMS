@@ -2,8 +2,6 @@ const Student = require("../models/Student");
 const cloudinary = require("../config/cloudinaryConfig");
 
 const bcrypt = require("bcryptjs");
-const nodemailer = require("nodemailer");
-
 const ExcelJS = require("exceljs"); // replaced xlsx
 
 const { importExcelSchema, addStudentDetailsSchema, updateStudentSchema, getStudentsValidation } = require("../validators/studentValidation");
@@ -21,23 +19,6 @@ const sendEmailBrevo = require("../services/sendEmailBrevo");
 
 const { transformStudent, studentColumnMap } = require('../helpers/excel/exportTransformers');
 const exportToExcel = require('../helpers/excel/exportToExcel');
-
-
-// SendGrid No Longer In Use.
-// const sgMail = require('@sendgrid/mail');
-// sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-
-
-// Configure your email transporter (example with Gmail) --No Longer In Use
-// const transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   auth: {
-//     user: process.env.EMAIL_USER || process.env.emailUser,       // your email
-//     pass: process.env.EMAIL_PASSWORD || process.env.emailPassword,          // app password if 2FA enabled
-//   },
-// });
-
 
 // for studentPhoto
 const fileConfigs = [
@@ -69,7 +50,7 @@ const getCellValue = (cell) => {
 };
 
 
-// Import studentIDs from Excel (only studentID )
+// Import studentIDs from Excel (studentID + email )
 const importStudentIDs = async (req, res) => {
   try {
 
@@ -114,74 +95,124 @@ const importStudentIDs = async (req, res) => {
       .slice(1)
       .map(h => h?.toString().trim().toLowerCase());
 
-    // Check only one column
-    if (headers.length !== 1 || headers[0] !== "studentid") {
+    // Check only two column
+    const studentIDColIndex = headers.findIndex(h => h === "studentid") + 1;
+    const emailColIndex     = headers.findIndex(h => h === "email")     + 1;
+ 
+    if (studentIDColIndex === 0 || emailColIndex === 0) {
       return res.status(400).json({
         success: false,
-        message: "Excel must contain ONLY one column named 'studentID'"
+        message: "Excel must contain exactly two columns named 'studentID' and 'email'"
       });
     }
 
-    const students = [];
-
+    const emailRegex  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const validRows   = [];
+    const invalidRows = [];
+ 
     worksheet.eachRow((row, rowNumber) => {
-      if (rowNumber === 1) return;
-
-      const studentID = getCellValue(row.getCell(1));
-
-      if (studentID) {
-        students.push({ studentID });
+      if (rowNumber === 1) return; // skip header
+ 
+      const studentID = getCellValue(row.getCell(studentIDColIndex));
+      if (!studentID) return; // skip blank rows silently
+ 
+      const email = getCellValue(row.getCell(emailColIndex));
+ 
+      if (!email || !emailRegex.test(email)) {
+        invalidRows.push({
+          row: rowNumber,
+          studentID,
+          issue: !email ? "Missing email" : "Invalid email format"
+        });
+        return;
       }
+ 
+      validRows.push({ studentID, email: email.toLowerCase() });
     });
-
-    if (students.length === 0) {
+ 
+    if (validRows.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "No studentIDs found in Excel"
+        message: "No valid rows found in Excel",
+        ...(invalidRows.length > 0 && { invalidRows })
       });
     }
-
-    // Remove duplicates inside Excel
+ 
+    // Deduplicate within the file (keep first occurrence per studentID) 
     const uniqueStudents = [
-      ...new Map(students.map(item => [item.studentID, item])).values()
+      ...new Map(validRows.map(s => [s.studentID, s])).values()
     ];
-
-    // Check existing studentIDs
+ 
+    //Check existing records in DB 
     const existingStudents = await Student.find({
       studentID: { $in: uniqueStudents.map(s => s.studentID) }
-    }).select("studentID");
-
-    const existingSet = new Set(existingStudents.map(s => s.studentID));
-
-    const newStudents = uniqueStudents.filter(
-      s => !existingSet.has(s.studentID)
-    );
-
-    let insertedStudents = [];
-
-    if (newStudents.length > 0) {
-      insertedStudents = await Student.insertMany(newStudents);
+    }).select("studentID email");
+ 
+    const existingMap = new Map(existingStudents.map(s => [s.studentID, s]));
+ 
+    //Categorise each row 
+    const toInsert      = []; // brand-new students
+    const toUpdateEmail = []; // exists but no email yet → patch
+    const skipped       = []; // exists and already has an email → skip
+ 
+    for (const s of uniqueStudents) {
+      const existing = existingMap.get(s.studentID);
+ 
+      if (!existing) {
+        toInsert.push({ studentID: s.studentID, email: s.email });
+      } else if (!existing.email) {
+        toUpdateEmail.push({ _id: existing._id, studentID: s.studentID, email: s.email });
+      } else {
+        skipped.push(s.studentID);
+      }
     }
-
+ 
+    // Persist
+    let insertedCount = 0;
+    let updatedCount  = 0;
+ 
+    if (toInsert.length > 0) {
+      await Student.insertMany(toInsert);
+      insertedCount = toInsert.length;
+    }
+ 
+    if (toUpdateEmail.length > 0) {
+      const bulkOps = toUpdateEmail.map(s => ({
+        updateOne: {
+          filter: { _id: s._id },
+          update: { $set: { email: s.email } }
+        }
+      }));
+      await Student.bulkWrite(bulkOps);
+      updatedCount = toUpdateEmail.length;
+    }
+ 
+    // Response 
     return res.status(200).json({
       success: true,
-      message: "StudentIDs imported successfully",
+      message: "Student IDs and emails imported successfully",
       summary: {
-        received: students.length,
-        unique: uniqueStudents.length,
-        inserted: insertedStudents.length,
-        alreadyExists: existingStudents.length
-      }
+        totalRowsInFile  : validRows.length + invalidRows.length,
+        validRows        : validRows.length,
+        uniqueInFile     : uniqueStudents.length,
+        inserted         : insertedCount,
+        emailPatched     : updatedCount,
+        skipped          : skipped.length,
+        invalidEmailRows : invalidRows.length,
+      },
+      ...(invalidRows.length > 0 && { invalidRows })
     });
-
+ 
   } catch (error) {
     console.error("Import StudentIDs Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Error importing student IDs"
+      message: "Error importing student data"
     });
   }
 };
+
+
 
 //importExcelDataWithPasswords
 const importExcelDataWithPasswords = async (req, res) => {

@@ -36,13 +36,13 @@ exports.signup = async (req, res) => {
 
     const { studentID, email, password } = value;
 
-    // Check student exists (added by admin)
-    const student = await Student.findOne({ studentID });
+    // Check student exists (added by admin) also email(added by admin)
+    const student = await Student.findOne({ studentID , email });
 
     if (!student) {
       return res.status(400).json({
         success: false,
-        message: "Invalid Student ID. Contact admin."
+        message: "Invalid Student ID and Email. Contact admin."
       });
     }
 
@@ -55,13 +55,13 @@ exports.signup = async (req, res) => {
     }
 
     // Email already exists
-    const existingEmail = await Student.findOne({ email });
-    if (existingEmail) {
-      return res.status(400).json({
-        success: false,
-        message: "Email already in use."
-      });
-    }
+    // const existingEmail = await Student.findOne({ email });
+    // if (existingEmail) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Email already in use."
+    //   });
+    // }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);

@@ -15,7 +15,9 @@ const { readLimiter, writeLimiter, uploadLimiter, exportLimiter } = require("../
 // route to add excel file and then send generated passwords via email --admin access
 // router.post('/import', authenticateToken, authorizeRoles("admin", "divisionIncharge"), uploadLimiter, uploadMemoryStorage.single("studentData"), importExcelDataWithPasswords);
 
-// route to add excel file with only studentIDs --admin access
+// route to import studentIDs + emails from Excel --admin or divisionIncharge access
+// Inserts new students, patches email onto existing records that lack one, skips the rest
+// Excel must have exactly two columns: "studentID" and "email"
 router.post('/import-student-ids', authenticateToken, authorizeRoles("admin", "divisionIncharge"), uploadLimiter, uploadMemoryStorage.single("studentIDs"), importStudentIDs);
 
 // route to dwnload all student data in Excel format
@@ -41,11 +43,11 @@ router.put("/:studentId",
     updateStudent
 );
 
-// route to delete student --admin or divisionIncharge
+// route to delete student ->admin or divisionIncharge
 router.delete("/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), writeLimiter, deleteStudent);
 
-// GET routes --it also has export in it
-router.get("/", authenticateToken, authorizeRoles("admin", "divisionIncharge"), readLimiter, getStudents);  // Admin and DivisionIncharge --with search, filter and pagination
+// GET routes ->it also has export in it
+router.get("/", authenticateToken, authorizeRoles("admin", "divisionIncharge"), readLimiter, getStudents);  // Admin and DivisionIncharge with search, filter and pagination
 router.get("/me", authenticateToken, authorizeRoles("student"), readLimiter, getStudentById); // Student self
 router.get("/:studentId", authenticateToken, authorizeRoles("admin", "divisionIncharge"), readLimiter, getSingleStudent); // Admin only
 
