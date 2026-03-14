@@ -343,7 +343,7 @@ const updateStudentSchema = Joi.object({
 
     academicYear: academicYearBase.optional(),
 
-}).min(1).options({
+}).options({
     abortEarly: false,
     stripUnknown: true,
     convert: true

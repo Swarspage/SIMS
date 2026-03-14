@@ -850,6 +850,10 @@ const updateStudent = async (req, res) => {
       };
     }
 
+    if (Object.keys(updatedData).length === 0) {
+			return res.status(400).json({ success: false, message: "No valid fields provided for update" });
+		}
+
     // Update student in DB
     const updatedStudent = await Student.findByIdAndUpdate(
       studentId,
