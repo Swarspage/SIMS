@@ -25,4 +25,8 @@ router.post("/reset-password/:token", passwordResetLimiter, authController.reset
 router.post("/admin/forgot-password", passwordResetLimiter, authController.adminForgotPassword);
 router.post("/admin/reset-password/:token", passwordResetLimiter, authController.adminResetPassword);
 
+//forget and reset password routes -> for division incharge
+router.post("/division-incharge/forgot-password", passwordResetLimiter, authController.divisionInchargeForgotPassword);
+router.post("/division-incharge/reset-password/:token", passwordResetLimiter, authController.divisionInchargeResetPassword);
+
 module.exports = router;

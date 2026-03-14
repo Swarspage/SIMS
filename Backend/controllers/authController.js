@@ -7,7 +7,7 @@ const DivisionIncharge = require("../models/DivisionIncharge");
 const Student = require("../models/Student.js")
 const Admin = require('../models/Admin.js');
 const sendEmailBrevo = require("../services/sendEmailBrevo");
-const { signupSchema, loginSchema, adminLoginSchema, divisionInchargeLoginSchema , forgotPasswordSchema , resetPasswordSchema , adminResetPasswordSchema  } = require('../validators/authValidation.js');
+const { signupSchema, loginSchema, adminLoginSchema, divisionInchargeLoginSchema , forgotPasswordSchema , resetPasswordSchema , adminResetPasswordSchema , divisionInchargeResetPasswordSchema } = require('../validators/authValidation.js');
 
 
 // const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary.js");
@@ -525,4 +525,83 @@ exports.adminResetPassword = async (req, res) => {
   }
 };
 
-//division incharge -> 
+//division incharge -> forgot-pass
+exports.divisionInchargeForgotPassword = async (req, res) => {
+  try {
+    const { error, value } = forgotPasswordSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+ 
+    const divisionIncharge = await DivisionIncharge.findOne({ email: value.email });
+    if (!divisionIncharge) {
+      // Don't reveal whether division incharge exists — generic message
+      return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
+    }
+ 
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+ 
+    divisionIncharge.resetPasswordToken = hashedToken;
+    divisionIncharge.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 min
+    await divisionIncharge.save();
+ 
+    const resetURL = `${process.env.FRONTEND_URL}/division-incharge/reset-password/${resetToken}`;
+ 
+    const htmlContent = `
+      <h2>Hello ${divisionIncharge.name || "Division Incharge"},</h2>
+      <p>You are requested to reset your password.</p>
+      <p><a href="${resetURL}">Click here to reset your password</a></p>
+      <p>This link expires in 15 minutes.</p>
+    `;
+ 
+    await sendEmailBrevo({
+      toEmail: divisionIncharge.email,
+      subject: "Division Incharge Password Reset Request",
+      htmlContent,
+    });
+ 
+    return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
+ 
+  } catch (error) {
+    console.error("Division Incharge Forgot Password Error:", error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+ 
+ 
+//division incharge -> reset pass
+exports.divisionInchargeResetPassword = async (req, res) => {
+  try {
+    const { error, value } = divisionInchargeResetPasswordSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+ 
+    const { token } = req.params;
+    const { newPassword } = value;
+ 
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+ 
+    const divisionIncharge = await DivisionIncharge.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+ 
+    if (!divisionIncharge) {
+      return res.status(400).json({ success: false, message: "Invalid or expired token" });
+    }
+ 
+    divisionIncharge.password = await bcrypt.hash(newPassword, 10);
+    divisionIncharge.resetPasswordToken = undefined;
+    divisionIncharge.resetPasswordExpire = undefined;
+    await divisionIncharge.save();
+ 
+    return res.status(200).json({ success: true, message: "Division Incharge password reset successful" });
+ 
+  } catch (error) {
+    console.error("Division Incharge Reset Password Error:", error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
