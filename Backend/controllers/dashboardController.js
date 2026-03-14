@@ -14,17 +14,19 @@ exports.divisionDashboard = async (req, res) => {
 
     const divIncharge = await DivisionIncharge.findById(req.user.id);
 
+    if (!divIncharge) {
+      return res.status(404).json({ message: "Division Incharge not found" });
+    }
+
     const { year, division } = divIncharge;
 
+    // Get students of that division
     const students = await Student.find(
       { year, division },
       { _id: 1 }
     );
 
     const studentIDs = students.map(s => s._id);
-
-   exports.adminDashboard = async (req, res) => {
-  try {
 
     const [
       totalStudents,
@@ -34,23 +36,25 @@ exports.divisionDashboard = async (req, res) => {
       totalPlacements,
       totalHigherStudies,
       placementsByType,
-      achievementsByCategory,
-      recentAchievements
+      achievementsByCategory
     ] = await Promise.all([
 
-      Student.countDocuments(),
+      Student.countDocuments({ year, division }),
 
-      Activity.countDocuments(),
+      Activity.countDocuments({ stuID: { $in: studentIDs } }),
 
-      Achievement.countDocuments(),
+      Achievement.countDocuments({ stuID: { $in: studentIDs } }),
 
-      Internship.countDocuments(),
+      Internship.countDocuments({ stuID: { $in: studentIDs } }),
 
-      Placement.countDocuments(),
+      Placement.countDocuments({ stuID: { $in: studentIDs } }),
 
-      HigherStudies.countDocuments(),
+      HigherStudies.countDocuments({ stuID: { $in: studentIDs } }),
 
       Placement.aggregate([
+        {
+          $match: { stuID: { $in: studentIDs } }
+        },
         {
           $group: {
             _id: "$placementType",
@@ -61,18 +65,15 @@ exports.divisionDashboard = async (req, res) => {
 
       Achievement.aggregate([
         {
+          $match: { stuID: { $in: studentIDs } }
+        },
+        {
           $group: {
             _id: "$category",
             count: { $sum: 1 }
           }
         }
-      ]),
-
-      // NEW: Latest 5 achievements
-      Achievement.find()
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .populate("stuID", "studentID name year division branch")
+      ])
 
     ]);
 
@@ -86,15 +87,8 @@ exports.divisionDashboard = async (req, res) => {
         totalHigherStudies
       },
       placementsByType,
-      achievementsByCategory,
-      recentAchievements
+      achievementsByCategory
     });
-
-  } catch (error) {
-    console.error("Admin dashboard error:", error);
-    res.status(500).json({ message: "Dashboard error" });
-  }
-};
 
   } catch (error) {
     console.error("Division dashboard error:", error);
@@ -117,7 +111,8 @@ exports.adminDashboard = async (req, res) => {
       totalPlacements,
       totalHigherStudies,
       placementsByType,
-      achievementsByCategory
+      achievementsByCategory,
+      recentAchievements
     ] = await Promise.all([
 
       Student.countDocuments(),
@@ -148,7 +143,12 @@ exports.adminDashboard = async (req, res) => {
             count: { $sum: 1 }
           }
         }
-      ])
+      ]),
+
+      Achievement.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate("stuID", "studentID name year division branch")
 
     ]);
 
@@ -162,7 +162,8 @@ exports.adminDashboard = async (req, res) => {
         totalHigherStudies
       },
       placementsByType,
-      achievementsByCategory
+      achievementsByCategory,
+      recentAchievements
     });
 
   } catch (error) {
