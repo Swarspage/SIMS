@@ -7,6 +7,7 @@ node_modules
 
 # Admin Script
 seedAdmin.js
+AdminPassword.js
 
 # Logs
 npm-debug.log*
