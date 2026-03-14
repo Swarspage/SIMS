@@ -23,28 +23,34 @@ exports.divisionDashboard = async (req, res) => {
 
     const studentIDs = students.map(s => s._id);
 
+   exports.adminDashboard = async (req, res) => {
+  try {
+
     const [
       totalStudents,
       totalActivities,
       totalAchievements,
       totalInternships,
       totalPlacements,
+      totalHigherStudies,
       placementsByType,
-      achievementsByCategory
+      achievementsByCategory,
+      recentAchievements
     ] = await Promise.all([
 
-      Student.countDocuments({ year, division }),
+      Student.countDocuments(),
 
-      Activity.countDocuments({ stuID: { $in: studentIDs } }),
+      Activity.countDocuments(),
 
-      Achievement.countDocuments({ stuID: { $in: studentIDs } }),
+      Achievement.countDocuments(),
 
-      Internship.countDocuments({ stuID: { $in: studentIDs } }),
+      Internship.countDocuments(),
 
-      Placement.countDocuments({ stuID: { $in: studentIDs } }),
+      Placement.countDocuments(),
+
+      HigherStudies.countDocuments(),
 
       Placement.aggregate([
-        { $match: { stuID: { $in: studentIDs } } },
         {
           $group: {
             _id: "$placementType",
@@ -54,14 +60,19 @@ exports.divisionDashboard = async (req, res) => {
       ]),
 
       Achievement.aggregate([
-        { $match: { stuID: { $in: studentIDs } } },
         {
           $group: {
             _id: "$category",
             count: { $sum: 1 }
           }
         }
-      ])
+      ]),
+
+      // NEW: Latest 5 achievements
+      Achievement.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate("stuID", "studentID name year division branch")
 
     ]);
 
@@ -71,11 +82,19 @@ exports.divisionDashboard = async (req, res) => {
         totalActivities,
         totalAchievements,
         totalInternships,
-        totalPlacements
+        totalPlacements,
+        totalHigherStudies
       },
       placementsByType,
-      achievementsByCategory
+      achievementsByCategory,
+      recentAchievements
     });
+
+  } catch (error) {
+    console.error("Admin dashboard error:", error);
+    res.status(500).json({ message: "Dashboard error" });
+  }
+};
 
   } catch (error) {
     console.error("Division dashboard error:", error);
