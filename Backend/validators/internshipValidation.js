@@ -188,7 +188,6 @@ const updateInternshipValidationSchema = Joi.object({
         "string.empty" : "Description cannot be empty."
     })
 })
-.min(1) // At least one field is required
 .options({
     stripUnknown: true,  // removes extra fields not in schema
     convert: true,        // automatic string -> number conversion

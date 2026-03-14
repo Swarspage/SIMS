@@ -192,7 +192,7 @@ function containsProfanity(text) {
         // fuck123
         // 123fuckabc
         // behenchodxyz
-        if (normalizedWord.includes(badWord)) {
+        if (badWord.length >= 4 && normalizedWord.includes(badWord)) {
           return true;
         }
 

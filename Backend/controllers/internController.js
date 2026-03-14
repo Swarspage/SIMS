@@ -639,6 +639,16 @@ const updateInternship = async (req, res) => {
             return res.status(403).json({ success: false, message: "Wrong Role." });
         }
 
+        if (
+            (!req.body || Object.keys(req.body).length === 0) &&
+            (!req.files || Object.keys(req.files).length === 0)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "No data provided to update"
+            });
+        }
+
 
         const { error , value:updatedData } = updateInternshipValidationSchema.validate(req.body, { abortEarly: false });
 
@@ -731,14 +741,14 @@ const updateInternship = async (req, res) => {
             uploadedFiles = await validateAndUploadFiles(filteredFiles, activeConfigs);
         }
 
-        /* DELETE OLD FILES + ADD NEW */
+        /* HANDLE NEW FILES */
+
+        let oldPublicIds = [];
 
         if (uploadedFiles.internshipReport) {
 
             const oldPublicId = existingInternship.internshipReport?.publicId;
-            if (oldPublicId) {
-                await cloudinary.uploader.destroy(oldPublicId).catch(() => {});
-            }
+            if (oldPublicId) oldPublicIds.push(oldPublicId);
 
             updatedData.internshipReport = {
                 url: uploadedFiles.internshipReport.url,
@@ -751,9 +761,7 @@ const updateInternship = async (req, res) => {
         if (uploadedFiles.photoProof) {
 
             const oldPublicId = existingInternship.photoProof?.publicId;
-            if (oldPublicId) {
-                await cloudinary.uploader.destroy(oldPublicId).catch(() => {});
-            }
+            if (oldPublicId) oldPublicIds.push(oldPublicId);
 
             updatedData.photoProof = {
                 url: uploadedFiles.photoProof.url,
@@ -762,6 +770,7 @@ const updateInternship = async (req, res) => {
 
             newPublicIds.push(uploadedFiles.photoProof.publicId);
         }
+        console.log(updatedData);
 
         if (
             Object.keys(updatedData).length === 0 &&
@@ -773,6 +782,7 @@ const updateInternship = async (req, res) => {
             });
         }
 
+
         /* DB UPDATE */
 
         const updatedInternship = await Internship.findByIdAndUpdate(
@@ -783,7 +793,22 @@ const updateInternship = async (req, res) => {
 
         dbSaved = true;
 
-        return res.status(200).json({ success: true, message: "Internship updated successfully", data: updatedInternship });
+
+        /* DELETE OLD FILES AFTER DB SUCCESS */
+
+        if (oldPublicIds.length > 0) {
+            deleteMultipleFromCloudinary(oldPublicIds).catch((err) => {
+                console.warn("Error deleting old internship files:", err);
+            });
+        }
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Internship updated successfully",
+            data: updatedInternship
+        });
+
 
     } catch (err) {
         console.error("Error in updateInternship controller: ",  "\ntime = ", new Date().toISOString(), "\nError: ", err );
@@ -792,7 +817,7 @@ const updateInternship = async (req, res) => {
             await deleteMultipleFromCloudinary(newPublicIds);
         }
 
-        return res.status(500).json({ success: false, message: err.message || "Some Error Occured. Please Try Again Later." });
+        return res.status(500).json({ success: false, message: "Some Error Occured. Please Try Again Later." });
     }
 };
 
