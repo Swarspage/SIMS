@@ -24,9 +24,16 @@ const divisionInchargeSchema = new mongoose.Schema({
 
     password : {
         type : String,
-    }
+    },
 
-
+     //new authentication fields for password reset
+    resetPasswordToken: {
+        type: String,
+    },
+    
+    resetPasswordExpire: {
+        type: Date,
+    },
 
 }, {timestamps:true});
 
