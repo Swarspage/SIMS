@@ -8,23 +8,23 @@ import Pagination from "../Components/Common/Pagination";
 
 // Component: Add Student Modal
 function AddStudentModal({ isOpen, onClose, onAdded }) {
-  const [form, setForm] = useState({ studentID: "", email: "" });
+  const [form, setForm] = useState({ studentID: "" });
   const [saving, setSaving] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.studentID || !form.email) {
-      return toast.warn("Please provide both Student ID and Email.");
+    if (!form.studentID) {
+      return toast.warn("Please provide Student ID.");
     }
     try {
       setSaving(true);
       // Create a dummy Excel workbook in memory using exceljs
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Students");
-      worksheet.addRow(["studentID", "email"]);
-      worksheet.addRow([form.studentID.trim(), form.email.trim().toLowerCase()]);
+      worksheet.addRow(["studentID"]);
+      worksheet.addRow([form.studentID.trim()]);
 
       // Write workbook to array buffer
       const buffer = await workbook.xlsx.writeBuffer();
@@ -32,8 +32,16 @@ function AddStudentModal({ isOpen, onClose, onAdded }) {
       const file = new File([blob], "new_student.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 
       // Call the existing import endpoint with our 1-row file
-      await studentService.importExcel(file);
-      toast.success("✅ Student added successfully! Password sent via email.");
+      const response = await studentService.importStudentIDs(file);
+      
+      const inserted = response?.summary?.inserted ?? 0;
+      if (inserted > 0) {
+        toast.success("✅ Student added successfully!");
+      } else if (response?.summary?.alreadyExists > 0) {
+        toast.warn("⚠️ Student ID already exists.");
+      } else {
+        toast.success("✅ Student imported successfully.");
+      }
       onAdded();
       onClose();
     } catch (err) {
@@ -78,17 +86,7 @@ function AddStudentModal({ isOpen, onClose, onAdded }) {
               onChange={(e) => setForm({ ...form, studentID: e.target.value })}
             />
           </div>
-          <div>
-            <label className={labelClass}>Email Address *</label>
-            <input
-              type="email"
-              required
-              placeholder="student@example.com"
-              className={inputClass}
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
-          </div>
+
           <div className="pt-6 flex justify-end gap-3 border-t border-slate-100">
             <button type="button" onClick={onClose} className="px-5 py-2.5 font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
             <button type="submit" disabled={saving} className="px-6 py-2.5 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
@@ -798,7 +796,7 @@ export default function AdminStudentSection() {
 
   // Import/Export state (Students)
   const [exporting, setExporting] = useState(false);
-  const fileInputRef = useRef(null);
+
 
   // Import Student IDs state (new auth flow)
   const [importingStudentIDs, setImportingStudentIDs] = useState(false);

@@ -17,8 +17,16 @@ router.post('/division-incharge', authLimiter , authController.divisionInchargeL
 //logout route
 router.get('/logout', authController.logout);
 
-//forget and reset password routes
+//forget and reset password routes -> for students
 router.post("/forgot-password", passwordResetLimiter, authController.forgotPassword);
 router.post("/reset-password/:token", passwordResetLimiter, authController.resetPassword);
+
+//forget and reset password routes -> for admins
+router.post("/admin/forgot-password", passwordResetLimiter, authController.adminForgotPassword);
+router.post("/admin/reset-password/:token", passwordResetLimiter, authController.adminResetPassword);
+
+//forget and reset password routes -> for division incharge
+router.post("/division-incharge/forgot-password", passwordResetLimiter, authController.divisionInchargeForgotPassword);
+router.post("/division-incharge/reset-password/:token", passwordResetLimiter, authController.divisionInchargeResetPassword);
 
 module.exports = router;
