@@ -15,13 +15,15 @@ import sanikaImg from "../assets/Sanika.png";
 import atharvImg from "../assets/Atharv.png";
 import aasthaImg from "../assets/Aastha.png";
 import shrutiImg from "../assets/Shruti.png";
+import swarImg from "../assets/swar.png";
 
-const developers = [
-  { name: "Yash Sunder Bawari", role: "Frontend Developer", image: yashImg, linkedin: "https://www.linkedin.com/in/yash-bawari-5a3379313/", github: "https://github.com/YashBawari18", portfolio: "https://my-portfolio-six-alpha-47.vercel.app/" },
-  { name: "Sanika Salunkhe", role: "Backend Developer", image: sanikaImg, linkedin: "https://www.linkedin.com/in/sanika-salunkhe-18a237329/", github: "https://github.com/SanikaSalunkhe1", portfolio: "#" },
-  { name: "Atharv Santosh Kotwal", role: "UI/UX Designer", image: atharvImg, linkedin: "https://www.linkedin.com/in/atharv-kotwal-b95559330?", github: "https://github.com/GrandPredator", portfolio: "#" },
-  { name: "Aastha Oswal", role: "Backend Developer", image: aasthaImg, linkedin: "#", github: "#", portfolio: "#" },
-  { name: "Shruti Gaonkar", role: "Documentation", image: shrutiImg, linkedin: "https://github.com/ShrutiGaonkar19", github: "#", portfolio: "#" },
+const developers = [{ name: "Aastha Oswal", role: "Backend Developer", image: aasthaImg, linkedin: "#", github: "#", portfolio: "#" },
+{ name: "Swar Shinde", role: "Frontend Developer", image: swarImg, linkedin: "https://www.linkedin.com/in/swar-shinde-91131a2b9/", github: "https://github.com/Swarspage", portfolio: "https://swarspage.github.io/My-Portfolio/" },
+{ name: "Yash Sunder Bawari", role: "Frontend Developer", image: yashImg, linkedin: "https://www.linkedin.com/in/yash-bawari-5a3379313/", github: "https://github.com/YashBawari18", portfolio: "https://my-portfolio-six-alpha-47.vercel.app/" },
+{ name: "Sanika Salunkhe", role: "Backend Developer", image: sanikaImg, linkedin: "https://www.linkedin.com/in/sanika-salunkhe-18a237329/", github: "https://github.com/SanikaSalunkhe1", portfolio: "#" },
+{ name: "Atharv Santosh Kotwal", role: "UI/UX Designer", image: atharvImg, linkedin: "https://www.linkedin.com/in/atharv-kotwal-b95559330?", github: "https://github.com/GrandPredator", portfolio: "#" },
+
+{ name: "Shruti Gaonkar", role: "Documentation", image: shrutiImg, linkedin: "https://github.com/ShrutiGaonkar19", github: "#", portfolio: "#" },
 ];
 
 const events = [
@@ -101,20 +103,20 @@ const Home = () => {
 
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex items-center space-x-3">
-              <button 
-                onClick={() => navigate("/login")} 
+              <button
+                onClick={() => navigate("/login")}
                 className="px-4 py-2 text-xs font-bold text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-all shine-effect"
               >
                 Student
               </button>
-              <button 
-                onClick={() => navigate("/admin/login")} 
+              <button
+                onClick={() => navigate("/admin/login")}
                 className="px-4 py-2 text-xs font-bold text-white bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all"
               >
                 Admin
               </button>
-              <button 
-                onClick={() => navigate("/division/login")} 
+              <button
+                onClick={() => navigate("/division/login")}
                 className="px-4 py-2 text-xs font-bold text-white bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all"
               >
                 Division
