@@ -312,7 +312,7 @@ const MeetDevelopers = () => {
       <footer className="py-12 border-t border-gray-100 z-10 relative">
         <div className="container mx-auto px-6 text-center">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 py-10 opacity-60 hover:opacity-100 transition-opacity">
-            <p className="text-[12px] md:text-[14px] font-black tracking-[0.5em] text-[#182137] uppercase">DMCE COMP DEPT © 2024</p>
+            <p className="text-[12px] md:text-[14px] font-black tracking-[0.5em] text-[#182137] uppercase">DMCE COMP DEPT © 2026</p>
             <div className="h-[1px] flex-1 bg-gray-200 hidden md:block mx-10"></div>
             <p className="text-[12px] md:text-[14px] font-black tracking-[0.5em] text-[#1D3EA1] uppercase">HANDCRAFTED IN AIROLI</p>
           </div>
