@@ -1,20 +1,11 @@
 import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children, requiredRole }) {
-  // Check if user is logged in (has token)
-  const isAuthenticated = localStorage.getItem("token");
-
   // Check user role (admin or student)
   const userRole = localStorage.getItem("role");
 
-  // If not logged in, redirect to login page
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // If logged in but role is missing from localStorage, it's an inconsistent state
+  // If role is missing, we consider them not authenticated (or at least, we can't verify role)
   if (!userRole) {
-    localStorage.removeItem("token");
     return <Navigate to="/login" replace />;
   }
 

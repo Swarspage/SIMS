@@ -13,9 +13,8 @@ export default function DivisionInchargeLogin() {
 
     // ✅ REDIRECT IF ALREADY LOGGED IN
     React.useEffect(() => {
-        const token = localStorage.getItem("token");
         const role = localStorage.getItem("role");
-        if (token && (role === "admin" || role === "division" || role === "divisionIncharge")) {
+        if (role === "admin" || role === "division" || role === "divisionIncharge") {
             navigate("/admin/dashboard", { replace: true });
         }
     }, [navigate]);
@@ -38,10 +37,8 @@ export default function DivisionInchargeLogin() {
             // Setting role as 'division' to distinguish from super admin
             localStorage.setItem("role", "division");
 
-            const token = response.token || response.data?.token || response.accessToken;
-            if (token) {
-                localStorage.setItem("token", token);
-            }
+            // Token is now handled by httpOnly cookies via withCredentials: true
+            localStorage.removeItem("token"); // Cleanup just in case
 
             const user = response.user || response.data?.user;
             if (user) {

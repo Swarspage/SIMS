@@ -6,8 +6,7 @@ export const authService = {
     const response = await API.post("/auth/login", { studentID, password });
 
     if (response.data.token) {
-      localStorage.setItem("token", response.data.token);
-      console.log("✅ Token saved to localStorage");
+      console.log("✅ Login successful");
     }
 
     return response.data;
@@ -18,8 +17,7 @@ export const authService = {
     const response = await API.post("/auth/admin-login", { email, password });
 
     if (response.data.token) {
-      localStorage.setItem("token", response.data.token);
-      console.log("✅ Token saved to localStorage");
+      console.log("✅ Admin login successful");
     }
 
     return response.data;
@@ -33,8 +31,7 @@ export const authService = {
     });
 
     if (response.data.token) {
-      localStorage.setItem("token", response.data.token);
-      console.log("✅ Token saved to localStorage");
+      console.log("✅ Division login successful");
     }
 
     return response.data;
@@ -87,10 +84,12 @@ export const authService = {
     const response = await API.get("/auth/logout");
 
     localStorage.removeItem("token");
-    localStorage.removeItem("role"); // Ensure role is cleared too
+    localStorage.removeItem("role");
+    localStorage.removeItem("studentId");
+    localStorage.removeItem("studentName");
     localStorage.removeItem("adminId");
     localStorage.removeItem("adminEmail");
-    console.log("🗑️ Token and credentials removed from localStorage");
+    console.log("🗑️ Local storage cleared on logout");
 
     return response.data;
   },

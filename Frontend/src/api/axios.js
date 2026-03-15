@@ -13,36 +13,22 @@ const API = axios.create({
   withCredentials: true
 });
 
-// ✅ REQUEST INTERCEPTOR - Read from localStorage (NOT cookie)
-API.interceptors.request.use(
-  (config) => {
-    // ✅ CHANGED: Get token from localStorage instead of cookie
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-  (error) => {
-    console.error("❌ Request interceptor error:", error);
-    return Promise.reject(error);
-  }
-);
-
 // ✅ RESPONSE INTERCEPTOR
 API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // ✅ CHANGED: Clear localStorage instead of cookie
+      // ✅ CHANGED: Clear localStorage items instead of cookie
       localStorage.removeItem("token");
       localStorage.removeItem("role");
+      localStorage.removeItem("studentId");
+      localStorage.removeItem("studentName");
+      localStorage.removeItem("adminId");
+      localStorage.removeItem("adminEmail");
       
       // Only redirect if not already on a login page
       const path = window.location.pathname;
-      if (!path.includes("/login")) {
+      if (!path.includes("/login") && !path.includes("/signup")) {
         window.location.href = "/login";
       }
     }
