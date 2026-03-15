@@ -3,7 +3,7 @@ import { placementService } from "../services/placementService";
 import { higherStudiesService } from "../services/higherStudiesService";
 import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
-import Pagination from "../Components/Common/Pagination";
+import Pagination from "../components/Common/Pagination";
 
 // Placement Card Component - COMPACT
 function PlacementCard({ placement, onView, onDelete, onEdit, isDeleting }) {

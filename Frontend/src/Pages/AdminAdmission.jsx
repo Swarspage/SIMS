@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { admissionService } from "../services/admissionService";
 import { toast, Toaster } from "react-hot-toast";
-import Pagination from "../Components/Common/Pagination";
+import Pagination from "../components/Common/Pagination";
 
 // ==================== COMPONENTS ====================
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { divisionInchargeService } from "../services/divisionInchargeService";
 import { toast } from "react-toastify";
-import Pagination from "../Components/Common/Pagination";
+import Pagination from "../components/Common/Pagination";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 const YEARS = ["SE", "TE", "BE"];

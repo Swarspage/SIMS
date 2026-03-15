@@ -3,7 +3,7 @@ import avatar from "../assets/Students.png";
 import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
 
-import Pagination from "../Components/Common/Pagination";
+import Pagination from "../components/Common/Pagination";
 
 
 

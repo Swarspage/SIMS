@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { achievementService } from "../services/achievementService";
 import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
-import Pagination from "../Components/Common/Pagination";
+import Pagination from "../components/Common/Pagination";
 
 // Achievement Card Component - COMPACT & BEAUTIFUL
 function AchievementCard({ achievement, onView, onDelete, onEdit, isDeleting }) {

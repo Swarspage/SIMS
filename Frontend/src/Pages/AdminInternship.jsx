@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { internshipService } from "../services/internshipService";
 import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
-import Pagination from "../Components/Common/Pagination";
+import Pagination from "../components/Common/Pagination";
 
 // InternshipCard Component - COMPACT & BEAUTIFUL
 function InternshipCard({ internship, onView, onDelete, onEdit, isDeleting }) {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { semInfoService } from "../services/semInfoService";
 import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
-import Pagination from "../Components/Common/Pagination";
+import Pagination from "../components/Common/Pagination";
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 function DetailModal({ record, onClose }) {

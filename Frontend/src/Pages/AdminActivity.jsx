@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { activityService } from "../services/activityService";
 import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
-import Pagination from "../Components/Common/Pagination";
+import Pagination from "../components/Common/Pagination";
 
 // Activity Card Component - COMPACT & BEAUTIFUL
 function ActivityCard({ activity, onView, onDelete, onEdit, isDeleting }) {
