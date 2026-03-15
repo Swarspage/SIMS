@@ -10,6 +10,14 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // ✅ REDIRECT IF ALREADY LOGGED IN
+  React.useEffect(() => {
+    const role = localStorage.getItem("role");
+    if (role === "admin" || role === "division" || role === "divisionIncharge") {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, [navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((s) => ({ ...s, [name]: value }));
@@ -24,13 +32,8 @@ export default function AdminLoginPage() {
       const response = await authService.adminLogin(form.email, form.password);
       localStorage.setItem("role", "admin");
 
-      const token =
-        response.token || response.data?.token || response.accessToken;
-      if (token) {
-        localStorage.setItem("token", token);
-      } else {
-        localStorage.setItem("token", "logged-in");
-      }
+      // Token is now handled by httpOnly cookies via withCredentials: true
+      localStorage.removeItem("token"); // Cleanup just in case
 
       const admin = response.admin || response.data?.admin || response.user;
       if (admin) {

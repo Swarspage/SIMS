@@ -283,10 +283,20 @@ export default function StudentSemesterInfo() {
                         return;
                     }
                 } catch (retryErr) {
-                    toast.error(retryErr.response?.data?.message || "Failed to save");
+                    const resData = retryErr.response?.data;
+                    if (resData?.errors && Array.isArray(resData.errors)) {
+                        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+                    } else {
+                        toast.error(resData?.message || "Failed to save");
+                    }
                 }
             } else {
-                toast.error(err.response?.data?.message || "Failed to save");
+                const resData = err.response?.data;
+                if (resData?.errors && Array.isArray(resData.errors)) {
+                    resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+                } else {
+                    toast.error(resData?.message || "Failed to save");
+                }
             }
             console.error(err);
         } finally {

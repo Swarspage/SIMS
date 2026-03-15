@@ -14,6 +14,14 @@ export default function LoginPage() {
     return window.history.state?.usr?.message || "";
   });
 
+  // ✅ REDIRECT IF ALREADY LOGGED IN
+  React.useEffect(() => {
+    const role = localStorage.getItem("role");
+    if (role === "student") {
+      navigate("/student/dashboard", { replace: true });
+    }
+  }, [navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((s) => ({ ...s, [name]: value }));
@@ -28,13 +36,8 @@ export default function LoginPage() {
       const response = await authService.login(form.studentId, form.password);
       localStorage.setItem("role", "student");
 
-      const token =
-        response.token || response.data?.token || response.accessToken;
-      if (token) {
-        localStorage.setItem("token", token);
-      } else {
-        localStorage.setItem("token", "logged-in");
-      }
+      // Token is now handled by httpOnly cookies via withCredentials: true
+      localStorage.removeItem("token"); // Cleanup just in case
 
       const student =
         response.student || response.data?.student || response.user;

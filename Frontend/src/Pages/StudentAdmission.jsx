@@ -144,18 +144,12 @@ export default function StudentAdmission() {
       console.error("Error saving admission:", err);
       const resData = err.response?.data;
 
-      // Improved error reporting for Joi validation failures
-      let errorMsg = resData?.message || "Failed to save admission.";
-
       if (resData?.errors && Array.isArray(resData.errors)) {
-        // Joi returns details array in 'errors'
-        const details = resData.errors.map(e => e.message).join(" | ");
-        errorMsg = `Validation Error: ${details}`;
-      } else if (resData?.message) {
-        errorMsg = resData.message;
+        // Show each validation error as a separate toast
+        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+      } else {
+        toast.error(resData?.message || "Failed to save admission.");
       }
-
-      toast.error(errorMsg);
       window.scrollTo(0, 0);
     } finally {
       setSubmitting(false);
@@ -182,7 +176,6 @@ export default function StudentAdmission() {
   if (!isEditMode && hasData) {
     return (
       <main className="min-h-screen bg-slate-50 p-4 sm:p-8">
-        <ToastContainer position="top-right" autoClose={5000} theme="light" />
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Left Column: Summary Card */}
@@ -260,6 +253,7 @@ export default function StudentAdmission() {
   // =============== FORM VIEW (EDIT MODE) ===============
   return (
     <main className="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+      <ToastContainer position="top-right" autoClose={5000} theme="light" />
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">

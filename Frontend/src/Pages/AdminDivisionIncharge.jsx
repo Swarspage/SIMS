@@ -59,7 +59,12 @@ function DetailModal({ incharge, onClose, onEditEmail }) {
             onEditEmail();
             onClose();
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to change email.");
+            const resData = err.response?.data;
+            if (resData?.errors && Array.isArray(resData.errors)) {
+                resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+            } else {
+                toast.error(resData?.message || "Failed to change email.");
+            }
         } finally {
             setChangingEmail(false);
         }
@@ -164,7 +169,12 @@ function EditModal({ incharge, onClose, onSaved }) {
             onSaved();
             onClose();
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to update details.");
+            const resData = err.response?.data;
+            if (resData?.errors && Array.isArray(resData.errors)) {
+                resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+            } else {
+                toast.error(resData?.message || "Failed to update details.");
+            }
         } finally {
             setSaving(false);
         }
@@ -233,7 +243,12 @@ function AddModal({ onClose, onAdded }) {
             onAdded();
             onClose();
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to add Division Incharge.");
+            const resData = err.response?.data;
+            if (resData?.errors && Array.isArray(resData.errors)) {
+                resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+            } else {
+                toast.error(resData?.message || "Failed to add Division Incharge.");
+            }
         } finally {
             setSaving(false);
         }

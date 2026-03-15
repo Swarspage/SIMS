@@ -11,6 +11,14 @@ export default function DivisionInchargeLogin() {
     const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
+    // ✅ REDIRECT IF ALREADY LOGGED IN
+    React.useEffect(() => {
+        const role = localStorage.getItem("role");
+        if (role === "admin" || role === "division" || role === "divisionIncharge") {
+            navigate("/admin/dashboard", { replace: true });
+        }
+    }, [navigate]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((s) => ({ ...s, [name]: value }));
@@ -29,10 +37,8 @@ export default function DivisionInchargeLogin() {
             // Setting role as 'division' to distinguish from super admin
             localStorage.setItem("role", "division");
 
-            const token = response.token || response.data?.token || response.accessToken;
-            if (token) {
-                localStorage.setItem("token", token);
-            }
+            // Token is now handled by httpOnly cookies via withCredentials: true
+            localStorage.removeItem("token"); // Cleanup just in case
 
             const user = response.user || response.data?.user;
             if (user) {

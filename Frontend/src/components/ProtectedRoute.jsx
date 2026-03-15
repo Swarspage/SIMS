@@ -1,14 +1,11 @@
 import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children, requiredRole }) {
-  // Check if user is logged in (has token)
-  const isAuthenticated = localStorage.getItem("token");
-
   // Check user role (admin or student)
   const userRole = localStorage.getItem("role");
 
-  // If not logged in, redirect to login page
-  if (!isAuthenticated) {
+  // If role is missing, we consider them not authenticated (or at least, we can't verify role)
+  if (!userRole) {
     return <Navigate to="/login" replace />;
   }
 
@@ -18,11 +15,18 @@ export default function ProtectedRoute({ children, requiredRole }) {
     : userRole === requiredRole;
 
   if (requiredRole && !hasPermission) {
-    if (userRole === "admin" || userRole === "division" || userRole === "division_incharge") {
-      // Handle both "division" (used in user's Login component) and "division_incharge" (used in backend/plan)
-      return <Navigate to="/admin/dashboard" replace />;
-    } else {
-      return <Navigate to="/student/dashboard" replace />;
+    // Determine the safe dashboard for this user
+    let target = "/login";
+    if (userRole === "admin" || userRole === "division" || userRole === "division_incharge" || userRole === "divisionIncharge") {
+      target = "/admin/dashboard";
+    } else if (userRole === "student") {
+      target = "/student/dashboard";
+    }
+
+    // Only redirect if we're not actually already on that target path (to prevent loops)
+    // Note: window.location.pathname check is a safeguard
+    if (window.location.pathname !== target) {
+      return <Navigate to={target} replace />;
     }
   }
 

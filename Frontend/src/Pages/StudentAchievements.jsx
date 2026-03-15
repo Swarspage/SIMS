@@ -159,11 +159,12 @@ export default function StudentAchievements() {
 
   const fetchAchievements = async () => {
     try {
-      const studentId = achievementService.getStudentIdFromToken();
-      if (!studentId) return;
+      const studentId = localStorage.getItem("studentId");
       const data = await achievementService.getAchievementsByStu();
       setAchievements(Array.isArray(data) ? data : []);
-      setFormData((prev) => ({ ...prev, studentID: studentId }));
+      if (studentId) {
+        setFormData((prev) => ({ ...prev, studentID: studentId }));
+      }
     } catch (err) {
       console.error("Error fetching achievements:", err);
       toast.error("Failed to load achievements");
@@ -191,7 +192,7 @@ export default function StudentAchievements() {
   };
 
   const resetForm = () => {
-    const studentId = achievementService.getStudentIdFromToken();
+    const studentId = localStorage.getItem("studentId");
     setFormData({
       studentID: studentId || "",
       category: "",
@@ -233,7 +234,7 @@ export default function StudentAchievements() {
 
     setFormData({
       studentID:
-        achievement.stuID || achievementService.getStudentIdFromToken(),
+        achievement.stuID || localStorage.getItem("studentId"),
       category: parsedCategory,
       otherCategory: parsedOther,
       title: achievement.title || "",
@@ -314,14 +315,12 @@ export default function StudentAchievements() {
     } catch (err) {
       console.error("Error saving achievement:", err);
       const resData = err.response?.data;
-      let errorMsg = resData?.message || "Failed to save achievement.";
 
       if (resData?.errors && Array.isArray(resData.errors)) {
-        const details = resData.errors.map(e => `${e.field}: ${e.message}`).join(", ");
-        errorMsg += ` (${details})`;
+        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+      } else {
+        toast.error(resData?.message || "Failed to save achievement.");
       }
-
-      toast.error(errorMsg);
     } finally {
       setFormLoading(false);
     }
