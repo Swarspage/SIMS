@@ -1,3 +1,4 @@
+// Vercel trigger comment - re-deploying after auth migration
 import axios from "axios";
 
 // Backend URL
