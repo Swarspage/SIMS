@@ -182,7 +182,6 @@ export default function StudentAdmission() {
   if (!isEditMode && hasData) {
     return (
       <main className="min-h-screen bg-slate-50 p-4 sm:p-8">
-        <ToastContainer position="top-right" autoClose={5000} theme="light" />
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Left Column: Summary Card */}
@@ -260,6 +259,7 @@ export default function StudentAdmission() {
   // =============== FORM VIEW (EDIT MODE) ===============
   return (
     <main className="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+      <ToastContainer position="top-right" autoClose={5000} theme="light" />
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
