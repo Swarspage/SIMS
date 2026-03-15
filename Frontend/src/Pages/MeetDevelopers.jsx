@@ -22,7 +22,7 @@ const teamGroups = [
     icon: <FaServer />,
     description: "Building robust servers and secure data management.",
     members: [
-      { name: "Aastha Oswal", role: "Backend Developer", image: aasthaImg, linkedin: "#", github: "#", portfolio: "#" },
+      { name: "Aastha Oswal", role: "Backend Developer", image: aasthaImg, linkedin: "https://www.linkedin.com/in/aasthaoswal/", github: "https://github.com/AasthaOswal", portfolio: "#" },
       { name: "Sanika Salunkhe", role: "Backend Developer", image: sanikaImg, linkedin: "https://www.linkedin.com/in/sanika-salunkhe-18a237329/", github: "https://github.com/SanikaSalunkhe1", portfolio: "#" },
     ]
   },
