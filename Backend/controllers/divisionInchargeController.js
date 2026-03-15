@@ -110,7 +110,7 @@ const getMyProfile = async (req,res)=>{
 		const divisionInchargeId = id;
 
 
-		const incharge = await DivisionIncharge.findById(divisionInchargeId).select("-password");
+		const incharge = await DivisionIncharge.findById(divisionInchargeId).select("-password").lean();
 
 		if (!incharge) {
 			return res.status(404).json({ success: false, message: "Division Incharge not found" });
@@ -138,7 +138,7 @@ const getSingleDivisionInchargeById = async (req, res) => {
 		const divisionInchargeId = id;
 
 
-		const incharge = await DivisionIncharge.findById(divisionInchargeId).select("-password");
+		const incharge = await DivisionIncharge.findById(divisionInchargeId).select("-password").lean();
 
 		if (!incharge) {
 			return res.status(404).json({ success: false, message: "Division Incharge not found" });

@@ -148,7 +148,7 @@ exports.adminDashboard = async (req, res) => {
       Achievement.find()
         .sort({ createdAt: -1 })
         .limit(5)
-        .populate("stuID", "studentID name year division branch")
+        .populate("stuID", "studentID name year division branch").lean()
 
     ]);
 

@@ -453,7 +453,7 @@ const getInternships = async (req, res) => {
         }
 
         if (search) {
-            const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#]/g);
+            const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
             match.$or = [
                 { companyName: { $regex: safeSearch, $options: "i" } },
                 { role: { $regex: safeSearch, $options: "i" } },
@@ -722,7 +722,7 @@ const getOwnInternships = async (req, res) => {
     try {
         const studentId = req.user.id; // always the logged-in student
 
-        const internships = await Internship.find({ stuID: studentId }).sort({ startDate: -1 });
+        const internships = await Internship.find({ stuID: studentId }).sort({ startDate: -1 }).lean();
 
         return res.status(200).json({ success: true, data: internships });
     } catch (err) {
@@ -764,7 +764,7 @@ const getStudentInternshipsByAdmin = async (req, res) => {
                 path: "stuID",
                 select: "name branch year division"  // only these fields
             })
-            .sort({ startDate: -1 });
+            .sort({ startDate: -1 }).lean();
 
         return res.status(200).json({ success: true, data: internships });
     } catch (err) {
@@ -795,7 +795,7 @@ const getSingleInternship = async (req, res) => {
             query = query.populate("stuID", "year division");
         }
 
-        const internship = await query; // execute once
+        const internship = await query.lean(); // execute once
         if (!internship) {
             return res.status(404).json({ success: false, message: "Internship not found" });
         }

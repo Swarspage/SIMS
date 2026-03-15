@@ -236,7 +236,7 @@ const getSingleHigherStudy = async (req, res) => {
             query = query.populate("stuID", "name branch year division");
         }
 
-        const higherStudy = await query; // execute once
+        const higherStudy = await query.lean(); // execute once
         if (!higherStudy) {
             return res.status(404).json({ success: false, message: "HigherStudy not found" });
         }
@@ -526,7 +526,7 @@ const getHigherStudies2 = async (req, res) => {
 const getOwnHigherStudies = async (req, res) => {
     try {
         const studentId = req.user.id;
-        const studies = await HigherStudies.find({ stuID: studentId }).sort({ createdAt: -1 });
+        const studies = await HigherStudies.find({ stuID: studentId }).sort({ createdAt: -1 }).lean();
         return res.status(200).json({ success: true, data: studies });
     } catch (err) {
         console.error("Error in getOwnHigherStudies:", err);
@@ -549,7 +549,7 @@ const getHigherStudiesByStudent = async (req, res) => {
             }
         }
 
-        const studies = await HigherStudies.find({ stuID: studentId }).sort({ createdAt: -1 });
+        const studies = await HigherStudies.find({ stuID: studentId }).sort({ createdAt: -1 }).lean();
         return res.status(200).json({ success: true, data: studies });
     } catch (err) {
         console.error("Error in getHigherStudiesByStudent:", err);

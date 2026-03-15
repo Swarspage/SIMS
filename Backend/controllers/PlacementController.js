@@ -698,6 +698,10 @@ const getPlacementsByStudentId = async (req, res) => {
 		if(req.user.role === "divisionIncharge"){
 			const student = await Student.findById(studentId);
 
+			if(!student){
+				return res.status(404).json({ success: false, message: "Student not found." });
+			}
+
 			if(student.year !== req.user.year || student.division !== req.user.division){
 				return res.status(403).json({success : false, message: "You can only access students of your own division."});
 			}
@@ -731,7 +735,7 @@ const getSinglePlacement = async (req, res) => {
 			query = query.populate("stuID", "year division");
 		}
 		
-		const existingPlacement = await query; // execute once
+		const existingPlacement = await query.lean(); // execute once
 		if (!existingPlacement) {
 			return res.status(404).json({ success: false, message: "Placement not found" });
 		}

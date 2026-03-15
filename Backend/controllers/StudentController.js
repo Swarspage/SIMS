@@ -1217,7 +1217,7 @@ const getSingleStudent = async (req, res) => {
     }
 
 
-    const student = await Student.findById(studentId).select("-password -__v");
+    const student = await Student.findById(studentId).select("-password -__v").lean();
     if (!student) {
       return res.status(404).json({ success: false, message: "Student not found" });
     }
@@ -1247,7 +1247,7 @@ const getStudentById = async (req, res) => {
       return res.status(400).json({ success: false, message: "Student ID is required, Please Login first" });
     }
 
-    const student = await Student.findById(studentId).select("-password -__v");
+    const student = await Student.findById(studentId).select("-password -__v").lean();
     if (!student) {
       return res.status(404).json({ success: false, message: "Student not found" });
     }
