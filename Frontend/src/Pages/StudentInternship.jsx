@@ -156,6 +156,22 @@ export default function StudentInternship() {
     fetchInternships();
   }, []);
 
+  // Auto-calculate duration
+  useEffect(() => {
+    if (formData.startDate && formData.endDate) {
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+      
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
+        const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+        // If the day of month of end date is less than start date, it's not a full month
+        // but for internship usually rounded up or strict diff is fine. 
+        // Let's use a simple month diff.
+        setFormData(prev => ({ ...prev, durationMonths: Math.max(1, months).toString() }));
+      }
+    }
+  }, [formData.startDate, formData.endDate]);
+
   const fetchInternships = async () => {
     try {
       const response = await internshipService.getOwnInternships();
@@ -170,12 +186,28 @@ export default function StudentInternship() {
     }
   };
 
+  const formatIndianCurrency = (val) => {
+    if (!val) return "";
+    const num = val.toString().replace(/,/g, "");
+    if (isNaN(num)) return val;
+    return new Intl.NumberFormat("en-IN").format(num);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    if (name === "stipend") {
+      // Remove commas before saving to state
+      const rawValue = value.replace(/,/g, "");
+      if (!isNaN(rawValue) || rawValue === "") {
+        setFormData((prev) => ({ ...prev, [name]: rawValue }));
+      }
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handlePhotoChange = (e) => {
@@ -482,11 +514,11 @@ export default function StudentInternship() {
                       Stipend Amount (₹)
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       name="stipend"
-                      value={formData.stipend}
+                      value={formatIndianCurrency(formData.stipend)}
                       onChange={handleChange}
-                      placeholder="Enter amount"
+                      placeholder="e.g. 10,000"
                       className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
                       disabled={formData.isPaid !== "paid"}
                       required={formData.isPaid === "paid"}

@@ -73,9 +73,25 @@ export default function StudentAdmission() {
     }
   };
 
+  const formatIndianCurrency = (val) => {
+    if (!val) return "";
+    const num = val.toString().replace(/,/g, "");
+    if (isNaN(num)) return val;
+    return new Intl.NumberFormat("en-IN").format(num);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "fees") {
+      // Remove commas before saving to state
+      const rawValue = value.replace(/,/g, "");
+      if (!isNaN(rawValue) || rawValue === "") {
+        setFormData((prev) => ({ ...prev, [name]: rawValue }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -287,7 +303,14 @@ export default function StudentAdmission() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="md:col-span-2">
-                <InputField label="Course" name="course" value={formData.course} onChange={handleChange} required />
+                <SelectField
+                  label="Course"
+                  name="course"
+                  value={formData.course}
+                  onChange={handleChange}
+                  required
+                  options={["Computer Engineering"]}
+                />
               </div>
               <div className="md:col-span-2">
                 <InputField label="Academic Year" name="academicYear" value={formData.academicYear} onChange={handleChange} required placeholder="2024-2025" disabled={hasData} title={hasData ? "Academic Year cannot be changed once submitted" : ""} />
@@ -313,7 +336,15 @@ export default function StudentAdmission() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <InputField label="Fees Amount (₹)" name="fees" type="number" value={formData.fees} onChange={handleChange} required />
+              <InputField
+                label="Fees Amount (₹)"
+                name="fees"
+                type="text"
+                value={formatIndianCurrency(formData.fees)}
+                onChange={handleChange}
+                required
+                placeholder="e.g. 1,00,000"
+              />
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
