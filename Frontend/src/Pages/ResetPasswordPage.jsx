@@ -42,11 +42,13 @@ export default function ResetPasswordPage({ role = "student" }) {
       setSuccess(true);
       setTimeout(() => navigate(loginLink), 3000);
     } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        "Password reset failed. The link may have expired.";
-      setError(msg);
+      console.error(err);
+      const resData = err.response?.data;
+      if (resData?.errors && Array.isArray(resData.errors)) {
+        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+      } else {
+        setError(resData?.message || resData?.error || "Failed to reset password");
+      }
     } finally {
       setLoading(false);
     }

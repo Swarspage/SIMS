@@ -314,14 +314,12 @@ export default function StudentAchievements() {
     } catch (err) {
       console.error("Error saving achievement:", err);
       const resData = err.response?.data;
-      let errorMsg = resData?.message || "Failed to save achievement.";
 
       if (resData?.errors && Array.isArray(resData.errors)) {
-        const details = resData.errors.map(e => `${e.field}: ${e.message}`).join(", ");
-        errorMsg += ` (${details})`;
+        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+      } else {
+        toast.error(resData?.message || "Failed to save achievement.");
       }
-
-      toast.error(errorMsg);
     } finally {
       setFormLoading(false);
     }

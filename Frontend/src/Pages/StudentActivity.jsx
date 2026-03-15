@@ -248,14 +248,12 @@ export default function StudentActivity() {
     } catch (err) {
       console.error("Error saving activity:", err);
       const resData = err.response?.data;
-      let errorMsg = resData?.message || "Failed to save activity.";
 
       if (resData?.errors && Array.isArray(resData.errors)) {
-        const details = resData.errors.map(e => `${e.field}: ${e.message}`).join(", ");
-        errorMsg += ` (${details})`;
+        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+      } else {
+        toast.error(resData?.message || "Failed to save activity.");
       }
-
-      toast.error(errorMsg);
     } finally {
       setFormLoading(false);
     }

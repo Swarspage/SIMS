@@ -458,10 +458,16 @@ export default function StudentPlacement() {
       }
       setTimeout(() => setView("list"), 500);
     } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-        "Failed to save data. Please try again."
-      );
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        error.response.data.errors.forEach(err => {
+          toast.error(err.message || `${err.field} is invalid`);
+        });
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+          "Failed to save data. Please try again."
+        );
+      }
     } finally {
       setFormLoading(false);
     }

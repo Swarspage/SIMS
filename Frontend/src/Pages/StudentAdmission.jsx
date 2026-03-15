@@ -144,18 +144,12 @@ export default function StudentAdmission() {
       console.error("Error saving admission:", err);
       const resData = err.response?.data;
 
-      // Improved error reporting for Joi validation failures
-      let errorMsg = resData?.message || "Failed to save admission.";
-
       if (resData?.errors && Array.isArray(resData.errors)) {
-        // Joi returns details array in 'errors'
-        const details = resData.errors.map(e => e.message).join(" | ");
-        errorMsg = `Validation Error: ${details}`;
-      } else if (resData?.message) {
-        errorMsg = resData.message;
+        // Show each validation error as a separate toast
+        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+      } else {
+        toast.error(resData?.message || "Failed to save admission.");
       }
-
-      toast.error(errorMsg);
       window.scrollTo(0, 0);
     } finally {
       setSubmitting(false);

@@ -40,11 +40,16 @@ export default function SignupPage() {
         state: { message: "Signup successful! Please login." },
       });
     } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        "Signup failed. Please try again.";
-      setError(msg);
+      const resData = err.response?.data;
+      if (resData?.errors && Array.isArray(resData.errors)) {
+        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
+        // Optionally, if you still want to display a single error message in the form:
+        setError(resData.errors[0].message || "Validation Error");
+      } else {
+        const msg = resData?.message || resData?.error || "Signup failed. Please try again.";
+        toast.error(msg);
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

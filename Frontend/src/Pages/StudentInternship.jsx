@@ -302,13 +302,12 @@ export default function StudentInternship() {
       await fetchInternships();
       setTimeout(() => setView("list"), 500);
     } catch (err) {
-      if (err.response?.data?.errors) {
-        const errorMessages = err.response.data.errors
-          .map((e) => `${e.field}: ${e.message}`)
-          .join(", ");
-        toast.error(errorMessages);
+      const resData = err.response?.data;
+
+      if (resData?.errors && Array.isArray(resData.errors)) {
+        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
       } else {
-        toast.error(err.response?.data?.message || "Failed to save internship");
+        toast.error(resData?.message || "Failed to save internship");
       }
       console.error(err);
     } finally {
