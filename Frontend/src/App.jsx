@@ -103,6 +103,7 @@ import AdminPlacement from "./Pages/AdminPlacement";
 import AdminAdmission from "./Pages/AdminAdmission";
 import AdminSemesterInfo from "./Pages/AdminSemesterInfo";
 import AdminDivisionIncharge from "./Pages/AdminDivisionIncharge";
+import MeetDevelopers from "./Pages/MeetDevelopers";
 
 // Student Pages
 import StudentActivity from "./Pages/StudentActivity";
@@ -137,6 +138,7 @@ const App = () => {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage role="student" />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage role="student" />} />
+        <Route path="/developers" element={<MeetDevelopers />} />
 
         {/* Admin Routes - PROTECTED */}
         {/* Note: Updated requiredRole to allow 'division' role to access admin dashboard */}

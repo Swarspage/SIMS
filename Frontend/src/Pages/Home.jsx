@@ -9,22 +9,7 @@ import hodPhoto from "../assets/hod_photo.png";
 import dmceLogo from "../assets/dmce_logo_new.png";
 import csiLogo from "../assets/csi_logo_new.png";
 
-// Developer Images
-import yashImg from "../assets/Yash.JPG";
-import sanikaImg from "../assets/Sanika.png";
-import atharvImg from "../assets/Atharv.png";
-import aasthaImg from "../assets/Aastha.png";
-import shrutiImg from "../assets/Shruti.png";
-import swarImg from "../assets/swar.png";
-
-const developers = [
-{ name: "Yash Sunder Bawari", role: "Frontend Developer", image: yashImg, linkedin: "https://www.linkedin.com/in/yash-bawari-5a3379313/", github: "https://github.com/YashBawari18", portfolio: "https://my-portfolio-six-alpha-47.vercel.app/" },
-{ name: "Aastha Oswal", role: "Backend Developer", image: aasthaImg, linkedin: "#", github: "#", portfolio: "#" },
-{ name: "Swar Shinde", role: "Frontend Developer", image: swarImg, linkedin: "https://www.linkedin.com/in/swar-shinde-91131a2b9/", github: "https://github.com/Swarspage", portfolio: "https://swarspage.github.io/My-Portfolio/" },
-{ name: "Sanika Salunkhe", role: "Backend Developer", image: sanikaImg, linkedin: "https://www.linkedin.com/in/sanika-salunkhe-18a237329/", github: "https://github.com/SanikaSalunkhe1", portfolio: "#" },
-{ name: "Atharv Santosh Kotwal", role: "UI/UX Designer", image: atharvImg, linkedin: "https://www.linkedin.com/in/atharv-kotwal-b95559330?", github: "https://github.com/GrandPredator", portfolio: "#" },
-{ name: "Shruti Gaonkar", role: "Documentation", image: shrutiImg, linkedin: "https://github.com/ShrutiGaonkar19", github: "#", portfolio: "#" },
-];
+// Developer Images - Removed (Now in MeetDevelopers.jsx)
 
 const events = [
   { title: "Code Quest 2024", date: "March 25, 2024", image: facultyGroup, desc: "A 24-hour hackathon to solve real-world problems." },
@@ -43,7 +28,6 @@ const Home = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeEvent, setActiveEvent] = useState(0);
-  const [activeDev, setActiveDev] = useState(0);
 
   // Scroll Reveal Logic
   useEffect(() => {
@@ -70,9 +54,6 @@ const Home = () => {
   const nextEvent = () => setActiveEvent((prev) => (prev + 1) % events.length);
   const prevEvent = () => setActiveEvent((prev) => (prev - 1 + events.length) % events.length);
 
-  const nextDev = () => setActiveDev((prev) => (prev + 1) % developers.length);
-  const prevDev = () => setActiveDev((prev) => (prev - 1 + developers.length) % developers.length);
-
   return (
     <div className="min-h-screen bg-white text-gray-900 selection:bg-blue-500/30 overflow-x-hidden">
       {/* 
@@ -95,10 +76,13 @@ const Home = () => {
             <a href="#college" className="text-sm font-medium hover:text-[#1D3EA1] transition-colors uppercase">College</a>
             <a href="#about" className="text-sm font-medium hover:text-[#1D3EA1] transition-colors uppercase">About</a>
             <a href="#events" className="text-sm font-medium hover:text-[#1D3EA1] transition-colors uppercase">Events</a>
-            <a href="#developers" className="text-sm font-bold flex items-center gap-2 text-gray-800 hover:text-[#1D3EA1] transition-colors group">
+            <button 
+              onClick={() => navigate("/developers")} 
+              className="text-sm font-bold flex items-center gap-2 text-gray-800 hover:text-[#1D3EA1] transition-colors group"
+            >
               <span className="status-dot"></span>
-              DEVELOPER
-            </a>
+              DEVELOPERS
+            </button>
           </nav>
 
           <div className="flex items-center space-x-4">
@@ -127,10 +111,13 @@ const Home = () => {
             <a href="#college" className="block font-medium" onClick={() => setIsMenuOpen(false)}>COLLEGE</a>
             <a href="#about" className="block font-medium" onClick={() => setIsMenuOpen(false)}>ABOUT</a>
             <a href="#events" className="block font-medium" onClick={() => setIsMenuOpen(false)}>EVENTS</a>
-            <a href="#developers" className="flex items-center gap-3 font-bold text-gray-900 uppercase" onClick={() => setIsMenuOpen(false)}>
+            <button 
+              className="flex items-center gap-3 font-bold text-gray-900 uppercase pr-4" 
+              onClick={() => { setIsMenuOpen(false); navigate("/developers"); }}
+            >
               <span className="status-dot"></span>
-              Developer
-            </a>
+              Developers
+            </button>
             <div className="pt-4 space-y-2 border-t border-gray-100">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-2">Portals</p>
               <button onClick={() => navigate("/login")} className="w-full py-3 bg-[#1D3EA1] text-white rounded-xl font-bold transition-colors">Student Login</button>
@@ -314,122 +301,6 @@ const Home = () => {
 
       {/* 
         ========================================
-        DEVELOPERS SECTION (Crazy Mobile Design)
-        ========================================
-      */}
-      <section id="developers" className="py-20 md:py-40 bg-white relative overflow-hidden">
-        {/* Background Decorative Text */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full text-center pointer-events-none select-none overflow-hidden opacity-[0.03]">
-          <h1 className="text-[15vw] md:text-[20vw] font-black tracking-tighter text-[#1D3EA1] whitespace-nowrap">
-            DEVELOPERS
-          </h1>
-        </div>
-
-        <div className="container mx-auto px-6 text-center relative z-10">
-          <div className="reveal reveal-y mb-24">
-            <div className="flex items-center justify-center space-x-4 mb-6">
-              <div className="h-[1px] w-12 bg-blue-500/20"></div>
-              <span className="text-[#1D3EA1] font-black tracking-[0.8em] text-[10px] uppercase">CREATIVE MINDS</span>
-              <div className="h-[1px] w-12 bg-blue-500/20"></div>
-            </div>
-            <h2 className="text-5xl md:text-8xl font-black mb-6 tracking-tighter text-[#182137]">MEET THE DEVELOPERS</h2>
-            <p className="text-gray-600 font-bold tracking-widest uppercase text-xs">The faces behind the innovation</p>
-          </div>
-
-          <div className="relative min-h-[650px] md:min-h-[850px] flex items-center justify-center">
-            {developers.map((dev, index) => {
-              const isActive = index === activeDev;
-              const offset = (index - activeDev + developers.length) % developers.length;
-
-              return (
-                <div
-                  key={index}
-                  onClick={() => setActiveDev(index)}
-                  className={`absolute w-full max-w-[360px] md:max-w-[460px] transition-all duration-700 cursor-pointer preserve-3d
-                    ${isActive ? "z-30 opacity-100 translate-y-0 scale-105" :
-                      offset === 1 || offset === -4 ? "z-20 scale-85 opacity-20 translate-x-[75%] md:translate-x-[115%] rotate-y-[-35deg] blur-[4px]" :
-                        offset === developers.length - 1 || offset === 4 ? "z-20 scale-85 opacity-20 translate-x-[-75%] md:translate-x-[-115%] rotate-y-[35deg] blur-[4px]" :
-                          "z-10 scale-75 opacity-0 invisible"
-                    }
-                  `}
-                >
-                  <div className={`relative group glass-card p-[2px] rounded-[3.5rem] transition-all duration-700 overflow-visible ${isActive ? "shadow-2xl border-[#1D3EA1]" : "border-gray-100"}`}>
-
-                    <div className={`bg-white rounded-[3.4rem] p-10 md:p-14 h-full relative overflow-hidden`}>
-
-                      {/* Hello HUD */}
-                      <div className={`absolute top-4 right-4 md:top-8 md:right-10 px-3 py-1 md:px-5 md:py-2 bg-blue-50 backdrop-blur-2xl rounded-sm border-l-4 border-[#1D3EA1] z-30 transition-all duration-700 pointer-events-none ${isActive ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}`}>
-                        <span className="text-[8px] md:text-[10px] font-black text-[#1D3EA1] uppercase tracking-[0.3em] flex items-center gap-2 md:gap-3">
-                          <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-[#1D3EA1] animate-pulse"></span>
-                          Hello..!! 👋
-                        </span>
-                      </div>
-
-                      <div className="relative w-40 h-40 sm:w-56 sm:h-56 md:w-64 md:h-64 mx-auto mb-12">
-
-                        {/* Image Power Glow */}
-                        {isActive && (
-                          <>
-                            <div className="absolute inset-0 bg-blue-100 blur-[80px] rounded-full animate-pulse"></div>
-                          </>
-                        )}
-
-                        <div className={`relative w-full h-full rounded-full overflow-hidden border-4 transition-all duration-700 ${isActive ? "border-[#1D3EA1] scale-110 shadow-xl" : "border-gray-100 opacity-30 grayscale"}`}>
-                          <img
-                            src={dev.image}
-                            alt={dev.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="text-center relative z-10">
-                        <div className="flex items-center justify-center space-x-2 mb-3">
-                          <div className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-[#1D3EA1] shadow-[0_0_8px_#1D3EA1]" : "bg-gray-300"}`}></div>
-                          <span className={`text-[9px] font-black tracking-[0.5em] uppercase transition-colors ${isActive ? "text-[#1D3EA1]" : "text-gray-400"}`}>CORE DEVELOPER</span>
-                        </div>
-                        <h3 className={`text-3xl md:text-5xl font-black mb-6 tracking-tighter transition-all duration-700 ${isActive ? "text-[#182137] scale-105" : "text-gray-300"}`}>{dev.name}</h3>
-
-                        <div className="flex justify-center mb-12">
-                          <div className={`px-8 py-3 rounded-full text-[11px] font-black tracking-[0.3em] uppercase transition-all duration-500 relative group/btn overflow-hidden ${isActive ? "bg-blue-50 text-[#1D3EA1] border border-blue-100" : "bg-gray-50 text-gray-400"}`}>
-                            <span className="relative z-10">{dev.role}</span>
-                          </div>
-                        </div>
-
-                        <div className={`flex justify-center space-x-10 transition-all duration-700 delay-500 ${isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"}`}>
-                          <a href={dev.linkedin} className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-2xl text-gray-500 hover:text-[#1D3EA1] border border-gray-100 shadow-sm transition-all hover:-translate-y-2"><FaLinkedin /></a>
-                          <a href={dev.github} className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-2xl text-gray-500 hover:text-gray-900 border border-gray-100 shadow-sm transition-all hover:-translate-y-2"><FaGithub /></a>
-                          <a href={dev.portfolio} className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-2xl text-gray-500 hover:text-blue-400 border border-gray-100 shadow-sm transition-all hover:-translate-y-2"><FaGlobe /></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Sidebar Navigation Controls */}
-            <div className="absolute inset-0 flex items-center justify-between pointer-events-none z-40 -mx-6 sm:-mx-12 md:-mx-24">
-              <button
-                onClick={(e) => { e.stopPropagation(); prevDev(); }}
-                className="w-10 h-10 md:w-14 md:h-14 rounded-full glass-card flex items-center justify-center hover:bg-gray-50 transition-all border border-gray-200 group pointer-events-auto shadow-sm"
-              >
-                <FaChevronLeft className="text-[#1D3EA1] text-sm md:text-xl group-hover:-translate-x-1 transition-transform" />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); nextDev(); }}
-                className="w-10 h-10 md:w-14 md:h-14 rounded-full glass-card flex items-center justify-center hover:bg-gray-50 transition-all border border-gray-200 group pointer-events-auto shadow-sm"
-              >
-                <FaChevronRight className="text-[#1D3EA1] text-sm md:text-xl group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* 
-        ========================================
         FOOTER
         ========================================
       */}
@@ -456,6 +327,7 @@ const Home = () => {
               <li><a href="#college" className="hover:text-[#1D3EA1] transition-all">College</a></li>
               <li><a href="#about" className="hover:text-[#1D3EA1] transition-all">About</a></li>
               <li><a href="#events" className="hover:text-[#1D3EA1] transition-all">Events</a></li>
+              <li><button onClick={() => navigate("/developers")} className="hover:text-[#1D3EA1] transition-all text-left">Developers</button></li>
             </ul>
           </div>
 
