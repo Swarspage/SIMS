@@ -26,9 +26,14 @@ export default function StudentDashboard() {
       const data = await dashboardService.getStudentDashboard();
 
       if (data && data.stats) {
-        setStats(data.stats);
-        setActivityDistribution(data.activityDistribution || []);
-        setAchievementDistribution(data.achievementDistribution || []);
+        setStats({
+          ...data.stats,
+          internshipStatus: data.stats.totalInternships > 0 ? "Done" : "Pending",
+          placementStatus: data.stats.totalPlacements > 0 ? "Placed" : "Not Placed",
+          higherStudiesStatus: data.stats.totalHigherStudies > 0 ? "Applied" : "Not Applied",
+        });
+        setActivityDistribution(data.activitiesByType || []);
+        setAchievementDistribution(data.achievementsByCategory || []);
       }
     } catch (error) {
       console.error("Error fetching student dashboard data:", error);
