@@ -12,8 +12,7 @@ const {
 const exportToExcel = require("../helpers/excel/exportToExcel");
 const { transformAdmission, admissionColumnMap } = require("../helpers/excel/exportTransformers");
 
-//helper
-//Build a 400 validation-error response from Joi details 
+// Build a 400 validation-error response from Joi details
 const validationErrorResponse = (res, details) =>
   res.status(400).json({
     success: false,
@@ -25,7 +24,9 @@ const validationErrorResponse = (res, details) =>
   });
 
 
-// create admission => student | admin | DI
+/*  CREATE ADMISSION  */
+// Roles: student | admin | divisionIncharge
+
 const createAdmission = async (req, res) => {
   try {
     const { error, value } = admissionCreateSchema.validate(req.body, {
@@ -36,30 +37,34 @@ const createAdmission = async (req, res) => {
     if (error) return validationErrorResponse(res, error.details);
 
     let stuID;
-    let student;   //resolved in all role branches
+    let student; // resolved in all role branches
 
-    // Role-based ownership
     if (req.user.role === "student") {
-      student = await Student.findById(req.user.id);
+      // FIX: .lean() — we only need plain fields (year, division) for the admission record
+      student = await Student.findById(req.user.id).lean();
       if (!student) {
         return res.status(404).json({ success: false, message: "Student not found" });
       }
       stuID = student._id;
     } else if (["admin", "divisionIncharge"].includes(req.user.role)) {
-      const rawStudentId = req.body.studentId;
+      // FIX: studentId is read from raw body and trimmed manually before use,
+      // since admissionCreateSchema strips unknown fields and does not include studentId.
+      const rawStudentId = typeof req.body.studentId === "string"
+        ? req.body.studentId.trim()
+        : req.body.studentId;
 
       if (!rawStudentId) {
         return res.status(400).json({ success: false, message: "studentId is required" });
       }
 
-      // Support both MongoDB ObjectId and custom studentID field
+      // Support both MongoDB ObjectId and custom studentID field.
       // Only fall back to findOne when rawStudentId is NOT a valid ObjectId,
-      // preventing a wasted query (an ObjectId string never matches studentID field)
-      let student;
+      // preventing a wasted query (an ObjectId string never matches studentID field).
+      // FIX: .lean() — read-only lookup
       if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
-        student = await Student.findById(rawStudentId);
+        student = await Student.findById(rawStudentId).lean();
       } else {
-        student = await Student.findOne({ studentID: rawStudentId });
+        student = await Student.findOne({ studentID: rawStudentId }).lean();
       }
 
       if (!student) {
@@ -68,7 +73,6 @@ const createAdmission = async (req, res) => {
 
       stuID = student._id;
 
-      // For Division Incharge, ensure the student belongs to their division
       // Division Incharge restriction
       if (
         req.user.role === "divisionIncharge" &&
@@ -81,7 +85,8 @@ const createAdmission = async (req, res) => {
       }
     }
 
-    // All validated fields from value are explicitly assigned to the model
+    // All validated fields from value are explicitly assigned to the model.
+    // year and div are sourced from the student record — not trusted from client input.
     const admission = new Admission({
       stuID,
       rollno: value.rollno,
@@ -96,8 +101,6 @@ const createAdmission = async (req, res) => {
       hasMigrationCertificate: value.hasMigrationCertificate,
       migrationExpectedDate: value.migrationExpectedDate,
       migrationNotAvailableReason: value.migrationNotAvailableReason,
-
-      // Sourced from the student record — not trusted from client input
       year: student.year,
       div: student.division,
     });
@@ -123,10 +126,15 @@ const createAdmission = async (req, res) => {
 };
 
 
-// get student their own admissions
+/*  GET OWN ADMISSIONS (STUDENT)  */
+
 const getAdmissionsByStudent = async (req, res) => {
   try {
-    const admissions = await Admission.find({ stuID: req.user.id }).sort({ createdAt: -1 });
+    // FIX: .lean() — read-only list endpoint
+    const admissions = await Admission.find({ stuID: req.user.id })
+      .sort({ createdAt: -1 })
+      .lean();
+
     return res.status(200).json({ success: true, data: admissions });
   } catch (err) {
     console.error("getAdmissionsByStudent error:", err);
@@ -135,10 +143,11 @@ const getAdmissionsByStudent = async (req, res) => {
 };
 
 
-// update admission => student | admin | DI | pending only
+/*  UPDATE ADMISSION  */
+// Roles: student | admin | divisionIncharge — pending status only
+
 const updateAdmission = async (req, res) => {
   try {
-    // FIX: "admin" added to the allowed roles list
     if (!["student", "admin", "divisionIncharge"].includes(req.user.role)) {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
@@ -162,7 +171,6 @@ const updateAdmission = async (req, res) => {
       });
     }
 
-    // Ownership checks
     if (
       req.user.role === "student" &&
       admission.stuID._id.toString() !== req.user.id
@@ -193,7 +201,9 @@ const updateAdmission = async (req, res) => {
 };
 
 
-// delete admission => student | DI | pending only
+/*  DELETE ADMISSION  */
+// Roles: student | divisionIncharge — pending status only
+
 const deleteAdmission = async (req, res) => {
   try {
     const admission = await Admission.findById(req.params.id).populate("stuID", "year division");
@@ -237,13 +247,15 @@ const deleteAdmission = async (req, res) => {
 };
 
 
-// get all admissions with optional export => admin | DI
+/*  GET ALL ADMISSIONS  */
+// Roles: admin | divisionIncharge — with optional export
+
 const getAllAdmissions = async (req, res) => {
   try {
     const { error, value } = getAdmissionsValidation.validate(req.query);
     if (error) return validationErrorResponse(res, error.details);
 
-    const isExport = req.query.export === "true";
+    const isExport = value.export === "true";
 
     const page = Math.max(1, Number(value.page || 1));
     const limit = Math.min(Number(value.limit || 10), 50);
@@ -268,9 +280,9 @@ const getAllAdmissions = async (req, res) => {
       query.isFeesPaid = false;
     }
 
-     // Status filter
+    // Status filter
     if (value.status) query.status = value.status;
- 
+
     // Boolean filters — check explicitly for undefined so `false` values are not skipped
     if (value.isScholarshipApplied !== undefined) {
       query.isScholarshipApplied = value.isScholarshipApplied;
@@ -295,10 +307,12 @@ const getAllAdmissions = async (req, res) => {
 
     // Export branch — capped at 5,000 rows to prevent memory overload
     if (isExport) {
+      // .lean() — read-only export, no Mongoose document methods needed
       const admissions = await Admission.find(query)
         .populate("stuID", "name branch studentID")
         .sort({ createdAt: -1 })
-        .limit(5000);
+        .limit(5000)
+        .lean();
 
       const rows = admissions.map(transformAdmission);
       const buffer = await exportToExcel(rows, "Admissions", admissionColumnMap);
@@ -312,12 +326,14 @@ const getAllAdmissions = async (req, res) => {
     }
 
     // Paginated branch
+    // .lean() on both find() calls — read-only list
     const [data, total] = await Promise.all([
       Admission.find(query)
         .populate("stuID", "name branch studentID")
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit),
+        .limit(limit)
+        .lean(),
       Admission.countDocuments(query),
     ]);
 
@@ -336,7 +352,9 @@ const getAllAdmissions = async (req, res) => {
 };
 
 
-// update admission status => admin | DI
+// UPDATE ADMISSION STATUS  */
+// Roles: admin | divisionIncharge
+
 const updateAdmissionStatus = async (req, res) => {
   try {
     const { error } = admissionStatusSchema.validate(req.body);
@@ -380,7 +398,9 @@ const updateAdmissionStatus = async (req, res) => {
 };
 
 
-// get unpaid students => admin | DI
+// GET UNPAID STUDENTS  
+// Roles: admin | divisionIncharge
+
 const getUnpaidStudents = async (req, res) => {
   try {
     const filter = { isFeesPaid: false };
@@ -391,9 +411,11 @@ const getUnpaidStudents = async (req, res) => {
       filter.div = req.user.division;
     }
 
+    // .lean() — read-only list, no Mongoose document methods needed
     const unpaid = await Admission.find(filter)
       .populate("stuID", "name studentID branch year division mobileNo email")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json({ success: true, data: unpaid });
   } catch (err) {

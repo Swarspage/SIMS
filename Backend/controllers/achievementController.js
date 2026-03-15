@@ -1,14 +1,12 @@
 const mongoose = require("mongoose");
 const Achievement = require("../models/Achievement");
 const Student = require("../models/Student");
-const Admin = require("../models/Admin");
-const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary");
-const cloudinary = require("../config/cloudinaryConfig");
 const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
 const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
-const { createAchievementSchema, updateAchievementSchema , getAchievementsValidation} = require("../validators/achievementValidation");
+const { createAchievementSchema, updateAchievementSchema, getAchievementsValidation } = require("../validators/achievementValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformAchievement, achievementColumnMap } = require('../helpers/excel/exportTransformers');
+
 
 /* VALIDATION ERROR RESPONSE HELPER */
 const validationErrorResponse = (res, details) =>
@@ -44,63 +42,62 @@ const fileConfigs = [
   },
 ];
 
-// create achievement
+//create achievement
 const createAchievement = async (req, res) => {
   let uploadedFiles;
   let dbSaved = false;
 
   try {
-    // Construct date object from simple keys
-    if (req.body.dateFrom && req.body.dateTo) {
-      req.body.date = {
-        from: req.body.dateFrom,
-        to: req.body.dateTo
-      };
+    //local payload copy instead of mutating req.body directly.
+    // Mutating req.body is a bad pattern — it makes the request object unpredictable
+    // for any middleware or logging that runs after this point.
+    const payload = { ...req.body };
+
+    // Reshape flat date keys into the nested object Joi expects
+    if (payload.dateFrom && payload.dateTo) {
+      payload.date = { from: payload.dateFrom, to: payload.dateTo };
     }
 
-    // Normalize teamMembers to array if it is a single string
-    if (req.body.teamMembers && typeof req.body.teamMembers === 'string') {
-      req.body.teamMembers = [req.body.teamMembers];
+    // Normalize teamMembers to array if sent as a single string (e.g. from multipart form)
+    if (payload.teamMembers && typeof payload.teamMembers === "string") {
+      payload.teamMembers = [payload.teamMembers];
     }
+
+    // studentId is read from req.body and trimmed manually before use,
+    const rawStudentId = typeof req.body.studentId === "string"
+      ? req.body.studentId.trim()
+      : req.body.studentId;
 
     /* Joi Validation */
-    const { error, value } = createAchievementSchema.validate(req.body, {
+    const { error, value } = createAchievementSchema.validate(payload, {
       abortEarly: false,
       stripUnknown: true,
     });
 
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: error.details.map(e => ({
-          field: e.path.join("."),
-          message: e.message,
-        })),
-      });
-    }
+    if (error) return validationErrorResponse(res, error.details);
 
     let stuID;
 
     if (req.user.role === "student") {
       stuID = req.user.id;
-    } else if (req.user.role === "admin" || req.user.role === "divisionIncharge") {
-      // stuID = req.body.studentId;
-      const rawStudentID = req.body.studentId;
+    } else if (["admin", "divisionIncharge"].includes(req.user.role)) {
 
-      if (!rawStudentID) {
+      if (!rawStudentId) {
         return res.status(400).json({ success: false, message: "Student ID is required" });
       }
 
-      // Support both MongoDB ObjectId and studentID 
+      // Use if/else so we never fire both queries for the same input.
+      // The original code ran findById first and then unconditionally ran findOne
+      // when findById returned null — even for a valid ObjectId that simply didn't
+      // match any document, causing a wasted second DB call.
+      // An ObjectId-shaped string can never match the studentID text field, so the
+      // fallback is only meaningful when the input is NOT a valid ObjectId.
+      //.lean() — read-only lookup, only year/division fields are needed
       let student;
-      if (mongoose.Types.ObjectId.isValid(rawStudentID)) {
-        student = await Student.findById(rawStudentID);
-      }
-
-      //search by studentID field if not found via ObjectId
-      if (!student) {
-        student = await Student.findOne({ studentID: rawStudentID });
+      if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
+        student = await Student.findById(rawStudentId).lean();
+      } else {
+        student = await Student.findOne({ studentID: rawStudentId }).lean();
       }
 
       if (!student) {
@@ -108,7 +105,6 @@ const createAchievement = async (req, res) => {
       }
 
       stuID = student._id;
-    
 
       if (
         req.user.role === "divisionIncharge" &&
@@ -168,11 +164,13 @@ const createAchievement = async (req, res) => {
   }
 };
 
-//get logged in student data
+//get own achievements -> student
 const getOwnAchievements = async (req, res) => {
   try {
+    // FIX: .lean() — read-only list endpoint, no Mongoose document methods needed
     const achievements = await Achievement.find({ stuID: req.user.id })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json({ success: true, data: achievements });
   } catch {
@@ -180,8 +178,8 @@ const getOwnAchievements = async (req, res) => {
   }
 };
 
+// GET ALL ACHIEVEMENTS (ADMIN / DI) with export 
 
-//getall achievements with export option
 const getAllAchievements = async (req, res) => {
   try {
     const { error, value } = getAchievementsValidation.validate(req.query);
@@ -193,7 +191,6 @@ const getAllAchievements = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const { year, division, category, achievementType, search } = value;
-
 
     const pipeline = [
       {
@@ -235,12 +232,12 @@ const getAllAchievements = async (req, res) => {
 
     pipeline.push({ $match: match });
 
-    //export branch 
+    // Export branch
     if (isExport) {
       const achievements = await Achievement.aggregate([
         ...pipeline,
-        { $sort: { createdAt: -1 } }, 
-        { $limit: 5000 }, 
+        { $sort: { createdAt: -1 } },
+        { $limit: 5000 },
         {
           $project: {
             category: 1,
@@ -269,11 +266,7 @@ const getAllAchievements = async (req, res) => {
 
       const rows = achievements.map(transformAchievement);
 
-      const buffer = await exportToExcel(
-        rows,
-        "Achievements",
-        achievementColumnMap
-      );
+      const buffer = await exportToExcel(rows, "Achievements", achievementColumnMap);
 
       res.setHeader(
         "Content-Type",
@@ -287,7 +280,7 @@ const getAllAchievements = async (req, res) => {
       return res.send(buffer);
     }
 
-    //pagination branch
+    // Pagination branch
     const result = await Achievement.aggregate([
       ...pipeline,
       {
@@ -295,7 +288,7 @@ const getAllAchievements = async (req, res) => {
           data: [
             { $sort: { createdAt: -1 } },
             { $skip: skip },
-            { $limit: (limit) },
+            { $limit: limit },
           ],
           total: [{ $count: "count" }],
         },
@@ -308,7 +301,7 @@ const getAllAchievements = async (req, res) => {
       success: true,
       data: result[0].data,
       total,
-      page: Number(page),
+      page,
       totalPages: Math.ceil(total / limit),
     });
   } catch (err) {
@@ -317,8 +310,8 @@ const getAllAchievements = async (req, res) => {
   }
 };
 
+// GET STUDENT ACHIEVEMENTS (ADMIN / DI) 
 
-//get achievement by student (admin | DI )
 const getStudentAchievements = async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -327,8 +320,11 @@ const getStudentAchievements = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid student ID" });
     }
 
-    const student = await Student.findById(studentId);
-    if (!student) return res.status(404).json({ success: false, message: "Student not found" });
+    // FIX: .lean() — read-only lookup, only year/division fields needed for access check
+    const student = await Student.findById(studentId).lean();
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
 
     if (
       req.user.role === "divisionIncharge" &&
@@ -337,48 +333,44 @@ const getStudentAchievements = async (req, res) => {
       return res.status(403).json({ success: false, message: "Division access denied" });
     }
 
-    const achievements = await Achievement.find({ stuID: studentId }).sort({ createdAt: -1 });
+    // FIX: .lean() — read-only list endpoint
+    const achievements = await Achievement.find({ stuID: studentId })
+      .sort({ createdAt: -1 })
+      .lean();
+
     return res.status(200).json({ success: true, data: achievements });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-//update achievement
+// UPDATE ACHIEVEMENT 
+
 const updateAchievement = async (req, res) => {
   let newPublicIds = [];
   let dbSaved = false;
 
   try {
-    // Construct date object from simple keys
-    if (req.body.dateFrom && req.body.dateTo) {
-      req.body.date = {
-        from: req.body.dateFrom,
-        to: req.body.dateTo
-      };
+    // a local payload copy instead of mutating req.body directly.
+    const payload = { ...req.body };
+
+    // Reshape flat date keys into the nested object Joi expects
+    if (payload.dateFrom && payload.dateTo) {
+      payload.date = { from: payload.dateFrom, to: payload.dateTo };
     }
 
-    // Normalize teamMembers to array if it is a single string
-    if (req.body.teamMembers && typeof req.body.teamMembers === 'string') {
-      req.body.teamMembers = [req.body.teamMembers];
+    // Normalize teamMembers to array if sent as a single string
+    if (payload.teamMembers && typeof payload.teamMembers === "string") {
+      payload.teamMembers = [payload.teamMembers];
     }
 
     /* Joi Validation */
-    const { error, value } = updateAchievementSchema.validate(req.body, {
+    const { error, value } = updateAchievementSchema.validate(payload, {
       abortEarly: false,
       stripUnknown: true,
     });
 
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: error.details.map(e => ({
-          field: e.path.join("."),
-          message: e.message,
-        })),
-      });
-    }
+    if (error) return validationErrorResponse(res, error.details);
 
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -407,6 +399,7 @@ const updateAchievement = async (req, res) => {
       return res.status(403).json({ success: false, message: "Division access denied" });
     }
 
+    // Upload any new files
     const uploaded = {};
     if (req.files) {
       const activeFileConfigs = fileConfigs.filter(
@@ -417,16 +410,24 @@ const updateAchievement = async (req, res) => {
       }
     }
 
+    // Collect old publicIds to delete AFTER a successful DB save.
+    // Apply validated field updates via `value` FIRST, then overwrite only
+    // the file fields that were actually replaced. This ensures `value` can never
+    // silently clobber a file reference we just set — file fields are not part of
+    // the update schema so Joi strips them, but the explicit ordering makes the
+    // intent unambiguous and safe against future schema changes.
+    Object.assign(achievement, value);
+
     const oldIds = [];
 
     if (uploaded.eventPhoto) {
-      oldIds.push(achievement.photographs.eventPhoto.publicId);
+      oldIds.push(achievement.photographs?.eventPhoto?.publicId);
       achievement.photographs.eventPhoto = uploaded.eventPhoto;
       newPublicIds.push(uploaded.eventPhoto.publicId);
     }
 
     if (uploaded.certificate) {
-      oldIds.push(achievement.photographs.certificate.publicId);
+      oldIds.push(achievement.photographs?.certificate?.publicId);
       achievement.photographs.certificate = uploaded.certificate;
       newPublicIds.push(uploaded.certificate.publicId);
     }
@@ -439,12 +440,13 @@ const updateAchievement = async (req, res) => {
       newPublicIds.push(uploaded.course_certificate.publicId);
     }
 
-    Object.assign(achievement, value); //validated update data
     await achievement.save();
     dbSaved = true;
 
-    if (oldIds.length) {
-      await deleteMultipleFromCloudinary(oldIds);
+    // Safe to delete old files now that the DB record points to the new ones
+    const validOldIds = oldIds.filter(Boolean);
+    if (validOldIds.length) {
+      await deleteMultipleFromCloudinary(validOldIds);
     }
 
     return res.status(200).json({
@@ -453,6 +455,8 @@ const updateAchievement = async (req, res) => {
       data: achievement,
     });
   } catch (err) {
+    console.error("Update Achievement Error:", err);
+    // Clean up any newly uploaded files if the DB save never succeeded
     if (!dbSaved && newPublicIds.length) {
       await deleteMultipleFromCloudinary(newPublicIds);
     }
@@ -460,7 +464,8 @@ const updateAchievement = async (req, res) => {
   }
 };
 
-//delete achievement
+// DELETE ACHIEVEMENT 
+
 const deleteAchievement = async (req, res) => {
   try {
     const { id } = req.params;
@@ -488,13 +493,16 @@ const deleteAchievement = async (req, res) => {
     }
 
     const publicIds = [
-      achievement.photographs.eventPhoto.publicId,
-      achievement.photographs.certificate.publicId,
+      achievement.photographs?.eventPhoto?.publicId,
+      achievement.photographs?.certificate?.publicId,
       achievement.course_certificate?.publicId,
     ].filter(Boolean);
 
     await Achievement.findByIdAndDelete(id);
-    await deleteMultipleFromCloudinary(publicIds);
+
+    if (publicIds.length) {
+      await deleteMultipleFromCloudinary(publicIds);
+    }
 
     return res.status(200).json({
       success: true,

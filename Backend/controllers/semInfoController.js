@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 const SemesterInfo = require("../models/SemesterInfo");
 const Student = require("../models/Student");
-const { semInfoCreateSchema , semInfoUpdateSchema , getSemInfosValidation } = require("../validators/seminfoValidation");
+const { semInfoCreateSchema, semInfoUpdateSchema, getSemInfosValidation } = require("../validators/seminfoValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformSemesterInfo, semesterInfoColumnMap } = require('../helpers/excel/exportTransformers');
 
-//validation err response helper
+// Validation error response helper
 const validationErrorResponse = (res, details) =>
   res.status(400).json({
     success: false,
@@ -21,10 +21,12 @@ const calculateDefaulter = (attendance, kts) => {
 };
 
 
-//create sem info student or admin/DI
+// ADD SEM INFO 
+// Roles: student | admin | divisionIncharge
+
 const addSemInfo = async (req, res) => {
   try {
-    // VALIDATION FIRST — before any DB work
+    // Validation first — before any DB work
     const { error, value } = semInfoCreateSchema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
@@ -33,24 +35,28 @@ const addSemInfo = async (req, res) => {
 
     let stuID;
 
-    // Role handling
     if (req.user.role === "student") {
       stuID = req.user.id;
     } else if (["admin", "divisionIncharge"].includes(req.user.role)) {
-      const rawStudentId = req.body.studentId;
+      // studentId is read from raw body and trimmed manually before use,
+      // since semInfoCreateSchema strips unknown fields and does not include studentId.
+      const rawStudentId = typeof req.body.studentId === "string"
+        ? req.body.studentId.trim()
+        : req.body.studentId;
 
       if (!rawStudentId) {
         return res.status(400).json({ success: false, message: "studentId is required" });
       }
 
       // Support both MongoDB ObjectId and custom studentID field.
-      // Use else to avoid a second DB call when the first already resolved the student,
-      // and to fail fast when a valid ObjectId matches no document.
+      // Only fall back to findOne when rawStudentId is NOT a valid ObjectId,
+      // preventing a wasted query (an ObjectId string never matches studentID field).
+      //.lean() — read-only lookup
       let student;
       if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
-        student = await Student.findById(rawStudentId);
+        student = await Student.findById(rawStudentId).lean();
       } else {
-        student = await Student.findOne({ studentID: rawStudentId });
+        student = await Student.findOne({ studentID: rawStudentId }).lean();
       }
 
       if (!student) {
@@ -59,11 +65,11 @@ const addSemInfo = async (req, res) => {
 
       stuID = student._id;
 
-      // DI restriction
+      // Division Incharge restriction
       if (
         req.user.role === "divisionIncharge" &&
         (student.year !== req.user.year ||
-         student.division !== req.user.division)
+          student.division !== req.user.division)
       ) {
         return res.status(403).json({
           success: false,
@@ -99,7 +105,9 @@ const addSemInfo = async (req, res) => {
   }
 };
 
-//update sem info
+
+// UPDATE SEM INFO 
+
 const updateSemInfo = async (req, res) => {
   try {
     const semInfo = await SemesterInfo
@@ -113,7 +121,7 @@ const updateSemInfo = async (req, res) => {
       });
     }
 
-    // STUDENT OWNERSHIP
+    // Student ownership check
     if (
       req.user.role === "student" &&
       semInfo.stuID._id.toString() !== req.user.id
@@ -121,11 +129,11 @@ const updateSemInfo = async (req, res) => {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    // DI CHECK
+    // Division Incharge check
     if (
       req.user.role === "divisionIncharge" &&
       (semInfo.stuID.year !== req.user.year ||
-       semInfo.stuID.division !== req.user.division)
+        semInfo.stuID.division !== req.user.division)
     ) {
       return res.status(403).json({
         success: false,
@@ -133,32 +141,35 @@ const updateSemInfo = async (req, res) => {
       });
     }
 
-    // STUDENT FIELD LIMIT
+    // Build a restricted body for students BEFORE validation, so that
+    // only the allowed fields are validated and later applied. This avoids
+    // touching req.body (which is the raw request object) and keeps the
+    // validated `value` as the single source of truth for what gets written.
+    let bodyToValidate = req.body;
+
     if (req.user.role === "student") {
       const allowed = ["attendance", "kts", "journalTaken", "examFormFilled"];
-      Object.keys(req.body).forEach(key => {
-        if (!allowed.includes(key)) delete req.body[key];
-      });
-    }
-
-    // VALIDATION
-    const { error } = semInfoUpdateSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: error.details[0].message,
-      });
-    }
-
-    // UPDATE DATA
-    Object.assign(semInfo, req.body);
-
-    // RECALCULATE DEFAULTER
-    if (req.body.attendance !== undefined || req.body.kts !== undefined) {
-      semInfo.isDefaulter = calculateDefaulter(
-        semInfo.attendance,
-        semInfo.kts
+      bodyToValidate = Object.fromEntries(
+        Object.entries(req.body).filter(([key]) => allowed.includes(key))
       );
+    }
+
+    // Validation — run on the filtered body, capture `value` for use below
+    const { error, value } = semInfoUpdateSchema.validate(bodyToValidate, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
+
+    if (error) return validationErrorResponse(res, error.details);
+
+    // Use `value` (the Joi-validated, stripped object) instead of req.body.
+    // Previously this was Object.assign(semInfo, req.body), which bypassed
+    // Joi's type coercion and stripUnknown, allowing raw unvalidated data onto the document.
+    Object.assign(semInfo, value);
+
+    // Recalculate defaulter status if attendance or kts changed
+    if (value.attendance !== undefined || value.kts !== undefined) {
+      semInfo.isDefaulter = calculateDefaulter(semInfo.attendance, semInfo.kts);
     }
 
     await semInfo.save();
@@ -175,7 +186,9 @@ const updateSemInfo = async (req, res) => {
   }
 };
 
-//delete sem info
+
+// DELETE SEM INFO 
+
 const deleteSemInfo = async (req, res) => {
   try {
     const semInfo = await SemesterInfo
@@ -199,7 +212,7 @@ const deleteSemInfo = async (req, res) => {
     if (
       req.user.role === "divisionIncharge" &&
       (semInfo.stuID.year !== req.user.year ||
-       semInfo.stuID.division !== req.user.division)
+        semInfo.stuID.division !== req.user.division)
     ) {
       return res.status(403).json({
         success: false,
@@ -220,10 +233,12 @@ const deleteSemInfo = async (req, res) => {
   }
 };
 
-//get all sem infos with export option
+
+// GET ALL SEM INFOS 
+// Roles: admin | divisionIncharge — with optional export
+
 const getAllSemInfos = async (req, res) => {
   try {
-
     const { error, value } = getSemInfosValidation.validate(req.query);
     if (error) return validationErrorResponse(res, error.details);
 
@@ -242,34 +257,30 @@ const getAllSemInfos = async (req, res) => {
       year,
       division,
       search,
-      // page,
-      // limit,
-      // export: exportFlag
     } = value;
 
-    
     const pipeline = [];
 
-    // JOIN STUDENT
+    // Join student
     pipeline.push({
       $lookup: {
         from: "students",
         localField: "stuID",
         foreignField: "_id",
-        as: "student"
-      }
+        as: "student",
+      },
     });
 
     pipeline.push({
       $unwind: {
         path: "$student",
-        preserveNullAndEmptyArrays: true
-      }
+        preserveNullAndEmptyArrays: true,
+      },
     });
 
     const match = {};
 
-    // ROLE FILTERING
+    // Role filtering
     if (req.user.role === "divisionIncharge") {
       match["student.year"] = req.user.year;
       match["student.division"] = req.user.division;
@@ -280,24 +291,22 @@ const getAllSemInfos = async (req, res) => {
       if (division) match["student.division"] = division.trim();
     }
 
-    
-    // SEMESTER
+    // Semester
     if (semester !== undefined) match.semester = semester; // already a Number from Joi
 
-    // BOOLEAN FILTERS
+    // Boolean filters
     if (isDefaulter !== undefined) match.isDefaulter = isDefaulter;
     if (journalTaken !== undefined) match.journalTaken = journalTaken;
     if (examFormFilled !== undefined) match.examFormFilled = examFormFilled;
 
-    
-   // ATTENDANCE RANGE
+    // Attendance range
     if (minAttendance !== undefined || maxAttendance !== undefined) {
       match.attendance = {};
       if (minAttendance !== undefined) match.attendance.$gte = minAttendance;
       if (maxAttendance !== undefined) match.attendance.$lte = maxAttendance;
     }
 
-    // SEARCH
+    // Search
     if (search) {
       const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
@@ -305,7 +314,7 @@ const getAllSemInfos = async (req, res) => {
         { "student.name.firstName": { $regex: safeSearch, $options: "i" } },
         { "student.name.middleName": { $regex: safeSearch, $options: "i" } },
         { "student.name.lastName": { $regex: safeSearch, $options: "i" } },
-        { "student.studentID": { $regex: safeSearch, $options: "i" } }
+        { "student.studentID": { $regex: safeSearch, $options: "i" } },
       ];
     }
 
@@ -313,46 +322,36 @@ const getAllSemInfos = async (req, res) => {
       pipeline.push({ $match: match });
     }
 
-    // EXPORT FIELDS
+    // Export projection — wide, includes all student fields
     const exportFields = {
-  semester: 1,
-  attendance: 1,
-  kts: 1,
-  marks: 1,
-  isDefaulter: 1,
-  journalTaken: 1,
-  examFormFilled: 1,
+      semester: 1,
+      attendance: 1,
+      kts: 1,
+      marks: 1,
+      isDefaulter: 1,
+      journalTaken: 1,
+      examFormFilled: 1,
 
-  // Student identity
-  stuID: "$student._id",
-  studentID: "$student.studentID",
-  PRN: "$student.PRN",
+      stuID: "$student._id",
+      studentID: "$student.studentID",
+      PRN: "$student.PRN",
+      studentName: "$student.name",
+      studentYear: "$student.year",
+      studentDivision: "$student.division",
+      studentBranch: "$student.branch",
+      studentDob: "$student.dob",
+      studentBloodGroup: "$student.bloodGroup",
+      studentCategory: "$student.category",
+      studentAbcId: "$student.abcId",
+      studentMobileNo: "$student.mobileNo",
+      studentParentMobileNo: "$student.parentMobileNo",
+      studentEmail: "$student.email",
+      studentParentEmail: "$student.parentEmail",
+      studentCurrentAddress: "$student.currentAddress",
+      studentNativeAddress: "$student.nativeAddress",
+    };
 
-  // Student name
-  studentName: "$student.name",
-
-  // Student academic
-  studentYear: "$student.year",
-  studentDivision: "$student.division",
-  studentBranch: "$student.branch",
-
-  // Student personal
-  studentDob: "$student.dob",
-  studentBloodGroup: "$student.bloodGroup",
-  studentCategory: "$student.category",
-  studentAbcId: "$student.abcId",
-
-  // Student contact
-  studentMobileNo: "$student.mobileNo",
-  studentParentMobileNo: "$student.parentMobileNo",
-  studentEmail: "$student.email",
-  studentParentEmail: "$student.parentEmail",
-
-  // Addresses
-  studentCurrentAddress: "$student.currentAddress",
-  studentNativeAddress: "$student.nativeAddress"
-};
-
+    // Paginated projection — lean subset
     const leanFields = {
       semester: 1,
       attendance: 1,
@@ -365,31 +364,26 @@ const getAllSemInfos = async (req, res) => {
       studentID: "$student.studentID",
       studentName: "$student.name",
       studentYear: "$student.year",
-      studentDivision: "$student.division"
+      studentDivision: "$student.division",
     };
 
-    // EXPORT
+    // Export branch
     if (isExport) {
       const semInfos = await SemesterInfo.aggregate([
         ...pipeline,
         { $sort: { createdAt: -1 } },
         { $limit: 5000 },
-        { $project: exportFields }
+        { $project: exportFields },
       ]);
 
       const rows = semInfos.map(transformSemesterInfo);
 
-      const buffer = await exportToExcel(
-        rows,
-        "Semester Info",
-        semesterInfoColumnMap
-      );
+      const buffer = await exportToExcel(rows, "Semester Info", semesterInfoColumnMap);
 
       res.setHeader(
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       );
-
       res.setHeader(
         "Content-Disposition",
         'attachment; filename="semester-info.xlsx"'
@@ -398,7 +392,7 @@ const getAllSemInfos = async (req, res) => {
       return res.send(buffer);
     }
 
-    // PAGINATION
+    // Pagination branch
     const results = await SemesterInfo.aggregate([
       ...pipeline,
       {
@@ -407,11 +401,11 @@ const getAllSemInfos = async (req, res) => {
             { $sort: { createdAt: -1 } },
             { $skip: skip },
             { $limit: limitNum },
-            { $project: leanFields }
+            { $project: leanFields },
           ],
-          totalCount: [{ $count: "total" }]
-        }
-      }
+          totalCount: [{ $count: "total" }],
+        },
+      },
     ]);
 
     const semInfos = results[0]?.data || [];
@@ -422,16 +416,14 @@ const getAllSemInfos = async (req, res) => {
       data: semInfos,
       total,
       page: pageNum,
-      totalPages: Math.ceil(total / limitNum)
+      totalPages: Math.ceil(total / limitNum),
     });
 
   } catch (err) {
     console.error(
       "Error in getAllSemInfos controller:",
-      "\ntime = ",
-      new Date().toISOString(),
-      "\nError:",
-      err
+      "\ntime =", new Date().toISOString(),
+      "\nError:", err
     );
 
     return res.status(500).json({
@@ -441,11 +433,15 @@ const getAllSemInfos = async (req, res) => {
   }
 };
 
-//getownsemInfo
+
+// GET OWN SEM INFOS (STUDENT) 
+
 const getOwnSemInfos = async (req, res) => {
   try {
+    // FIX: .lean() — read-only list endpoint
     const data = await SemesterInfo.find({ stuID: req.user.id })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.status(200).json({ success: true, data });
 
@@ -456,17 +452,19 @@ const getOwnSemInfos = async (req, res) => {
 };
 
 
-//get student sem infos by admin or di
+// GET STUDENT SEM INFOS (ADMIN / DI) 
+
 const getStudentSemInfos = async (req, res) => {
   try {
     const { studentId } = req.params;
 
-    // Support both MongoDB ObjectId and custom studentID field
+    // Support both MongoDB ObjectId and custom studentID field.
+    // FIX: .lean() — read-only lookup
     let student;
     if (mongoose.Types.ObjectId.isValid(studentId)) {
-      student = await Student.findById(studentId);
+      student = await Student.findById(studentId).lean();
     } else {
-      student = await Student.findOne({ studentID: studentId });
+      student = await Student.findOne({ studentID: studentId }).lean();
     }
 
     if (!student) {
@@ -479,7 +477,7 @@ const getStudentSemInfos = async (req, res) => {
     if (
       req.user.role === "divisionIncharge" &&
       (student.year !== req.user.year ||
-       student.division !== req.user.division)
+        student.division !== req.user.division)
     ) {
       return res.status(403).json({
         success: false,
@@ -487,8 +485,10 @@ const getStudentSemInfos = async (req, res) => {
       });
     }
 
+    // FIX: .lean() — read-only list
     const data = await SemesterInfo.find({ stuID: student._id })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.status(200).json({ success: true, data });
 
@@ -499,7 +499,6 @@ const getStudentSemInfos = async (req, res) => {
 };
 
 
-//exporting all controller functions
 module.exports = {
   addSemInfo,
   updateSemInfo,

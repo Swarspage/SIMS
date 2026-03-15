@@ -1,17 +1,14 @@
 const mongoose = require("mongoose");
 const Activity = require("../models/Activity");
 const Student = require("../models/Student");
-// const Admin = require("../models/Admin");
-// const cloudinary = require("../config/cloudinaryConfig");
-// const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary");
 const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMultipleFromCloudinary");
 const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
-const { activityCreateSchema, activityUpdateSchema , getActivitiesValidation } = require("../validators/activitiesValidation");
+const { activityCreateSchema, activityUpdateSchema, getActivitiesValidation } = require("../validators/activitiesValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformActivity, activityColumnMap } = require('../helpers/excel/exportTransformers');
 
 
-//validation err helper
+// Validation error helper
 const validationErrorResponse = (res, details) =>
   res.status(400).json({
     success: false,
@@ -38,16 +35,20 @@ const fileConfigs = [
   },
 ];
 
-/* CREATE ACTIVITY */
+// CREATE ACTIVITY 
 
 const createActivity = async (req, res) => {
   let uploadedFiles;
   let dbSaved = false;
 
   try {
-
-    //studentId is required in body for admin/di, but will be ignored for students (overridden by req.user.id)
-    const { studentId } = req.body;
+    //Joi validation runs first; studentId is read from req.body directly
+    // since activityCreateSchema uses stripUnknown:true and does not include studentId,
+    // it is intentionally kept outside `value` and read from raw body before any DB work.
+    // Trimming is applied manually below.
+    const rawStudentId = typeof req.body.studentId === "string"
+      ? req.body.studentId.trim()
+      : req.body.studentId;
 
     /* Joi Validation */
     const { error, value } = activityCreateSchema.validate(req.body, {
@@ -55,43 +56,14 @@ const createActivity = async (req, res) => {
       stripUnknown: true,
     });
 
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: error.details.map(e => ({
-          field: e.path.join("."),
-          message: e.message,
-        })),
-      });
-    }
+    if (error) return validationErrorResponse(res, error.details);
 
     let stuID;
 
     /* Role-based ownership */
     if (req.user.role === "student") {
       stuID = req.user.id;
-    }
-    else if (["admin", "divisionIncharge"].includes(req.user.role)) {
-      // stuID = req.body.studentId;
-      // stuID = studentId;
-
-      // if (!stuID || !mongoose.Types.ObjectId.isValid(stuID)) {
-      //   return res.status(400).json({
-      //     success: false,
-      //     message: "Invalid student ID",
-      //   });
-      // }
-
-      // const student = await Student.findById(stuID);
-      // if (!student) {
-      //   return res.status(404).json({
-      //     success: false,
-      //     message: "Student not found",
-      //   });
-      // }
-
-      const rawStudentId = studentId;
+    } else if (["admin", "divisionIncharge"].includes(req.user.role)) {
 
       if (!rawStudentId) {
         return res.status(400).json({
@@ -100,9 +72,9 @@ const createActivity = async (req, res) => {
         });
       }
 
-      // Support both MongoDB ObjectId and studentID (e.g. "2024FHIT009")
+      // Support both MongoDB ObjectId and custom studentID (e.g. "2024FHIT009").
       // Only fall back to findOne when rawStudentId is NOT a valid ObjectId,
-      // preventing a wasted query (an ObjectId string never matches studentID field)
+      // preventing a wasted query (an ObjectId string never matches studentID field).
       let student;
       if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
         student = await Student.findById(rawStudentId);
@@ -119,8 +91,6 @@ const createActivity = async (req, res) => {
 
       stuID = student._id;
 
-      //end
-
       if (
         req.user.role === "divisionIncharge" &&
         (student.year !== req.user.year ||
@@ -131,8 +101,7 @@ const createActivity = async (req, res) => {
           message: "You can access students only from your division",
         });
       }
-    }
-    else {
+    } else {
       return res.status(403).json({
         success: false,
         message: "Unauthorized role",
@@ -142,9 +111,9 @@ const createActivity = async (req, res) => {
     /* File upload */
     uploadedFiles = req.file
       ? await validateAndUploadFiles(
-        { certificate: [req.file] },
-        fileConfigs
-      )
+          { certificate: [req.file] },
+          fileConfigs
+        )
       : {};
 
     const activity = new Activity({
@@ -176,12 +145,12 @@ const createActivity = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server Error",
-      error: err.message
+      error: err.message,
     });
   }
 };
 
-/* ----------------------- GET OWN ACTIVITIES (STUDENT) ----------------------- */
+// GET OWN ACTIVITIES (STUDENT) 
 
 const getActivityByStu = async (req, res) => {
   try {
@@ -192,10 +161,13 @@ const getActivityByStu = async (req, res) => {
       });
     }
 
+    // FIX: .lean() added — read-only endpoint, plain JS objects are faster to serialize
     const activities = await Activity.find({
       stuID: req.user.id,
       type: "Committee",
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json({
       success: true,
@@ -206,7 +178,7 @@ const getActivityByStu = async (req, res) => {
   }
 };
 
-/* -------------------- GET ACTIVITIES BY STUDENT (ADMIN / DI) -------------------- */
+// GET ACTIVITIES BY STUDENT (ADMIN / DI)
 
 const getActivities = async (req, res) => {
   try {
@@ -219,7 +191,8 @@ const getActivities = async (req, res) => {
       });
     }
 
-    const student = await Student.findById(studentId);
+    // FIX: .lean() added — this student lookup is read-only
+    const student = await Student.findById(studentId).lean();
     if (!student) {
       return res.status(404).json({
         success: false,
@@ -238,10 +211,13 @@ const getActivities = async (req, res) => {
       });
     }
 
+    // FIX: .lean() added
     const activities = await Activity.find({
       stuID: studentId,
       type: "Committee",
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json({
       success: true,
@@ -252,17 +228,16 @@ const getActivities = async (req, res) => {
   }
 };
 
+// GET ALL ACTIVITIES (ADMIN / DI) with export
 
-//get all activities with export option
 const getAllActivities = async (req, res) => {
   try {
-    const { error , value } = getActivitiesValidation.validate(req.query);
-    if(error) 
-      return validationErrorResponse(res, error.details);
+    const { error, value } = getActivitiesValidation.validate(req.query);
+    if (error) return validationErrorResponse(res, error.details);
 
-    const isExport = req.query.export === "true";
-    const page = Math.max(1 , Number(value.page || 1));
-    const limit = Math.min(Number(value.limit || 10), 50);    //single capped value is used everywhwre
+    const isExport = value.export === "true";
+    const page = Math.max(1, Number(value.page || 1));
+    const limit = Math.min(Number(value.limit || 10), 50); // single capped value used everywhere
     const skip = (page - 1) * limit;
 
     const { year, division, search } = value;
@@ -283,7 +258,7 @@ const getAllActivities = async (req, res) => {
 
     const match = {};
 
-    //role filter
+    // Role filter
     if (req.user.role === "divisionIncharge") {
       match["student.year"] = req.user.year;
       match["student.division"] = req.user.division;
@@ -294,12 +269,9 @@ const getAllActivities = async (req, res) => {
       if (division) match["student.division"] = division;
     }
 
-    //search filter
+    // Search filter
     if (search) {
-      const safeSearch = search.replace(
-        /[-[\]{}()*+?.,\\^$|#\s]/g,
-        "\\$&"
-      );
+      const safeSearch = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
       match.$or = [
         { title: { $regex: safeSearch, $options: "i" } },
@@ -311,11 +283,11 @@ const getAllActivities = async (req, res) => {
 
     pipeline.push({ $match: match });
 
-    //export branch
+    // Export branch
     if (isExport) {
       const activities = await Activity.aggregate([
         ...pipeline,
-        { $sort: { createdAt: -1 } }, // sort before project so createdAt is still available
+        { $sort: { createdAt: -1 } }, // sort before $project so createdAt is still available
         { $limit: 5000 },             // row cap to prevent memory overload
         {
           $project: {
@@ -340,11 +312,7 @@ const getAllActivities = async (req, res) => {
 
       const rows = activities.map(transformActivity);
 
-      const buffer = await exportToExcel(
-        rows,
-        "Activities",
-        activityColumnMap
-      );
+      const buffer = await exportToExcel(rows, "Activities", activityColumnMap);
 
       res.setHeader(
         "Content-Type",
@@ -358,7 +326,7 @@ const getAllActivities = async (req, res) => {
       return res.send(buffer);
     }
 
-    //pagination branch
+    // Pagination branch
     const result = await Activity.aggregate([
       ...pipeline,
       {
@@ -366,7 +334,7 @@ const getAllActivities = async (req, res) => {
           data: [
             { $sort: { createdAt: -1 } },
             { $skip: skip },
-            { $limit: (limit) },   //uses the sm capped limit as skip
+            { $limit: limit },
           ],
           total: [{ $count: "count" }],
         },
@@ -393,8 +361,8 @@ const getAllActivities = async (req, res) => {
   }
 };
 
+// UPDATE ACTIVITY 
 
-//update activity
 const updateActivity = async (req, res) => {
   let uploadedFiles;
   let dbSaved = false;
@@ -405,16 +373,7 @@ const updateActivity = async (req, res) => {
       stripUnknown: true,
     });
 
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: error.details.map(e => ({
-          field: e.path.join("."),
-          message: e.message,
-        })),
-      });
-    }
+    if (error) return validationErrorResponse(res, error.details);
 
     const activity = await Activity.findById(req.params.id).populate(
       "stuID",
@@ -449,18 +408,18 @@ const updateActivity = async (req, res) => {
       });
     }
 
+    // Stash the old publicId BEFORE overwriting the reference on the document.
+    // The old file is deleted only AFTER a successful DB save, so a save failure
+    // never leaves the record pointing at a file that no longer exists.
+    let oldPublicId = null;
+
     if (req.file) {
       uploadedFiles = await validateAndUploadFiles(
         { certificate: [req.file] },
         fileConfigs
       );
 
-      if (activity.certificateURL?.publicId) {
-        await deleteMultipleFromCloudinary([
-          activity.certificateURL.publicId,
-        ]);
-      }
-
+      oldPublicId = activity.certificateURL?.publicId || null;
       activity.certificateURL = uploadedFiles.certificate;
     }
 
@@ -470,6 +429,11 @@ const updateActivity = async (req, res) => {
     await activity.save();
     dbSaved = true;
 
+    // Safe to delete the old file now that the DB record points to the new one
+    if (oldPublicId) {
+      await deleteMultipleFromCloudinary([oldPublicId]);
+    }
+
     return res.status(200).json({
       success: true,
       message: "Committee activity updated successfully",
@@ -477,6 +441,7 @@ const updateActivity = async (req, res) => {
     });
 
   } catch (err) {
+    // Only clean up the newly uploaded file if the DB save never succeeded
     if (!dbSaved && uploadedFiles) {
       const ids = Object.values(uploadedFiles)
         .map(f => f?.publicId)
@@ -485,11 +450,12 @@ const updateActivity = async (req, res) => {
       await deleteMultipleFromCloudinary(ids);
     }
 
+    console.error("Update Activity Error:", err);
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-/* ----------------------------- DELETE ACTIVITY ----------------------------- */
+// DELETE ACTIVITY 
 
 const deleteActivity = async (req, res) => {
   try {
@@ -545,7 +511,6 @@ const deleteActivity = async (req, res) => {
   }
 };
 
-//exports
 module.exports = {
   createActivity,
   getActivityByStu,
