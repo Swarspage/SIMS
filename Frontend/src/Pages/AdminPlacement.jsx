@@ -21,11 +21,21 @@ function PlacementCard({ placement, onView, onDelete, onEdit, isDeleting }) {
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
       {/* Document/Image Preview Section */}
       <div className="h-32 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden relative">
-        {placement?.placementProof?.url ? (
-          placement.placementProof.url.toLowerCase().endsWith(".pdf") ? (
+        {(() => {
+          const proofUrl = typeof placement?.placementProof === 'string' 
+            ? placement.placementProof 
+            : placement?.placementProof?.url;
+          
+          if (!proofUrl) return (
+            <div className="text-slate-300 text-5xl font-bold">
+              {placement?.companyName?.charAt(0) || "?"}
+            </div>
+          );
+
+          return proofUrl.toLowerCase().endsWith(".pdf") ? (
             <div className="w-full h-full relative group-hover:scale-105 transition-transform duration-300">
               <iframe
-                src={`${placement.placementProof.url}#view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
+                src={`${proofUrl}#view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
                 title="PDF Preview"
                 className="w-full h-full border-none pointer-events-none"
                 scrolling="no"
@@ -37,16 +47,12 @@ function PlacementCard({ placement, onView, onDelete, onEdit, isDeleting }) {
             </div>
           ) : (
             <img
-              src={placement.placementProof.url}
+              src={proofUrl}
               alt={placement?.companyName || "Placement"}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-          )
-        ) : (
-          <div className="text-slate-300 text-5xl font-bold">
-            {placement?.companyName?.charAt(0) || "?"}
-          </div>
-        )}
+          );
+        })()}
 
         {/* Top Overlay: ID & Year */}
         <div className="absolute top-2 left-2 flex gap-1">
