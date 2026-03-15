@@ -29,10 +29,6 @@ export default function StudentDashboard() {
         setStats(data.stats);
         setActivityDistribution(data.activityDistribution || []);
         setAchievementDistribution(data.achievementDistribution || []);
-        
-        // Note: Recent activities list is not currently provided by the consolidated API.
-        // We could fetch it separately if needed, but for minimal hits, we leave it empty.
-        setRecentActivities([]);
       }
     } catch (error) {
        console.error("Error fetching student dashboard data:", error);
@@ -256,29 +252,27 @@ export default function StudentDashboard() {
           </h3>
           <div className="space-y-3">
             {activityDistribution.length > 0 ? (
-              activityDistribution.map((item) => (
-                <div key={item._id}>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-xs sm:text-sm font-medium text-slate-700">
-                      {item._id || "Other"}
-                    </span>
-                    <span className="text-xs sm:text-sm font-bold text-blue-600">
-                      {item.count}
-                    </span>
+              (() => {
+                const maxCount = Math.max(...activityDistribution.map(d => d.count)) || 1;
+                return activityDistribution.map((item) => (
+                  <div key={item._id}>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-xs sm:text-sm font-medium text-slate-700">
+                        {item._id || "Other"}
+                      </span>
+                      <span className="text-xs sm:text-sm font-bold text-blue-600">
+                        {item.count}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${(item.count / maxCount) * 100}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${(item.count /
-                            Math.max(...activityDistribution.map(d => d.count))) *
-                          100
-                          }%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              ))
+                ));
+              })()
             ) : (
               <p className="text-slate-500 text-xs sm:text-sm">
                 No activities yet
@@ -293,96 +287,33 @@ export default function StudentDashboard() {
           </h3>
           <div className="space-y-3">
             {achievementDistribution.length > 0 ? (
-              achievementDistribution.map((item) => (
-                <div key={item._id}>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-xs sm:text-sm font-medium text-slate-700">
-                      {item._id || "Other"}
-                    </span>
-                    <span className="text-xs sm:text-sm font-bold text-green-600">
-                      {item.count}
-                    </span>
+              (() => {
+                const maxCount = Math.max(...achievementDistribution.map(d => d.count)) || 1;
+                return achievementDistribution.map((item) => (
+                  <div key={item._id}>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-xs sm:text-sm font-medium text-slate-700">
+                        {item._id || "Other"}
+                      </span>
+                      <span className="text-xs sm:text-sm font-bold text-green-600">
+                        {item.count}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div
+                        className="bg-green-600 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${(item.count / maxCount) * 100}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2">
-                    <div
-                      className="bg-green-600 h-2 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${(item.count /
-                            Math.max(...achievementDistribution.map(d => d.count))) *
-                          100
-                          }%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              ))
+                ));
+              })()
             ) : (
               <p className="text-slate-500 text-xs sm:text-sm">
                 No achievements yet
               </p>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Recent Activities Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-slate-200">
-          <h3 className="text-base sm:text-lg font-semibold text-slate-900">
-            Recent Activities
-          </h3>
-        </div>
-        <div className="divide-y divide-slate-200">
-          {recentActivities.length > 0 ? (
-            recentActivities.map((activity, index) => (
-              <div
-                key={index}
-                className="p-4 sm:p-6 hover:bg-slate-50 transition"
-              >
-                <div className="flex flex-col md:flex-row items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-slate-900 text-sm sm:text-base">
-                      {activity.title}
-                    </h4>
-                    <p className="text-xs sm:text-sm text-slate-600 mt-1">
-                      {activity.description}
-                    </p>
-                    <div className="flex gap-2 sm:gap-4 mt-2 sm:mt-3 flex-wrap">
-                      <span className="inline-block px-2 py-1 sm:px-3 sm:py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full">
-                        {activity.type}
-                      </span>
-                      <span className="text-xs text-slate-500">
-                        {new Date(activity.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right self-center md:self-auto">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <svg
-                        className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-4 sm:p-6 text-center">
-              <p className="text-slate-500 text-xs sm:text-sm">
-                No activities recorded yet. Start exploring!
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </main>
