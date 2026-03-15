@@ -107,9 +107,9 @@ const Home = () => {
                 Login
               </button>
               <div className="absolute right-0 mt-2 w-48 glass-card rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 border border-gray-200 overflow-hidden">
-                <button onClick={() => navigate("/student-login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors">Student Login</button>
-                <button onClick={() => navigate("/admin-login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors border-t border-gray-100">Admin Login</button>
-                <button onClick={() => navigate("/division-login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors border-t border-gray-100">Division Login</button>
+                <button onClick={() => navigate("/login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors">Student Login</button>
+                <button onClick={() => navigate("/admin/login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors border-t border-gray-100">Admin Login</button>
+                <button onClick={() => navigate("/division/login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors border-t border-gray-100">Division Login</button>
               </div>
             </div>
             <button className="p-2 text-gray-900 md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -133,9 +133,9 @@ const Home = () => {
             </a>
             <div className="pt-4 space-y-2 border-t border-gray-100">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-2">Portals</p>
-              <button onClick={() => navigate("/student-login")} className="w-full py-3 bg-[#1D3EA1] text-white rounded-xl font-bold transition-colors">Student Login</button>
-              <button onClick={() => navigate("/admin-login")} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Admin Login</button>
-              <button onClick={() => navigate("/division-login")} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Division Login</button>
+              <button onClick={() => navigate("/login")} className="w-full py-3 bg-[#1D3EA1] text-white rounded-xl font-bold transition-colors">Student Login</button>
+              <button onClick={() => navigate("/admin/login")} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Admin Login</button>
+              <button onClick={() => navigate("/division/login")} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Division Login</button>
             </div>
           </div>
         )}
