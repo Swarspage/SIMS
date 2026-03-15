@@ -12,17 +12,30 @@ export default function ProtectedRoute({ children, requiredRole }) {
     return <Navigate to="/login" replace />;
   }
 
+  // If logged in but role is missing from localStorage, it's an inconsistent state
+  if (!userRole) {
+    localStorage.removeItem("token");
+    return <Navigate to="/login" replace />;
+  }
+
   // If logged in but wrong role, redirect to their correct dashboard
   const hasPermission = Array.isArray(requiredRole)
     ? requiredRole.includes(userRole)
     : userRole === requiredRole;
 
   if (requiredRole && !hasPermission) {
-    if (userRole === "admin" || userRole === "division" || userRole === "division_incharge") {
-      // Handle both "division" (used in user's Login component) and "division_incharge" (used in backend/plan)
-      return <Navigate to="/admin/dashboard" replace />;
-    } else {
-      return <Navigate to="/student/dashboard" replace />;
+    // Determine the safe dashboard for this user
+    let target = "/login";
+    if (userRole === "admin" || userRole === "division" || userRole === "division_incharge" || userRole === "divisionIncharge") {
+      target = "/admin/dashboard";
+    } else if (userRole === "student") {
+      target = "/student/dashboard";
+    }
+
+    // Only redirect if we're not actually already on that target path (to prevent loops)
+    // Note: window.location.pathname check is a safeguard
+    if (window.location.pathname !== target) {
+      return <Navigate to={target} replace />;
     }
   }
 

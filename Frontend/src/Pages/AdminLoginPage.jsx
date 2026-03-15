@@ -10,6 +10,15 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // ✅ REDIRECT IF ALREADY LOGGED IN
+  React.useEffect(() => {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    if (token && (role === "admin" || role === "division" || role === "divisionIncharge")) {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, [navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((s) => ({ ...s, [name]: value }));

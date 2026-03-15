@@ -14,6 +14,15 @@ export default function LoginPage() {
     return window.history.state?.usr?.message || "";
   });
 
+  // ✅ REDIRECT IF ALREADY LOGGED IN
+  React.useEffect(() => {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    if (token && role === "student") {
+      navigate("/student/dashboard", { replace: true });
+    }
+  }, [navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((s) => ({ ...s, [name]: value }));

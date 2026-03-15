@@ -38,7 +38,13 @@ API.interceptors.response.use(
     if (error.response?.status === 401) {
       // ✅ CHANGED: Clear localStorage instead of cookie
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      localStorage.removeItem("role");
+      
+      // Only redirect if not already on a login page
+      const path = window.location.pathname;
+      if (!path.includes("/login")) {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }
