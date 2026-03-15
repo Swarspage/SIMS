@@ -14,7 +14,7 @@ import { studentService } from "../services/studentService";
 import { authService } from "../services/authService";
 import avatar from "../assets/Students.png";
 
-export default function Header({ showSearch = false }) {
+export default function Header({ showSearch = false, onMenuButtonClick }) {
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -70,36 +70,46 @@ export default function Header({ showSearch = false }) {
   const userRole = localStorage.getItem("role") || "student";
 
   return (
-    <header className="flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 py-4 bg-white/70 backdrop-blur-2xl border-b border-gray-200/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] sticky top-0 z-40 w-full gap-4 sm:gap-0 transition-all duration-500 rounded-b-xl sm:rounded-none">
-      {/* Left: Welcome Section */}
-      <div className="flex flex-col justify-center items-center sm:items-start w-full sm:w-auto animate-in fade-in slide-in-from-left duration-700">
-        <h1 className="text-xl sm:text-[22px] font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-          <span>Welcome back,</span>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">
-            {loading ? "..." : `${studentData?.name?.firstName || "User"}`}
-          </span>
-        </h1>
-        <div className="flex items-center gap-2.5 mt-1.5">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-          </span>
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] leading-none">
-             {userRole === 'student' ? `ID: ${displayID}` : `ROLE: ${userRole}`}
-          </span>
+    <header className="flex items-center justify-between px-4 sm:px-10 py-3 sm:py-4 bg-white/70 backdrop-blur-2xl border-b border-gray-200/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] sticky top-0 z-40 w-full transition-all duration-500 sm:rounded-none">
+      {/* Left: Hamburger + Welcome Section */}
+      <div className="flex items-center gap-3 sm:gap-4 animate-in fade-in slide-in-from-left duration-700">
+        {/* Mobile Hamburger - Only visible on small screens */}
+        <button
+          onClick={onMenuButtonClick}
+          className="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-xl transition-all active:scale-95"
+          aria-label="Open menu"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        <div className="flex flex-col justify-center">
+          <h1 className="text-lg sm:text-[22px] font-extrabold text-gray-900 tracking-tight flex items-center gap-1.5 sm:gap-2">
+            <span className="hidden xs:inline">Welcome back,</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">
+              {loading ? "..." : `${studentData?.name?.firstName || "User"}`}
+            </span>
+          </h1>
+          <div className="flex items-center gap-2 mt-0.5 sm:mt-1.5">
+            <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+            </span>
+            <span className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] leading-none">
+               {userRole === 'student' ? `ID: ${displayID}` : `ROLE: ${userRole}`}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Right: Icons and Profile */}
-      <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-center sm:justify-end animate-in fade-in slide-in-from-right duration-700">
-        {/* Actions Group */}
-        <div className="flex items-center gap-2 bg-gray-50/80 backdrop-blur-md p-1.5 rounded-2xl border border-gray-200/60 shadow-sm">
-          <button className="group relative p-2.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all duration-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] active:scale-95">
-            <BellIcon className="h-[20px] w-[20px] transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
-            <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
-          <button className="group relative p-2.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all duration-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] active:scale-95">
-            <ChatBubbleOvalLeftEllipsisIcon className="h-[20px] w-[20px] transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:scale-110" />
+      <div className="flex items-center gap-3 sm:gap-6 animate-in fade-in slide-in-from-right duration-700">
+        {/* Actions Group - Hidden on extra small screens if needed, or slightly more compact */}
+        <div className="flex items-center gap-1 sm:gap-2 bg-gray-50/80 backdrop-blur-md p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-gray-200/60 shadow-sm">
+          <button className="group relative p-2 sm:p-2.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded-lg sm:rounded-xl transition-all duration-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] active:scale-95">
+            <BellIcon className="h-[18px] w-[18px] sm:h-[20px] sm:w-[20px] transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
+            <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2.5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full border-2 border-white"></span>
           </button>
         </div>
 

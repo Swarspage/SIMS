@@ -155,15 +155,15 @@ function DetailModal({ internship, onClose }) {
     : "N/A";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Internship Details</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900">Internship Details</h2>
           </div>
           <button
             onClick={onClose}
@@ -176,7 +176,7 @@ function DetailModal({ internship, onClose }) {
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 space-y-8">
+        <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
 
           {/* Top Info Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -327,10 +327,10 @@ function DetailModal({ internship, onClose }) {
         </div>
 
         {/* Modal Footer */}
-        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
+        <div className="bg-slate-50 px-4 sm:px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+            className="w-full sm:w-auto px-5 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
           >
             Close
           </button>
@@ -873,7 +873,7 @@ export default function AdminInternship() {
   };
 
   return (
-    <main className="p-8 bg-slate-50 min-h-screen">
+    <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Manage Internships</h1>
@@ -882,10 +882,10 @@ export default function AdminInternship() {
         </p>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-8">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-6 mb-8">
 
         {/* Row 1 — Search + Export */}
-        <div className="flex flex-wrap gap-4 items-center mb-5">
+        <div className="flex flex-wrap gap-3 sm:gap-4 items-center mb-5">
           <div className="flex-1 min-w-[240px]">
             <input
               type="text"
@@ -899,7 +899,7 @@ export default function AdminInternship() {
             </p>
           </div>
 
-          <div className="flex gap-3 ml-auto flex-wrap">
+          <div className="flex flex-wrap gap-3 w-full md:w-auto md:ml-auto">
             <button
               onClick={() => {
                 setAppliedFilters({
@@ -914,20 +914,20 @@ export default function AdminInternship() {
                 });
                 setCurrentPage(1);
               }}
-              className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
+              className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Find Internships
+              Find
             </button>
             <button
               onClick={handleAddInternship}
-              className="px-5 py-2.5 rounded-lg border border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition-colors shadow-sm">
-              + Add Internship
+              className="flex-1 sm:flex-none px-5 py-2.5 rounded-lg border border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition-colors shadow-sm text-center">
+              + Add
             </button>
             <button onClick={handleExport}
-              className="px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-2">
+              className="flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm flex items-center justify-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

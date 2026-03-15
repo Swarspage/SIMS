@@ -903,7 +903,7 @@ export default function AdminStudentSection() {
 
   // Otherwise show the list view
   return (
-    <main className="p-8 bg-slate-50 min-h-screen">
+    <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Manage Students</h1>
@@ -922,7 +922,7 @@ export default function AdminStudentSection() {
 
       <>
         {/* Filter / Buttons Row */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-8">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-6 mb-8">
 
           {/* 1. Main Search Bar */}
           <div className="mb-5">
@@ -1012,7 +1012,7 @@ export default function AdminStudentSection() {
           <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
 
             {/* Find & Clear Buttons Group */}
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3 w-full sm:w-auto">
               <button
                 onClick={() => {
                   setAppliedFilters({
@@ -1032,7 +1032,7 @@ export default function AdminStudentSection() {
                   });
                   setCurrentPage(1);
                 }}
-                className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
+                className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

@@ -31,7 +31,7 @@ export default function StudentDashboard() {
         setAchievementDistribution(data.achievementDistribution || []);
       }
     } catch (error) {
-       console.error("Error fetching student dashboard data:", error);
+      console.error("Error fetching student dashboard data:", error);
     } finally {
       setLoading(false);
     }
@@ -39,7 +39,7 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <main className="p-4 sm:p-8 bg-slate-50 min-h-screen flex items-center justify-center">
+      <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-slate-600">Loading your dashboard...</p>
@@ -49,7 +49,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <main className="p-2 xs:p-3 sm:p-6 md:p-8 bg-slate-50 min-h-screen">
+    <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       {/* Welcome Section */}
       <div className="mb-7 sm:mb-10">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
@@ -127,8 +127,8 @@ export default function StudentDashboard() {
               </p>
               <p
                 className={`text-lg sm:text-2xl font-bold ${stats.internshipStatus === "Done"
-                    ? "text-purple-600"
-                    : "text-slate-400"
+                  ? "text-purple-600"
+                  : "text-slate-400"
                   }`}
               >
                 {stats.internshipStatus}
@@ -136,14 +136,14 @@ export default function StudentDashboard() {
             </div>
             <div
               className={`rounded-full p-2 sm:p-4 ${stats.internshipStatus === "Done"
-                  ? "bg-purple-100"
-                  : "bg-slate-100"
+                ? "bg-purple-100"
+                : "bg-slate-100"
                 }`}
             >
               <svg
                 className={`w-5 h-5 sm:w-6 sm:h-6 ${stats.internshipStatus === "Done"
-                    ? "text-purple-600"
-                    : "text-slate-400"
+                  ? "text-purple-600"
+                  : "text-slate-400"
                   }`}
                 fill="none"
                 stroke="currentColor"
@@ -168,8 +168,8 @@ export default function StudentDashboard() {
               </p>
               <p
                 className={`text-lg sm:text-2xl font-bold ${stats.placementStatus === "Placed"
-                    ? "text-emerald-600"
-                    : "text-slate-400"
+                  ? "text-emerald-600"
+                  : "text-slate-400"
                   }`}
               >
                 {stats.placementStatus === "Placed" ? "✓ Placed" : "Not Placed"}
@@ -177,14 +177,14 @@ export default function StudentDashboard() {
             </div>
             <div
               className={`rounded-full p-2 sm:p-4 ${stats.placementStatus === "Placed"
-                  ? "bg-emerald-100"
-                  : "bg-slate-100"
+                ? "bg-emerald-100"
+                : "bg-slate-100"
                 }`}
             >
               <svg
                 className={`w-5 h-5 sm:w-6 sm:h-6 ${stats.placementStatus === "Placed"
-                    ? "text-emerald-600"
-                    : "text-slate-400"
+                  ? "text-emerald-600"
+                  : "text-slate-400"
                   }`}
                 fill="none"
                 stroke="currentColor"
@@ -209,8 +209,8 @@ export default function StudentDashboard() {
               </p>
               <p
                 className={`text-lg sm:text-xl font-bold ${stats.higherStudiesStatus === "Applied"
-                    ? "text-amber-600"
-                    : "text-slate-400"
+                  ? "text-amber-600"
+                  : "text-slate-400"
                   }`}
               >
                 {stats.higherStudiesStatus === "Applied" ? "Applied" : "N/A"}
@@ -218,14 +218,14 @@ export default function StudentDashboard() {
             </div>
             <div
               className={`rounded-full p-2 sm:p-4 ${stats.higherStudiesStatus === "Applied"
-                  ? "bg-amber-100"
-                  : "bg-slate-100"
+                ? "bg-amber-100"
+                : "bg-slate-100"
                 }`}
             >
               <svg
                 className={`w-5 h-5 sm:w-6 sm:h-6 ${stats.higherStudiesStatus === "Applied"
-                    ? "text-amber-600"
-                    : "text-slate-400"
+                  ? "text-amber-600"
+                  : "text-slate-400"
                   }`}
                 fill="none"
                 stroke="currentColor"
