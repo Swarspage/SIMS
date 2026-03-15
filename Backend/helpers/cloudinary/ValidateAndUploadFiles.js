@@ -2,7 +2,7 @@ const fs = require("fs").promises;
 const cloudinary = require("../../config/cloudinaryConfig");
 const { deleteMultipleFromCloudinary } = require("./DeleteMultipleFromCloudinary");
 const { insertFailedCloudinaryDeletion } = require("../failedCloudinaryDeletetion/insertFailedCloudinaryDeletion");
-
+const { fileTypeFromBuffer } = require("file-type");
 
 const validateAndUploadFiles = async (filesObj, fileConfigs) => {
     const uploadedFiles = {};
@@ -26,6 +26,14 @@ const validateAndUploadFiles = async (filesObj, fileConfigs) => {
                 throw new Error(
                     `${friendlyName} exceeds max size.`
                 );
+            }
+
+            // Magic Bytes Validation
+            const buffer = await fs.readFile(file.path);
+            const type = await fileTypeFromBuffer(buffer);
+
+            if (!type || !allowedTypes.includes(type.mime)) {
+                throw new Error(`${friendlyName} file content is invalid`);
             }
         }
 
