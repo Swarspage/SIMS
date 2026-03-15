@@ -1,6 +1,9 @@
 // const Joi = require("joi");
 const Joi = require("../helpers/profanity/joiWithProfanity");
-const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
+// Negative lookahead guards against all-digit strings.
+// Character class has no nested quantifiers so there is no backtracking risk.
+// Joi's max() cap (enforced before this regex runs) further bounds worst-case input length.
+const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'\-]+$/;
 
 //create admission
 const admissionCreateSchema = Joi.object({
@@ -161,27 +164,6 @@ const admissionCreateSchema = Joi.object({
 
 //update admission => student | pending only
 const admissionUpdateSchema = Joi.object({
-  year: Joi.string()
-    .trim()
-    .valid("SE", "TE", "BE")
-    .optional()
-    .messages({
-      "any.only": "Year must be one of SE, TE, or BE.",
-      "string.empty": "Year cannot be empty."
-    }),
-
-  div: Joi.string()
-    .trim()
-    .pattern(textWithNumberRegex)
-    .max(10)
-    .noProfanity()
-    .optional()
-    .messages({
-      "string.pattern.base": "Division must contain only letters, numbers and allowed characters.",
-      "string.noProfanity": "Division contains inappropriate language.",
-      "string.empty": "Division cannot be empty."
-    }),
-
   rollno: Joi.string()
     .trim()
     .pattern(/^\d+$/)

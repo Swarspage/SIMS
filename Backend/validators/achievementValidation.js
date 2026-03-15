@@ -1,6 +1,9 @@
 const Joi = require("../helpers/profanity/joiWithProfanity");
 
-const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
+// Negative lookahead guards against all-digit strings.
+// Character class has no nested quantifiers so there is no backtracking risk.
+// Joi's max() cap (enforced before this regex runs) further bounds worst-case input length.
+const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'\-]+$/;
 const textOnlyRegex = /^[A-Za-z\s'-]+$/;
 
 //create

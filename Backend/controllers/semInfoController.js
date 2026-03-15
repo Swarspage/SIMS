@@ -43,13 +43,13 @@ const addSemInfo = async (req, res) => {
         return res.status(400).json({ success: false, message: "studentId is required" });
       }
 
-      // Support both MongoDB ObjectId and custom studentID field
-      // Use else-if to avoid a redundant DB call when ObjectId lookup already failed
+      // Support both MongoDB ObjectId and custom studentID field.
+      // Use else to avoid a second DB call when the first already resolved the student,
+      // and to fail fast when a valid ObjectId matches no document.
       let student;
       if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
         student = await Student.findById(rawStudentId);
-      }
-      if (!student) {
+      } else {
         student = await Student.findOne({ studentID: rawStudentId });
       }
 
@@ -436,7 +436,7 @@ const getAllSemInfos = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: err.message || "Some Error Occurred. Please Try Again Later."
+      message: "Server Error",
     });
   }
 };
