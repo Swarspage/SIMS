@@ -5,6 +5,7 @@ const Achievement = require("../models/Achievement");
 const Internship = require("../models/Internship");
 const Placement = require("../models/Placement");
 const HigherStudies = require("../models/HigherStudies");
+const mongoose = require("mongoose");
 
 
 // ================= DIVISION INCHARGE DASHBOARD =================
@@ -179,7 +180,7 @@ exports.adminDashboard = async (req, res) => {
 exports.studentDashboard = async (req, res) => {
   try {
 
-    const stuID = req.user.id;
+    const stuID = new mongoose.Types.ObjectId(req.user.id); // ✅ Cast once, use everywhere
 
     const [
       totalActivities,
@@ -192,17 +193,13 @@ exports.studentDashboard = async (req, res) => {
     ] = await Promise.all([
 
       Activity.countDocuments({ stuID }),
-
       Achievement.countDocuments({ stuID }),
-
       Internship.exists({ stuID }),
-
       Placement.exists({ stuID }),
-
       HigherStudies.exists({ stuID }),
 
       Activity.aggregate([
-        { $match: { stuID } },
+        { $match: { stuID } }, // ✅ Now correctly matches ObjectId
         {
           $group: {
             _id: "$type",
@@ -212,7 +209,7 @@ exports.studentDashboard = async (req, res) => {
       ]),
 
       Achievement.aggregate([
-        { $match: { stuID } },
+        { $match: { stuID } }, // ✅ Now correctly matches ObjectId
         {
           $group: {
             _id: "$category",
@@ -240,3 +237,67 @@ exports.studentDashboard = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
   }
 };
+
+//   try {
+
+//     const stuID = req.user.id;
+
+//     const [
+//       totalActivities,
+//       totalAchievements,
+//       internship,
+//       placement,
+//       higherStudies,
+//       activitiesByType,
+//       achievementsByCategory
+//     ] = await Promise.all([
+
+//       Activity.countDocuments({ stuID }),
+
+//       Achievement.countDocuments({ stuID }),
+
+//       Internship.exists({ stuID }),
+
+//       Placement.exists({ stuID }),
+
+//       HigherStudies.exists({ stuID }),
+
+//       Activity.aggregate([
+//         { $match: { stuID } },
+//         {
+//           $group: {
+//             _id: "$type",
+//             count: { $sum: 1 }
+//           }
+//         }
+//       ]),
+
+//       Achievement.aggregate([
+//         { $match: { stuID } },
+//         {
+//           $group: {
+//             _id: "$category",
+//             count: { $sum: 1 }
+//           }
+//         }
+//       ])
+
+//     ]);
+
+//     res.json({
+//       stats: {
+//         totalActivities,
+//         totalAchievements,
+//         internshipStatus: internship ? "Done" : "Pending",
+//         placementStatus: placement ? "Placed" : "Not Placed",
+//         higherStudiesStatus: higherStudies ? "Applied" : "Not Applied"
+//       },
+//       activityDistribution: activitiesByType,
+//       achievementDistribution: achievementsByCategory
+//     });
+
+//   } catch (error) {
+//     console.error("Student dashboard error:", error);
+//     res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
+//   }
+// };
