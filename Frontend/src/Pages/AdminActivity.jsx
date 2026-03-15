@@ -331,9 +331,12 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
   useEffect(() => {
     if (isOpen) {
       if (activity) {
-        const studentObj = activity.student || activity.stuID;
+        // Extract student info from either 'student' (aggregate) or 'stuID' (populated)
+        const studentInfo = activity.student || activity.stuID;
+        const initialID = (typeof studentInfo === "object" ? studentInfo?.studentID : studentInfo) || "";
+        
         setFormData({
-          studentId: (typeof studentObj === "object" ? studentObj?.studentID : studentObj) || "",
+          studentId: initialID,
           title: activity.title || "",
           dateFrom: (activity.date?.from && !isNaN(new Date(activity.date.from).getTime()))
             ? new Date(activity.date.from).toISOString().split('T')[0]
@@ -684,7 +687,15 @@ export default function AdminActivity() {
     if (activityToEdit) {
       // Local update for edits
       setActivities((prev) =>
-        prev.map((a) => (a._id === updatedItem._id ? updatedItem : a))
+        prev.map((a) =>
+          a._id === updatedItem._id
+            ? {
+                ...updatedItem,
+                student: a.student || updatedItem.student,
+                stuID: a.stuID || updatedItem.stuID,
+              }
+            : a
+        )
       );
     } else {
       // For new activities, a refetch is safer to maintain sorting/pagination

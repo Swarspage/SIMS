@@ -2,107 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import avatar from "../assets/Students.png";
 import { studentService } from "../services/studentService";
 import { toast } from "react-toastify";
-import ExcelJS from "exceljs";
+
 import Pagination from "../Components/Common/Pagination";
 
 
-// Component: Add Student Modal
-function AddStudentModal({ isOpen, onClose, onAdded }) {
-  const [form, setForm] = useState({ studentID: "" });
-  const [saving, setSaving] = useState(false);
 
-  if (!isOpen) return null;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.studentID) {
-      return toast.warn("Please provide Student ID.");
-    }
-    try {
-      setSaving(true);
-      // Create a dummy Excel workbook in memory using exceljs
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Students");
-      worksheet.addRow(["studentID"]);
-      worksheet.addRow([form.studentID.trim()]);
-
-      // Write workbook to array buffer
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const file = new File([blob], "new_student.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-
-      // Call the existing import endpoint with our 1-row file
-      const response = await studentService.importStudentIDs(file);
-
-      const inserted = response?.summary?.inserted ?? 0;
-      if (inserted > 0) {
-        toast.success("✅ Student added successfully!");
-      } else if (response?.summary?.alreadyExists > 0) {
-        toast.warn("⚠️ Student ID already exists.");
-      } else {
-        toast.success("✅ Student imported successfully.");
-      }
-      onAdded();
-      onClose();
-    } catch (err) {
-      console.error(err);
-      const resData = err.response?.data;
-      if (resData?.errors && Array.isArray(resData.errors)) {
-        resData.errors.forEach((e) => toast.error(e.message || "Validation error"));
-      } else {
-        toast.error(resData?.message || "Failed to add student.");
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const inputClass = "w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200 shadow-sm";
-  const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] animate-slideUp">
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight">Add New Student</h3>
-          </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto bg-white">
-          <div>
-            <label className={labelClass}>Student ID *</label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. 2024COMP123"
-              className={inputClass}
-              value={form.studentID}
-              onChange={(e) => setForm({ ...form, studentID: e.target.value })}
-            />
-          </div>
-
-          <div className="pt-6 flex justify-end gap-3 border-t border-slate-100">
-            <button type="button" onClick={onClose} className="px-5 py-2.5 font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
-            <button type="submit" disabled={saving} className="px-6 py-2.5 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-              {saving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Adding...
-                </>
-              ) : "Add Student"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
 
 // Component: Edit Student Modal
 function EditStudentModal({ isOpen, onClose, onSaved, student }) {
@@ -774,7 +678,7 @@ export default function AdminStudentSection() {
   const [viewMode, setViewMode] = useState("list"); // "list" or "profile"
 
   // Add/Edit Modals State
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Filter state
@@ -1185,14 +1089,7 @@ export default function AdminStudentSection() {
               {/* Hidden Input for Student IDs Import */}
               <input ref={studentIDsFileInputRef} type="file" accept=".xlsx,.xls" onChange={handleStudentIDsFileChange} className="hidden" />
 
-              {/* Add Student Button */}
-              <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="px-4 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                Add Student
-              </button>
+
             </div>
           </div>
 
@@ -1293,11 +1190,7 @@ export default function AdminStudentSection() {
         </div>
       </>
 
-      <AddStudentModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAdded={() => fetchStudents()}
-      />
+
 
       <EditStudentModal
         isOpen={isEditModalOpen}

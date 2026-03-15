@@ -854,7 +854,15 @@ export default function AdminAchievements() {
     if (achievementToEdit) {
       // Local update for edits
       setAchievements((prev) =>
-        prev.map((a) => (a._id === updatedItem._id ? updatedItem : a))
+        prev.map((a) =>
+          a._id === updatedItem._id
+            ? {
+                ...updatedItem,
+                student: a.student || updatedItem.student,
+                stuID: a.stuID || updatedItem.stuID,
+              }
+            : a
+        )
       );
     } else {
       // For new achievements, a refetch is safer to maintain sorting/pagination

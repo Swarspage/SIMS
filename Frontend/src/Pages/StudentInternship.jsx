@@ -449,7 +449,7 @@ export default function StudentInternship() {
                       onChange={handleChange}
                       placeholder="1-12"
                       min="1"
-                      max="12"
+                      max="6"
                       className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                       required
                     />

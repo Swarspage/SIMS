@@ -791,7 +791,11 @@ export default function AdminAdmission() {
     setAdmissions((prev) => {
       const exists = prev.some((a) => a._id === updatedItem._id);
       if (exists) {
-        return prev.map((a) => (a._id === updatedItem._id ? updatedItem : a));
+        return prev.map((a) =>
+          a._id === updatedItem._id
+            ? { ...updatedItem, stuID: a.stuID || updatedItem.stuID }
+            : a
+        );
       } else {
         // For new admissions, refetch to maintain sorting/pagination
         fetchAdmissions(currentPage);

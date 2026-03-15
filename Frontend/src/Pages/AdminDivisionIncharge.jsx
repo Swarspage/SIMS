@@ -319,9 +319,7 @@ export default function AdminDivisionIncharge() {
     const [editTarget, setEditTarget] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
 
-    // Import/Export state
-    const [importing, setImporting] = useState(false);
-    const fileInputRef = useRef(null);
+
 
     useEffect(() => {
         fetchIncharges(currentPage);
@@ -373,45 +371,9 @@ export default function AdminDivisionIncharge() {
         setCurrentPage(1);
     };
 
-    const handleImportClick = () => {
-        fileInputRef.current?.click();
-    };
 
-    const handleFileChange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
 
-        if (!file.name.match(/\.(xlsx|xls)$/)) {
-            toast.warn("Please upload a valid Excel file (.xlsx or .xls)");
-            return;
-        }
 
-        try {
-            setImporting(true);
-            const response = await divisionInchargeService.importExcel(file);
-
-            if (response && response.summary) {
-                const { received, inserted, emailed, failed } = response.summary;
-                let message = `✅ Processed ${received} records.\n`;
-                message += `Entries created: ${inserted}\n`;
-                message += `Emails sent: ${emailed}\n`;
-
-                if (failed > 0 || (response.failed && response.failed.length > 0)) {
-                    message += `\n⚠️ Failed to send emails to: ${failed} users.`;
-                }
-                toast.info(message);
-            } else {
-                toast.info("✅ Import completed successfully.");
-            }
-            fetchIncharges(1);
-            e.target.value = "";
-        } catch (err) {
-            console.error("Import error:", err);
-            toast.error(err.response?.data?.message || "Failed to import Division Incharges.");
-        } finally {
-            setImporting(false);
-        }
-    };
 
 
     return (
@@ -477,27 +439,7 @@ export default function AdminDivisionIncharge() {
 
 
 
-                {/* Import Button */}
-                <button
-                    onClick={handleImportClick}
-                    disabled={importing}
-                    className="px-5 py-2.5 rounded-lg bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                    {importing ? (
-                        <>
-                            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                            Importing...
-                        </>
-                    ) : (
-                        <>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
-                            Import
-                        </>
-                    )}
-                </button>
-                <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleFileChange} className="hidden" />
+
             </div>
 
             {/* Content */}

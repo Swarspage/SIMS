@@ -21,11 +21,11 @@ function PlacementCard({ placement, onView, onDelete, onEdit, isDeleting }) {
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
       {/* Document/Image Preview Section */}
       <div className="h-32 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden relative">
-        {placement?.placementProof ? (
-          placement.placementProof.toLowerCase().endsWith(".pdf") ? (
+        {placement?.placementProof?.url ? (
+          placement.placementProof.url.toLowerCase().endsWith(".pdf") ? (
             <div className="w-full h-full relative group-hover:scale-105 transition-transform duration-300">
               <iframe
-                src={`${placement.placementProof}#view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
+                src={`${placement.placementProof.url}#view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
                 title="PDF Preview"
                 className="w-full h-full border-none pointer-events-none"
                 scrolling="no"
@@ -37,7 +37,7 @@ function PlacementCard({ placement, onView, onDelete, onEdit, isDeleting }) {
             </div>
           ) : (
             <img
-              src={placement.placementProof}
+              src={placement.placementProof.url}
               alt={placement?.companyName || "Placement"}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
@@ -505,51 +505,31 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const initForm = async () => {
-      if (!isOpen) return;
-
-      if (placement) {
-        const studentObj = placement.student || placement.stuID;
-        let initialID = (typeof studentObj === "object" ? studentObj?.studentID : studentObj) || "";
-        
-        // If it's a hex ID string, try to fetch the proper studentID
-        if (/^[0-9a-fA-F]{24}$/.test(initialID)) {
-          try {
-            const res = await studentService.getSingleStudent(initialID);
-            if (res.success && res.data?.studentID) {
-              initialID = res.data.studentID;
-            }
-          } catch (err) {
-            console.error("Error resolving student ID for placement edit:", err);
-          }
-        }
-
-        setFormData({
-          studentId: initialID,
-          companyName: placement.companyName || "",
-          role: placement.role || "",
-          placementType: placement.placementType || "Campus",
-          package: placement.package || "",
-          placementYear: placement.placementYear || "",
-          passoutYear: placement.passoutYear || "",
-          joiningYear: placement.joiningYear || "",
-        });
-      } else {
-        setFormData({
-          studentId: "",
-          companyName: "",
-          role: "",
-          placementType: "Campus",
-          package: "",
-          placementYear: "",
-          passoutYear: "",
-          joiningYear: "",
-        });
-      }
-      setPlacementProof(null);
-    };
-
-    initForm();
+    if (!isOpen) return;
+    if (placement) {
+      setFormData({
+        studentId: placement.studentID || "",
+        companyName: placement.companyName || "",
+        role: placement.role || "",
+        placementType: placement.placementType || "Campus",
+        package: placement.package || "",
+        placementYear: placement.placementYear || "",
+        passoutYear: placement.passoutYear || "",
+        joiningYear: placement.joiningYear || "",
+      });
+    } else {
+      setFormData({
+        studentId: "",
+        companyName: "",
+        role: "",
+        placementType: "Campus",
+        package: "",
+        placementYear: "",
+        passoutYear: "",
+        joiningYear: "",
+      });
+    }
+    setPlacementProof(null);
   }, [isOpen, placement]);
 
   const handleChange = (e) => {
@@ -566,40 +546,9 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
     setLoading(true);
 
     try {
-      let stuIDToUse = formData.studentId;
-
-      // Handle Student ID resolution for new records
-      if (!placement) {
-        const isObjectId = /^[0-9a-fA-F]{24}$/.test(formData.studentId);
-
-        if (!isObjectId) {
-          const studentRes = await studentService.getStudents({ search: formData.studentId });
-          const students = studentRes.data || [];
-
-          const exactMatch = students.find(s => s.studentID === formData.studentId);
-          if (exactMatch) {
-            stuIDToUse = exactMatch._id;
-          } else if (students.length === 1) {
-            stuIDToUse = students[0]._id;
-          } else if (students.length > 1) {
-            toast.error("Multiple students found with this ID. Please be more specific.");
-            setLoading(false);
-            return;
-          } else {
-            toast.error("No student found with this ID. Please verify.");
-            setLoading(false);
-            return;
-          }
-        }
-      }
-
       const payload = new FormData();
       Object.keys(formData).forEach((key) => {
-        if (!placement && key === "studentId") {
-          payload.append("studentId", stuIDToUse);
-        } else if (key !== "studentId") {
-          payload.append(key, formData[key]);
-        }
+        payload.append(key, formData[key]);
       });
 
       if (placementProof) {
@@ -612,7 +561,7 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
         toast.success("Placement updated successfully!");
       } else {
         if (!placementProof) {
-          toast.error("Placement Proof (PDF) is required for new records.");
+          toast.error("Placement proof (PDF/Image) is required for new records.");
           setLoading(false);
           return;
         }
@@ -624,7 +573,6 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
       onClose();
     } catch (err) {
       console.error("Error saving placement:", err);
-      // Improve Validation: Parse detailed messages from backend
       const errorMessage = 
         err.response?.data?.errors?.map(e => e.message).join(", ") || 
         err.response?.data?.error || 
@@ -890,7 +838,17 @@ export default function AdminPlacement() {
   const handleSavePlacement = (updatedItem) => {
     if (placementToEdit) {
       setPlacements((prev) =>
-        prev.map((p) => (p._id === updatedItem._id ? updatedItem : p))
+        prev.map((p) =>
+          p._id === updatedItem._id
+            ? {
+                ...updatedItem,
+                stuID: p.stuID || updatedItem.stuID,
+                studentName: p.studentName || updatedItem.studentName,
+                studentID: p.studentID || updatedItem.studentID,
+                studentYear: p.studentYear || updatedItem.studentYear,
+              }
+            : p
+        )
       );
     } else {
       fetchPlacements(currentPage);
@@ -900,7 +858,17 @@ export default function AdminPlacement() {
   const handleSaveHigherStudy = (updatedItem) => {
     if (higherStudyToEdit) {
       setHigherStudies((prev) =>
-        prev.map((h) => (h._id === updatedItem._id ? updatedItem : h))
+        prev.map((h) =>
+          h._id === updatedItem._id
+            ? {
+                ...updatedItem,
+                stuID: h.stuID || updatedItem.stuID,
+                studentName: h.studentName || updatedItem.studentName,
+                studentID: h.studentID || updatedItem.studentID,
+                studentYear: h.studentYear || updatedItem.studentYear,
+              }
+            : h
+        )
       );
     } else {
       fetchHigherStudies(currentPage);
@@ -1354,41 +1322,23 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const initForm = async () => {
-      if (!isOpen) return;
+    if (!isOpen) return;
 
-      if (higherStudy) {
-        let initialID = typeof higherStudy.stuID === "string" ? higherStudy.stuID : higherStudy.stuID?.studentID || "";
-        
-        // If it's a hex ID string, try to fetch the proper studentID
-        if (/^[0-9a-fA-F]{24}$/.test(initialID)) {
-          try {
-            const res = await studentService.getSingleStudent(initialID);
-            if (res.success && res.data?.studentID) {
-              initialID = res.data.studentID;
-            }
-          } catch (err) {
-            console.error("Error resolving student ID for higher study edit:", err);
-          }
-        }
-
-        setFormData({
-          studentId: initialID,
-          examName: higherStudy.examName || "GATE",
-          score: higherStudy.score || "",
-        });
-      } else {
-        setFormData({
-          studentId: "",
-          examName: "GATE",
-          score: "",
-        });
-      }
-      setMarksheet(null);
-      setIdCardPhoto(null);
-    };
-
-    initForm();
+    if (higherStudy) {
+      setFormData({
+        studentId: higherStudy.studentID || "",
+        examName: higherStudy.examName || "GATE",
+        score: higherStudy.score || "",
+      });
+    } else {
+      setFormData({
+        studentId: "",
+        examName: "GATE",
+        score: "",
+      });
+    }
+    setMarksheet(null);
+    setIdCardPhoto(null);
   }, [isOpen, higherStudy]);
 
   const handleChange = (e) => {
@@ -1405,42 +1355,10 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
     setLoading(true);
 
     try {
-      let stuIDToUse = formData.studentId;
-
-      // Handle Student ID resolution for new records
-      if (!higherStudy) {
-        // If it's not a 24-char hex string, it's likely a human-readable ID
-        const isObjectId = /^[0-9a-fA-F]{24}$/.test(formData.studentId);
-
-        if (!isObjectId) {
-          const studentRes = await studentService.getStudents({ search: formData.studentId });
-          const students = studentRes.data || [];
-
-          // Try exact match on studentID first
-          const exactMatch = students.find(s => s.studentID === formData.studentId);
-          if (exactMatch) {
-            stuIDToUse = exactMatch._id;
-          } else if (students.length === 1) {
-            stuIDToUse = students[0]._id;
-          } else if (students.length > 1) {
-            toast.error("Multiple students found with this ID. Please be more specific.");
-            setLoading(false);
-            return;
-          } else {
-            toast.error("No student found with this ID. Please verify.");
-            setLoading(false);
-            return;
-          }
-        }
-      }
-
       const payload = new FormData();
-      // Only append studentId if creating new
-      if (!higherStudy) {
-        payload.append("studentId", stuIDToUse);
-      }
-      payload.append("examName", formData.examName);
-      payload.append("score", formData.score);
+      Object.keys(formData).forEach((key) => {
+        payload.append(key, formData[key]);
+      });
 
       if (marksheet) {
         payload.append("marksheet", marksheet);

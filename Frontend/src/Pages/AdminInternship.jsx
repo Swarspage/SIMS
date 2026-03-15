@@ -365,10 +365,16 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
       if (!isOpen) return;
 
       if (internship) {
-        const studentObj = internship.student || internship.stuID;
-        let initialID = (typeof studentObj === "object" ? studentObj?.studentID : studentObj) || "";
+        // Prioritize the human-readable studentID if available from the backend projection
+        let initialID = internship.studentID || "";
 
-        // If it's a hex ID string, try to fetch the proper studentID
+        // Fallback or cleanup if only a hex ID is present
+        const studentObj = internship.student || internship.stuID;
+        if (!initialID) {
+          initialID = (typeof studentObj === "object" ? studentObj?.studentID : studentObj) || "";
+        }
+
+        // If it's still a hex ID string, try to fetch the proper human-readable studentID
         if (/^[0-9a-fA-F]{24}$/.test(initialID)) {
           try {
             const res = await studentService.getSingleStudent(initialID);
@@ -431,34 +437,9 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
     e.preventDefault();
     setSaving(true);
     try {
-      let stuIDToUse = formData.studentId;
-
-      // Handle Student ID resolution for new records
-      if (!internship) {
-        // If it's not a 24-char hex string, it's likely a human-readable ID
-        const isObjectId = /^[0-9a-fA-F]{24}$/.test(formData.studentId);
-
-        if (!isObjectId) {
-          const studentRes = await studentService.getStudents({ search: formData.studentId });
-          const students = studentRes.data || [];
-
-          // Try exact match on studentID first
-          const exactMatch = students.find(s => s.studentID === formData.studentId);
-          if (exactMatch) {
-            stuIDToUse = exactMatch._id;
-          } else if (students.length === 1) {
-            stuIDToUse = students[0]._id;
-          } else if (students.length > 1) {
-            toast.error("Multiple students found with this ID. Please be more specific.");
-            setSaving(false);
-            return;
-          } else {
-            toast.error("No student found with this ID. Please verify.");
-            setSaving(false);
-            return;
-          }
-        }
-      }
+      // Send the raw human-readable Student ID (e.g., 2023FHCO073)
+      // The backend will perform the lookup and validation.
+      const stuIDToUse = formData.studentId;
 
       const data = new FormData();
 
@@ -583,7 +564,7 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
                   name="durationMonths"
                   required
                   min="1"
-                  max="12"
+                  max="6"
                   value={formData.durationMonths}
                   onChange={handleChange}
                   placeholder="e.g. 3"
@@ -856,7 +837,16 @@ export default function AdminInternship() {
     if (internshipToEdit) {
       // Local update for edits
       setInternships((prev) =>
-        prev.map((i) => (i._id === updatedItem._id ? updatedItem : i))
+        prev.map((i) =>
+          i._id === updatedItem._id
+            ? {
+                ...updatedItem,
+                studentName: i.studentName || updatedItem.studentName,
+                studentID: i.studentID || updatedItem.studentID,
+                studentYear: i.studentYear || updatedItem.studentYear,
+              }
+            : i
+        )
       );
     } else {
       // For new records, refetch to maintain sorting/pagination
