@@ -21,13 +21,14 @@ const limiterDefaults = {
         xForwardedForHeader: false,
         keyGeneratorIpFallback: false,
     },
+    skip: (req) => req.path === "/health" 
 };
 
 // General auth limiter (login, signup, etc.)
 const authLimiter = rateLimit({
     ...limiterDefaults,
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20,
+    windowMs: 15 * 60 * 1000,
+    max: 10,  // ⬇ was 20. College app: 10 attempts per 15min per IP is plenty
     message: { success: false, message: "Too many auth attempts, please try again later." },
     handler: makeHandler("authLimiter"),
 });
@@ -35,8 +36,8 @@ const authLimiter = rateLimit({
 // Stricter limiter for forgot/reset password
 const passwordResetLimiter = rateLimit({
     ...limiterDefaults,
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 5,
+    windowMs: 60 * 60 * 1000,
+    max: 3,  // ⬇ was 5. Password reset is a high-abuse vector, 3/hr is safe
     message: { success: false, message: "Too many password reset attempts, please try again after an hour." },
     handler: makeHandler("passwordResetLimiter"),
 });

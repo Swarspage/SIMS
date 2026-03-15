@@ -21,12 +21,13 @@ const limiterDefaults = {
         xForwardedForHeader: false,
         keyGeneratorIpFallback: false,
     },
+    skip: (req) => req.path === "/health" 
 };
 
 const generalLimiter = rateLimit({
-    ...limiterDefaults,  // spread here
+    ...limiterDefaults,
     windowMs: 15 * 60 * 1000,
-    max: 200,
+    max: 100,  // ⬇ was 200. On 512MB, this halves memory pressure from tracked IPs
     message: { success: false, message: "Too many requests, please try again later." },
     handler: makeHandler("generalLimiter"),
 });
@@ -34,7 +35,7 @@ const generalLimiter = rateLimit({
 const readLimiter = rateLimit({
     ...limiterDefaults,
     windowMs: 15 * 60 * 1000,
-    max: 150,
+    max: 100,  // ⬇ was 150. Students browsing dashboards don't need 150 GETs per 15min
     message: { success: false, message: "Too many requests, please slow down." },
     handler: makeHandler("readLimiter"),
 });
@@ -42,7 +43,7 @@ const readLimiter = rateLimit({
 const writeLimiter = rateLimit({
     ...limiterDefaults,
     windowMs: 15 * 60 * 1000,
-    max: 50,
+    max: 30,  // ⬇ was 50. 30 writes/15min is generous for a student records app
     message: { success: false, message: "Too many write requests, please try again later." },
     handler: makeHandler("writeLimiter"),
 });
@@ -50,7 +51,7 @@ const writeLimiter = rateLimit({
 const uploadLimiter = rateLimit({
     ...limiterDefaults,
     windowMs: 60 * 60 * 1000,
-    max: 15,
+    max: 10,  // ⬇ was 15. Uploads are heavy — 10/hr per user is enough
     message: { success: false, message: "Too many upload requests, please try again after an hour." },
     handler: makeHandler("uploadLimiter"),
 });
@@ -58,7 +59,7 @@ const uploadLimiter = rateLimit({
 const exportLimiter = rateLimit({
     ...limiterDefaults,
     windowMs: 60 * 60 * 1000,
-    max: 15,
+    max: 5,   // ⬇ was 15. Excel exports are CPU/memory heavy on a shared 0.5 vCPU
     message: { success: false, message: "Too many export requests, please try again after an hour." },
     handler: makeHandler("exportLimiter"),
 });
