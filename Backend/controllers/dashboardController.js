@@ -9,7 +9,6 @@ const mongoose = require("mongoose");
 
 
 // ================= DIVISION INCHARGE DASHBOARD =================
-
 exports.divisionDashboard = async (req, res) => {
   try {
 
@@ -37,7 +36,10 @@ exports.divisionDashboard = async (req, res) => {
       totalPlacements,
       totalHigherStudies,
       placementsByType,
-      achievementsByCategory
+      achievementsByCategory,
+      activitiesByType,
+      internshipsByType,
+      recentAchievements
     ] = await Promise.all([
 
       Student.countDocuments({ year, division }),
@@ -52,6 +54,7 @@ exports.divisionDashboard = async (req, res) => {
 
       HigherStudies.countDocuments({ stuID: { $in: studentIDs } }),
 
+      // placements by type
       Placement.aggregate([
         {
           $match: { stuID: { $in: studentIDs } }
@@ -64,6 +67,7 @@ exports.divisionDashboard = async (req, res) => {
         }
       ]),
 
+      // achievements by category
       Achievement.aggregate([
         {
           $match: { stuID: { $in: studentIDs } }
@@ -74,7 +78,48 @@ exports.divisionDashboard = async (req, res) => {
             count: { $sum: 1 }
           }
         }
-      ])
+      ]),
+
+      // activities by type
+      Activity.aggregate([
+        {
+          $match: { stuID: { $in: studentIDs } }
+        },
+        {
+          $group: {
+            _id: "$type",
+            count: { $sum: 1 }
+          }
+        }
+      ]),
+
+      // internships by paid/unpaid
+      Internship.aggregate([
+        {
+          $match: { stuID: { $in: studentIDs } }
+        },
+        {
+          $group: {
+            _id: {
+              $cond: [
+                { $eq: ["$stipendInfo.isPaid", true] },
+                "Paid",
+                "Unpaid"
+              ]
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ]),
+
+      // recent achievements
+      Achievement.find({
+        stuID: { $in: studentIDs }
+      })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate("stuID", "studentID name year division branch")
+        .lean()
 
     ]);
 
@@ -87,8 +132,16 @@ exports.divisionDashboard = async (req, res) => {
         totalPlacements,
         totalHigherStudies
       },
+
       placementsByType,
-      achievementsByCategory
+
+      achievementsByCategory,
+
+      activitiesByType,
+
+      internshipsByType,
+
+      recentAchievements
     });
 
   } catch (error) {
@@ -100,7 +153,6 @@ exports.divisionDashboard = async (req, res) => {
 
 
 // ================= ADMIN DASHBOARD =================
-
 exports.adminDashboard = async (req, res) => {
   try {
 
@@ -113,6 +165,8 @@ exports.adminDashboard = async (req, res) => {
       totalHigherStudies,
       placementsByType,
       achievementsByCategory,
+      activitiesByType,
+      internshipsByType,
       recentAchievements
     ] = await Promise.all([
 
@@ -128,6 +182,7 @@ exports.adminDashboard = async (req, res) => {
 
       HigherStudies.countDocuments(),
 
+      // placements by type
       Placement.aggregate([
         {
           $group: {
@@ -137,6 +192,7 @@ exports.adminDashboard = async (req, res) => {
         }
       ]),
 
+      // achievements by category
       Achievement.aggregate([
         {
           $group: {
@@ -146,10 +202,38 @@ exports.adminDashboard = async (req, res) => {
         }
       ]),
 
+      // activities by type
+      Activity.aggregate([
+        {
+          $group: {
+            _id: "$type",
+            count: { $sum: 1 }
+          }
+        }
+      ]),
+
+      // internships by paid/unpaid
+      Internship.aggregate([
+        {
+          $group: {
+            _id: {
+              $cond: [
+                { $eq: ["$stipendInfo.isPaid", true] },
+                "Paid",
+                "Unpaid"
+              ]
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ]),
+
+      // recent achievements
       Achievement.find()
         .sort({ createdAt: -1 })
         .limit(5)
-        .populate("stuID", "studentID name year division branch").lean()
+        .populate("stuID", "studentID name year division branch")
+        .lean()
 
     ]);
 
@@ -162,8 +246,15 @@ exports.adminDashboard = async (req, res) => {
         totalPlacements,
         totalHigherStudies
       },
+
       placementsByType,
+
       achievementsByCategory,
+
+      activitiesByType,
+
+      internshipsByType,
+
       recentAchievements
     });
 
@@ -173,33 +264,63 @@ exports.adminDashboard = async (req, res) => {
   }
 };
 
-
-
 // ================= STUDENT DASHBOARD =================
-
 exports.studentDashboard = async (req, res) => {
   try {
 
-    const stuID = new mongoose.Types.ObjectId(req.user.id); // ✅ Cast once, use everywhere
+    const stuID = new mongoose.Types.ObjectId(req.user.id);
 
     const [
+      totalStudents,
       totalActivities,
       totalAchievements,
-      internship,
-      placement,
-      higherStudies,
+      totalInternships,
+      totalPlacements,
+      totalHigherStudies,
+      placementsByType,
+      achievementsByCategory,
       activitiesByType,
-      achievementsByCategory
+      internshipsByType
     ] = await Promise.all([
 
-      Activity.countDocuments({ stuID }),
-      Achievement.countDocuments({ stuID }),
-      Internship.exists({ stuID }),
-      Placement.exists({ stuID }),
-      HigherStudies.exists({ stuID }),
+      // only 1 student
+      Student.countDocuments({ _id: stuID }),
 
+      Activity.countDocuments({ stuID }),
+
+      Achievement.countDocuments({ stuID }),
+
+      Internship.countDocuments({ stuID }),
+
+      Placement.countDocuments({ stuID }),
+
+      HigherStudies.countDocuments({ stuID }),
+
+      // placements by type
+      Placement.aggregate([
+        { $match: { stuID } },
+        {
+          $group: {
+            _id: "$placementType",
+            count: { $sum: 1 }
+          }
+        }
+      ]),
+
+      // achievements by category
+      Achievement.aggregate([
+        { $match: { stuID } },
+        {
+          $group: {
+            _id: "$category",
+            count: { $sum: 1 }
+          }
+        }
+      ]),
+
+      // activities by type
       Activity.aggregate([
-        { $match: { stuID } }, // ✅ Now correctly matches ObjectId
+        { $match: { stuID } },
         {
           $group: {
             _id: "$type",
@@ -208,28 +329,38 @@ exports.studentDashboard = async (req, res) => {
         }
       ]),
 
-      Achievement.aggregate([
-        { $match: { stuID } }, // ✅ Now correctly matches ObjectId
+      // internships paid/unpaid
+      Internship.aggregate([
+        { $match: { stuID } },
         {
           $group: {
-            _id: "$category",
+            _id: {
+              $cond: [
+                { $eq: ["$stipendInfo.isPaid", true] },
+                "Paid",
+                "Unpaid"
+              ]
+            },
             count: { $sum: 1 }
           }
         }
       ])
-
     ]);
 
     res.json({
       stats: {
+        totalStudents,
         totalActivities,
         totalAchievements,
-        internshipStatus: internship ? "Done" : "Pending",
-        placementStatus: placement ? "Placed" : "Not Placed",
-        higherStudiesStatus: higherStudies ? "Applied" : "Not Applied"
+        totalInternships,
+        totalPlacements,
+        totalHigherStudies
       },
-      activityDistribution: activitiesByType,
-      achievementDistribution: achievementsByCategory
+
+      placementsByType,
+      achievementsByCategory,
+      activitiesByType,
+      internshipsByType
     });
 
   } catch (error) {
@@ -237,67 +368,3 @@ exports.studentDashboard = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
   }
 };
-
-//   try {
-
-//     const stuID = req.user.id;
-
-//     const [
-//       totalActivities,
-//       totalAchievements,
-//       internship,
-//       placement,
-//       higherStudies,
-//       activitiesByType,
-//       achievementsByCategory
-//     ] = await Promise.all([
-
-//       Activity.countDocuments({ stuID }),
-
-//       Achievement.countDocuments({ stuID }),
-
-//       Internship.exists({ stuID }),
-
-//       Placement.exists({ stuID }),
-
-//       HigherStudies.exists({ stuID }),
-
-//       Activity.aggregate([
-//         { $match: { stuID } },
-//         {
-//           $group: {
-//             _id: "$type",
-//             count: { $sum: 1 }
-//           }
-//         }
-//       ]),
-
-//       Achievement.aggregate([
-//         { $match: { stuID } },
-//         {
-//           $group: {
-//             _id: "$category",
-//             count: { $sum: 1 }
-//           }
-//         }
-//       ])
-
-//     ]);
-
-//     res.json({
-//       stats: {
-//         totalActivities,
-//         totalAchievements,
-//         internshipStatus: internship ? "Done" : "Pending",
-//         placementStatus: placement ? "Placed" : "Not Placed",
-//         higherStudiesStatus: higherStudies ? "Applied" : "Not Applied"
-//       },
-//       activityDistribution: activitiesByType,
-//       achievementDistribution: achievementsByCategory
-//     });
-
-//   } catch (error) {
-//     console.error("Student dashboard error:", error);
-//     res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
-//   }
-// };
