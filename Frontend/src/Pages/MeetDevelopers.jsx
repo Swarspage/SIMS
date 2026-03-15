@@ -43,7 +43,7 @@ const teamGroups = [
     icon: <FaCode />,
     description: "Architecting the visual experience and user interactions.",
     members: [
-      { name: "Swar Shinde", role: "Team Lead & Frontend", image: swarImg, linkedin: "https://www.linkedin.com/in/swar-shinde-91131a2b9/", github: "https://github.com/Swarspage", portfolio: "https://swarspage.github.io/My-Portfolio/" },
+      { name: "Swar Shinde", role: "Frontend Developer", image: swarImg, linkedin: "https://www.linkedin.com/in/swar-shinde-91131a2b9/", github: "https://github.com/Swarspage", portfolio: "https://swarspage.github.io/My-Portfolio/" },
       { name: "Yash Sunder Bawari", role: "Frontend Developer", image: yashImg, linkedin: "https://www.linkedin.com/in/yash-bawari-5a3379313/", github: "https://github.com/YashBawari18", portfolio: "https://my-portfolio-six-alpha-47.vercel.app/" },
     ]
   },
