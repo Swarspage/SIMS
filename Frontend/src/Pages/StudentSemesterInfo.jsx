@@ -311,7 +311,7 @@ export default function StudentSemesterInfo() {
     // ─────────────────────────────── FORM VIEW ───────────────────────────────
     if (view === "form") {
         return (
-            <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
+            <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
                 <ToastContainer position="top-right" autoClose={3000} theme="light" />
                 <button
                     onClick={backToList}
@@ -538,7 +538,7 @@ export default function StudentSemesterInfo() {
 
     // ─────────────────────────────── LIST VIEW ───────────────────────────────
     return (
-        <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
+        <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
             <ToastContainer position="top-right" autoClose={3000} theme="light" />
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
