@@ -728,6 +728,7 @@ export default function AdminAdmission() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false); // For Add
   const [deletingIds, setDeletingIds] = useState([]); // Track IDs currently being deleted
+  const [exporting, setExporting] = useState(false); // Track export status
 
   useEffect(() => {
     // Only auto-fetch on pagination/limit changes to minimize API hits
@@ -835,6 +836,40 @@ export default function AdminAdmission() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const toastId = toast.loading("Preparing Excel file...");
+
+      const params = {
+        search: searchQuery.trim() || undefined,
+        year: yearFilter || undefined,
+        status: statusFilter || undefined,
+        isScholarshipApplied: scholarshipFilter !== "" ? scholarshipFilter === "true" : undefined,
+        isMahadbtFormSubmitted: mahadbtFilter !== "" ? mahadbtFilter === "true" : undefined,
+        hasMigrationCertificate: migrationFilter !== "" ? migrationFilter === "true" : undefined,
+      };
+
+      const blob = await admissionService.exportAdmissions(params);
+      
+      // Create a link and trigger download
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `admissions_${new Date().toISOString().split('T')[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      
+      toast.success("✅ Excel file downloaded successfully", { id: toastId });
+    } catch (err) {
+      console.error("Export error:", err);
+      toast.error("Failed to export admissions. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // FILTER LOGIC - Manual Trigger Only
   const handleFind = () => {
     setCurrentPage(1);
@@ -929,6 +964,21 @@ export default function AdminAdmission() {
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
             Add
+          </button>
+
+          <button
+            onClick={handleExport}
+            disabled={exporting || admissions.length === 0}
+            className={`flex-1 sm:flex-none px-6 py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
+              exporting || admissions.length === 0
+                ? "bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200"
+                : "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {exporting ? "Exporting..." : "Export"}
           </button>
 
           <button
