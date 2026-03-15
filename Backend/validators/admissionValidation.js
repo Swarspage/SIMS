@@ -6,10 +6,10 @@ const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'-]+$/;
 const admissionCreateSchema = Joi.object({
   year: Joi.string()
     .trim()
-    .valid("FY", "SY", "TY")
+    .valid("SE", "TE", "BE")
     .optional()
     .messages({
-      "any.only": "Year must be one of FY, SY, or TY.",
+      "any.only": "Year must be one of SE, TE, or BE.",
       "string.empty": "Year cannot be empty."
     }),
 
@@ -163,10 +163,10 @@ const admissionCreateSchema = Joi.object({
 const admissionUpdateSchema = Joi.object({
   year: Joi.string()
     .trim()
-    .valid("FY", "SY", "TY")
+    .valid("SE", "TE", "BE")
     .optional()
     .messages({
-      "any.only": "Year must be one of FY, SY, or TY.",
+      "any.only": "Year must be one of SE, TE, or BE.",
       "string.empty": "Year cannot be empty."
     }),
 
@@ -322,10 +322,10 @@ const admissionStatusSchema = Joi.object({
 const getAdmissionsValidation = Joi.object({
   year: Joi.string()
     .trim()
-    .valid("FY", "SY", "TY")
+    .valid("SE", "TE", "BE")
     .optional()
     .messages({
-      "any.only": "Year must be one of FY, SY, or TY."
+      "any.only": "Year must be one of SE, TE, or BE."
     }),
 
   academicYear: Joi.string()
