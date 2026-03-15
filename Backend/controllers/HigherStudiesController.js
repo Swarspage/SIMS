@@ -7,7 +7,7 @@ const { deleteMultipleFromCloudinary } = require("../helpers/cloudinary/DeleteMu
 const { validateAndUploadFiles } = require("../helpers/cloudinary/ValidateAndUploadFiles");
 const mongoose = require("mongoose");
 
-const { createHigherStudySchema, updateHigherStudySchema, getHigherStudiesValidation } = require("../validators/higherStudiesValidation");
+const { createHigherStudySchema, updateHigherStudySchema, getHigherStudiesValidation, validateStudentID } = require("../validators/higherStudiesValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformHigherStudy, higherStudyColumnMap } = require('../helpers/excel/exportTransformers');
 
