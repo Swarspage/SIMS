@@ -6,7 +6,7 @@ import dmceLogo from "../assets/dmce_logo_new.png";
 export default function DivisionInchargeLogin() {
     const navigate = useNavigate();
     // Added 'division' to state with a default empty string or a default value
-    const [form, setForm] = useState({ email: "", password: "", division: "A" });
+    const [form, setForm] = useState({ email: "", password: "" });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -23,7 +23,7 @@ export default function DivisionInchargeLogin() {
 
         try {
             // Calling the new divisionLogin service
-            const response = await authService.divisionLogin(form.email, form.password, form.division);
+            const response = await authService.divisionLogin(form.email, form.password);
             console.log("Division login response:", response);
 
             // Setting role as 'division' to distinguish from super admin
@@ -83,31 +83,6 @@ export default function DivisionInchargeLogin() {
                             </div>
                         )}
 
-                        {/* Division Dropdown */}
-                        <div className="mb-5">
-                            <label htmlFor="division" className="block text-sm font-semibold text-gray-700 mb-2">
-                                Select Division
-                            </label>
-                            <div className="relative">
-                                <select
-                                    id="division"
-                                    name="division"
-                                    value={form.division}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition appearance-none"
-                                    required
-                                >
-                                    <option value="A">Division A</option>
-                                    <option value="B">Division B</option>
-                                    <option value="C">Division C</option>
-                                </select>
-                                <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
-                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
 
                         {/* Email Input */}
                         <div className="mb-5">

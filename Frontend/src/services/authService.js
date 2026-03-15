@@ -26,13 +26,10 @@ export const authService = {
   },
 
   // Division Incharge Login (New)
-  divisionLogin: async (email, password, division) => {
-    // Sending email, password to backend (division param is ignored by backend but kept here if needed for UI state)
-    // Using /auth/division-incharge endpoint which correctly includes 'year' in the token payload
+  divisionLogin: async (email, password) => {
     const response = await API.post("/auth/division-incharge", {
       email,
-      password,
-      division
+      password
     });
 
     if (response.data.token) {

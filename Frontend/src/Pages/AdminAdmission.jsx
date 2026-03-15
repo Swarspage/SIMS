@@ -261,7 +261,8 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
     div: "", rollno: "", course: "Computer Engineering", fees: "",
     isScholarshipApplied: false, scholarshipNotAppliedReason: "",
     isMahadbtFormSubmitted: false, mahadbtFilledDate: "", mahadbtNotFilledReason: "",
-    hasMigrationCertificate: false, migrationExpectedDate: "", migrationNotAvailableReason: ""
+    hasMigrationCertificate: false, migrationExpectedDate: "", migrationNotAvailableReason: "",
+    year: "SE"
   });
 
   if (!isOpen) return null;
@@ -303,7 +304,8 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
         div: "", rollno: "", course: "Computer Engineering", fees: "",
         isScholarshipApplied: false, scholarshipNotAppliedReason: "",
         isMahadbtFormSubmitted: false, mahadbtFilledDate: "", mahadbtNotFilledReason: "",
-        hasMigrationCertificate: false, migrationExpectedDate: "", migrationNotAvailableReason: ""
+        hasMigrationCertificate: false, migrationExpectedDate: "", migrationNotAvailableReason: "",
+        year: "SE"
       });
     } catch (err) {
       console.error(err);
@@ -359,6 +361,14 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
                 <div>
                   <label className={labelClass}>Course <span className="text-red-500">*</span></label>
                   <input type="text" name="course" value={form.course} onChange={handleInputChange} required className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Year <span className="text-red-500">*</span></label>
+                  <select name="year" value={form.year} onChange={handleInputChange} required className={inputClass}>
+                    <option value="SE">SE</option>
+                    <option value="TE">TE</option>
+                    <option value="BE">BE</option>
+                  </select>
                 </div>
                 <div>
                   <label className={labelClass}>Division <span className="text-red-500">*</span></label>
@@ -600,7 +610,7 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
                 <div><label className={labelClass}>Course</label><input type="text" name="course" value={form.course} onChange={handleInputChange} className={inputClass} /></div>
                 <div><label className={labelClass}>Full Year</label>
                   <select name="year" value={form.year} onChange={handleInputChange} className={inputClass}>
-                    <option value="FY">FY</option><option value="SY">SY</option><option value="TY">TY</option>
+                    <option value="SE">SE</option><option value="TE">TE</option><option value="BE">BE</option>
                   </select>
                 </div>
                 <div><label className={labelClass}>Division</label><input type="text" name="div" value={form.div} onChange={handleInputChange} className={inputClass} /></div>
@@ -876,9 +886,9 @@ export default function AdminAdmission() {
             className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
           >
             <option value="">All Years</option>
-            <option value="FY">FY</option>
-            <option value="SY">SY</option>
-            <option value="TY">TY</option>
+            <option value="SE">SE</option>
+            <option value="TE">TE</option>
+            <option value="BE">BE</option>
           </select>
 
           <select

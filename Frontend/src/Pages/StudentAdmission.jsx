@@ -300,7 +300,7 @@ export default function StudentAdmission() {
               </div>
 
               <div className="md:col-span-2">
-                <SelectField label="Year" name="year" value={formData.year} onChange={handleChange} required options={["FY", "SY", "TY"]} />
+                <SelectField label="Year" name="year" value={formData.year} onChange={handleChange} required options={["SE", "TE", "BE"]} />
               </div>
               <div className="md:col-span-1">
                 <InputField label="Division" name="div" value={formData.div} onChange={handleChange} required placeholder="e.g. A" />
