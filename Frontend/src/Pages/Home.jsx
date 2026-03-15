@@ -147,22 +147,22 @@ const Home = () => {
             <span className="inline-block px-4 py-1.5 mb-6 text-[10px] font-black tracking-[0.3em] text-[#1D3EA1] uppercase glass-card rounded-full border border-blue-100 animate-hero-slide">
               Welcome to the Future
             </span>
-            <h1 className="text-5xl md:text-8xl font-black mb-8 leading-[0.9] text-[#182137] animate-hero-slide animation-delay-100">
+            <h1 className="text-5xl sm:text-7xl md:text-8xl font-black mb-8 leading-[0.9] text-[#182137] animate-hero-slide animation-delay-100">
               INNOVATE.<br />CREATE.<br />EXCEL.
             </h1>
             <p className="text-base md:text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed animate-hero-slide animation-delay-200">
               The Department of Computer Engineering at <span className="text-[#1D3EA1] font-bold">DMCE</span> is where ambition meets opportunity.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-6 animate-hero-slide animation-delay-300">
+            <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 animate-hero-slide animation-delay-300">
               <a
                 href="https://dmce.ac.in/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-10 py-4 bg-[#1D3EA1] text-white font-black rounded-full hover:scale-105 transition-transform shine-effect text-center"
+                className="px-8 sm:px-10 py-3.5 sm:py-4 bg-[#1D3EA1] text-white font-black rounded-full hover:scale-105 transition-transform shine-effect text-center text-sm sm:text-base"
               >
                 DISCOVER MORE
               </a>
-              <a href="#college" className="px-10 py-4 glass-card font-black rounded-full hover:bg-gray-50 transition-all border border-gray-200 text-[#182137] text-center">
+              <a href="#college" className="px-8 sm:px-10 py-3.5 sm:py-4 glass-card font-black rounded-full hover:bg-gray-50 transition-all border border-gray-200 text-[#182137] text-center text-sm sm:text-base">
                 OUR CAMPUS
               </a>
             </div>
@@ -188,7 +188,7 @@ const Home = () => {
             <div className="h-1.5 w-24 bg-[#1D3EA1] mx-auto rounded-full"></div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 md:grid-rows-2 gap-3 md:gap-4 min-h-[400px] md:h-[600px]">
+          <div className="grid grid-cols-2 md:grid-cols-4 md:grid-rows-2 gap-3 md:gap-4 min-h-[500px] sm:min-h-[400px] md:h-[600px]">
             <div className="col-span-2 md:row-span-2 overflow-hidden rounded-2xl md:rounded-3xl relative group reveal reveal-x-left">
               <img src={dmceBuilding} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Campus 1" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-4 md:p-8 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -281,7 +281,7 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl h-[400px] md:h-[600px] shadow-2xl reveal reveal-y">
+          <div className="relative overflow-hidden rounded-3xl h-[450px] sm:h-[400px] md:h-[600px] shadow-2xl reveal reveal-y">
             {events.map((event, index) => (
               <div
                 key={index}

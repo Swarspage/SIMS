@@ -148,12 +148,12 @@ function DetailModal({ achievement, onClose }) {
   if (!achievement) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
 
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col relative z-10 animate-in fade-in zoom-in duration-300">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col relative z-10 animate-in fade-in zoom-in duration-300">
         {/* Header */}
-        <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-20">
+        <div className="px-4 sm:px-8 py-4 sm:py-5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-20">
           <div>
             {achievement.category && (
               <div className="flex items-center gap-2 mt-1">
@@ -169,7 +169,7 @@ function DetailModal({ achievement, onClose }) {
         </div>
 
         <div className="flex-grow overflow-y-auto">
-          <div className="p-8">
+          <div className="p-4 sm:p-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
               {/* Left Column: Student & Metadata */}
@@ -186,8 +186,8 @@ function DetailModal({ achievement, onClose }) {
                       <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-blue-200">
                         {student.name?.firstName?.charAt(0) || student.name?.lastName?.charAt(0) || "?"}
                       </div>
-                      <div>
-                        <h3 className="text-lg font-black text-slate-900 antialiased leading-tight">
+                      <div className="min-w-0">
+                        <h3 className="text-base sm:text-lg font-black text-slate-900 antialiased leading-tight truncate">
                           {student.name?.firstName} {student.name?.lastName}
                         </h3>
                         <p className="text-blue-600 font-bold text-sm tracking-tight">{student.studentID}</p>
@@ -338,10 +338,10 @@ function DetailModal({ achievement, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 z-20">
+        <div className="px-4 sm:px-8 py-4 sm:py-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 z-20">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-black rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+            className="w-full sm:w-auto px-6 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-black rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
           >
             Close Viewer
           </button>
@@ -889,7 +889,7 @@ export default function AdminAchievements() {
   };
 
   return (
-    <main className="p-8 bg-slate-50 min-h-screen">
+    <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">
@@ -905,8 +905,8 @@ export default function AdminAchievements() {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-8">
-        <div className="flex flex-wrap gap-4 items-center">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-6 mb-8">
+        <div className="flex flex-wrap gap-3 sm:gap-4 items-center">
           {/* Search */}
           <div className="flex-1 min-w-[250px]">
             <input
@@ -925,7 +925,7 @@ export default function AdminAchievements() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
+            className="w-full md:w-auto px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
           >
             <option value="">All Categories</option>
             <option value="Coding competitions">Coding Competitions</option>
@@ -942,7 +942,7 @@ export default function AdminAchievements() {
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
+            className="w-full md:w-auto px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
           >
             <option value="">All Types</option>
             <option value="Winner">Winner</option>
@@ -954,7 +954,7 @@ export default function AdminAchievements() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
+            className="w-full md:w-auto px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
           >
             <option value="">All Years</option>
             <option value="SE">Second Year (SE)</option>
@@ -966,7 +966,7 @@ export default function AdminAchievements() {
           <select
             value={selectedDivision}
             onChange={(e) => setSelectedDivision(e.target.value)}
-            className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
+            className="w-full md:w-auto px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
           >
             <option value="">All Divs</option>
             <option value="A">A</option>
@@ -990,7 +990,7 @@ export default function AdminAchievements() {
                 });
                 setCurrentPage(1);
               }}
-              className="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

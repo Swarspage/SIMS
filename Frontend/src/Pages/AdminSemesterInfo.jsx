@@ -896,7 +896,7 @@ export default function AdminSemesterInfo() {
   const filtered = records;
 
   return (
-    <main className="p-8 bg-slate-50 min-h-screen relative">
+    <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen relative">
       {/* Loading Overlay for Refetching */}
       {refreshing && (
         <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center">

@@ -498,7 +498,7 @@ export default function StudentPlacement() {
   // =============== FORM VIEW ===============
   if (view === "form") {
     return (
-      <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
+      <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
         <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
         <button
           onClick={backToList}
@@ -980,7 +980,7 @@ export default function StudentPlacement() {
   });
 
   return (
-    <main className="p-3 sm:p-6 md:p-10 bg-slate-50 min-h-screen">
+    <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">

@@ -287,15 +287,15 @@ function DetailModal({ item, type, onClose }) {
   const studentID = studentDetails?.studentID || (typeof item.stuID === 'string' ? item.stuID : item.stuID?.studentID) || "N/A";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900">
               {type === "placement" ? "Placement Details" : "Higher Study Details"}
             </h2>
           </div>
@@ -310,7 +310,7 @@ function DetailModal({ item, type, onClose }) {
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 space-y-8">
+        <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
 
           {/* Top Info Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -481,10 +481,10 @@ function DetailModal({ item, type, onClose }) {
         </div>
 
         {/* Modal Footer */}
-        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
+        <div className="bg-slate-50 px-4 sm:px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+            className="w-full sm:w-auto px-5 py-2.5 bg-white border border-slate-300 text-slate-700 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
           >
             Close
           </button>
@@ -980,7 +980,7 @@ export default function AdminPlacement() {
   };
 
   return (
-    <main className="p-8 bg-slate-50 min-h-screen">
+    <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Career Outcomes</h1>
@@ -994,10 +994,10 @@ export default function AdminPlacement() {
       </div>
 
       {/* Filters & Tabs */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-8">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-6 mb-8">
 
         {/* Row 1 — Search + Tab buttons + Export */}
-        <div className="flex flex-wrap gap-4 items-center mb-5">
+        <div className="flex flex-wrap gap-3 sm:gap-4 items-center mb-5">
           <div className="flex-1 min-w-[240px]">
             <input
               type="text"
@@ -1016,17 +1016,17 @@ export default function AdminPlacement() {
             </p>
           </div>
 
-          <div className="flex gap-3 ml-auto flex-wrap">
+          <div className="flex flex-wrap gap-3 w-full md:w-auto md:ml-auto">
             <button onClick={() => setActiveTab("placements")}
-              className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${activeTab === "placements" ? "bg-blue-600 text-white shadow-sm" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              className={`flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${activeTab === "placements" ? "bg-blue-600 text-white shadow-sm" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}>Placements</button>
 
             <button onClick={() => setActiveTab("higherStudies")}
-              className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${activeTab === "higherStudies" ? "bg-blue-600 text-white shadow-sm" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              className={`flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${activeTab === "higherStudies" ? "bg-blue-600 text-white shadow-sm" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}>Higher Studies</button>
 
             <button onClick={handleExport}
-              className="px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm flex items-center gap-2">
+              className="flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm flex items-center justify-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1036,14 +1036,14 @@ export default function AdminPlacement() {
             {activeTab === "placements" && (
               <button
                 onClick={() => { setPlacementToEdit(null); setIsPlacementModalOpen(true); }}
-                className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm transition-colors flex items-center">
+                className="flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm transition-colors flex items-center justify-center">
                 + Add Placement
               </button>
             )}
             {activeTab === "higherStudies" && (
               <button
                 onClick={() => { setHigherStudyToEdit(null); setIsHigherStudyModalOpen(true); }}
-                className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm transition-colors flex items-center">
+                className="flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm transition-colors flex items-center justify-center">
                 + Add Higher Study
               </button>
             )}

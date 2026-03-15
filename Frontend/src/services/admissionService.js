@@ -16,6 +16,14 @@ export const admissionService = {
     return response.data;
   },
 
+  exportAdmissions: async (params = {}) => {
+    const response = await API.get("/admission/all", {
+      params: { ...params, export: "true" },
+      responseType: "blob",
+    });
+    return response.data;
+  },
+
   updateAdmission: async (admissionId, admissionData) => {
     const response = await API.put(`/admission/${admissionId}`, admissionData);
     return response.data;

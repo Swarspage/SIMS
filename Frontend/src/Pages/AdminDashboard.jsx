@@ -62,7 +62,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <main className="p-4 sm:p-8 bg-slate-50 min-h-screen flex items-center justify-center">
+      <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-slate-600">Loading system overview...</p>
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <main className="p-4 sm:p-8 bg-slate-50 min-h-screen">
+    <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">System Overview</h1>

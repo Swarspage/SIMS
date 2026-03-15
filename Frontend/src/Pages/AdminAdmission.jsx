@@ -114,7 +114,7 @@ function DetailModal({ admission, onClose }) {
   const div = admission.div || student.division || "N/A";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto animate-slideUp" onClick={e => e.stopPropagation()}>
         {/* Modal Header */}
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
@@ -128,7 +128,7 @@ function DetailModal({ admission, onClose }) {
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
 
           {/* Main Info Section */}
           <div className="flex flex-col sm:flex-row gap-6">
@@ -243,8 +243,8 @@ function DetailModal({ admission, onClose }) {
         </div>
 
         {/* Modal Footer */}
-        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
-          <button onClick={onClose} className="px-6 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-all shadow-md active:scale-95">
+        <div className="bg-slate-50 px-4 sm:px-6 py-4 border-t border-slate-200 flex justify-end">
+          <button onClick={onClose} className="w-full sm:w-auto px-6 py-2 bg-slate-900 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-all shadow-md active:scale-95">
             Close
           </button>
         </div>
@@ -324,8 +324,8 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
   const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] border border-white/20 animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-slate-900/60 backdrop-blur-md">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh] border border-white/20 animate-fadeIn">
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg shadow-inner">
@@ -342,7 +342,7 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
         </div>
 
         <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 bg-slate-50/30">
-          <div className="p-6 sm:p-8 space-y-10">
+          <div className="p-4 sm:p-8 space-y-8 sm:space-y-10">
             {/* Section: Basic Info */}
             <section>
               <div className="flex items-center gap-2 mb-6">
@@ -453,12 +453,12 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
             </section>
           </div>
 
-          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-6 flex justify-end gap-4">
-            <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">Cancel</button>
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-4 sm:p-6 flex flex-wrap justify-end gap-3 sm:gap-4">
+            <button type="button" onClick={onClose} className="flex-1 sm:flex-none px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all text-xs sm:text-sm">Cancel</button>
             <button
               type="submit"
               disabled={saving}
-              className="px-10 py-3 font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+              className="flex-1 sm:flex-none px-10 py-3 font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-xs sm:text-sm"
             >
               {saving ? "Saving..." : "Add Admission"}
             </button>
@@ -573,8 +573,8 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
   const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] border border-white/20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-slate-900/60 backdrop-blur-md">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh] border border-white/20">
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg shadow-inner">
@@ -686,12 +686,12 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
             </section>
           </div>
 
-          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-6 flex justify-end gap-4">
-            <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">Cancel</button>
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-4 sm:p-6 flex flex-wrap justify-end gap-3 sm:gap-4">
+            <button type="button" onClick={onClose} className="flex-1 sm:flex-none px-6 py-3 font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all text-xs sm:text-sm">Cancel</button>
             <button
               type="submit"
               disabled={saving}
-              className="px-10 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+              className="flex-1 sm:flex-none px-10 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-xs sm:text-sm"
             >
               {saving ? "Saving Changes..." : "Save Changes"}
             </button>
@@ -728,6 +728,7 @@ export default function AdminAdmission() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false); // For Add
   const [deletingIds, setDeletingIds] = useState([]); // Track IDs currently being deleted
+  const [exporting, setExporting] = useState(false); // Track export status
 
   useEffect(() => {
     // Only auto-fetch on pagination/limit changes to minimize API hits
@@ -835,6 +836,40 @@ export default function AdminAdmission() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const toastId = toast.loading("Preparing Excel file...");
+
+      const params = {
+        search: searchQuery.trim() || undefined,
+        year: yearFilter || undefined,
+        status: statusFilter || undefined,
+        isScholarshipApplied: scholarshipFilter !== "" ? scholarshipFilter === "true" : undefined,
+        isMahadbtFormSubmitted: mahadbtFilter !== "" ? mahadbtFilter === "true" : undefined,
+        hasMigrationCertificate: migrationFilter !== "" ? migrationFilter === "true" : undefined,
+      };
+
+      const blob = await admissionService.exportAdmissions(params);
+      
+      // Create a link and trigger download
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `admissions_${new Date().toISOString().split('T')[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      
+      toast.success("✅ Excel file downloaded successfully", { id: toastId });
+    } catch (err) {
+      console.error("Export error:", err);
+      toast.error("Failed to export admissions. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // FILTER LOGIC - Manual Trigger Only
   const handleFind = () => {
     setCurrentPage(1);
@@ -842,7 +877,7 @@ export default function AdminAdmission() {
   };
 
   return (
-    <main className="p-8 bg-slate-50 min-h-screen">
+    <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Manage Admissions</h1>
         <p className="text-slate-600 mt-2">
@@ -851,7 +886,7 @@ export default function AdminAdmission() {
       </div>
 
       {/* FILTER BAR - Only showing filters supported by Backend Joi Schema */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-8 flex flex-wrap gap-4 items-center">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 mb-8 flex flex-wrap gap-3 sm:gap-4 items-center">
         <div className="flex-1 min-w-[300px]">
           <div className="relative">
             <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -872,7 +907,7 @@ export default function AdminAdmission() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+            className="w-full md:w-auto px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm shadow-slate-100"
           >
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
@@ -883,7 +918,7 @@ export default function AdminAdmission() {
           <select
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}
-            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+            className="w-full md:w-auto px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm shadow-slate-100"
           >
             <option value="">All Years</option>
             <option value="SE">SE</option>
@@ -894,7 +929,7 @@ export default function AdminAdmission() {
           <select
             value={scholarshipFilter}
             onChange={(e) => setScholarshipFilter(e.target.value)}
-            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+            className="w-full md:w-auto px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm shadow-slate-100"
           >
             <option value="">Scholarship</option>
             <option value="true">Applied</option>
@@ -904,7 +939,7 @@ export default function AdminAdmission() {
           <select
             value={mahadbtFilter}
             onChange={(e) => setMahadbtFilter(e.target.value)}
-            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+            className="w-full md:w-auto px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm shadow-slate-100"
           >
             <option value="">MahaDBT Form</option>
             <option value="true">Submitted</option>
@@ -914,7 +949,7 @@ export default function AdminAdmission() {
           <select
             value={migrationFilter}
             onChange={(e) => setMigrationFilter(e.target.value)}
-            className="px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm"
+            className="w-full md:w-auto px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm shadow-slate-100"
           >
             <option value="">Migration Cert.</option>
             <option value="true">Available</option>
@@ -922,23 +957,38 @@ export default function AdminAdmission() {
           </select>
         </div>
 
-        <div className="flex gap-3 ml-auto">
+        <div className="flex flex-wrap gap-3 w-full md:w-auto md:ml-auto">
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-6 py-3 bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 flex items-center gap-2 whitespace-nowrap"
+            className="flex-1 sm:flex-none px-6 py-3 bg-emerald-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-            Add Admission
+            Add
+          </button>
+
+          <button
+            onClick={handleExport}
+            disabled={exporting || admissions.length === 0}
+            className={`flex-1 sm:flex-none px-6 py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
+              exporting || admissions.length === 0
+                ? "bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200"
+                : "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {exporting ? "Exporting..." : "Export"}
           </button>
 
           <button
             onClick={handleFind}
-            className="px-8 py-3 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95 flex items-center gap-2 group whitespace-nowrap"
+            className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-slate-900 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 group"
           >
             <svg className="w-4 h-4 group-hover:scale-125 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            Find Sessions
+            Find
           </button>
 
           {(searchQuery || yearFilter || statusFilter || scholarshipFilter || mahadbtFilter || migrationFilter) && (
@@ -960,7 +1010,7 @@ export default function AdminAdmission() {
                   setTotalPages(response.totalPages || 1);
                 }).catch(console.error).finally(() => setLoading(false));
               }}
-              className="px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95 flex items-center gap-2"
+              className="flex-1 sm:flex-none px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               Clear

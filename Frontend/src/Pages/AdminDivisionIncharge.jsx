@@ -66,12 +66,12 @@ function DetailModal({ incharge, onClose, onEditEmail }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[95vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 {/* Header */}
-                <div className="bg-gradient-to-r from-violet-600 to-purple-700 px-6 py-4 flex items-center justify-between">
+                <div className="bg-gradient-to-r from-violet-600 to-purple-700 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-10">
                     <div>
-                        <h2 className="text-lg font-bold text-white">Division Incharge Details</h2>
+                        <h2 className="text-lg font-bold text-white leading-tight">Incharge Details</h2>
                     </div>
                     <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/20 text-white transition">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,7 +80,7 @@ function DetailModal({ incharge, onClose, onEditEmail }) {
                     </button>
                 </div>
 
-                <div className="p-6 space-y-4">
+                <div className="p-4 sm:p-6 space-y-4">
                     {/* Avatar + Name */}
                     <div className="flex items-center gap-4">
                         <div className="w-16 h-16 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-2xl border-2 border-violet-200">
@@ -171,17 +171,17 @@ function EditModal({ incharge, onClose, onSaved }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
-                <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4 flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-white">Edit Division Incharge</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[95vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+                    <h2 className="text-lg font-bold text-white leading-tight">Edit Incharge</h2>
                     <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/20 text-white transition">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1.5">Name</label>
                         <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -240,17 +240,17 @@ function AddModal({ onClose, onAdded }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
-                <div className="bg-gradient-to-r from-violet-600 to-purple-700 px-6 py-4 flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-white">Add Division Incharge</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[95vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                <div className="bg-gradient-to-r from-violet-600 to-purple-700 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+                    <h2 className="text-lg font-bold text-white leading-tight">Add Incharge</h2>
                     <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/20 text-white transition">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1.5">Full Name <span className="text-red-500">*</span></label>
                         <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required
@@ -377,7 +377,7 @@ export default function AdminDivisionIncharge() {
 
 
     return (
-        <main className="p-8 bg-slate-50 min-h-screen">
+        <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-slate-900">Division Incharges</h1>
@@ -387,7 +387,7 @@ export default function AdminDivisionIncharge() {
             </div>
 
             {/* Action Bar */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-8 flex flex-wrap items-center gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 mb-8 flex flex-col md:flex-row items-stretch md:items-center gap-4">
                 <div className="relative flex-1 min-w-[220px]">
                     <svg className="w-5 h-5 text-slate-400 absolute left-3 top-4 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

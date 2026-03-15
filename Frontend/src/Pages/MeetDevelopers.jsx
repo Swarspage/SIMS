@@ -143,10 +143,10 @@ const MeetDevelopers = () => {
               Engineering the Future
               <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
             </div>
-            <h1 className="text-6xl md:text-9xl font-black mb-10 text-[#182137] tracking-tight leading-[0.9]">
+            <h1 className="text-4xl xs:text-5xl sm:text-7xl md:text-9xl font-black mb-6 sm:mb-10 text-[#182137] tracking-tight leading-[0.9]">
               THE <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1D3EA1] via-blue-500 to-cyan-400">DEVELOPERS</span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-medium">
+            <p className="text-base sm:text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-medium px-4">
               A collective of passionate developers and designers from the Computer Engineering batch of DMCE.
             </p>
           </div>
@@ -176,10 +176,10 @@ const MeetDevelopers = () => {
                   <span className="p-2 rounded-lg bg-white/50 backdrop-blur-sm text-gray-800 shadow-sm">{group.icon}</span>
                   {group.category}
                 </div>
-                <h2 className="text-4xl md:text-6xl font-black text-[#182137] tracking-tighter mb-4">
-                  Crafting {group.category.split(' ')[0]}
+                <h2 className="text-3xl sm:text-4xl md:text-6xl font-black text-[#182137] tracking-tighter mb-4">
+                   {group.category}
                 </h2>
-                <p className="text-gray-500 text-lg font-medium">{group.description}</p>
+                <p className="text-gray-500 text-base sm:text-lg font-medium">{group.description}</p>
               </div>
               <div className="hidden lg:block text-right">
                 <span className="text-8xl font-black text-gray-200/30 pointer-events-none uppercase tracking-tighter">0{gIdx + 1}</span>
@@ -195,18 +195,17 @@ const MeetDevelopers = () => {
                 >
                   <div className="relative transform-gpu transition-all duration-700 preserve-3d group-hover:rotate-y-12 group-hover:scale-[1.02]">
 
-                    {/* Shadow Layer */}
-                    <div className={`absolute inset-0 rounded-[3rem] blur-3xl opacity-0 group-hover:opacity-40 transition-opacity duration-700 bg-gradient-to-br ${group.color} -z-10`}></div>
+                    <div className={`absolute inset-0 rounded-3xl sm:rounded-[3rem] blur-3xl opacity-0 group-hover:opacity-40 transition-opacity duration-700 bg-gradient-to-br ${group.color} -z-10`}></div>
 
-                    <div className="bg-white/90 rounded-[3.5rem] p-10 md:p-14 border border-white shadow-xl relative overflow-hidden backdrop-blur-md backdrop-saturate-150">
+                    <div className="bg-white/90 rounded-[2.5rem] sm:rounded-[3.5rem] p-6 sm:p-10 md:p-14 border border-white shadow-xl relative overflow-hidden backdrop-blur-md backdrop-saturate-150">
 
                       {/* Inner Decorative Shapes */}
-                      <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br ${group.color} opacity-[0.05] rounded-full translate-x-1/2 -translate-y-1/2`}></div>
+                      <div className={`absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-gradient-to-br ${group.color} opacity-[0.05] rounded-full translate-x-1/2 -translate-y-1/2`}></div>
 
                       <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
 
                         {/* Image Section */}
-                        <div className="relative w-48 h-48 md:w-64 md:h-64 shrink-0">
+                        <div className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-64 md:h-64 shrink-0">
                           <div className={`absolute inset-0 bg-gradient-to-br ${group.color} rounded-[2.5rem] rotate-6 scale-105 opacity-20 group-hover:rotate-12 group-hover:scale-110 transition-transform duration-700 shadow-2xl`}></div>
                           <div className="relative w-full h-full rounded-[2.5rem] overflow-hidden border-2 border-white shadow-xl z-20">
                             <img
@@ -228,7 +227,7 @@ const MeetDevelopers = () => {
                             <span className={`w-2 h-2 rounded-full animate-pulse bg-gradient-to-r ${group.color}`}></span>
                             <span className="text-[10px] font-black text-gray-400 tracking-[0.4em] uppercase">{member.role}</span>
                           </div>
-                          <h3 className="text-3xl md:text-5xl font-black text-[#182137] tracking-tighter mb-6 leading-tight group-hover:text-blue-600 transition-colors">
+                          <h3 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#182137] tracking-tighter mb-4 sm:mb-6 leading-tight group-hover:text-blue-600 transition-colors">
                             {member.name}
                           </h3>
 
@@ -238,7 +237,7 @@ const MeetDevelopers = () => {
                               href={member.linkedin}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-14 h-14 rounded-2xl bg-white/50 backdrop-blur-md flex items-center justify-center text-2xl text-gray-400 hover:text-white hover:bg-blue-600 transition-all duration-300 hover:shadow-lg hover:-translate-y-1.5 border border-gray-100 shadow-sm"
+                              className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/50 backdrop-blur-md flex items-center justify-center text-xl sm:text-2xl text-gray-400 hover:text-white hover:bg-blue-600 transition-all duration-300 hover:shadow-lg hover:-translate-y-1.5 border border-gray-100 shadow-sm"
                             >
                               <FaLinkedin />
                             </a>
@@ -246,7 +245,7 @@ const MeetDevelopers = () => {
                               href={member.github}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-14 h-14 rounded-2xl bg-white/50 backdrop-blur-md flex items-center justify-center text-2xl text-gray-400 hover:text-white hover:bg-gray-900 transition-all duration-300 hover:shadow-lg hover:-translate-y-1.5 border border-gray-100 shadow-sm"
+                              className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/50 backdrop-blur-md flex items-center justify-center text-xl sm:text-2xl text-gray-400 hover:text-white hover:bg-gray-900 transition-all duration-300 hover:shadow-lg hover:-translate-y-1.5 border border-gray-100 shadow-sm"
                             >
                               <FaGithub />
                             </a>
@@ -255,7 +254,7 @@ const MeetDevelopers = () => {
                                 href={member.portfolio}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-14 h-14 rounded-2xl bg-white/50 backdrop-blur-md flex items-center justify-center text-2xl text-gray-400 hover:text-white hover:bg-cyan-500 transition-all duration-300 hover:shadow-lg hover:-translate-y-1.5 border border-gray-100 shadow-sm"
+                                className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/50 backdrop-blur-md flex items-center justify-center text-xl sm:text-2xl text-gray-400 hover:text-white hover:bg-cyan-500 transition-all duration-300 hover:shadow-lg hover:-translate-y-1.5 border border-gray-100 shadow-sm"
                               >
                                 <FaGlobe />
                               </a>
@@ -279,8 +278,8 @@ const MeetDevelopers = () => {
       */}
       <section className="container mx-auto px-6 md:px-12 mb-20 reveal reveal-y z-10 relative">
         <div className="relative group">
-          <div className="absolute inset-0 bg-blue-600 blur-[120px] opacity-20 group-hover:opacity-30 transition-opacity"></div>
-          <div className="relative bg-[#182137]/90 backdrop-blur-xl rounded-[4rem] p-16 md:p-32 text-center text-white overflow-hidden shadow-2xl border border-white/10">
+          <div className="absolute inset-0 bg-blue-600 blur-[60px] sm:blur-[120px] opacity-20 group-hover:opacity-30 transition-opacity"></div>
+          <div className="relative bg-[#182137]/90 backdrop-blur-xl rounded-3xl sm:rounded-[4rem] p-10 sm:p-16 md:p-32 text-center text-white overflow-hidden shadow-2xl border border-white/10">
 
             {/* Decorative Animated Lines */}
             <div className="absolute inset-0 pointer-events-none opacity-[0.05]">
@@ -288,10 +287,10 @@ const MeetDevelopers = () => {
             </div>
 
             <div className="relative z-10 max-w-4xl mx-auto">
-              <h2 className="text-5xl md:text-8xl font-black mb-12 tracking-tighter leading-none">
+              <h2 className="text-3xl sm:text-5xl md:text-8xl font-black mb-8 sm:mb-12 tracking-tighter leading-none">
                 BUILT WITH <br /> <span className="text-cyan-300 italic">PURPOSE.</span>
               </h2>
-              <p className="text-xl md:text-2xl text-blue-100/60 mb-16 leading-relaxed max-w-2xl mx-auto font-medium">
+              <p className="text-base sm:text-xl md:text-2xl text-blue-100/60 mb-8 sm:mb-16 leading-relaxed max-w-2xl mx-auto font-medium px-4">
                 This platform is a testament to the skills and dedication of the DMCE Computer Engineering students. Designed for excellence, built for you.
               </p>
               <button
@@ -312,7 +311,7 @@ const MeetDevelopers = () => {
       <footer className="py-12 border-t border-gray-100 z-10 relative">
         <div className="container mx-auto px-6 text-center">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 py-10 opacity-60 hover:opacity-100 transition-opacity">
-            <p className="text-[12px] md:text-[14px] font-black tracking-[0.5em] text-[#182137] uppercase">DMCE COMP DEPT © 2024</p>
+            <p className="text-[12px] md:text-[14px] font-black tracking-[0.5em] text-[#182137] uppercase">DMCE COMP DEPT © 2026</p>
             <div className="h-[1px] flex-1 bg-gray-200 hidden md:block mx-10"></div>
             <p className="text-[12px] md:text-[14px] font-black tracking-[0.5em] text-[#1D3EA1] uppercase">HANDCRAFTED IN AIROLI</p>
           </div>
