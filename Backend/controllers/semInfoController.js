@@ -16,12 +16,12 @@ const validationErrorResponse = (res, details) =>
     })),
   });
 
-const calculateDefaulter = (attendance, kts) => {
-  return attendance < 75 || (Array.isArray(kts) && kts.length > 0);
+const calculateDefaulter = (attendance) => {
+  return attendance < 75;
 };
 
 
-// ADD SEM INFO 
+// ADD SEM INFO
 // Roles: student | admin | divisionIncharge
 
 const addSemInfo = async (req, res) => {
@@ -51,7 +51,7 @@ const addSemInfo = async (req, res) => {
       // Support both MongoDB ObjectId and custom studentID field.
       // Only fall back to findOne when rawStudentId is NOT a valid ObjectId,
       // preventing a wasted query (an ObjectId string never matches studentID field).
-      //.lean() — read-only lookup
+      // .lean() — read-only lookup
       let student;
       if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
         student = await Student.findById(rawStudentId).lean();
@@ -88,7 +88,7 @@ const addSemInfo = async (req, res) => {
       attendance,
       kts,
       marks,
-      isDefaulter: calculateDefaulter(attendance, kts),
+      isDefaulter: calculateDefaulter(attendance),
     });
 
     await semInfo.save();
@@ -106,10 +106,15 @@ const addSemInfo = async (req, res) => {
 };
 
 
-// UPDATE SEM INFO 
+// UPDATE SEM INFO
 
 const updateSemInfo = async (req, res) => {
   try {
+    // FIX: validate ObjectId before querying to avoid Mongoose CastError / 500 leak
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid semester info ID" });
+    }
+
     const semInfo = await SemesterInfo
       .findById(req.params.id)
       .populate("stuID", "year division");
@@ -163,13 +168,11 @@ const updateSemInfo = async (req, res) => {
     if (error) return validationErrorResponse(res, error.details);
 
     // Use `value` (the Joi-validated, stripped object) instead of req.body.
-    // Previously this was Object.assign(semInfo, req.body), which bypassed
-    // Joi's type coercion and stripUnknown, allowing raw unvalidated data onto the document.
     Object.assign(semInfo, value);
 
     // Recalculate defaulter status if attendance or kts changed
     if (value.attendance !== undefined || value.kts !== undefined) {
-      semInfo.isDefaulter = calculateDefaulter(semInfo.attendance, semInfo.kts);
+      semInfo.isDefaulter = calculateDefaulter(semInfo.attendance);
     }
 
     await semInfo.save();
@@ -187,10 +190,15 @@ const updateSemInfo = async (req, res) => {
 };
 
 
-// DELETE SEM INFO 
+// DELETE SEM INFO
 
 const deleteSemInfo = async (req, res) => {
   try {
+    // FIX: validate ObjectId before querying to avoid Mongoose CastError / 500 leak
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid semester info ID" });
+    }
+
     const semInfo = await SemesterInfo
       .findById(req.params.id)
       .populate("stuID", "year division");
@@ -234,7 +242,7 @@ const deleteSemInfo = async (req, res) => {
 };
 
 
-// GET ALL SEM INFOS 
+// GET ALL SEM INFOS
 // Roles: admin | divisionIncharge — with optional export
 
 const getAllSemInfos = async (req, res) => {
@@ -416,6 +424,7 @@ const getAllSemInfos = async (req, res) => {
       data: semInfos,
       total,
       page: pageNum,
+      limit: limitNum,
       totalPages: Math.ceil(total / limitNum),
     });
 
@@ -434,11 +443,11 @@ const getAllSemInfos = async (req, res) => {
 };
 
 
-// GET OWN SEM INFOS (STUDENT) 
+// GET OWN SEM INFOS (STUDENT)
 
 const getOwnSemInfos = async (req, res) => {
   try {
-    // FIX: .lean() — read-only list endpoint
+    // .lean() — read-only list endpoint
     const data = await SemesterInfo.find({ stuID: req.user.id })
       .sort({ createdAt: -1 })
       .lean();
@@ -452,14 +461,14 @@ const getOwnSemInfos = async (req, res) => {
 };
 
 
-// GET STUDENT SEM INFOS (ADMIN / DI) 
+// GET STUDENT SEM INFOS (ADMIN / DI)
 
 const getStudentSemInfos = async (req, res) => {
   try {
     const { studentId } = req.params;
 
     // Support both MongoDB ObjectId and custom studentID field.
-    // FIX: .lean() — read-only lookup
+    // .lean() — read-only lookup
     let student;
     if (mongoose.Types.ObjectId.isValid(studentId)) {
       student = await Student.findById(studentId).lean();
@@ -485,7 +494,7 @@ const getStudentSemInfos = async (req, res) => {
       });
     }
 
-    // FIX: .lean() — read-only list
+    // .lean() — read-only list
     const data = await SemesterInfo.find({ stuID: student._id })
       .sort({ createdAt: -1 })
       .lean();

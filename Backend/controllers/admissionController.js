@@ -24,8 +24,8 @@ const validationErrorResponse = (res, details) =>
   });
 
 
-/*  CREATE ADMISSION  */
-// Roles: student | admin | divisionIncharge
+// CREATE ADMISSION
+// Roles => student | admin | divisionIncharge
 
 const createAdmission = async (req, res) => {
   try {
@@ -40,15 +40,14 @@ const createAdmission = async (req, res) => {
     let student; // resolved in all role branches
 
     if (req.user.role === "student") {
-      // FIX: .lean() — we only need plain fields (year, division) for the admission record
+      // .lean() — we only need plain fields (year, division) for the admission record
       student = await Student.findById(req.user.id).lean();
       if (!student) {
         return res.status(404).json({ success: false, message: "Student not found" });
       }
       stuID = student._id;
     } else if (["admin", "divisionIncharge"].includes(req.user.role)) {
-      // FIX: studentId is read from raw body and trimmed manually before use,
-      // since admissionCreateSchema strips unknown fields and does not include studentId.
+      // admissionCreateSchema strips unknown fields and does not include studentId.
       const rawStudentId = typeof req.body.studentId === "string"
         ? req.body.studentId.trim()
         : req.body.studentId;
@@ -60,7 +59,7 @@ const createAdmission = async (req, res) => {
       // Support both MongoDB ObjectId and custom studentID field.
       // Only fall back to findOne when rawStudentId is NOT a valid ObjectId,
       // preventing a wasted query (an ObjectId string never matches studentID field).
-      // FIX: .lean() — read-only lookup
+      // .lean() — read-only lookup
       if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
         student = await Student.findById(rawStudentId).lean();
       } else {
@@ -101,7 +100,7 @@ const createAdmission = async (req, res) => {
       hasMigrationCertificate: value.hasMigrationCertificate,
       migrationExpectedDate: value.migrationExpectedDate,
       migrationNotAvailableReason: value.migrationNotAvailableReason,
-      year: student.year,
+      year: student.year,   // always taken from DB, never from client
       div: student.division,
     });
 
@@ -126,11 +125,11 @@ const createAdmission = async (req, res) => {
 };
 
 
-/*  GET OWN ADMISSIONS (STUDENT)  */
+// GET OWN ADMISSIONS (STUDENT)
 
 const getAdmissionsByStudent = async (req, res) => {
   try {
-    // FIX: .lean() — read-only list endpoint
+    // .lean() — read-only list endpoint
     const admissions = await Admission.find({ stuID: req.user.id })
       .sort({ createdAt: -1 })
       .lean();
@@ -143,8 +142,8 @@ const getAdmissionsByStudent = async (req, res) => {
 };
 
 
-/*  UPDATE ADMISSION  */
-// Roles: student | admin | divisionIncharge — pending status only
+// UPDATE ADMISSION
+// Roles -> student | admin | divisionIncharge — pending status only
 
 const updateAdmission = async (req, res) => {
   try {
@@ -157,6 +156,11 @@ const updateAdmission = async (req, res) => {
       stripUnknown: true,
     });
     if (error) return validationErrorResponse(res, error.details);
+
+    // FIX: validate ObjectId before querying to avoid Mongoose CastError / 500 leak
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid admission ID" });
+    }
 
     const admission = await Admission.findById(req.params.id).populate("stuID", "year division");
 
@@ -201,11 +205,16 @@ const updateAdmission = async (req, res) => {
 };
 
 
-/*  DELETE ADMISSION  */
-// Roles: student | divisionIncharge — pending status only
+// DELETE ADMISSION
+// Roles -> student | divisionIncharge — pending status only
 
 const deleteAdmission = async (req, res) => {
   try {
+    // FIX: validate ObjectId before querying to avoid Mongoose CastError / 500 leak
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid admission ID" });
+    }
+
     const admission = await Admission.findById(req.params.id).populate("stuID", "year division");
 
     if (!admission) {
@@ -247,8 +256,8 @@ const deleteAdmission = async (req, res) => {
 };
 
 
-/*  GET ALL ADMISSIONS  */
-// Roles: admin | divisionIncharge — with optional export
+// GET ALL ADMISSIONS
+// Roles -> admin | divisionIncharge — with optional export
 
 const getAllAdmissions = async (req, res) => {
   try {
@@ -352,13 +361,18 @@ const getAllAdmissions = async (req, res) => {
 };
 
 
-// UPDATE ADMISSION STATUS  */
+// UPDATE ADMISSION STATUS
 // Roles: admin | divisionIncharge
 
 const updateAdmissionStatus = async (req, res) => {
   try {
     const { error } = admissionStatusSchema.validate(req.body);
     if (error) return validationErrorResponse(res, error.details);
+
+    // FIX: validate ObjectId before querying to avoid Mongoose CastError / 500 leak
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid admission ID" });
+    }
 
     const admission = await Admission.findById(req.params.id);
 
@@ -398,7 +412,7 @@ const updateAdmissionStatus = async (req, res) => {
 };
 
 
-// GET UNPAID STUDENTS  
+// GET UNPAID STUDENTS
 // Roles: admin | divisionIncharge
 
 const getUnpaidStudents = async (req, res) => {

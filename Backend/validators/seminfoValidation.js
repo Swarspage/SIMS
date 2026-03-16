@@ -47,7 +47,7 @@ const markSchema = Joi.object({
     })
 });
 
-//create  
+// CREATE
 const semInfoCreateSchema = Joi.object({
   semester: Joi.number()
     .strict()
@@ -75,11 +75,20 @@ const semInfoCreateSchema = Joi.object({
       "any.required": "Attendance is required."
     }),
 
+  // added .noProfanity() to each KT subject name — previously these were
+  // the only free-text string fields in this file without profanity protection.
+  // Also added a .max(200) cap to bound worst-case input length.
   kts: Joi.array()
     .items(
       Joi.string()
         .trim()
-        .messages({ "string.base": "Each KT subject name must be a string." })
+        .max(200)
+        .noProfanity()
+        .messages({
+          "string.base": "Each KT subject name must be a string.",
+          "string.max": "Each KT subject name cannot exceed 200 characters.",
+          "string.noProfanity": "A KT subject name contains inappropriate language."
+        })
     )
     .default([])
     .messages({ "array.base": "KTs must be an array." }),
@@ -92,14 +101,27 @@ const semInfoCreateSchema = Joi.object({
       "array.base": "Marks must be an array.",
       "array.min": "At least one subject mark is required.",
       "any.required": "Marks are required."
-    })
+    }),
+
+  // journalTaken and examFormFilled added to the create schema.
+  // Previously they only existed in the update schema, which meant they could
+  // never be set at creation time even by an admin. Since the model tracks these
+  // from the start of a semester, it makes sense to allow setting them on create.
+  journalTaken: Joi.boolean()
+    .optional()
+    .messages({ "boolean.base": "Journal Taken must be true or false." }),
+
+  examFormFilled: Joi.boolean()
+    .optional()
+    .messages({ "boolean.base": "ExamFormFilled must be true or false." })
+
 }).options({
   stripUnknown: true,
   convert: true,
   abortEarly: false
 });
 
-//update 
+// UPDATE
 const semInfoUpdateSchema = Joi.object({
   semester: Joi.number()
     .strict()
@@ -125,11 +147,18 @@ const semInfoUpdateSchema = Joi.object({
       "number.max": "Attendance cannot exceed 100%."
     }),
 
+  // .noProfanity() and .max(200) added to match create schema
   kts: Joi.array()
     .items(
       Joi.string()
         .trim()
-        .messages({ "string.base": "Each KT subject name must be a string." })
+        .max(200)
+        .noProfanity()
+        .messages({
+          "string.base": "Each KT subject name must be a string.",
+          "string.max": "Each KT subject name cannot exceed 200 characters.",
+          "string.noProfanity": "A KT subject name contains inappropriate language."
+        })
     )
     .optional()
     .messages({ "array.base": "KTs must be an array." }),
@@ -162,7 +191,7 @@ const semInfoUpdateSchema = Joi.object({
   });
 
 
-//getSeminfo
+// GET SEM INFOS
 const getSemInfosValidation = Joi.object({
   year: Joi.string()
     .trim()
@@ -254,6 +283,6 @@ const getSemInfosValidation = Joi.object({
 
 module.exports = {
   semInfoCreateSchema,
-  semInfoUpdateSchema , 
+  semInfoUpdateSchema,
   getSemInfosValidation,
 };

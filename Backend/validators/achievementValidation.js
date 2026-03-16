@@ -3,7 +3,7 @@ const Joi = require("../helpers/profanity/joiWithProfanity");
 // Negative lookahead guards against all-digit strings.
 // Character class has no nested quantifiers so there is no backtracking risk.
 // Joi's max() cap (enforced before this regex runs) further bounds worst-case input length.
-const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'\-]+$/;
+const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'\-()\[\]]+$/;
 const textOnlyRegex = /^[A-Za-z\s'-]+$/;
 
 //create
@@ -87,12 +87,12 @@ const createAchievementSchema = Joi.object({
       }),
 
     to: Joi.date()
-      .greater(Joi.ref("from"))
+      .min(Joi.ref("from"))
       .required()
       .messages({
         "any.required": "End date is required.",
         "date.base": "End date must be a valid date.",
-        "date.greater": "End date must be greater than start date."
+        "date.min": "End date must be the same as or after the start date."
       })
   })
     .required()
@@ -110,15 +110,21 @@ const createAchievementSchema = Joi.object({
       "string.empty": "Achievement type cannot be empty."
     }),
 
+  // FIX: added .noProfanity() to each team member name — previously these were
+  // the only free-text string fields without profanity protection.
   teamMembers: Joi.array()
     .items(
       Joi.string()
         .trim()
         .pattern(textOnlyRegex)
         .min(2)
+        .max(100)
+        .noProfanity()
         .messages({
           "string.pattern.base": "Each team member name must contain only letters.",
-          "string.min": "Each team member name must be at least 2 characters long."
+          "string.min": "Each team member name must be at least 2 characters long.",
+          "string.max": "Each team member name cannot exceed 100 characters.",
+          "string.noProfanity": "A team member name contains inappropriate language."
         })
     )
     .default([])
@@ -142,7 +148,7 @@ const createAchievementSchema = Joi.object({
   abortEarly: false
 });
 
-//update 
+//update
 const updateAchievementSchema = Joi.object({
   category: Joi.string()
     .trim()
@@ -220,9 +226,9 @@ const updateAchievementSchema = Joi.object({
     to: Joi.date()
       .when("from", {
         is: Joi.exist(),
-        then: Joi.date().greater(Joi.ref("from")).messages({
+        then: Joi.date().min(Joi.ref("from")).messages({
           "date.base": "End date must be a valid date.",
-          "date.greater": "End date must be greater than start date."
+          "date.min": "End date must be the same as or after the start date."
         }),
         otherwise: Joi.date().messages({
           "date.base": "End date must be a valid date."
@@ -242,15 +248,20 @@ const updateAchievementSchema = Joi.object({
       "string.empty": "Achievement type cannot be empty."
     }),
 
+  // FIX: added .noProfanity() and .max(100) to each team member name
   teamMembers: Joi.array()
     .items(
       Joi.string()
         .trim()
         .pattern(textOnlyRegex)
         .min(2)
+        .max(100)
+        .noProfanity()
         .messages({
           "string.pattern.base": "Each team member name must contain only letters.",
-          "string.min": "Each team member name must be at least 2 characters long."
+          "string.min": "Each team member name must be at least 2 characters long.",
+          "string.max": "Each team member name cannot exceed 100 characters.",
+          "string.noProfanity": "A team member name contains inappropriate language."
         })
     )
     .optional()
@@ -275,8 +286,8 @@ const updateAchievementSchema = Joi.object({
   })
   .options({
     stripUnknown: true,    // removes extra fields not in schema
-    convert: true,       // allows type conversion (e.g., string to date)
-    abortEarly: false     // reports all validation errors, not just the first one
+    convert: true,         // allows type conversion (e.g., string to date)
+    abortEarly: false      // reports all validation errors, not just the first one
   });
 
 
@@ -338,4 +349,4 @@ const getAchievementsValidation = Joi.object({
 
 }).options({ stripUnknown: true, convert: true, abortEarly: false });
 
-module.exports = { createAchievementSchema, updateAchievementSchema , getAchievementsValidation };
+module.exports = { createAchievementSchema, updateAchievementSchema, getAchievementsValidation };

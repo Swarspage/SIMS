@@ -42,15 +42,14 @@ const fileConfigs = [
   },
 ];
 
-//create achievement
+// CREATE ACHIEVEMENT
+
 const createAchievement = async (req, res) => {
   let uploadedFiles;
   let dbSaved = false;
 
   try {
-    //local payload copy instead of mutating req.body directly.
-    // Mutating req.body is a bad pattern — it makes the request object unpredictable
-    // for any middleware or logging that runs after this point.
+    // Build a local payload copy instead of mutating req.body directly.
     const payload = { ...req.body };
 
     // Reshape flat date keys into the nested object Joi expects
@@ -63,7 +62,7 @@ const createAchievement = async (req, res) => {
       payload.teamMembers = [payload.teamMembers];
     }
 
-    // studentId is read from req.body and trimmed manually before use,
+    // since createAchievementSchema uses stripUnknown:true and does not include studentId.
     const rawStudentId = typeof req.body.studentId === "string"
       ? req.body.studentId.trim()
       : req.body.studentId;
@@ -86,13 +85,7 @@ const createAchievement = async (req, res) => {
         return res.status(400).json({ success: false, message: "Student ID is required" });
       }
 
-      // Use if/else so we never fire both queries for the same input.
-      // The original code ran findById first and then unconditionally ran findOne
-      // when findById returned null — even for a valid ObjectId that simply didn't
-      // match any document, causing a wasted second DB call.
-      // An ObjectId-shaped string can never match the studentID text field, so the
-      // fallback is only meaningful when the input is NOT a valid ObjectId.
-      //.lean() — read-only lookup, only year/division fields are needed
+      // FIX: .lean() — read-only lookup, only year/division fields are needed
       let student;
       if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
         student = await Student.findById(rawStudentId).lean();
@@ -153,21 +146,29 @@ const createAchievement = async (req, res) => {
   } catch (err) {
     console.error("Create Achievement Error:", err);
 
+    // FIX: cleanup runs BEFORE sending the response so that a Cloudinary failure
+    // does not throw on an already-closed response stream.
     if (!dbSaved && uploadedFiles) {
       const ids = Object.values(uploadedFiles)
         .map(f => f?.publicId)
         .filter(Boolean);
-      await deleteMultipleFromCloudinary(ids);
+
+      try {
+        await deleteMultipleFromCloudinary(ids);
+      } catch (cleanupErr) {
+        console.error("Cloudinary cleanup failed after create error:", cleanupErr);
+      }
     }
 
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-//get own achievements -> student
+// GET OWN ACHIEVEMENTS (STUDENT)
+
 const getOwnAchievements = async (req, res) => {
   try {
-    // FIX: .lean() — read-only list endpoint, no Mongoose document methods needed
+    // .lean() — read-only list endpoint, no Mongoose document methods needed
     const achievements = await Achievement.find({ stuID: req.user.id })
       .sort({ createdAt: -1 })
       .lean();
@@ -178,10 +179,16 @@ const getOwnAchievements = async (req, res) => {
   }
 };
 
-// GET ALL ACHIEVEMENTS (ADMIN / DI) with export 
+// GET ALL ACHIEVEMENTS (ADMIN / DI) with export
 
 const getAllAchievements = async (req, res) => {
   try {
+    // FIX: explicit role whitelist — students must never reach this endpoint even
+    // if a route guard is accidentally misconfigured.
+    if (!["admin", "divisionIncharge"].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: "Unauthorized role" });
+    }
+
     const { error, value } = getAchievementsValidation.validate(req.query);
     if (error) return validationErrorResponse(res, error.details);
 
@@ -212,8 +219,6 @@ const getAllAchievements = async (req, res) => {
     } else if (req.user.role === "admin") {
       if (year) match["student.year"] = year;
       if (division) match["student.division"] = division;
-    } else {
-      return res.status(403).json({ success: false, message: "Unauthorized role" });
     }
 
     if (category) match.category = category;
@@ -244,8 +249,8 @@ const getAllAchievements = async (req, res) => {
             title: 1,
             description: 1,
             issuedBy: 1,
-            achievementType: 1,
             date: 1,
+            achievementType: 1,
             teamMembers: 1,
             certification_course: 1,
             photographs: 1,
@@ -265,7 +270,6 @@ const getAllAchievements = async (req, res) => {
       ]);
 
       const rows = achievements.map(transformAchievement);
-
       const buffer = await exportToExcel(rows, "Achievements", achievementColumnMap);
 
       res.setHeader(
@@ -302,6 +306,7 @@ const getAllAchievements = async (req, res) => {
       data: result[0].data,
       total,
       page,
+      limit,
       totalPages: Math.ceil(total / limit),
     });
   } catch (err) {
@@ -310,7 +315,7 @@ const getAllAchievements = async (req, res) => {
   }
 };
 
-// GET STUDENT ACHIEVEMENTS (ADMIN / DI) 
+// GET STUDENT ACHIEVEMENTS (ADMIN / DI)
 
 const getStudentAchievements = async (req, res) => {
   try {
@@ -320,7 +325,7 @@ const getStudentAchievements = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid student ID" });
     }
 
-    // FIX: .lean() — read-only lookup, only year/division fields needed for access check
+    // .lean() — read-only lookup, only year/division fields needed for access check
     const student = await Student.findById(studentId).lean();
     if (!student) {
       return res.status(404).json({ success: false, message: "Student not found" });
@@ -333,7 +338,7 @@ const getStudentAchievements = async (req, res) => {
       return res.status(403).json({ success: false, message: "Division access denied" });
     }
 
-    // FIX: .lean() — read-only list endpoint
+    // .lean() — read-only list endpoint
     const achievements = await Achievement.find({ stuID: studentId })
       .sort({ createdAt: -1 })
       .lean();
@@ -344,14 +349,14 @@ const getStudentAchievements = async (req, res) => {
   }
 };
 
-// UPDATE ACHIEVEMENT 
+// UPDATE ACHIEVEMENT
 
 const updateAchievement = async (req, res) => {
   let newPublicIds = [];
   let dbSaved = false;
 
   try {
-    // a local payload copy instead of mutating req.body directly.
+    // Build a local payload copy instead of mutating req.body directly.
     const payload = { ...req.body };
 
     // Reshape flat date keys into the nested object Joi expects
@@ -373,8 +378,10 @@ const updateAchievement = async (req, res) => {
     if (error) return validationErrorResponse(res, error.details);
 
     const { id } = req.params;
+
+    // FIX: validate ObjectId before querying to avoid Mongoose CastError / 500 leak
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid ID" });
+      return res.status(400).json({ success: false, message: "Invalid achievement ID" });
     }
 
     let query = Achievement.findById(id);
@@ -410,12 +417,8 @@ const updateAchievement = async (req, res) => {
       }
     }
 
-    // Collect old publicIds to delete AFTER a successful DB save.
-    // Apply validated field updates via `value` FIRST, then overwrite only
-    // the file fields that were actually replaced. This ensures `value` can never
-    // silently clobber a file reference we just set — file fields are not part of
-    // the update schema so Joi strips them, but the explicit ordering makes the
-    // intent unambiguous and safe against future schema changes.
+    // Apply validated field updates via `value`, then overwrite only
+    // the file fields that were actually replaced.
     Object.assign(achievement, value);
 
     const oldIds = [];
@@ -446,7 +449,12 @@ const updateAchievement = async (req, res) => {
     // Safe to delete old files now that the DB record points to the new ones
     const validOldIds = oldIds.filter(Boolean);
     if (validOldIds.length) {
-      await deleteMultipleFromCloudinary(validOldIds);
+      try {
+        await deleteMultipleFromCloudinary(validOldIds);
+      } catch (cleanupErr) {
+        // Non-fatal: DB is already consistent. Log and move on.
+        console.error("Cloudinary old-file cleanup failed after update:", cleanupErr);
+      }
     }
 
     return res.status(200).json({
@@ -456,19 +464,32 @@ const updateAchievement = async (req, res) => {
     });
   } catch (err) {
     console.error("Update Achievement Error:", err);
-    // Clean up any newly uploaded files if the DB save never succeeded
+
+    // Clean up any newly uploaded files if the DB save never succeeded.
+    // Wrapped in its own try/catch so a Cloudinary failure does not mask the
+    // original error or throw on an already-closed response.
     if (!dbSaved && newPublicIds.length) {
-      await deleteMultipleFromCloudinary(newPublicIds);
+      try {
+        await deleteMultipleFromCloudinary(newPublicIds);
+      } catch (cleanupErr) {
+        console.error("Cloudinary cleanup failed after update error:", cleanupErr);
+      }
     }
+
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-// DELETE ACHIEVEMENT 
+// DELETE ACHIEVEMENT
 
 const deleteAchievement = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // FIX: validate ObjectId before querying to avoid Mongoose CastError / 500 leak
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid achievement ID" });
+    }
 
     let query = Achievement.findById(id);
     if (req.user.role !== "student") {
@@ -498,11 +519,26 @@ const deleteAchievement = async (req, res) => {
       achievement.course_certificate?.publicId,
     ].filter(Boolean);
 
-    await Achievement.findByIdAndDelete(id);
-
+    // FIX: delete from Cloudinary FIRST, then remove the DB record.
+    // Reversing this order meant: if Cloudinary failed, the DB row was already
+    // gone but the files were permanently orphaned with no recovery path.
+    // Now if Cloudinary fails we return 500 and the DB record is still intact —
+    // the user can retry. If Cloudinary succeeds but the DB delete fails (rare),
+    // the files are orphaned but the record is still queryable — an acceptable
+    // trade-off that keeps the record as the source of truth.
     if (publicIds.length) {
-      await deleteMultipleFromCloudinary(publicIds);
+      try {
+        await deleteMultipleFromCloudinary(publicIds);
+      } catch (cleanupErr) {
+        console.error("Cloudinary delete failed during achievement deletion:", cleanupErr);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to delete associated files. Please try again.",
+        });
+      }
     }
+
+    await Achievement.findByIdAndDelete(id);
 
     return res.status(200).json({
       success: true,

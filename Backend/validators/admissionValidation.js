@@ -1,21 +1,13 @@
-// const Joi = require("joi");
 const Joi = require("../helpers/profanity/joiWithProfanity");
+
 // Negative lookahead guards against all-digit strings.
 // Character class has no nested quantifiers so there is no backtracking risk.
 // Joi's max() cap (enforced before this regex runs) further bounds worst-case input length.
 const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'\-]+$/;
 
-//create admission
+// CREATE ADMISSION
 const admissionCreateSchema = Joi.object({
-  year: Joi.string()
-    .trim()
-    .valid("SE", "TE", "BE")
-    .optional()
-    .messages({
-      "any.only": "Year must be one of SE, TE, or BE.",
-      "string.empty": "Year cannot be empty."
-    }),
-
+  
   div: Joi.string()
     .trim()
     .pattern(textWithNumberRegex)
@@ -162,7 +154,7 @@ const admissionCreateSchema = Joi.object({
   abortEarly: false
 });
 
-//update admission => student | pending only
+// UPDATE ADMISSION => student | pending only
 const admissionUpdateSchema = Joi.object({
   rollno: Joi.string()
     .trim()
@@ -282,7 +274,7 @@ const admissionUpdateSchema = Joi.object({
   });
 
 
-//update admission status => admin | DI
+// UPDATE ADMISSION STATUS => admin | DI
 const admissionStatusSchema = Joi.object({
   status: Joi.string()
     .trim()
@@ -300,7 +292,7 @@ const admissionStatusSchema = Joi.object({
 });
 
 
-//get all admissions => admin | DI
+// GET ALL ADMISSIONS => admin | DI
 const getAdmissionsValidation = Joi.object({
   year: Joi.string()
     .trim()

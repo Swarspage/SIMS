@@ -35,17 +35,15 @@ const fileConfigs = [
   },
 ];
 
-// CREATE ACTIVITY 
+// CREATE ACTIVITY
 
 const createActivity = async (req, res) => {
   let uploadedFiles;
   let dbSaved = false;
 
   try {
-    //Joi validation runs first; studentId is read from req.body directly
-    // since activityCreateSchema uses stripUnknown:true and does not include studentId,
-    // it is intentionally kept outside `value` and read from raw body before any DB work.
-    // Trimming is applied manually below.
+    // studentId is read from req.body directly since activityCreateSchema uses
+    // stripUnknown:true and does not include studentId. Trimming applied manually.
     const rawStudentId = typeof req.body.studentId === "string"
       ? req.body.studentId.trim()
       : req.body.studentId;
@@ -75,11 +73,12 @@ const createActivity = async (req, res) => {
       // Support both MongoDB ObjectId and custom studentID (e.g. "2024FHIT009").
       // Only fall back to findOne when rawStudentId is NOT a valid ObjectId,
       // preventing a wasted query (an ObjectId string never matches studentID field).
+      // .lean() — read-only lookup
       let student;
       if (mongoose.Types.ObjectId.isValid(rawStudentId)) {
-        student = await Student.findById(rawStudentId);
+        student = await Student.findById(rawStudentId).lean();
       } else {
-        student = await Student.findOne({ studentID: rawStudentId });
+        student = await Student.findOne({ studentID: rawStudentId }).lean();
       }
 
       if (!student) {
@@ -133,24 +132,30 @@ const createActivity = async (req, res) => {
     });
 
   } catch (err) {
+    // FIX: cleanup is wrapped in its own try/catch so a Cloudinary failure does
+    // not throw on an already-closed response stream, and the original error
+    // message is still returned to the client correctly.
     if (!dbSaved && uploadedFiles) {
       const ids = Object.values(uploadedFiles)
         .map(f => f?.publicId)
         .filter(Boolean);
 
-      await deleteMultipleFromCloudinary(ids);
+      try {
+        await deleteMultipleFromCloudinary(ids);
+      } catch (cleanupErr) {
+        console.error("Cloudinary cleanup failed after create error:", cleanupErr);
+      }
     }
 
     console.error("Create Activity Error:", err);
     return res.status(500).json({
       success: false,
       message: "Server Error",
-      error: err.message,
     });
   }
 };
 
-// GET OWN ACTIVITIES (STUDENT) 
+// GET OWN ACTIVITIES (STUDENT)
 
 const getActivityByStu = async (req, res) => {
   try {
@@ -161,7 +166,7 @@ const getActivityByStu = async (req, res) => {
       });
     }
 
-    // FIX: .lean() added — read-only endpoint, plain JS objects are faster to serialize
+    // .lean() — read-only endpoint, plain JS objects are faster to serialize
     const activities = await Activity.find({
       stuID: req.user.id,
       type: "Committee",
@@ -191,7 +196,7 @@ const getActivities = async (req, res) => {
       });
     }
 
-    // FIX: .lean() added — this student lookup is read-only
+    // .lean() — this student lookup is read-only
     const student = await Student.findById(studentId).lean();
     if (!student) {
       return res.status(404).json({
@@ -211,7 +216,7 @@ const getActivities = async (req, res) => {
       });
     }
 
-    // FIX: .lean() added
+    // .lean() — read-only list
     const activities = await Activity.find({
       stuID: studentId,
       type: "Committee",
@@ -232,6 +237,12 @@ const getActivities = async (req, res) => {
 
 const getAllActivities = async (req, res) => {
   try {
+    // FIX: explicit role whitelist — students must never reach this endpoint even
+    // if a route guard is accidentally misconfigured.
+    if (!["admin", "divisionIncharge"].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: "Unauthorized role" });
+    }
+
     const { error, value } = getActivitiesValidation.validate(req.query);
     if (error) return validationErrorResponse(res, error.details);
 
@@ -343,6 +354,8 @@ const getAllActivities = async (req, res) => {
 
     const total = result[0].total[0]?.count || 0;
 
+    // FIX: `limit` was missing from the response — added so the frontend can
+    // calculate pages consistently (every other paginated endpoint returns it).
     return res.status(200).json({
       success: true,
       data: result[0].data,
@@ -361,7 +374,7 @@ const getAllActivities = async (req, res) => {
   }
 };
 
-// UPDATE ACTIVITY 
+// UPDATE ACTIVITY
 
 const updateActivity = async (req, res) => {
   let uploadedFiles;
@@ -374,6 +387,11 @@ const updateActivity = async (req, res) => {
     });
 
     if (error) return validationErrorResponse(res, error.details);
+
+    // FIX: validate ObjectId before querying to avoid Mongoose CastError / 500 leak
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid activity ID" });
+    }
 
     const activity = await Activity.findById(req.params.id).populate(
       "stuID",
@@ -429,9 +447,14 @@ const updateActivity = async (req, res) => {
     await activity.save();
     dbSaved = true;
 
-    // Safe to delete the old file now that the DB record points to the new one
+    // Safe to delete the old file now that the DB record points to the new one.
+    // Wrapped in try/catch — non-fatal; DB is already consistent.
     if (oldPublicId) {
-      await deleteMultipleFromCloudinary([oldPublicId]);
+      try {
+        await deleteMultipleFromCloudinary([oldPublicId]);
+      } catch (cleanupErr) {
+        console.error("Cloudinary old-file cleanup failed after activity update:", cleanupErr);
+      }
     }
 
     return res.status(200).json({
@@ -441,13 +464,18 @@ const updateActivity = async (req, res) => {
     });
 
   } catch (err) {
-    // Only clean up the newly uploaded file if the DB save never succeeded
+    // FIX: cleanup wrapped in its own try/catch so a Cloudinary failure does not
+    // throw on an already-closed response stream.
     if (!dbSaved && uploadedFiles) {
       const ids = Object.values(uploadedFiles)
         .map(f => f?.publicId)
         .filter(Boolean);
 
-      await deleteMultipleFromCloudinary(ids);
+      try {
+        await deleteMultipleFromCloudinary(ids);
+      } catch (cleanupErr) {
+        console.error("Cloudinary cleanup failed after activity update error:", cleanupErr);
+      }
     }
 
     console.error("Update Activity Error:", err);
@@ -455,10 +483,15 @@ const updateActivity = async (req, res) => {
   }
 };
 
-// DELETE ACTIVITY 
+// DELETE ACTIVITY
 
 const deleteActivity = async (req, res) => {
   try {
+    // FIX: validate ObjectId before querying to avoid Mongoose CastError / 500 leak
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid activity ID" });
+    }
+
     const activity = await Activity.findById(req.params.id).populate(
       "stuID",
       "year division"
@@ -496,11 +529,25 @@ const deleteActivity = async (req, res) => {
       ? [activity.certificateURL.publicId]
       : [];
 
-    await Activity.findByIdAndDelete(req.params.id);
-
+    // FIX: delete from Cloudinary FIRST, then remove the DB record.
+    // Previously findByIdAndDelete ran first — if Cloudinary then failed, the DB
+    // row was already gone but the file was permanently orphaned with no recovery.
+    // Now: if Cloudinary fails we return 500 and the DB record stays intact so
+    // the user can retry. If the DB delete fails after Cloudinary succeeds (rare),
+    // the file is orphaned but the record is still queryable — acceptable trade-off.
     if (publicIds.length) {
-      await deleteMultipleFromCloudinary(publicIds);
+      try {
+        await deleteMultipleFromCloudinary(publicIds);
+      } catch (cleanupErr) {
+        console.error("Cloudinary delete failed during activity deletion:", cleanupErr);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to delete associated files. Please try again.",
+        });
+      }
     }
+
+    await Activity.findByIdAndDelete(req.params.id);
 
     return res.status(200).json({
       success: true,

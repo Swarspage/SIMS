@@ -3,7 +3,7 @@ const Joi = require("../helpers/profanity/joiWithProfanity");
 // Negative lookahead guards against all-digit strings.
 // Character class has no nested quantifiers so there is no backtracking risk.
 // Joi's max() cap (enforced before this regex runs) further bounds worst-case input length.
-const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'\-]+$/;
+const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'\-()\[\]]+$/;
 
 //create
 const activityCreateSchema = Joi.object({
@@ -51,12 +51,12 @@ const activityCreateSchema = Joi.object({
       }),
 
     to: Joi.date()
-      .greater(Joi.ref("from"))
+      .min(Joi.ref("from"))
       .required()
       .messages({
         "any.required": "End date is required.",
         "date.base": "End date must be a valid date.",
-        "date.greater": "End date must be greater than start date."
+        "date.min": "End date must be the same as or after the start date."
       })
   })
     .required()
@@ -113,9 +113,9 @@ const activityUpdateSchema = Joi.object({
     to: Joi.date()
       .when("from", {
         is: Joi.exist(),
-        then: Joi.date().greater(Joi.ref("from")).messages({
+        then: Joi.date().min(Joi.ref("from")).messages({
           "date.base": "End date must be a valid date.",
-          "date.greater": "End date must be greater than start date."
+          "date.min": "End date must be the same as or after the start date."
         }),
         otherwise: Joi.date().messages({
           "date.base": "End date must be a valid date."
@@ -140,9 +140,9 @@ const activityUpdateSchema = Joi.object({
 const getActivitiesValidation = Joi.object({
   year: Joi.string()
     .trim()
-    .valid("FY", "SY", "TY")
+    .valid("SE", "TE", "BE")
     .optional()
-    .messages({ "any.only": "Year must be one of FY, SY, or TY." }),
+    .messages({ "any.only": "Year must be one of SE, TE, BE" }),
 
   division: Joi.string()
     .trim()
