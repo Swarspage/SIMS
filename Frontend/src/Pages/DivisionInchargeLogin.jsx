@@ -37,8 +37,12 @@ export default function DivisionInchargeLogin() {
             // Setting role as 'division' to distinguish from super admin
             localStorage.setItem("role", "division");
 
-            // Token is now handled by httpOnly cookies via withCredentials: true
-            localStorage.removeItem("token"); // Cleanup just in case
+            // Store token in localStorage to fix mobile browser 3rd-party cookie blocking issues
+            if (response.token) {
+                localStorage.setItem("token", response.token);
+            } else {
+                localStorage.removeItem("token"); // Cleanup just in case
+            }
 
             const user = response.user || response.data?.user;
             if (user) {

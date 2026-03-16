@@ -32,8 +32,12 @@ export default function AdminLoginPage() {
       const response = await authService.adminLogin(form.email, form.password);
       localStorage.setItem("role", "admin");
 
-      // Token is now handled by httpOnly cookies via withCredentials: true
-      localStorage.removeItem("token"); // Cleanup just in case
+      // Store token in localStorage to fix mobile browser 3rd-party cookie blocking issues
+      if (response.token) {
+        localStorage.setItem("token", response.token);
+      } else {
+        localStorage.removeItem("token"); // Cleanup just in case
+      }
 
       const admin = response.admin || response.data?.admin || response.user;
       if (admin) {

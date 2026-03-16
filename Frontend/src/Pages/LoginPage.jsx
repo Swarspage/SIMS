@@ -36,8 +36,12 @@ export default function LoginPage() {
       const response = await authService.login(form.studentId, form.password);
       localStorage.setItem("role", "student");
 
-      // Token is now handled by httpOnly cookies via withCredentials: true
-      localStorage.removeItem("token"); // Cleanup just in case
+      // Store token in localStorage to fix mobile browser 3rd-party cookie blocking issues
+      if (response.token) {
+        localStorage.setItem("token", response.token);
+      } else {
+        localStorage.removeItem("token"); // Cleanup just in case
+      }
 
       const student =
         response.student || response.data?.student || response.user;
