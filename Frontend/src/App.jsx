@@ -92,6 +92,7 @@ import DivisionInchargeLogin from "./Pages/DivisionInchargeLogin"; // ✅ IMPORT
 import SignupPage from "./Pages/SignupPage";
 import ForgotPasswordPage from "./Pages/ForgotPasswordPage";
 import ResetPasswordPage from "./Pages/ResetPasswordPage";
+import VerifyEmail from "./Pages/VerifyEmail";
 
 // Admin Pages
 import AdminStudentSection from "./Pages/AdminStudentSection";
@@ -139,6 +140,7 @@ const App = () => {
         <Route path="/forgot-password" element={<ForgotPasswordPage role="student" />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage role="student" />} />
         <Route path="/developers" element={<MeetDevelopers />} />
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
         {/* Admin Routes - PROTECTED */}
         {/* Note: Updated requiredRole to allow 'division' role to access admin dashboard */}
