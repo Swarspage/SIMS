@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import { authService } from "../services/authService";
 import dmceLogo from "../assets/dmce_logo_new.png";
 
@@ -16,6 +17,7 @@ export default function SignupPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   // ✅ REDIRECT IF ALREADY LOGGED IN
