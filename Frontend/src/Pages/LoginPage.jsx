@@ -33,11 +33,16 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await authService.login(form.studentId, form.password);
+      const normalizedStudentId = form.studentId.trim().toUpperCase();
+      const response = await authService.login(normalizedStudentId, form.password);
       localStorage.setItem("role", "student");
 
-      // Token is now handled by httpOnly cookies via withCredentials: true
-      localStorage.removeItem("token"); // Cleanup just in case
+      // Store token in localStorage to fix mobile browser 3rd-party cookie blocking issues
+      if (response.token) {
+        localStorage.setItem("token", response.token);
+      } else {
+        localStorage.removeItem("token"); // Cleanup just in case
+      }
 
       const student =
         response.student || response.data?.student || response.user;
@@ -92,6 +97,8 @@ export default function LoginPage() {
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Student Login</h1>
             <p className="text-gray-500 text-sm">
               Welcome back! Please access your account.
+              <br />
+              <span className="text-xs font-medium text-blue-600 mt-1 block">New here? Sign up first to create your account.</span>
             </p>
           </div>
 
@@ -134,6 +141,9 @@ export default function LoginPage() {
                 placeholder="e.g., 2023FHCO125"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition duration-200"
                 required
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
               />
             </div>
 

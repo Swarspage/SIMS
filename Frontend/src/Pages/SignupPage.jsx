@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import { authService } from "../services/authService";
 import dmceLogo from "../assets/dmce_logo_new.png";
 
@@ -16,6 +17,7 @@ export default function SignupPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   // ✅ REDIRECT IF ALREADY LOGGED IN
@@ -43,9 +45,11 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      await authService.signup(form.studentID, form.email, form.password);
+      const normalizedStudentID = form.studentID.trim().toUpperCase();
+      const normalizedEmail = form.email.trim().toLowerCase();
+      await authService.signup(normalizedStudentID, normalizedEmail, form.password);
       navigate("/login", {
-        state: { message: "Signup successful! Please login." },
+        state: { message: "Signup successful! We've sent a verification email. Please verify your email before logging in." },
       });
     } catch (err) {
       const resData = err.response?.data;
@@ -102,6 +106,9 @@ export default function SignupPage() {
                 placeholder="e.g., 2023FHCO125"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
                 required
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
               />
               <p className="mt-1 text-xs text-gray-400">
                 As provided by the admin (4 digits + 4 uppercase letters + 3 digits)
@@ -121,6 +128,9 @@ export default function SignupPage() {
                 placeholder="you@example.com"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
                 required
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
               />
             </div>
 

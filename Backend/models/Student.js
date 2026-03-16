@@ -14,6 +14,19 @@ const studentSchema = new mongoose.Schema({
 
     email: { type: String, unique: true, sparse : true },
     password: { type: String },
+
+
+    // new fields for email verification
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailVerificationToken: {
+        type: String
+    },
+    emailVerificationExpire: {
+        type: Date
+    },
     
     //new authentication fields for password reset
     resetPasswordToken: {

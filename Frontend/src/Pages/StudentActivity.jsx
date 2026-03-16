@@ -311,7 +311,7 @@ export default function StudentActivity() {
           <p className="text-slate-600 mt-1 text-sm sm:text-base">
             {editingId
               ? "Update your activity details"
-              : "Record your achievements and activities"}
+              : "Record your activities"}
           </p>
         </div>
 

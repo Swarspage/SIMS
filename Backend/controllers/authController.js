@@ -10,10 +10,9 @@ const sendEmailBrevo = require("../services/sendEmailBrevo");
 const { signupSchema, loginSchema, adminLoginSchema, divisionInchargeLoginSchema , forgotPasswordSchema , resetPasswordSchema , adminResetPasswordSchema , divisionInchargeResetPasswordSchema } = require('../validators/authValidation.js');
 
 
-// const { uploadToCloudinary } = require("../helpers/cloudinary/UploadToCloudinary.js");
 
-
-const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
+if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not set");
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const cookieOptions = {
   httpOnly: true,
@@ -22,7 +21,7 @@ const cookieOptions = {
   sameSite: "none",
 };
  
-//signup2
+//signup
 exports.signup = async (req, res) => {
   try {
 
@@ -47,35 +46,42 @@ exports.signup = async (req, res) => {
     }
 
     // Already registered
-    if (student.password) {
-      return res.status(400).json({
-        success: false,
-        message: "Student already registered. Please login."
-      });
+    if (student.password && student.isVerified) {
+      return res.status(400).json({ success: false, message: "Student already registered. Please login." });
     }
 
-    // Email already exists
-    // const existingEmail = await Student.findOne({ email });
-    // if (existingEmail) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Email already in use."
-    //   });
-    // }
+    // Hash and save password (but account stays inactive until email verified)
+    student.password = await bcrypt.hash(password, 10);
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+     // Generate verification token
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
 
-    // Update existing record
-    student.email = email;
-    student.password = hashedPassword;
-    // student.isRegistered = true;
+    student.emailVerificationToken = hashedToken;
+    student.emailVerificationExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+    student.isVerified = false;
 
     await student.save();
 
+    // Send verification email
+    const verifyURL = `${process.env.FRONTEND_URL}/verify-email/${rawToken}`;
+    const htmlContent = `
+      <h2>Hello ${student.name?.firstName || "Student"},</h2>
+      <p>Thanks for signing up! Please verify your email to activate your account.</p>
+      <p><a href="${verifyURL}" style="padding:10px 20px; background:#4F46E5; color:white; border-radius:5px; text-decoration:none;">Verify Email</a></p>
+      <p>This link expires in 10 minutes.</p>
+      <p>If you didn't sign up, ignore this email.</p>
+    `;
+
+    await sendEmailBrevo({
+      toEmail: student.email,
+      subject: "Verify Your Email",
+      htmlContent
+    });
+
     return res.status(200).json({
       success: true,
-      message: "Signup successful. Please login."
+      message: "Signup successful. Please check your email to verify your account. Please check your Spam or Inbox or All Mail sections of your mail."
     });
 
   } catch (error) {
@@ -87,7 +93,7 @@ exports.signup = async (req, res) => {
   }
 };
 
-//login2
+//login
 // POST /student/login
 exports.login = async (req, res) => {
   try {
@@ -109,7 +115,7 @@ exports.login = async (req, res) => {
     if (!student) {
       return res.status(400).json({
         success: false,
-        message: "Invalid Student ID"
+        message: "Invalid credentials."
       });
     }
 
@@ -120,12 +126,19 @@ exports.login = async (req, res) => {
       });
     }
 
+    if (!student.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email first.",
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, student.password);
 
     if (!isMatch) {
       return res.status(400).json({
         success: false,
-        message: "Incorrect password"
+        message: "Invalid credentials."
       });
     }
 
@@ -163,6 +176,45 @@ exports.login = async (req, res) => {
     });
   }
 };
+
+
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const student = await Student.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpire: { $gt: Date.now() }
+    });
+
+    if (!student) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification link. Please sign up again."
+      });
+    }
+
+    // Activate account
+    student.isVerified = true;
+    student.emailVerificationToken = undefined;
+    student.emailVerificationExpire = undefined;
+
+    await student.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully! You can now log in."
+    });
+
+  } catch (error) {
+    console.error("Verify Email Error:", error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+
 
 // ADMIN LOGIN
 exports.adminLogin = async (req, res) => {
@@ -314,7 +366,7 @@ exports.forgotPassword = async (req, res) => {
     if (!student) {
       return res.status(404).json({
         success: false,
-        message: "No account found with this email"
+        message: "If that email is registered, a reset link has been sent. Please check your Spam or Inbox or All Mail sections of your mail."
       });
     }
 

@@ -8,6 +8,8 @@ const { authLimiter, passwordResetLimiter } = require('../middlewares/rateLimite
 router.post('/signup' ,authLimiter , authController.signup);     
 router.post('/login', authLimiter , authController.login);
 
+// For Email varification -reuse 2 tries of password reset limiter
+router.post('/verify-email/:token', passwordResetLimiter, authController.verifyEmail);
 //admin auth routes
 router.post('/admin-login', authLimiter , authController.adminLogin);
 

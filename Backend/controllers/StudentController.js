@@ -924,7 +924,7 @@ const updateStudent = async (req, res) => {
 
 
 
-// DELETE STUDENT --student or admin
+// DELETE STUDENT --divisionIncharge or admin
 const deleteStudent = async (req, res) => {
   try {
     let studentId;
@@ -954,36 +954,14 @@ const deleteStudent = async (req, res) => {
       }
 
 
-    } else if (req.user.role === "student") {
-
-      studentId = req.user.id;
-
     } else {
       return res.status(403).json({ success: false, message: "Unauthorized role" });
     }
 
-    const student = await Student.findByIdAndDelete(studentId);
 
-    if (!student) {
-      return res.status(404).json({ success: false, message: "Student not found" });
-    }
-
-    // Delete student photo only if details deleted from cloudinary
-    if (student.studentPhoto && student.studentPhoto.publicId) {
-      try {
-        await deleteFromCloudinary(student.studentPhoto.publicId);
-      } catch (err) {
-        console.error("Cloudinary cleanup failed:", err);
-      }
-    }
+    await cascadeDeleteStudent(studentId);
 
 
-    // delete other documents in other schemas referencing to this student --only if studdent is first successfully deleted from Student.js
-    try {
-      await cascadeDeleteStudent(studentId);
-    } catch (err) {
-      console.error("Cascade failed:", err);
-    }
 
 
     return res.status(200).json({ success: true, message: "Student deleted successfully" });

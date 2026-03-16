@@ -43,6 +43,12 @@ export const authService = {
     return response.data;
   },
 
+  // Verify Email
+  verifyEmail: async (token) => {
+    const response = await API.post(`/auth/verify-email/${token}`);
+    return response.data;
+  },
+
   // Forgot Password (Student)
   forgotPassword: async (email) => {
     const response = await API.post("/auth/forgot-password", { email });

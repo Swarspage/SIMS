@@ -3,7 +3,10 @@ import axios from "axios";
 
 // Backend URL
 // Backend URL
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// Automatically use the host's IP for local network testing if VITE_API_URL isn't set.
+const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+const defaultApi = host === 'localhost' ? 'http://localhost:5000/api' : `http://${host}:5000/api`;
+const BASE_URL = import.meta.env.VITE_API_URL || defaultApi;
 
 // Create axios instance
 const API = axios.create({
@@ -13,6 +16,18 @@ const API = axios.create({
   },
   withCredentials: true
 });
+
+// ✅ REQUEST INTERCEPTOR (Add Authorization Header for mobile Safari/WebKit 3rd party cookie issues)
+API.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // ✅ RESPONSE INTERCEPTOR
 API.interceptors.response.use(

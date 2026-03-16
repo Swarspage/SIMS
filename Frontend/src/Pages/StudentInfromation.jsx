@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 export default function StudentInformation() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(true); // Default to true, switch to false if data exists
   const [hasData, setHasData] = useState(false);
   const [studentId, setStudentId] = useState(null);
@@ -48,6 +49,65 @@ export default function StudentInformation() {
   useEffect(() => {
     fetchStudentData();
   }, []);
+
+  const copyCurrentAddress = () => {
+    setFormData(prev => ({
+      ...prev,
+      nativeStreet: prev.currentStreet,
+      nativeCity: prev.currentCity,
+      nativePincode: prev.pincode
+    }));
+    toast.info("Address copied!");
+  };
+
+  const fetchCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          // Using Nominatim (OpenStreetMap) for better postcode retrieval
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const data = await response.json();
+
+          if (data && data.address) {
+            const city = data.address.city || data.address.town || data.address.village || data.address.suburb || "";
+            const pincode = data.address.postcode || "";
+            
+            setFormData((prev) => ({
+              ...prev,
+              currentCity: city,
+              pincode: pincode || prev.pincode, // Keep existing if new is empty
+            }));
+            
+            if (city) {
+              toast.success(`Location fetched: ${city}`);
+            }
+            if (!pincode) {
+              toast.warning("Precise pincode not found. Please enter manually.");
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching location:", err);
+          toast.error("Failed to fetch location details.");
+        } finally {
+          setGeoLoading(false);
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        setGeoLoading(false);
+        toast.error(error.message || "Failed to get current position.");
+      }
+    );
+  };
 
   const fetchStudentData = async () => {
     try {
@@ -445,7 +505,25 @@ export default function StudentInformation() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Current Address */}
               <div className="space-y-4">
-                <h3 className="text-md font-bold text-orange-900 bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">Current Address</h3>
+                <div className="flex justify-between items-center bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">
+                  <h3 className="text-md font-bold text-orange-900">Current Address</h3>
+                  <button 
+                    type="button"
+                    onClick={fetchCurrentLocation}
+                    disabled={geoLoading}
+                    className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md font-bold transition-all disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {geoLoading ? (
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    )}
+                    FETCH LOCATION
+                  </button>
+                </div>
                 <InputField label="Street / Building (Complete Address)" name="currentStreet" value={formData.currentStreet} onChange={handleChange} required />
                 <div className="grid grid-cols-2 gap-4">
                   <InputField label="City" name="currentCity" value={formData.currentCity} onChange={handleChange} required />
@@ -455,7 +533,16 @@ export default function StudentInformation() {
 
               {/* Native Address */}
               <div className="space-y-4">
-                <h3 className="text-md font-bold text-orange-900 bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">Native Address</h3>
+                <div className="flex justify-between items-center bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">
+                  <h3 className="text-md font-bold text-orange-900">Native Address</h3>
+                  <button 
+                    type="button"
+                    onClick={copyCurrentAddress}
+                    className="text-xs bg-orange-200 hover:bg-orange-300 text-orange-800 px-3 py-1 rounded-md font-bold transition-all"
+                  >
+                    SAME AS CURRENT
+                  </button>
+                </div>
                 <InputField label="Street / Building (Complete Address)" name="nativeStreet" value={formData.nativeStreet} onChange={handleChange} required />
                 <div className="grid grid-cols-2 gap-4">
                   <InputField label="City" name="nativeCity" value={formData.nativeCity} onChange={handleChange} required />

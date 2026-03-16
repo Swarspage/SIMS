@@ -30,15 +30,20 @@ export default function DivisionInchargeLogin() {
         setError("");
 
         try {
+            const normalizedEmail = form.email.trim().toLowerCase();
             // Calling the new divisionLogin service
-            const response = await authService.divisionLogin(form.email, form.password);
+            const response = await authService.divisionLogin(normalizedEmail, form.password);
             console.log("Division login response:", response);
 
             // Setting role as 'division' to distinguish from super admin
             localStorage.setItem("role", "division");
 
-            // Token is now handled by httpOnly cookies via withCredentials: true
-            localStorage.removeItem("token"); // Cleanup just in case
+            // Store token in localStorage to fix mobile browser 3rd-party cookie blocking issues
+            if (response.token) {
+                localStorage.setItem("token", response.token);
+            } else {
+                localStorage.removeItem("token"); // Cleanup just in case
+            }
 
             const user = response.user || response.data?.user;
             if (user) {
@@ -104,6 +109,9 @@ export default function DivisionInchargeLogin() {
                                 placeholder="incharge@example.com"
                                 className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition duration-200"
                                 required
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                spellCheck="false"
                             />
                         </div>
 
