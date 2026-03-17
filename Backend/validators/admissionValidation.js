@@ -101,7 +101,8 @@ const admissionCreateSchema = Joi.object({
 
   mahadbtFilledDate: Joi.when("isMahadbtFormSubmitted", {
     is: true,
-    then: Joi.date().required().messages({
+    then: Joi.date().max('now').required().messages({
+      "date.max" : "MahaDBT form filled date cannot be in the future.",
       "any.required": "MahaDBT form filled date is required.",
       "date.base": "MahaDBT form filled date must be a valid date."
     }),
