@@ -30,9 +30,8 @@ export default function DivisionInchargeLogin() {
         setError("");
 
         try {
-            const normalizedEmail = form.email.trim().toLowerCase();
             // Calling the new divisionLogin service
-            const response = await authService.divisionLogin(normalizedEmail, form.password);
+            const response = await authService.divisionLogin(form.email, form.password);
             console.log("Division login response:", response);
 
             // Setting role as 'division' to distinguish from super admin
@@ -109,9 +108,6 @@ export default function DivisionInchargeLogin() {
                                 placeholder="incharge@example.com"
                                 className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition duration-200"
                                 required
-                                autoCapitalize="none"
-                                autoCorrect="off"
-                                spellCheck="false"
                             />
                         </div>
 

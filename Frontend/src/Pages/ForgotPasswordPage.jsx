@@ -19,13 +19,12 @@ export default function ForgotPasswordPage({ role = "student" }) {
     setError("");
     setLoading(true);
     try {
-      const normalizedEmail = email.trim().toLowerCase();
       if (role === "admin") {
-        await authService.adminForgotPassword(normalizedEmail);
+        await authService.adminForgotPassword(email);
       } else if (role === "division") {
-        await authService.divisionForgotPassword(normalizedEmail);
+        await authService.divisionForgotPassword(email);
       } else {
-        await authService.forgotPassword(normalizedEmail);
+        await authService.forgotPassword(email);
       }
       setSuccess(true);
     } catch (err) {
@@ -106,9 +105,6 @@ export default function ForgotPasswordPage({ role = "student" }) {
                     placeholder="you@example.com"
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
                     required
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck="false"
                   />
                 </div>
 

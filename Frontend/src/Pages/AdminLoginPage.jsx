@@ -29,8 +29,7 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const normalizedEmail = form.email.trim().toLowerCase();
-      const response = await authService.adminLogin(normalizedEmail, form.password);
+      const response = await authService.adminLogin(form.email, form.password);
       localStorage.setItem("role", "admin");
 
       // Store token in localStorage to fix mobile browser 3rd-party cookie blocking issues
@@ -112,9 +111,6 @@ export default function AdminLoginPage() {
                 placeholder="admin@example.com"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition duration-200"
                 required
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck="false"
               />
             </div>
 
