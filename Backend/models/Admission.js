@@ -35,12 +35,6 @@ const admissionSchema = new mongoose.Schema({
         }
     },
 
-    //academic yr => 2023-2024
-    academicYear: {
-        type: String,
-        required: true
-    } ,
-
     //mahadbt form
     isMahadbtFormSubmitted: {
         type: Boolean,
@@ -87,22 +81,18 @@ admissionSchema.statics.getUnpaidStudents = function (){
 };
 
 admissionSchema.index({ stuID: 1 });
-admissionSchema.index({ academicYear: 1 });
 admissionSchema.index({ status: 1 });
 admissionSchema.index({ isFeesPaid: 1 });
 admissionSchema.index({ isMahadbtFormSubmitted: 1 });
 admissionSchema.index({ hasMigrationCertificate: 1 });
 
 
-admissionSchema.index({ academicYear: 1, status: 1 });
-admissionSchema.index({ academicYear: 1, isFeesPaid: 1 });
-
 admissionSchema.index({ admissionDate: -1 });
 admissionSchema.index({ createdAt: -1 });
 
-// Prevent duplicate admission per academic year
+// Prevent duplicate admission per student
 admissionSchema.index(
-  { stuID: 1, academicYear: 1 },
+  { stuID: 1 },
   { unique: true }
 );
 

@@ -93,7 +93,6 @@ const createAdmission = async (req, res) => {
       fees: value.fees,
       isScholarshipApplied: value.isScholarshipApplied,
       scholarshipNotAppliedReason: value.scholarshipNotAppliedReason,
-      academicYear: value.academicYear,
       isMahadbtFormSubmitted: value.isMahadbtFormSubmitted,
       mahadbtFilledDate: value.mahadbtFilledDate,
       mahadbtNotFilledReason: value.mahadbtNotFilledReason,
@@ -116,7 +115,7 @@ const createAdmission = async (req, res) => {
     if (err.code === 11000) {
       return res.status(409).json({
         success: false,
-        message: "Admission already exists for this academic year for the student.",
+        message: "Admission already exists for this student.",
       });
     }
     console.error("createAdmission error:", err);
@@ -279,8 +278,6 @@ const getAllAdmissions = async (req, res) => {
     } else {
       if (value.year) query.year = value.year;
     }
-
-    if (value.academicYear) query.academicYear = value.academicYear;
 
     // Paid / unpaid filter
     if (value.filterPaid === "paid") {

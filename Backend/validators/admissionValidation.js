@@ -1,8 +1,5 @@
 const Joi = require("../helpers/profanity/joiWithProfanity");
 
-// Negative lookahead guards against all-digit strings.
-// Character class has no nested quantifiers so there is no backtracking risk.
-// Joi's max() cap (enforced before this regex runs) further bounds worst-case input length.
 const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'\-]+$/;
 
 // CREATE ADMISSION
@@ -77,23 +74,6 @@ const admissionCreateSchema = Joi.object({
       }),
     otherwise: Joi.forbidden()
   }),
-
-  academicYear: Joi.string()
-    .trim()
-    .pattern(/^\d{4}-\d{4}$/)
-    .custom((value, helpers) => {
-      const [start, end] = value.split("-").map(Number);
-      if (end !== start + 1) {
-        return helpers.message("Academic year must be in the format YYYY-YYYY with consecutive years.");
-      }
-      return value;
-    })
-    .required()
-    .messages({
-      "string.empty": "Academic year is required.",
-      "string.pattern.base": "Academic year must be in the format YYYY-YYYY.",
-      "any.required": "Academic year is required."
-    }),
 
   isMahadbtFormSubmitted: Joi.boolean()
     .default(false)
@@ -301,14 +281,6 @@ const getAdmissionsValidation = Joi.object({
     .optional()
     .messages({
       "any.only": "Year must be one of SE, TE, or BE."
-    }),
-
-  academicYear: Joi.string()
-    .trim()
-    .pattern(/^\d{4}-\d{4}$/)
-    .optional()
-    .messages({
-      "string.pattern.base": "Academic year must be in the format YYYY-YYYY."
     }),
 
   search: Joi.string()
