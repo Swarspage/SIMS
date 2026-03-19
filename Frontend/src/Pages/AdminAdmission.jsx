@@ -32,37 +32,46 @@ function AdmissionCard({ admission, onView, onEdit, onDelete, isDeleting }) {
       : "Student";
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group">
-      {/* Card Header - Premium Gradient */}
-      <div className="h-28 bg-gradient-to-br from-blue-700 via-indigo-700 to-violet-800 flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-        <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
-        <div className="text-center z-10 text-white">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-1 drop-shadow-sm">
-            {studentId}
-          </p>
-          <h3 className="text-base font-bold line-clamp-1 drop-shadow-md">
-            {studentName}
-          </h3>
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-500 overflow-hidden flex flex-col h-full group relative">
+      {/* Top Banner - Subtle Status Color */}
+      <div className={`h-20 w-full bg-gradient-to-br transition-all duration-300 ${admission?.status === 'approved' ? 'from-emerald-600 to-teal-700' : admission?.status === 'rejected' ? 'from-rose-600 to-red-700' : 'from-blue-600 to-indigo-700'}`}>
+        <div className="absolute top-4 right-4 z-10">
+          <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full bg-white/20 backdrop-blur-md text-white border border-white/20`}>
+            {admission?.status || "Pending"}
+          </span>
+        </div>
+      </div>
+
+      {/* Profile Photo (Initial-Avatar) */}
+      <div className="relative px-6 -mt-10 mb-4 flex items-end justify-between">
+        <div className="w-20 h-20 rounded-2xl bg-white p-1.5 shadow-xl group-hover:scale-105 transition-transform duration-500">
+          <div className={`w-full h-full rounded-xl flex items-center justify-center text-2xl font-black text-white shadow-inner bg-gradient-to-br ${admission?.status === 'approved' ? 'from-emerald-500 to-teal-600' : admission?.status === 'rejected' ? 'from-rose-500 to-red-600' : 'from-blue-500 to-indigo-600'}`}>
+            {studentName.charAt(0)}
+          </div>
+        </div>
+        <div className="text-right pb-1">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Student ID</p>
+          <p className="text-xs font-bold text-slate-700 font-mono tracking-tighter">{studentId}</p>
         </div>
       </div>
 
       {/* Card Body */}
-      <div className="p-4 flex flex-col flex-grow">
-        <div className="flex items-center justify-between mb-4">
-          <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${getStatusColor(admission?.status)}`}>
-            {admission?.status || "Pending"}
-          </span>
+      <div className="px-6 pb-6 flex flex-col flex-grow">
+        <div className="mb-4">
+          <h3 className="text-lg font-black text-slate-900 tracking-tight leading-tight mb-0.5 group-hover:text-blue-600 transition-colors">
+            {studentName}
+          </h3>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Admission Record</p>
         </div>
 
-        <div className="space-y-2.5 mb-5">
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-400 font-bold uppercase tracking-tighter">Course</span>
-            <span className="font-bold text-slate-900 truncate max-w-[120px]">{admission?.course || "N/A"}</span>
+        <div className="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-slate-100">
+          <div>
+            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Course</span>
+            <span className="text-xs font-bold text-slate-700 truncate block">{admission?.course || "N/A"}</span>
           </div>
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-400 font-bold uppercase tracking-tighter">Roll No</span>
-            <span className="font-bold text-slate-900">{admission?.rollno || "N/A"}</span>
+          <div className="text-right">
+            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Roll Number</span>
+            <span className="text-xs font-bold text-slate-700 block">{admission?.rollno || "N/A"}</span>
           </div>
         </div>
 
@@ -131,7 +140,11 @@ function DetailModal({ admission, onClose }) {
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-shrink-0">
               <div className="w-full sm:w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 overflow-hidden border border-slate-200 flex items-center justify-center text-white text-4xl font-black shadow-lg">
-                {studentName.charAt(0)}
+                {admission.stuID?.studentPhoto?.url ? (
+                  <img src={admission.stuID.studentPhoto.url} alt={studentName} className="w-full h-full object-cover" />
+                ) : (
+                  studentName.charAt(0)
+                )}
               </div>
             </div>
 
