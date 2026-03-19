@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { admissionService } from "../services/admissionService";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast, Toaster } from 'react-hot-toast';
 
 export default function StudentAdmission() {
   const [loading, setLoading] = useState(true);
@@ -102,10 +101,9 @@ export default function StudentAdmission() {
       // Prepare payload - adhering strictly to backend Joi validation (admissionValidation.js)
       const payload = {
         rollno: String(formData.rollno).trim(),
-        year: formData.year || undefined, // Backend allows optional, but string.empty fails
-        div: formData.div ? formData.div.trim() : "",
+        // 'div' is required by Joi but ignored by the controller (it uses student.division instead).
+        div: formData.div || "A", 
         course: formData.course ? formData.course.trim() : "Computer Engineering",
-        academicYear: formData.academicYear ? formData.academicYear.trim() : "",
         fees: Number(formData.fees), // Backend requires Joi.number()
         isScholarshipApplied: !!formData.isScholarshipApplied,
         isMahadbtFormSubmitted: !!formData.isMahadbtFormSubmitted,
@@ -113,20 +111,16 @@ export default function StudentAdmission() {
       };
 
       // Conditional Logic: Backend uses Joi.forbidden() for mutually exclusive fields
-
-      // Scholarship logic
       if (!payload.isScholarshipApplied) {
         payload.scholarshipNotAppliedReason = formData.scholarshipNotAppliedReason || "";
       }
 
-      // MahaDBT logic
       if (payload.isMahadbtFormSubmitted) {
         payload.mahadbtFilledDate = formData.mahadbtFilledDate || undefined;
       } else {
         payload.mahadbtNotFilledReason = formData.mahadbtNotFilledReason || "";
       }
 
-      // Migration logic
       if (payload.hasMigrationCertificate) {
         payload.migrationExpectedDate = formData.migrationExpectedDate || undefined;
       } else {
@@ -141,13 +135,12 @@ export default function StudentAdmission() {
       });
 
       if (hasData && admissionId) {
-        // Update: Backend update schema is even stricter (admissionUpdateSchema)
-        // academicYear is NOT in update schema, so must be removed
-        const { academicYear, ...updateData } = payload;
-        await admissionService.updateAdmission(admissionId, updateData);
+        // Update: Backend update schema (admissionUpdateSchema) does not allow 'year' or 'div'
+        // We only send the core admission data fields.
+        await admissionService.updateAdmission(admissionId, payload);
         toast.success("Admission updated successfully!");
       } else {
-        // Create
+        // Create: Backend uses Student record to populate year/academicYear, so we don't send them.
         await admissionService.createAdmission(payload);
         toast.success("Admission created successfully!");
         setHasData(true);
@@ -269,7 +262,7 @@ export default function StudentAdmission() {
   // =============== FORM VIEW (EDIT MODE) ===============
   return (
     <main className="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
-      <ToastContainer position="top-right" autoClose={5000} theme="light" />
+      <Toaster position="bottom-right" />
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
@@ -301,8 +294,8 @@ export default function StudentAdmission() {
               Academic Details
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-1">
                 <SelectField
                   label="Course"
                   name="course"
@@ -312,16 +305,7 @@ export default function StudentAdmission() {
                   options={["Computer Engineering"]}
                 />
               </div>
-              <div className="md:col-span-2">
-                <InputField label="Academic Year" name="academicYear" value={formData.academicYear} onChange={handleChange} required placeholder="2024-2025" disabled={hasData} title={hasData ? "Academic Year cannot be changed once submitted" : ""} />
-              </div>
 
-              <div className="md:col-span-2">
-                <SelectField label="Year" name="year" value={formData.year} onChange={handleChange} required options={["SE", "TE", "BE"]} />
-              </div>
-              <div className="md:col-span-1">
-                <InputField label="Division" name="div" value={formData.div} onChange={handleChange} required placeholder="e.g. A" />
-              </div>
               <div className="md:col-span-1">
                 <InputField label="Roll No" name="rollno" value={formData.rollno} onChange={handleChange} required />
               </div>

@@ -53,9 +53,6 @@ function AdmissionCard({ admission, onView, onEdit, onDelete, isDeleting }) {
           <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${getStatusColor(admission?.status)}`}>
             {admission?.status || "Pending"}
           </span>
-          <span className="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-1 rounded shadow-sm border border-slate-200">
-            {admission?.academicYear || "N/A"}
-          </span>
         </div>
 
         <div className="space-y-2.5 mb-5">
@@ -64,8 +61,8 @@ function AdmissionCard({ admission, onView, onEdit, onDelete, isDeleting }) {
             <span className="font-bold text-slate-900 truncate max-w-[120px]">{admission?.course || "N/A"}</span>
           </div>
           <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-400 font-bold uppercase tracking-tighter">Year & Div</span>
-            <span className="font-bold text-slate-900">{admission?.year || "N/A"} - {admission?.div || "N/A"}</span>
+            <span className="text-slate-400 font-bold uppercase tracking-tighter">Roll No</span>
+            <span className="font-bold text-slate-900">{admission?.rollno || "N/A"}</span>
           </div>
         </div>
 
@@ -150,9 +147,6 @@ function DetailModal({ admission, onClose }) {
                 <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${admission.status === 'approved' ? 'bg-green-50 text-green-700 border-green-100' : admission.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
                   {admission.status || "Pending"}
                 </span>
-                <span className="px-3 py-1 bg-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-slate-200">
-                  {admission.academicYear || "N/A"}
-                </span>
                 <span className="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100">
                   {admission.course || "N/A"}
                 </span>
@@ -160,7 +154,7 @@ function DetailModal({ admission, onClose }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
               <p className="text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1">Roll Number</p>
               <p className="text-sm font-bold text-slate-800">{admission.rollno || 'N/A'}</p>
@@ -257,12 +251,13 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     studentId: "",
-    academicYear: "",
-    div: "", rollno: "", course: "Computer Engineering", fees: "",
+    div: "A", 
+    rollno: "", 
+    course: "Computer Engineering", 
+    fees: "",
     isScholarshipApplied: false, scholarshipNotAppliedReason: "",
     isMahadbtFormSubmitted: false, mahadbtFilledDate: "", mahadbtNotFilledReason: "",
     hasMigrationCertificate: false, migrationExpectedDate: "", migrationNotAvailableReason: "",
-    year: "SE"
   });
 
   if (!isOpen) return null;
@@ -279,6 +274,7 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
 
       const submitData = { ...form };
       // Clean up irrelevant fields based on booleans to prevent Joi errors
+      
       if (submitData.isScholarshipApplied) {
         delete submitData.scholarshipNotAppliedReason;
       }
@@ -347,7 +343,7 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <div className="h-6 w-1.5 bg-blue-500 rounded-full"></div>
-                <h4 className="text-lg font-bold text-slate-800">Basic Info</h4>
+                <h4 className="text-lg font-bold text-slate-800">Admission Info</h4>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
@@ -355,24 +351,8 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
                   <input type="text" name="studentId" value={form.studentId} onChange={handleInputChange} required className={inputClass} placeholder="e.g. 211P041" />
                 </div>
                 <div>
-                  <label className={labelClass}>Academic Year <span className="text-red-500">*</span></label>
-                  <input type="text" name="academicYear" value={form.academicYear} onChange={handleInputChange} required pattern="\d{4}-\d{4}" title="Format: YYYY-YYYY" className={inputClass} placeholder="e.g. 2023-2024" />
-                </div>
-                <div>
                   <label className={labelClass}>Course <span className="text-red-500">*</span></label>
                   <input type="text" name="course" value={form.course} onChange={handleInputChange} required className={inputClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>Year <span className="text-red-500">*</span></label>
-                  <select name="year" value={form.year} onChange={handleInputChange} required className={inputClass}>
-                    <option value="SE">SE</option>
-                    <option value="TE">TE</option>
-                    <option value="BE">BE</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Division <span className="text-red-500">*</span></label>
-                  <input type="text" name="div" value={form.div} onChange={handleInputChange} required className={inputClass} placeholder="e.g. A" />
                 </div>
                 <div>
                   <label className={labelClass}>Roll Number <span className="text-red-500">*</span></label>
@@ -473,7 +453,7 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
 function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    year: "", div: "", rollno: "", course: "", fees: "", status: "",
+    rollno: "", course: "", fees: "", status: "",
     isScholarshipApplied: false, scholarshipNotAppliedReason: "",
     isMahadbtFormSubmitted: false, mahadbtFilledDate: "", mahadbtNotFilledReason: "",
     hasMigrationCertificate: false, migrationExpectedDate: "", migrationNotAvailableReason: ""
@@ -482,8 +462,6 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
   useEffect(() => {
     if (admission && isOpen) {
       setForm({
-        year: admission.year || "",
-        div: admission.div || "",
         rollno: admission.rollno || "",
         course: admission.course || "",
         fees: admission.fees || "",
@@ -513,7 +491,6 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
       setSaving(true);
 
       // Calculate what actually changed so we only send necessary updates.
-      // This prevents Joi validation errors for empty strings when you haven't filled a field.
       const updateData = {};
       Object.keys(form).forEach(key => {
         if (key === 'status') return;
@@ -596,7 +573,7 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
             <section>
               <div className="flex items-center gap-2 mb-6">
                 <div className="h-6 w-1.5 bg-blue-500 rounded-full"></div>
-                <h4 className="text-lg font-bold text-slate-800">Basic Info & Status</h4>
+                <h4 className="text-lg font-bold text-slate-800">Admission Info</h4>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
@@ -608,12 +585,6 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
                   </select>
                 </div>
                 <div><label className={labelClass}>Course</label><input type="text" name="course" value={form.course} onChange={handleInputChange} className={inputClass} /></div>
-                <div><label className={labelClass}>Full Year</label>
-                  <select name="year" value={form.year} onChange={handleInputChange} className={inputClass}>
-                    <option value="SE">SE</option><option value="TE">TE</option><option value="BE">BE</option>
-                  </select>
-                </div>
-                <div><label className={labelClass}>Division</label><input type="text" name="div" value={form.div} onChange={handleInputChange} className={inputClass} /></div>
                 <div><label className={labelClass}>Roll Number</label><input type="text" name="rollno" value={form.rollno} onChange={handleInputChange} className={inputClass} /></div>
               </div>
             </section>
@@ -899,8 +870,7 @@ export default function AdminAdmission() {
             />
           </div>
           <p className="text-[10px] text-slate-500 mt-1.5 ml-1">
-            <span className="font-semibold text-blue-600">Note:</span> The search box filters by <strong className="text-slate-700">Course</strong> and <strong className="text-slate-700">Academic Year</strong>.
-            <span className="block mt-0.5 text-slate-400 italic">Numeric queries (like Roll Number) are blocked server-side.</span>
+            <span className="font-semibold text-blue-600">Note:</span> Search box filters by <strong className="text-slate-700">Course</strong> or other text fields.
           </p>        </div>
 
         <div className="flex flex-wrap gap-3 items-center">
