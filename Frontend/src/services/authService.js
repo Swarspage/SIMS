@@ -3,7 +3,9 @@ import API from "../api/axios";
 export const authService = {
   // Student Login
   login: async (studentID, password) => {
-    const response = await API.post("/auth/login", { studentID, password });
+    const cleanID = studentID?.trim().toUpperCase() || "";
+    const cleanPassword = password?.trim() || "";
+    const response = await API.post("/auth/login", { studentID: cleanID, password: cleanPassword });
 
 
     return response.data;
@@ -11,7 +13,9 @@ export const authService = {
 
   // Admin Login
   adminLogin: async (email, password) => {
-    const response = await API.post("/auth/admin-login", { email, password });
+    const cleanEmail = email?.trim().toLowerCase() || "";
+    const cleanPassword = password?.trim() || "";
+    const response = await API.post("/auth/admin-login", { email: cleanEmail, password: cleanPassword });
 
 
     return response.data;
@@ -19,9 +23,11 @@ export const authService = {
 
   // Division Incharge Login (New)
   divisionLogin: async (email, password) => {
+    const cleanEmail = email?.trim().toLowerCase() || "";
+    const cleanPassword = password?.trim() || "";
     const response = await API.post("/auth/division-incharge", {
-      email,
-      password
+      email: cleanEmail,
+      password: cleanPassword
     });
 
 

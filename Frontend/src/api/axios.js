@@ -5,7 +5,8 @@ import axios from "axios";
 // Backend URL
 // Automatically use the host's IP for local network testing if VITE_API_URL isn't set.
 const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-const defaultApi = host === 'localhost' ? 'http://localhost:5000/api' : `http://${host}:5000/api`;
+const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
+const defaultApi = host === 'localhost' ? 'http://localhost:5000/api' : `${protocol}//${host}:5000/api`;
 const BASE_URL = import.meta.env.VITE_API_URL || defaultApi;
 
 // Create axios instance

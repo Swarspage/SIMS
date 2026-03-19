@@ -30,8 +30,10 @@ export default function DivisionInchargeLogin() {
         setError("");
 
         try {
+            const cleanEmail = form.email.trim().toLowerCase();
+            const cleanPassword = form.password.trim();
             // Calling the new divisionLogin service
-            const response = await authService.divisionLogin(form.email, form.password);
+            const response = await authService.divisionLogin(cleanEmail, cleanPassword);
 
             // Setting role as 'division' to distinguish from super admin
             localStorage.setItem("role", "division");
@@ -51,7 +53,17 @@ export default function DivisionInchargeLogin() {
             // Navigating to the admin dashboard as requested
             navigate("/admin/dashboard");
         } catch (err) {
-            let errorMessage = err.response?.data?.error || err.response?.data?.message || "Login failed. Please verify credentials and division.";
+            let errorMessage = "Login failed. Please verify credentials and division.";
+
+            if (err.response?.data) {
+                if (err.response.data.errors && Array.isArray(err.response.data.errors) && err.response.data.errors.length > 0) {
+                    errorMessage = err.response.data.errors[0].message;
+                } else if (err.response.data.error) {
+                    errorMessage = err.response.data.error;
+                } else if (err.response.data.message) {
+                    errorMessage = err.response.data.message;
+                }
+            }
 
             // MASK PASSWORD POLICY ERROR
             if (errorMessage && errorMessage.includes("Password must be")) {
@@ -103,6 +115,11 @@ export default function DivisionInchargeLogin() {
                                 value={form.email}
                                 onChange={handleChange}
                                 type="email"
+                                inputMode="email"
+                                autoCapitalize="none"
+                                autoComplete="email"
+                                autoCorrect="off"
+                                spellCheck="false"
                                 placeholder="incharge@example.com"
                                 className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition duration-200"
                                 required
@@ -130,6 +147,7 @@ export default function DivisionInchargeLogin() {
                                     value={form.password}
                                     onChange={handleChange}
                                     type={showPassword ? "text" : "password"}
+                                    autoComplete="current-password"
                                     placeholder="••••••••"
                                     className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition duration-200"
                                     required

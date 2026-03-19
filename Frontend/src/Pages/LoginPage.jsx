@@ -33,7 +33,9 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await authService.login(form.studentID, form.password);
+      const cleanID = form.studentID.trim().toUpperCase();
+      const cleanPassword = form.password.trim();
+      const response = await authService.login(cleanID, cleanPassword);
       localStorage.setItem("role", "student");
 
       // Store token in localStorage to fix mobile browser 3rd-party cookie blocking issues
@@ -135,6 +137,11 @@ export default function LoginPage() {
                 value={form.studentID}
                 onChange={handleChange}
                 type="text"
+                inputMode="text"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
+                autoComplete="username"
                 placeholder="e.g., 2023FHCO125"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition duration-200"
                 required
@@ -165,6 +172,7 @@ export default function LoginPage() {
                   value={form.password}
                   onChange={handleChange}
                   type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition duration-200"
                   required

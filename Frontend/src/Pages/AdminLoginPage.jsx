@@ -29,7 +29,9 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const response = await authService.adminLogin(form.email, form.password);
+      const cleanEmail = form.email.trim().toLowerCase();
+      const cleanPassword = form.password.trim();
+      const response = await authService.adminLogin(cleanEmail, cleanPassword);
       localStorage.setItem("role", "admin");
 
       // Store token in localStorage to fix mobile browser 3rd-party cookie blocking issues
@@ -52,7 +54,17 @@ export default function AdminLoginPage() {
 
       navigate("/admin/dashboard");
     } catch (err) {
-      let errorMessage = err.response?.data?.error || err.response?.data?.message || "Admin login failed. Please try again.";
+      let errorMessage = "Admin login failed. Please try again.";
+
+      if (err.response?.data) {
+        if (err.response.data.errors && Array.isArray(err.response.data.errors) && err.response.data.errors.length > 0) {
+          errorMessage = err.response.data.errors[0].message;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      }
 
       // MASK PASSWORD POLICY ERROR
       if (errorMessage && errorMessage.includes("Password must be")) {
@@ -108,6 +120,11 @@ export default function AdminLoginPage() {
                 value={form.email}
                 onChange={handleChange}
                 type="email"
+                inputMode="email"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect="off"
+                spellCheck="false"
                 placeholder="admin@example.com"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition duration-200"
                 required
@@ -135,6 +152,7 @@ export default function AdminLoginPage() {
                   value={form.password}
                   onChange={handleChange}
                   type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition duration-200"
                   required
