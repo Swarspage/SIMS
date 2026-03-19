@@ -32,7 +32,6 @@ export default function DivisionInchargeLogin() {
         try {
             // Calling the new divisionLogin service
             const response = await authService.divisionLogin(form.email, form.password);
-            console.log("Division login response:", response);
 
             // Setting role as 'division' to distinguish from super admin
             localStorage.setItem("role", "division");
@@ -52,7 +51,6 @@ export default function DivisionInchargeLogin() {
             // Navigating to the admin dashboard as requested
             navigate("/admin/dashboard");
         } catch (err) {
-            console.log("Login error:", err);
             let errorMessage = err.response?.data?.error || err.response?.data?.message || "Login failed. Please verify credentials and division.";
 
             // MASK PASSWORD POLICY ERROR

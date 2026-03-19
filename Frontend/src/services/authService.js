@@ -5,9 +5,6 @@ export const authService = {
   login: async (studentID, password) => {
     const response = await API.post("/auth/login", { studentID, password });
 
-    if (response.data.token) {
-      console.log("✅ Login successful");
-    }
 
     return response.data;
   },
@@ -16,9 +13,6 @@ export const authService = {
   adminLogin: async (email, password) => {
     const response = await API.post("/auth/admin-login", { email, password });
 
-    if (response.data.token) {
-      console.log("✅ Admin login successful");
-    }
 
     return response.data;
   },
@@ -30,9 +24,6 @@ export const authService = {
       password
     });
 
-    if (response.data.token) {
-      console.log("✅ Division login successful");
-    }
 
     return response.data;
   },
@@ -95,7 +86,6 @@ export const authService = {
     localStorage.removeItem("studentName");
     localStorage.removeItem("adminId");
     localStorage.removeItem("adminEmail");
-    console.log("🗑️ Local storage cleared on logout");
 
     return response.data;
   },

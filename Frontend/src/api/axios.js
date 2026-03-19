@@ -34,18 +34,26 @@ API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // ✅ CHANGED: Clear localStorage items instead of cookie
+      // Read role BEFORE clearing storage, to redirect to correct login page
+      const role = localStorage.getItem("role");
+
       localStorage.removeItem("token");
       localStorage.removeItem("role");
       localStorage.removeItem("studentId");
       localStorage.removeItem("studentName");
       localStorage.removeItem("adminId");
       localStorage.removeItem("adminEmail");
-      
-      // Only redirect if not already on a login page
+
+      // Redirect to the correct login page based on role
       const path = window.location.pathname;
       if (!path.includes("/login") && !path.includes("/signup")) {
-        window.location.href = "/login";
+        if (role === "admin") {
+          window.location.href = "/admin/login";
+        } else if (role === "division" || role === "divisionIncharge") {
+          window.location.href = "/division/login";
+        } else {
+          window.location.href = "/login";
+        }
       }
     }
     return Promise.reject(error);

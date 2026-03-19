@@ -12,7 +12,7 @@ export default function ForgotPasswordPage({ role = "student" }) {
 
   // Determine back link and role label
   const backToLoginLink = role === "admin" ? "/admin/login" : role === "division" ? "/division/login" : "/login";
-  const roleLabel = role === "admin" ? "Admin" : role === "division" ? "Division Incharge" : "";
+  const roleLabel = role === "admin" ? "Admin" : role === "division" ? "Division Incharge" : "Student";
 
   const handleSubmit = async (e) => {
     e.preventDefault();

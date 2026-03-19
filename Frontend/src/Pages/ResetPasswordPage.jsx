@@ -44,11 +44,7 @@ export default function ResetPasswordPage({ role = "student" }) {
     } catch (err) {
       console.error(err);
       const resData = err.response?.data;
-      if (resData?.errors && Array.isArray(resData.errors)) {
-        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
-      } else {
-        setError(resData?.message || resData?.error || "Failed to reset password");
-      }
+      setError(resData?.message || resData?.error || "Failed to reset password. The link may have expired.");
     } finally {
       setLoading(false);
     }

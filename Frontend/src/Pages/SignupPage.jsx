@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
 import { authService } from "../services/authService";
 import dmceLogo from "../assets/dmce_logo_new.png";
 
@@ -47,17 +46,14 @@ export default function SignupPage() {
     try {
       await authService.signup(form.studentID, form.email, form.password);
       navigate("/login", {
-        state: { message: "Signup successful! Please login." },
+        state: { message: "Signup successful! Please verify your email before logging in. Check your inbox or spam folder." },
       });
     } catch (err) {
       const resData = err.response?.data;
       if (resData?.errors && Array.isArray(resData.errors)) {
-        resData.errors.forEach(e => toast.error(e.message || "Validation Error"));
-        // Optionally, if you still want to display a single error message in the form:
         setError(resData.errors[0].message || "Validation Error");
       } else {
         const msg = resData?.message || resData?.error || "Signup failed. Please try again.";
-        toast.error(msg);
         setError(msg);
       }
     } finally {

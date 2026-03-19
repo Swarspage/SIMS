@@ -1,23 +1,23 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { authService } from "../services/authService";
 import dmceLogo from "../assets/dmce_logo_new.png";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ studentId: "", password: "" });
+  const location = useLocation();
+  const [form, setForm] = useState({ studentID: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [successMsg] = useState(() => {
-    // Read signup success message passed via navigation state
-    return window.history.state?.usr?.message || "";
-  });
+  // Read the success message passed via navigation state (e.g. from signup redirect)
+  const successMsg = location.state?.message || "";
 
-  // ✅ REDIRECT IF ALREADY LOGGED IN
+  // Redirect if already logged in with valid token
   React.useEffect(() => {
+    const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
-    if (role === "student") {
+    if (token && role === "student") {
       navigate("/student/dashboard", { replace: true });
     }
   }, [navigate]);
@@ -33,7 +33,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await authService.login(form.studentId, form.password);
+      const response = await authService.login(form.studentID, form.password);
       localStorage.setItem("role", "student");
 
       // Store token in localStorage to fix mobile browser 3rd-party cookie blocking issues
@@ -124,15 +124,15 @@ export default function LoginPage() {
             {/* Student ID Input */}
             <div className="mb-5">
               <label
-                htmlFor="studentId"
+                htmlFor="studentID"
                 className="block text-sm font-semibold text-gray-700 mb-2"
               >
                 Student ID
               </label>
               <input
-                id="studentId"
-                name="studentId"
-                value={form.studentId}
+                id="studentID"
+                name="studentID"
+                value={form.studentID}
                 onChange={handleChange}
                 type="text"
                 placeholder="e.g., 2023FHCO125"
