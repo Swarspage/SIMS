@@ -4,6 +4,10 @@
     },
     "rewrites": [
         {
+            "source": "/api/:path*",
+            "destination": "https://student-website-backend-odq5.onrender.com/api/:path*"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }

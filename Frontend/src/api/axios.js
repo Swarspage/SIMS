@@ -2,12 +2,11 @@
 import axios from "axios";
 
 // Backend URL
-// Backend URL
-// Automatically use the host's IP for local network testing if VITE_API_URL isn't set.
+// In production (Vercel), use a relative /api path — Vercel reverse proxy forwards it to Render.
+// In local dev, hit localhost:5000 directly.
 const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
-const defaultApi = host === 'localhost' ? 'http://localhost:5000/api' : `${protocol}//${host}:5000/api`;
-const BASE_URL = import.meta.env.VITE_API_URL || defaultApi;
+const isLocalhost = host === 'localhost';
+const BASE_URL = import.meta.env.VITE_API_URL || (isLocalhost ? 'http://localhost:5000/api' : '/api');
 
 // Create axios instance
 const API = axios.create({

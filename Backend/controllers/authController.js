@@ -18,7 +18,7 @@ const cookieOptions = {
   httpOnly: true,
   maxAge: 1000 * 60 * 60 * 24, // 1 day
   secure: true,
-  sameSite: "none",
+  sameSite: "lax", // First-party via Vercel reverse proxy — "lax" is safer than "none"
 };
  
 //signup
@@ -333,7 +333,7 @@ exports.divisionInchargeLogin = async (req, res) => {
 // LOGOUT
 exports.logout = (req, res) => {
   try {
-    res.clearCookie('token', { httpOnly: true, sameSite: "none", secure: true });
+    res.clearCookie('token', { httpOnly: true, sameSite: "lax", secure: true });
     return res.status(200).json({ message: 'Logout successful' });
   } catch (err) {
     console.error("Logout Error:", err);
