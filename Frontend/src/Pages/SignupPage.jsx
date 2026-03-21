@@ -46,7 +46,7 @@ export default function SignupPage() {
     try {
       await authService.signup(form.studentID, form.email, form.password);
       navigate("/login", {
-        state: { message: "Signup successful! Please verify your email before logging in. Check your inbox or spam folder." },
+        state: { message: "Signup successful! A verification link has been sent to your email. Please check your Inbox, Spam, and All Mail folders to activate your account." },
       });
     } catch (err) {
       const resData = err.response?.data;

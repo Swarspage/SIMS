@@ -65,15 +65,21 @@ export default function ForgotPasswordPage({ role = "student" }) {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Check Your Email</h3>
-                  <p className="text-gray-600 text-sm">
-                    We've sent a password reset link to <span className="font-semibold text-gray-900">{email}</span>.
-                    The link expires in <span className="font-semibold text-orange-600">15 minutes</span>.
+                  <h3 className="text-lg font-black text-gray-900 mb-2 underline decoration-blue-500 decoration-4 underline-offset-4">Check Your Email</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    We've sent a password reset link to <span className="font-bold text-gray-900">{email}</span>.
+                    The link expires in <span className="font-bold text-orange-600">15 minutes</span>.
                   </p>
                 </div>
-                <p className="text-xs text-gray-400">
-                  Didn't receive it? Check All mail or spam section of ur email, or try again.
-                </p>
+                
+                <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-left space-y-2 shadow-sm">
+                  <p className="text-xs font-bold text-blue-900 uppercase tracking-wider">Didn't receive it?</p>
+                  <ul className="text-[13px] text-blue-800 space-y-1.5 list-disc pl-4 font-medium">
+                    <li>Check your <span className="font-black underline">Spam</span> folder</li>
+                    <li>Look in <span className="font-black underline">All Mail</span> section</li>
+                    <li>Ensure you entered the correct email</li>
+                  </ul>
+                </div>
                 <button
                   type="button"
                   onClick={() => { setSuccess(false); setEmail(""); }}
