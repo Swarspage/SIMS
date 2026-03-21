@@ -283,6 +283,21 @@ export default function StudentPlacement() {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Validate file size - 500KB max
+    const maxSize = 500 * 1024;
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 500KB. Please upload a smaller file.');
+      e.target.value = ''; // Clear the file input
+      return;
+    }
+
+    // Validate file type - only allow PDF
+    if (file.type !== 'application/pdf') {
+      toast.error('Please upload a PDF file for the placement proof.');
+      e.target.value = ''; // Clear the file input
+      return;
+    }
+
     setPlacementData((prev) => ({
       ...prev,
       placementProof: file,
@@ -302,6 +317,21 @@ export default function StudentPlacement() {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Validate file size - 500KB max
+    const maxSize = 500 * 1024;
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 500KB. Please upload a smaller file.');
+      e.target.value = ''; // Clear the file input
+      return;
+    }
+
+    // Validate file type - only allow PDF
+    if (file.type !== 'application/pdf') {
+      toast.error('Please upload a PDF file for the marksheet.');
+      e.target.value = ''; // Clear the file input
+      return;
+    }
+
     setHigherStudiesData((prev) => ({
       ...prev,
       marksheet: file,
@@ -312,6 +342,22 @@ export default function StudentPlacement() {
   const handleIdCardPhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Validate file size - 500KB max
+    const maxSize = 500 * 1024;
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 500KB. Please upload a smaller photo.');
+      e.target.value = ''; // Clear the file input
+      return;
+    }
+
+    // Validate file type - only allow PNG and JPEG images
+    const validImageTypes = ['image/png', 'image/jpeg'];
+    if (!validImageTypes.includes(file.type)) {
+      toast.error('Please upload a PNG or JPG image only.');
+      e.target.value = ''; // Clear the file input
+      return;
+    }
 
     setHigherStudiesData((prev) => ({
       ...prev,
@@ -671,6 +717,9 @@ export default function StudentPlacement() {
                     </h2>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                       Placement Proof
+                      <span className="text-xs font-semibold text-red-600 ml-2 italic">
+                        (Max 500KB | PDF)
+                      </span>
                     </label>
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">
@@ -797,6 +846,9 @@ export default function StudentPlacement() {
                     </h2>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                       Marksheet (PDF)
+                      <span className="text-xs font-semibold text-red-600 ml-2 italic">
+                        (Max 500KB | PDF)
+                      </span>
                     </label>
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">
@@ -875,6 +927,9 @@ export default function StudentPlacement() {
 
                     <label className="block text-sm font-semibold text-slate-700 mb-2 mt-6">
                       ID Card Photo (If no ID Card, then upload any valid admission proof for higher studies.)
+                      <span className="text-xs font-semibold text-red-600 ml-2 italic">
+                        (Max 500KB | JPG, PNG)
+                      </span>
                     </label>
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">

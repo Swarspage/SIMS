@@ -212,20 +212,51 @@ export default function StudentInternship() {
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setPhotoProof(file);
-      setPhotoFileName(file.name);
-      setPhotoPreview(URL.createObjectURL(file));
+    if (!file) return;
+
+    // Validate file size - 500KB max
+    const maxSize = 500 * 1024;
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 500KB. Please upload a smaller photo.');
+      e.target.value = ''; // Clear the file input
+      return;
     }
+
+    // Validate file type - only allow PNG and JPEG images
+    const validImageTypes = ['image/png', 'image/jpeg'];
+    if (!validImageTypes.includes(file.type)) {
+      toast.error('Please upload a PNG or JPG image only.');
+      e.target.value = ''; // Clear the file input
+      return;
+    }
+
+    setPhotoProof(file);
+    setPhotoFileName(file.name);
+    setPhotoPreview(URL.createObjectURL(file));
   };
 
   const handleReportChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setInternshipReport(file);
-      setReportFileName(file.name);
-      setReportPreview(URL.createObjectURL(file));
+    if (!file) return;
+
+    // Validate file size - 500KB max
+    const maxSize = 500 * 1024;
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 500KB. Please upload a smaller report.');
+      e.target.value = ''; // Clear the file input
+      return;
     }
+
+    // Validate file type - only allow PDF
+    if (file.type !== 'application/pdf') {
+      toast.error('Please upload a PDF file for the report.');
+      e.target.value = ''; // Clear the file input
+      return;
+    }
+
+    setInternshipReport(file);
+    setReportFileName(file.name);
+    setReportPreview(URL.createObjectURL(file));
   };
 
   const resetForm = () => {
@@ -564,6 +595,9 @@ export default function StudentInternship() {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                       Internship Photo{" "}
                       {!editingId && <span className="text-red-500">*</span>}
+                      <span className="text-xs font-semibold text-red-600 ml-2 italic">
+                        (Max 500KB | JPG, PNG)
+                      </span>
                     </label>
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">
@@ -579,7 +613,7 @@ export default function StudentInternship() {
                         UPLOAD
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg, image/png"
                           onChange={handlePhotoChange}
                           className="hidden"
                           required={!editingId}
@@ -624,6 +658,9 @@ export default function StudentInternship() {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                       Report (PDF){" "}
                       {!editingId && <span className="text-red-500">*</span>}
+                      <span className="text-xs font-semibold text-red-600 ml-2 italic">
+                        (Max 500KB | PDF)
+                      </span>
                     </label>
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">

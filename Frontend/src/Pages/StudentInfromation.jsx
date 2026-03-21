@@ -175,10 +175,26 @@ export default function StudentInformation() {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setStudentPhoto(file);
-      setPhotoPreview(URL.createObjectURL(file));
+    if (!file) return;
+
+    // Validate file size - 500KB max
+    const maxSize = 500 * 1024;
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 500KB. Please upload a smaller photo.');
+      e.target.value = ''; // Clear the file input
+      return;
     }
+
+    // Validate file type - only allow PNG and JPEG images
+    const validImageTypes = ['image/png', 'image/jpeg'];
+    if (!validImageTypes.includes(file.type)) {
+      toast.error('Please upload a PNG or JPG image only.');
+      e.target.value = ''; // Clear the file input
+      return;
+    }
+
+    setStudentPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
@@ -424,7 +440,7 @@ export default function StudentInformation() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                      <input type="file" accept="image/jpeg, image/png" onChange={handleFileChange} className="hidden" />
                     </label>
                   </div>
 
@@ -442,11 +458,11 @@ export default function StudentInformation() {
                     <div className="flex flex-wrap gap-4 mt-5">
                       <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
                         <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
-                        Max Size: <span className="font-bold text-slate-700 ml-1">500 KB</span>
+                        Max Size: <span className="font-bold text-red-600 ml-1 italic underline">500 KB</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
                         <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
-                        Formats: <span className="font-bold text-slate-700 ml-1">JPG, PNG</span>
+                        Formats: <span className="font-bold text-red-600 ml-1 italic underline">JPG, PNG</span>
                       </div>
                     </div>
                   </div>

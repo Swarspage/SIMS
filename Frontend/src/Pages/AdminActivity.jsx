@@ -365,7 +365,24 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
   };
 
   const handleFileChange = (e) => {
-    setCertificate(e.target.files[0]);
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Size Validation (500KB)
+    if (file.size > 500 * 1024) {
+      toast.error("File size exceeds 500KB limit!");
+      e.target.value = "";
+      return;
+    }
+
+    // Type Validation (PDF/JPG/PNG)
+    if (!["image/jpeg", "image/png", "image/jpg", "application/pdf"].includes(file.type)) {
+      toast.error("Please upload a PDF or image file (JPG/PNG)!");
+      e.target.value = "";
+      return;
+    }
+
+    setCertificate(file);
   };
 
   const handleSubmit = async (e) => {
@@ -542,7 +559,7 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
                   <p className="text-sm sm:text-base font-black text-slate-700 group-hover:text-blue-700 transition-colors">
                     {certificate ? certificate.name : "Click to select certificate"}
                   </p>
-                  <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest">PDF, PNG OR JPG (MAX 5MB)</p>
+                  <p className="text-[10px] sm:text-xs font-bold text-red-500 uppercase tracking-widest italic leading-tight">* Max 500KB, PDF/JPG/PNG only</p>
                 </div>
               </label>
             </div>

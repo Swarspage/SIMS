@@ -177,8 +177,21 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
                 <div><label className={labelClass}>Parent Mobile No</label><input type="text" name="parentMobileNo" value={form.parentMobileNo} onChange={handleInputChange} className={inputClass} /></div>
                 <div><label className={labelClass}>Parent Email</label><input type="email" name="parentEmail" value={form.parentEmail} onChange={handleInputChange} className={inputClass} /></div>
                 <div className="sm:col-span-2 md:col-span-3">
-                  <label className={labelClass}>Update Student Photo (Optional)</label>
-                  <input type="file" accept="image/png, image/jpeg, image/jpg" onChange={e => setPhoto(e.target.files[0])} className={`${inputClass} !p-3 cursor-pointer file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 transition-all`} />
+                  <label className={labelClass}>
+                    Update Student Photo (Optional)
+                    <span className="block text-[10px] text-red-500 font-bold italic normal-case mt-1 leading-tight">
+                      * Max 500KB, JPG/PNG only
+                    </span>
+                  </label>
+                  <input type="file" accept="image/png, image/jpeg, image/jpg" onChange={e => {
+                    const file = e.target.files[0];
+                    if (file && file.size > 500 * 1024) {
+                      toast.error("Photo size exceeds 500KB limit!");
+                      e.target.value = "";
+                      return;
+                    }
+                    setPhoto(file);
+                  }} className={`${inputClass} !p-3 cursor-pointer file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 transition-all`} />
                 </div>
               </div>
             </section>
@@ -841,6 +854,13 @@ export default function AdminStudentSection() {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Size Validation (500KB)
+    if (file.size > 500 * 1024) {
+      toast.error("Excel file size exceeds 500KB limit!");
+      e.target.value = "";
+      return;
+    }
+
     if (!file.name.match(/\.(xlsx|xls)$/)) {
       toast.warn("Please upload a valid Excel file (.xlsx or .xls)");
       return;
@@ -1082,7 +1102,13 @@ export default function AdminStudentSection() {
                 {importingStudentIDs ? (
                   <> <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> Importing IDs... </>
                 ) : (
-                  <> <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg> Import Student IDs </>
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                      Import Student IDs
+                    </div>
+                    <span className="text-[9px] text-white/90 font-bold italic mt-0.5 leading-none">* Max 500KB, Excel only</span>
+                  </div>
                 )}
               </button>
 

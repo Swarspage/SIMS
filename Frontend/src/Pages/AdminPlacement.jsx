@@ -544,7 +544,24 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
   };
 
   const handleFileChange = (e) => {
-    setPlacementProof(e.target.files[0]);
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Size Validation (500KB)
+    if (file.size > 500 * 1024) {
+      toast.error("File size exceeds 500KB limit!");
+      e.target.value = "";
+      return;
+    }
+
+    // Type Validation (PDF/JPG/PNG)
+    if (!["image/jpeg", "image/png", "image/jpg", "application/pdf"].includes(file.type)) {
+      toast.error("Please upload a PDF or image file (JPG/PNG)!");
+      e.target.value = "";
+      return;
+    }
+
+    setPlacementProof(file);
   };
 
   const handleSubmit = async (e) => {
@@ -676,8 +693,13 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
             </div>
 
             <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
-              <label className={labelClass}>Placement Proof (.pdf) {!placement && "*"}</label>
-              <input type="file" accept="application/pdf" onChange={handleFileChange} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 focus:outline-none transition-all cursor-pointer" />
+              <label className={labelClass}>
+                Placement Proof (.pdf / image) {!placement && "*"}
+                <span className="block text-[10px] text-red-500 font-bold italic normal-case mt-1 leading-tight">
+                  * Max 500KB, PDF/JPG/PNG only
+                </span>
+              </label>
+              <input type="file" accept=".pdf, image/jpeg, image/png, image/jpg" onChange={handleFileChange} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 focus:outline-none transition-all cursor-pointer" />
               {!placement && <p className="text-xs text-amber-600 mt-3 font-semibold px-2 flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Placement Proof is strictly required when adding a new placement.</p>}
             </div>
           </section>
@@ -1353,7 +1375,24 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
   };
 
   const handleFileChange = (e, setter) => {
-    setter(e.target.files[0]);
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Size Validation (500KB)
+    if (file.size > 500 * 1024) {
+      toast.error("File size exceeds 500KB limit!");
+      e.target.value = "";
+      return;
+    }
+
+    // Type Validation (PDF/JPG/PNG)
+    if (!["image/jpeg", "image/png", "image/jpg", "application/pdf"].includes(file.type)) {
+      toast.error("Please upload a PDF or image file (JPG/PNG)!");
+      e.target.value = "";
+      return;
+    }
+
+    setter(file);
   };
 
   const handleSubmit = async (e) => {
@@ -1455,12 +1494,22 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
               <div>
-                <label className={labelClass}>Marksheet (.pdf / image) {!higherStudy && "*"}</label>
-                <input type="file" onChange={(e) => handleFileChange(e, setMarksheet)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none transition-all cursor-pointer" />
+                <label className={labelClass}>
+                  Marksheet (.pdf / image) {!higherStudy && "*"}
+                  <span className="block text-[10px] text-red-500 font-bold italic normal-case mt-1 leading-tight">
+                    * Max 500KB, PDF/JPG/PNG only
+                  </span>
+                </label>
+                <input type="file" accept=".pdf, image/jpeg, image/png, image/jpg" onChange={(e) => handleFileChange(e, setMarksheet)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none transition-all cursor-pointer" />
               </div>
               <div>
-                <label className={labelClass}>ID Card Photo (Optional)</label>
-                <input type="file" onChange={(e) => handleFileChange(e, setIdCardPhoto)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 focus:outline-none transition-all cursor-pointer" />
+                <label className={labelClass}>
+                  ID Card Photo (Optional)
+                  <span className="block text-[10px] text-red-500 font-bold italic normal-case mt-1 leading-tight">
+                    * Max 500KB, JPG/PNG only
+                  </span>
+                </label>
+                <input type="file" accept="image/jpeg, image/png, image/jpg" onChange={(e) => handleFileChange(e, setIdCardPhoto)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 focus:outline-none transition-all cursor-pointer" />
               </div>
             </div>
             {!higherStudy && <p className="text-xs text-amber-600 mt-3 font-semibold px-2 flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Marksheet is strictly required when adding a new record.</p>}

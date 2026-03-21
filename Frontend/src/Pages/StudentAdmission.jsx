@@ -102,7 +102,7 @@ export default function StudentAdmission() {
       const payload = {
         rollno: String(formData.rollno).trim(),
         // 'div' is required by Joi but ignored by the controller (it uses student.division instead).
-        div: formData.div || "A", 
+        div: formData.div || "A",
         course: formData.course ? formData.course.trim() : "Computer Engineering",
         fees: Number(formData.fees), // Backend requires Joi.number()
         isScholarshipApplied: !!formData.isScholarshipApplied,
@@ -231,7 +231,6 @@ export default function StudentAdmission() {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
                   <InfoItem label="Course" value={formData.course} fullWidth />
-                  <InfoItem label="Academic Year" value={formData.academicYear} />
                   <InfoItem label="Admission Date" value={formData.admissionDate} />
                   <InfoItem label="Year" value={`${formData.year}`} />
                   <InfoItem label="Division" value={`Div ${formData.div}`} />

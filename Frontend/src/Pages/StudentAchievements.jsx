@@ -182,10 +182,33 @@ export default function StudentAchievements() {
   const handleFileChange = (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Validate file size - 500KB max
+    const maxSize = 500 * 1024;
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 500KB. Please upload a smaller file.');
+      e.target.value = ''; // Clear the file input
+      return;
+    }
+
     if (type === "eventPhoto") {
+      // Validate file type - only allow PNG and JPEG images for event photo
+      const validImageTypes = ['image/png', 'image/jpeg'];
+      if (!validImageTypes.includes(file.type)) {
+        toast.error('Please upload a PNG or JPG image for the event photo.');
+        e.target.value = '';
+        return;
+      }
       setEventPhoto(file);
       setEventPhotoPreview(URL.createObjectURL(file));
     } else if (type === "certificate") {
+      // Validate file type - allow PNG, JPEG, and PDF for certificate
+      const validCertTypes = ['image/png', 'image/jpeg', 'application/pdf'];
+      if (!validCertTypes.includes(file.type)) {
+        toast.error('Please upload a PNG, JPG, or PDF file for the certificate.');
+        e.target.value = '';
+        return;
+      }
       setCertificate(file);
       setCertificatePreview(URL.createObjectURL(file));
     }
@@ -558,6 +581,9 @@ export default function StudentAchievements() {
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Event Photo{" "}
                     {!editingId && <span className="text-red-500">*</span>}
+                    <span className="text-xs font-semibold text-red-600 ml-2 italic">
+                      (Max 500KB | JPG, PNG)
+                    </span>
                   </label>
                   <div className="flex flex-col sm:flex-row gap-3 items-end">
                     <div className="flex-1 w-full">
@@ -598,6 +624,9 @@ export default function StudentAchievements() {
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Certificate{" "}
                     {!editingId && <span className="text-red-500">*</span>}
+                    <span className="text-xs font-semibold text-red-600 ml-2 italic">
+                      (Max 500KB | JPG, PNG, PDF)
+                    </span>
                   </label>
                   <div className="flex flex-col sm:flex-row gap-3 items-end">
                     <div className="flex-1 w-full">

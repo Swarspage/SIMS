@@ -423,7 +423,32 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
 
   const handleFileChange = (e) => {
     const { name, files: selectedFiles } = e.target;
-    setFiles((prev) => ({ ...prev, [name]: selectedFiles[0] }));
+    const file = selectedFiles[0];
+    if (!file) return;
+
+    // Size Validation (500KB)
+    if (file.size > 500 * 1024) {
+      toast.error("File size exceeds 500KB limit!");
+      e.target.value = "";
+      return;
+    }
+
+    // Type Validation
+    if (name === "eventPhoto") {
+      if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+        toast.error("Please upload an image file (JPG/PNG) for the Event Photo!");
+        e.target.value = "";
+        return;
+      }
+    } else if (name === "certificate" || name === "course_certificate") {
+      if (!["image/jpeg", "image/png", "image/jpg", "application/pdf"].includes(file.type)) {
+        toast.error("Please upload a PDF or image file (JPG/PNG) for the Certificate!");
+        e.target.value = "";
+        return;
+      }
+    }
+
+    setFiles((prev) => ({ ...prev, [name]: file }));
   };
 
   const handleSubmit = async (e) => {
@@ -677,7 +702,12 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
               {/* Event Photo */}
               <div>
-                <label className={labelClass}>Event Photo {!achievement && "*"}</label>
+                <label className={labelClass}>
+                  Event Photo {!achievement && "*"}
+                  <span className="block text-[10px] text-red-500 font-bold italic normal-case mt-1 leading-tight">
+                    * Max 500KB, JPG/PNG only
+                  </span>
+                </label>
                 <input
                   type="file"
                   name="eventPhoto"
@@ -690,7 +720,12 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
 
               {/* Certificate */}
               <div>
-                <label className={labelClass}>Event Certificate {!achievement && "*"}</label>
+                <label className={labelClass}>
+                  Event Certificate {!achievement && "*"}
+                  <span className="block text-[10px] text-red-500 font-bold italic normal-case mt-1 leading-tight">
+                    * Max 500KB, PDF/JPG/PNG only
+                  </span>
+                </label>
                 <input
                   type="file"
                   name="certificate"
@@ -703,7 +738,12 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
 
               {/* Course Certificate */}
               <div>
-                <label className={labelClass}>Course Certificate (Optional)</label>
+                <label className={labelClass}>
+                  Course Certificate (Optional)
+                  <span className="block text-[10px] text-red-500 font-bold italic normal-case mt-1 leading-tight">
+                    * Max 500KB, PDF/JPG/PNG only
+                  </span>
+                </label>
                 <input
                   type="file"
                   name="course_certificate"

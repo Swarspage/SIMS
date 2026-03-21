@@ -430,7 +430,32 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
 
   const handleFileChange = (e) => {
     const { name, files: selectedFiles } = e.target;
-    setFiles((prev) => ({ ...prev, [name]: selectedFiles[0] }));
+    const file = selectedFiles[0];
+    if (!file) return;
+
+    // Size Validation (500KB)
+    if (file.size > 500 * 1024) {
+      toast.error("File size exceeds 500KB limit!");
+      e.target.value = "";
+      return;
+    }
+
+    // Type Validation
+    if (name === "internshipReport") {
+      if (file.type !== "application/pdf") {
+        toast.error("Please upload a PDF file for the Internship Report!");
+        e.target.value = "";
+        return;
+      }
+    } else if (name === "photoProof") {
+      if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+        toast.error("Please upload an image file (JPG/PNG) for the Photo Proof!");
+        e.target.value = "";
+        return;
+      }
+    }
+
+    setFiles((prev) => ({ ...prev, [name]: file }));
   };
 
   const handleSubmit = async (e) => {
@@ -673,6 +698,9 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
               <div>
                 <label className={labelClass}>
                   Internship Report (.pdf) {!internship && "*"}
+                  <span className="block text-[10px] text-red-500 font-bold italic normal-case mt-1 leading-tight">
+                    * Max 500KB, PDF only
+                  </span>
                 </label>
                 <input
                   type="file"
@@ -688,6 +716,9 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
               <div>
                 <label className={labelClass}>
                   Photo Proof (Image) {!internship && "*"}
+                  <span className="block text-[10px] text-red-500 font-bold italic normal-case mt-1 leading-tight">
+                    * Max 500KB, JPG/PNG only
+                  </span>
                 </label>
                 <input
                   type="file"
