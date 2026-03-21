@@ -888,7 +888,7 @@ export default function AdminActivity() {
               />
             </svg>
             <p className="text-slate-600 text-lg font-medium">
-              {searchQuery || selectedType
+              {searchQuery || selectedYear || selectedDivision
                 ? "No activities match your filters."
                 : "No activities found yet."}
             </p>
