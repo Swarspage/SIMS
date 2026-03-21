@@ -21,8 +21,10 @@ const admissionCreateSchema = Joi.object({
   rollno: Joi.string()
     .trim()
     .pattern(/^\d+$/)
+    .max(10)
     .required()
     .messages({
+      "string.max": "Roll number cannot exceed 10 characters.",
       "string.pattern.base": "Roll number must contain only digits.",
       "string.empty": "Roll number cannot be empty.",
       "any.required": "Roll number is required."
@@ -35,23 +37,23 @@ const admissionCreateSchema = Joi.object({
     .max(100)
     .noProfanity()
     .default("Computer Engineering")
-    .required()
     .messages({
-      "string.empty": "Course name is required.",
+      "string.empty": "Course name cannot be empty.",
       "string.min": "Course name must be at least 2 characters long.",
       "string.max": "Course name cannot exceed 100 characters.",
       "string.pattern.base":
         "Course name must contain only letters, numbers, and special characters like commas, periods, exclamation marks, question marks, and hyphens.",
-      "string.noProfanity": "Course name contains inappropriate language.",
-      "any.required": "Course name is required."
+      "string.noProfanity": "Course name contains inappropriate language."
     }),
 
   fees: Joi.number()
     .min(0)
+    .max(9999999)
     .required()
     .messages({
       "number.base": "Fees must be a valid number.",
       "number.min": "Fees cannot be negative.",
+      "number.max": "Fees cannot exceed 9,999,999.",
       "any.required": "Fees are required."
     }),
 
@@ -66,6 +68,8 @@ const admissionCreateSchema = Joi.object({
     then: Joi.string()
       .trim()
       .min(5)
+      .max(100)
+      .noProfanity()
       .required()
       .messages({
         "any.required": "Reason for not applying for scholarship is required when scholarship is not applied.",
@@ -94,6 +98,8 @@ const admissionCreateSchema = Joi.object({
     then: Joi.string()
       .trim()
       .min(5)
+      .max(100)
+      .noProfanity()
       .required()
       .messages({
         "any.required": "Reason is required if MahaDBT form is not submitted.",
@@ -121,6 +127,8 @@ const admissionCreateSchema = Joi.object({
     then: Joi.string()
       .trim()
       .min(5)
+      .max(100)
+      .noProfanity()
       .required()
       .messages({
         "any.required": "Reason is required if migration certificate is not available.",
@@ -140,8 +148,10 @@ const admissionUpdateSchema = Joi.object({
   rollno: Joi.string()
     .trim()
     .pattern(/^\d+$/)
+    .max(10)
     .optional()
     .messages({
+      "string.max": "Roll number cannot exceed 10 characters.",
       "string.pattern.base": "Roll number must contain only digits.",
       "string.empty": "Roll number cannot be empty."
     }),
@@ -164,10 +174,12 @@ const admissionUpdateSchema = Joi.object({
 
   fees: Joi.number()
     .min(0)
+    .max(9999999)
     .optional()
     .messages({
       "number.base": "Fees must be a valid number.",
-      "number.min": "Fees cannot be negative."
+      "number.min": "Fees cannot be negative.",
+      "number.max": "Fees cannot exceed 9,999,999."
     }),
 
   isScholarshipApplied: Joi.boolean()
@@ -177,10 +189,12 @@ const admissionUpdateSchema = Joi.object({
     }),
 
   scholarshipNotAppliedReason: Joi.when("isScholarshipApplied", {
-    is: false,
+    is: Joi.valid(false),      //only when explicity false
     then: Joi.string()
       .trim()
       .min(5)
+      .max(100)
+      .noProfanity()
       .required()
       .messages({
         "any.required": "Reason is required if scholarship is not applied.",
@@ -196,7 +210,8 @@ const admissionUpdateSchema = Joi.object({
 
   mahadbtFilledDate: Joi.when("isMahadbtFormSubmitted", {
     is: true,
-    then: Joi.date().required().messages({
+    then: Joi.date().max('now').required().messages({
+      "date.max" : "MahaDBT form filled date cannot be in the future.",
       "any.required": "MahaDBT form filled date is required.",
       "date.base": "MahaDBT form filled date must be a valid date."
     }),
@@ -204,10 +219,12 @@ const admissionUpdateSchema = Joi.object({
   }),
 
   mahadbtNotFilledReason: Joi.when("isMahadbtFormSubmitted", {
-    is: false,
+    is: Joi.valid(false),
     then: Joi.string()
       .trim()
       .min(5)
+      .max(100)
+      .noProfanity()
       .required()
       .messages({
         "any.required": "Reason is required if MahaDBT form is not submitted.",
@@ -231,10 +248,12 @@ const admissionUpdateSchema = Joi.object({
   }),
 
   migrationNotAvailableReason: Joi.when("hasMigrationCertificate", {
-    is: false,
+    is: Joi.valid(false),
     then: Joi.string()
       .trim()
       .min(5)
+      .max(100)
+      .noProfanity()
       .required()
       .messages({
         "any.required": "Reason is required if migration certificate is not available.",
