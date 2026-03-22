@@ -5,27 +5,29 @@ const connectDB = require("./config/db");
 require("dotenv").config();
 const errorHandler = require("./middlewares/errorHandler");
 const {generalLimiter} = require("./middlewares/rateLimiter/rateLimiter");
+const requestLogger = require("./middlewares/logger/requestLogger");
+const helmet = require("helmet");
 
-// ✅ ADD THIS DEBUG CHECK
+//ADD THIS DEBUG CHECK
 // console.log("🔍 ENVIRONMENT VARIABLES CHECK:");
-// console.log("EMAIL_USER loaded:", process.env.EMAIL_USER ? "✅ YES" : "❌ NO");
+// console.log("EMAIL_USER loaded:", process.env.EMAIL_USER ? YES" : "❌ NO");
 // console.log(
 //   "EMAIL_PASSWORD loaded:",
-//   process.env.EMAIL_PASSWORD ? "✅ YES" : "❌ NO"
+//   process.env.EMAIL_PASSWORD ? YES" : "❌ NO"
 // );
 // console.log(
 //   "ADMIN_EMAIL loaded:",
-//   process.env.ADMIN_EMAIL ? "✅ YES" : "❌ NO"
+//   process.env.ADMIN_EMAIL ? YES" : "❌ NO"
 // );
 
-// ✅ ADDED PORT CONFIG
+//ADDED PORT CONFIG
 const PORT = process.env.PORT || 5000;
 const app = express();
 app.set("trust proxy", true); // because render sits behind a reverse proxy - so all IPs might turn out to be same - req.ip maybe same - hence rate limiting might treat all users as same IP. - to avoid this trust proxy needs to be set
 
 connectDB();
 
-// ✅ FIXED CORS - More permissive for dev
+// FIXED CORS - More permissive for dev
 app.use(
   cors({
     origin: [
@@ -39,9 +41,49 @@ app.use(
   })
 );
 
+app.use(
+  helmet({
+    // KEEP DISABLED (important for features like cloudinary upload, sending emails, excel import export etc)
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+
+    //SAFE & IMPORTANT
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+
+    //prevents MIME sniffing (safe for Excel, uploads)
+    noSniff: true,
+
+    //prevents clickjacking (safe)
+    frameguard: { action: "deny" },
+
+    //hides server tech
+    hidePoweredBy: true,
+
+    // XSS basic protection (safe)
+    xssFilter: true,
+
+    //HSTS (only in production)
+    hsts: process.env.NODE_ENV === "production"
+      ? {
+          maxAge: 31536000,
+          includeSubDomains: true,
+          preload: true,
+        }
+      : false,
+  })
+);
+
+
+// Body Parsing
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
+
+// Logger
+app.use(requestLogger);
+
+
+// rate limiter
 app.use(generalLimiter); //always used just before routes
 
 // Routes

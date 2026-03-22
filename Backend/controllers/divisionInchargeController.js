@@ -74,7 +74,7 @@ const addSingleDivisionIncharge = async (req, res) => {
       subject: "Division Incharge Account Created",
       htmlContent: `
         <h2>Hello ${name},</h2>
-        <p>Your Division Incharge account has been created. Please change the password later on</p>
+        <p>Your Division Incharge account has been created. Please change the password later on.</p>
         <p><b>Email:</b> ${email}</p>
         <p><b>Password:</b> ${plainPassword}</p>
       `
