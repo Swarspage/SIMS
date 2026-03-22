@@ -1,34 +1,34 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const { authLimiter, passwordResetLimiter } = require('../middlewares/rateLimiter/authLimiter');
+const { signupLimiter, emailVerificationLimiter, resetPasswordLimiter, forgotPasswordLimiter, emailLoginLimiter, studentLoginLimiter, } = require('../middlewares/rateLimiter/authLimiter');
 // const upload = require("../middlewares/multer");
 
 //student auth routes
-router.post('/signup' ,authLimiter , authController.signup);     
-router.post('/login', authLimiter , authController.login);
+router.post('/signup' , signupLimiter, authController.signup);     
+router.post('/login', studentLoginLimiter, authController.login);
 
-// For Email varification -reuse 2 tries of password reset limiter
-router.post('/verify-email/:token', passwordResetLimiter, authController.verifyEmail);
+// For Email varification
+router.post('/verify-email/:token', emailVerificationLimiter, authController.verifyEmail);
 //admin auth routes
-router.post('/admin-login', authLimiter , authController.adminLogin);
+router.post('/admin-login', emailLoginLimiter , authController.adminLogin);
 
 //division incharge auth routes
-router.post('/division-incharge', authLimiter , authController.divisionInchargeLogin);
+router.post('/division-incharge', emailLoginLimiter , authController.divisionInchargeLogin);
 
 //logout route
 router.get('/logout', authController.logout);
 
 //forget and reset password routes -> for students
-router.post("/forgot-password", passwordResetLimiter, authController.forgotPassword);
-router.post("/reset-password/:token", passwordResetLimiter, authController.resetPassword);
+router.post("/forgot-password", forgotPasswordLimiter, authController.forgotPassword);
+router.post("/reset-password/:token", resetPasswordLimiter, authController.resetPassword);
 
 //forget and reset password routes -> for admins
-router.post("/admin/forgot-password", passwordResetLimiter, authController.adminForgotPassword);
-router.post("/admin/reset-password/:token", passwordResetLimiter, authController.adminResetPassword);
+router.post("/admin/forgot-password", forgotPasswordLimiter, authController.adminForgotPassword);
+router.post("/admin/reset-password/:token", resetPasswordLimiter, authController.adminResetPassword);
 
 //forget and reset password routes -> for division incharge
-router.post("/division-incharge/forgot-password", passwordResetLimiter, authController.divisionInchargeForgotPassword);
-router.post("/division-incharge/reset-password/:token", passwordResetLimiter, authController.divisionInchargeResetPassword);
+router.post("/division-incharge/forgot-password", forgotPasswordLimiter, authController.divisionInchargeForgotPassword);
+router.post("/division-incharge/reset-password/:token", resetPasswordLimiter, authController.divisionInchargeResetPassword);
 
 module.exports = router;
