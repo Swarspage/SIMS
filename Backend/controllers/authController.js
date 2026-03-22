@@ -366,7 +366,7 @@ exports.forgotPassword = async (req, res) => {
     if (!student) {
       return res.status(404).json({
         success: false,
-        message: "If that email is registered, a reset link has been sent. Please check your Spam or Inbox or All Mail sections of your mail."
+        message: "Email will be sent on registered email only."
       });
     }
 
