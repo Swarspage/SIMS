@@ -21,7 +21,7 @@ const allDevelopers = [
   { name: "Swar Shinde", role: "Frontend Developer", image: swarImg, linkedin: "https://www.linkedin.com/in/swar-shinde-91131a2b9/", github: "https://github.com/Swarspage", portfolio: "https://swarspage.github.io/My-Portfolio/", category: "Frontend", color: "from-blue-600 to-cyan-400" },
   { name: "Yash Bawari", role: "Frontend Developer", image: yashImg, linkedin: "https://www.linkedin.com/in/yash-bawari-5a3379313/", github: "https://github.com/YashBawari18", portfolio: "https://my-portfolio-six-alpha-47.vercel.app/", category: "Frontend", color: "from-blue-600 to-cyan-400" },
   { name: "Devang Bhattad", role: "UI/UX Designer", image: null, linkedin: "#", github: "#", portfolio: "#", category: "Design", color: "from-rose-600 to-orange-500" },
-  { name: "Shruti Gaonkar", role: "Documentation Specialist", image: shrutiImg, linkedin: "https://github.com/ShrutiGaonkar19", github: "#", portfolio: "#", category: "Docs", color: "from-emerald-600 to-teal-500" },
+  { name: "Shruti Gaonkar", role: "Documentation Specialist", image: shrutiImg, linkedin: "https://github.com/ShrutiGaonkar19", github: "https://github.com/ShrutiGaonkar19", portfolio: "#", category: "Docs", color: "from-emerald-600 to-teal-500" },
 ];
 
 const MeetDevelopers = () => {
@@ -87,23 +87,23 @@ const MeetDevelopers = () => {
 
                 {/* Avatar */}
                 <div className="relative mb-4 shrink-0 transition-transform duration-500 group-hover:scale-105">
-                   <div className={`absolute inset-0 bg-gradient-to-br ${dev.color} rounded-full blur-xl opacity-0 group-hover:opacity-15 transition-opacity`}></div>
-                   <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden border-4 border-slate-50 shadow-inner bg-slate-100 flex items-center justify-center">
-                      {dev.image ? (
-                        <img src={dev.image} alt={dev.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <FaPaintBrush className="text-slate-300 text-3xl md:text-4xl" />
-                      )}
-                   </div>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${dev.color} rounded-full blur-xl opacity-0 group-hover:opacity-15 transition-opacity`}></div>
+                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden border-4 border-slate-50 shadow-inner bg-slate-100 flex items-center justify-center">
+                    {dev.image ? (
+                      <img src={dev.image} alt={dev.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <FaPaintBrush className="text-slate-300 text-3xl md:text-4xl" />
+                    )}
+                  </div>
                 </div>
 
                 {/* Info */}
                 <div className="space-y-1">
-                   <p className="text-[8px] sm:text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">{dev.category}</p>
-                   <h3 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tighter leading-tight group-hover:text-blue-600 transition-colors">
-                      {dev.name}
-                   </h3>
-                   <p className="text-[10px] sm:text-[11px] font-bold text-slate-500">{dev.role}</p>
+                  <p className="text-[8px] sm:text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">{dev.category}</p>
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tighter leading-tight group-hover:text-blue-600 transition-colors">
+                    {dev.name}
+                  </h3>
+                  <p className="text-[10px] sm:text-[11px] font-bold text-slate-500">{dev.role}</p>
                 </div>
 
                 {/* Socials - Simple & Elegant */}
