@@ -272,8 +272,8 @@ const getAllActivities = async (req, res) => {
     
     // DI uses query params when provided -> their own year/division
     if (req.user.role === "divisionIncharge") {
-      match["student.year"] = year || req.user.year;
-      match["student.division"] = division || req.user.division;
+      match["student.year"] = req.user.year;
+      match["student.division"] = req.user.division;
     }
 
     if (req.user.role === "admin") {
