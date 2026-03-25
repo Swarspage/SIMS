@@ -36,7 +36,6 @@ const limiterDefaults = {
     standardHeaders: true,
     legacyHeaders: false,
     validate: {
-        xForwardedForHeader: false,
         keyGeneratorIpFallback: false,
     },
     skip: (req) => req.path === "/health" 
