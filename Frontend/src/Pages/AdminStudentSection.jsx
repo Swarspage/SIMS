@@ -1095,18 +1095,26 @@ export default function AdminStudentSection() {
 
             {/* Action Buttons Group */}
             <div className="flex flex-wrap gap-3">
-              {/* Export Button */}
-              <button
-                onClick={handleExport}
-                disabled={exporting || students.length === 0}
-                className="px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {exporting ? (
-                  <> <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> Exporting... </>
-                ) : (
-                  <> <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Export </>
-                )}
-              </button>
+              {/* Export Button with inline instructions */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg p-2">
+                <button
+                  onClick={handleExport}
+                  disabled={exporting || students.length === 0}
+                  className="px-4 py-2.5 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
+                >
+                  {exporting ? (
+                    <> <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> Exporting... </>
+                  ) : (
+                    <> <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Export </>
+                  )}
+                </button>
+
+                <div className="text-[11px] text-slate-600 leading-tight">
+                  <span className="font-semibold text-slate-800 block mb-0.5">How to export:</span>
+                  1. Click <span className="font-semibold text-blue-600">Find Students</span> to apply filters.<br />
+                  2. Click <span className="font-semibold text-emerald-600">Export</span> to download the data.
+                </div>
+              </div>
 
 
               {/* Import Student IDs Button — new auth flow */}
