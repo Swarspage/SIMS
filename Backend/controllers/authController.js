@@ -66,9 +66,9 @@ exports.signup = async (req, res) => {
     // Send verification email
     const verifyURL = `${process.env.FRONTEND_URL}/verify-email/${rawToken}`;
     const htmlContent = `
-      <h2>Hello ${student.name?.firstName || "Student"},</h2>
-      <p>Thanks for signing up! Please verify your email to activate your account.</p>
-      <p><a href="${verifyURL}" style="padding:10px 20px; background:#4F46E5; color:white; border-radius:5px; text-decoration:none;">Verify Email</a></p>
+      <h2>Hello ${student.name?.firstName || "Student"},</h2>\n\n
+      <p>Thanks for signing up! Please verify your email to activate your account.</p>\n\n
+      <p><a href="${verifyURL}" style="padding:10px 20px; background:#4F46E5; color:white; border-radius:5px; text-decoration:none;">Verify Email</a></p>\n\n\n\n
       <p>This link expires in 10 minutes.</p>
       <p>If you didn't sign up, ignore this email.</p>
     `;
