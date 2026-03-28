@@ -95,12 +95,9 @@ const semInfoCreateSchema = Joi.object({
 
   marks: Joi.array()
     .items(markSchema)
-    .min(1)
-    .required()
+    .optional()
     .messages({
-      "array.base": "Marks must be an array.",
-      "array.min": "At least one subject mark is required.",
-      "any.required": "Marks are required."
+      "array.base": "Marks must be an array."
     }),
 
   // journalTaken and examFormFilled added to the create schema.
@@ -165,11 +162,9 @@ const semInfoUpdateSchema = Joi.object({
 
   marks: Joi.array()
     .items(markSchema)
-    .min(1)
     .optional()
     .messages({
-      "array.base": "Marks must be an array.",
-      "array.min": "At least one subject mark is required."
+      "array.base": "Marks must be an array."
     }),
 
   journalTaken: Joi.boolean()
