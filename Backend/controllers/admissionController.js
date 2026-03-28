@@ -11,6 +11,7 @@ const {
 
 const exportToExcel = require("../helpers/excel/exportToExcel");
 const { transformAdmission, admissionColumnMap } = require("../helpers/excel/exportTransformers");
+const errorLogger = require("../helpers/winston/errorLogger");
 
 // Build a 400 validation-error response from Joi details
 const validationErrorResponse = (res, details) =>
@@ -118,7 +119,7 @@ const createAdmission = async (req, res) => {
         message: "Admission already exists for this student.",
       });
     }
-    console.error("createAdmission error:", err);
+    errorLogger(err, req, "createAdmission");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -135,7 +136,7 @@ const getAdmissionsByStudent = async (req, res) => {
 
     return res.status(200).json({ success: true, data: admissions });
   } catch (err) {
-    console.error("getAdmissionsByStudent error:", err);
+    errorLogger(err, req, "getAdmissionsByStudent");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -198,7 +199,7 @@ const updateAdmission = async (req, res) => {
       data: admission,
     });
   } catch (err) {
-    console.error("updateAdmission error:", err);
+    errorLogger(err, req, "updateAdmission");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -249,7 +250,7 @@ const deleteAdmission = async (req, res) => {
       message: "Admission deleted successfully",
     });
   } catch (err) {
-    console.error("deleteAdmission error:", err);
+    errorLogger(err, req, "deleteAdmission");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -352,7 +353,7 @@ const getAllAdmissions = async (req, res) => {
       totalPages: Math.ceil(total / limit),
     });
   } catch (err) {
-    console.error("getAllAdmissions error:", err);
+    errorLogger(err, req, "getAllAdmissions");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -403,7 +404,7 @@ const updateAdmissionStatus = async (req, res) => {
       data: admission,
     });
   } catch (err) {
-    console.error("updateAdmissionStatus error:", err);
+    errorLogger(err, req, "updateAdmissionStatus");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -430,7 +431,7 @@ const getUnpaidStudents = async (req, res) => {
 
     return res.status(200).json({ success: true, data: unpaid });
   } catch (err) {
-    console.error("getUnpaidStudents error:", err);
+    errorLogger(err, req, "getUnpaidStudents");
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };

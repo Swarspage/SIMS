@@ -4,6 +4,7 @@ const Student = require("../models/Student");
 const { semInfoCreateSchema, semInfoUpdateSchema, getSemInfosValidation } = require("../validators/seminfoValidation");
 const exportToExcel = require('../helpers/excel/exportToExcel');
 const { transformSemesterInfo, semesterInfoColumnMap } = require('../helpers/excel/exportTransformers');
+const errorLogger = require("../helpers/winston/errorLogger");
 
 // Validation error response helper
 const validationErrorResponse = (res, details) =>
@@ -100,7 +101,7 @@ const addSemInfo = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("addSemInfo error:", err);
+    errorLogger(err, req, "addSemInfo");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -184,7 +185,7 @@ const updateSemInfo = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("updateSemInfo error:", err);
+    errorLogger(err, req, "updateSemInfo");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -236,7 +237,7 @@ const deleteSemInfo = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("deleteSemInfo error:", err);
+    errorLogger(err, req, "deleteSemInfo");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -429,11 +430,7 @@ const getAllSemInfos = async (req, res) => {
     });
 
   } catch (err) {
-    console.error(
-      "Error in getAllSemInfos controller:",
-      "\ntime =", new Date().toISOString(),
-      "\nError:", err
-    );
+    errorLogger(err, req, "getAllSemInfos");
 
     return res.status(500).json({
       success: false,
@@ -455,7 +452,7 @@ const getOwnSemInfos = async (req, res) => {
     res.status(200).json({ success: true, data });
 
   } catch (err) {
-    console.error("getOwnSemInfos error:", err);
+    errorLogger(err, req, "getOwnSemInfos");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -502,7 +499,7 @@ const getStudentSemInfos = async (req, res) => {
     res.status(200).json({ success: true, data });
 
   } catch (err) {
-    console.error("getStudentSemInfos error:", err);
+    errorLogger(err, req, "getStudentSemInfos");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
