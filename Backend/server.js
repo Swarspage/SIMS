@@ -4,7 +4,7 @@ const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 require("dotenv").config();
 const errorHandler = require("./middlewares/errorHandler");
-const {generalLimiter} = require("./middlewares/rateLimiter/rateLimiter");
+const { generalLimiter } = require("./middlewares/rateLimiter/rateLimiter");
 const requestLogger = require("./middlewares/logger/requestLogger");
 const helmet = require("helmet");
 
@@ -34,7 +34,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://student-website-seven.vercel.app", "https://student-website-frontend.vercel.app",
+      "https://student-website-seven.vercel.app", "https://student-website-frontend.vercel.app", "https://sims.csidmce.com/",
       process.env.FRONTEND_URL // Support env-based URL
     ].filter(Boolean), // Remove undefined/null if env var is missing
     credentials: true,
@@ -67,10 +67,10 @@ app.use(
     //HSTS (only in production)
     hsts: process.env.NODE_ENV === "production"
       ? {
-          maxAge: 31536000,
-          includeSubDomains: true,
-          preload: true,
-        }
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      }
       : false,
   })
 );
