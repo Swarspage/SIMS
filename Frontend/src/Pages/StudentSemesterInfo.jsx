@@ -269,7 +269,18 @@ export default function StudentSemesterInfo() {
                 await semInfoService.updateSemInfo(editingId, payload);
                 toast.success("Semester info updated!");
             } else {
-                await semInfoService.addSemInfo(payload);
+                // Workaround: Backend currently ignores journal/exam fields on create.
+                // If they are checked, follow up with an update.
+                const response = await semInfoService.addSemInfo(payload);
+                const newRecord = response.data || response;
+                
+                const createdId = newRecord?.data?._id || newRecord?._id;
+                if (createdId && (payload.journalTaken || payload.examFormFilled)) {
+                    await semInfoService.updateSemInfo(createdId, {
+                        journalTaken: payload.journalTaken,
+                        examFormFilled: payload.examFormFilled
+                    });
+                }
                 toast.success("Semester info added!");
             }
             resetForm();
@@ -343,7 +354,8 @@ export default function StudentSemesterInfo() {
                                         <select
                                             value={formData.semester}
                                             onChange={(e) => setFormData((p) => ({ ...p, semester: e.target.value }))}
-                                            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                                            disabled={!!editingId}
+                                            className={`w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${editingId ? "opacity-60 cursor-not-allowed bg-slate-50" : ""}`}
                                             required
                                         >
                                             <option value="">Select Semester</option>
@@ -351,6 +363,11 @@ export default function StudentSemesterInfo() {
                                                 <option key={s} value={s}>Semester {s}</option>
                                             ))}
                                         </select>
+                                        {editingId && (
+                                            <p className="text-[10px] text-slate-500 mt-1 italic">
+                                                * Semester cannot be changed once created.
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold text-slate-700 mb-2">
