@@ -1,5 +1,13 @@
 const Joi = require("../helpers/profanity/joiWithProfanity");
 
+// Define the allowed reasons in a constant for easy reuse
+const MAHADBT_NOT_FILLED_REASONS = [
+  "Not Eligible",
+  "Awaiting Documents",
+  "Technical Issue in mahadbt website",
+  "Process in Progress",
+];
+
 const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'\-]+$/;
 
 // CREATE ADMISSION
@@ -97,13 +105,11 @@ const admissionCreateSchema = Joi.object({
     is: false,
     then: Joi.string()
       .trim()
-      .min(5)
-      .max(100)
-      .noProfanity()
+      .valid(...MAHADBT_NOT_FILLED_REASONS)
       .required()
       .messages({
+        "any.only": "Please select a valid reason from the list.",
         "any.required": "Reason is required if MahaDBT form is not submitted.",
-        "string.min": "Reason must be at least 5 characters long.",
         "string.empty": "Reason cannot be empty."
       }),
     otherwise: Joi.forbidden()
@@ -222,16 +228,14 @@ const admissionUpdateSchema = Joi.object({
     is: Joi.valid(false),
     then: Joi.string()
       .trim()
-      .min(5)
-      .max(100)
-      .noProfanity()
-      .required()
+      .valid(...MAHADBT_NOT_FILLED_REASONS)
+      .required() // It's required IF they are sending "isMahadbtFormSubmitted: false"
       .messages({
+        "any.only": "Please select a valid reason from the list.",
         "any.required": "Reason is required if MahaDBT form is not submitted.",
-        "string.min": "Reason must be at least 5 characters long.",
         "string.empty": "Reason cannot be empty."
       }),
-    otherwise: Joi.forbidden()
+    otherwise: Joi.forbidden() 
   }),
 
   hasMigrationCertificate: Joi.boolean()
