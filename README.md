@@ -143,6 +143,6 @@ npm run dev
 ---
 
 ## 📜 License
-
+_
 Distributed under the ISC License.
 
