@@ -1,15 +1,28 @@
 const logger = require("./logger");
+const getRequestIdentity = require("../common/getRequestIdentity")
 
 const errorLogger = (err, req, context = "Unknown") => {
+  const identity = getRequestIdentity(req);
+
   logger.error({
-    message: `Error in ${context}`,
-    error: err.message,
+    message: err.message,
     stack: err.stack,
-    route: req?.originalUrl,
-    method: req?.method,
+    context,
+
+    route: req?.originalUrl || "no-route",
+    method: req?.method || "no-method",
+
     userId: req?.user?.id || "guest",
-    ip: req?.ip,
+    role: req?.user?.role || "guest",
+
+
+    // For auth related stuff
+    identityType: identity.type,
+    identityValue: identity.value,
+
+    ip: req?.ip || "no-ip",
   });
 };
 
 module.exports = errorLogger;
+

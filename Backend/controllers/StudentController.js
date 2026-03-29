@@ -206,7 +206,7 @@ const importStudentIDs = async (req, res) => {
     });
  
   } catch (error) {
-    errorLogger(err,req, "Import student ids Controller")
+    errorLogger(error,req, "Import student ids Controller")
     return res.status(500).json({
       success: false,
       message: "Error importing student data"
@@ -1212,7 +1212,7 @@ const getSingleStudent = async (req, res) => {
 
     return res.status(200).json({ success: true, data: student });
   } catch (error) {
-    errorLogger(err,req, "Get single Student Controller")
+    errorLogger(error,req, "Get single Student Controller")
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -1234,7 +1234,7 @@ const getStudentById = async (req, res) => {
 
     return res.status(200).json({ success: true, data: student });
   } catch (error) {
-    errorLogger(err,req, "Get Student by id Controller")
+    errorLogger(error,req, "Get Student by id Controller")
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 

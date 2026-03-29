@@ -23,6 +23,8 @@ const helmet = require("helmet");
 //ADDED PORT CONFIG
 const PORT = process.env.PORT || 5000;
 const app = express();
+
+
 app.set("trust proxy", true); // because render sits behind a reverse proxy - so all IPs might turn out to be same - req.ip maybe same - hence rate limiting might treat all users as same IP. - to avoid this trust proxy needs to be set
 
 connectDB();
@@ -75,12 +77,19 @@ app.use(
 
 
 // Body Parsing
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use(express.json({ limit: "4mb" }));
+app.use(express.urlencoded({ limit: "4mb", extended: true }));
 app.use(cookieParser());
+
 
 // Logger
 app.use(requestLogger);
+
+
+// for ping
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
 
 
 // rate limiter
@@ -102,9 +111,6 @@ app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 // after all routes
 app.use(errorHandler);
 
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
-});
 
 app.get("/", (req, res) => {
   res.send("API is running...");

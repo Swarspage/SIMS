@@ -123,7 +123,7 @@ exports.divisionDashboard = async (req, res) => {
 
     ]);
 
-    res.json({
+    return res.json({
       stats: {
         totalStudents,
         totalActivities,
@@ -146,7 +146,7 @@ exports.divisionDashboard = async (req, res) => {
 
   } catch (error) {
     console.error("Division dashboard error:", error);
-    res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
+    return res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
   }
 };
 
@@ -237,7 +237,7 @@ exports.adminDashboard = async (req, res) => {
 
     ]);
 
-    res.json({
+    return res.json({
       stats: {
         totalStudents,
         totalActivities,
@@ -260,7 +260,7 @@ exports.adminDashboard = async (req, res) => {
 
   } catch (error) {
     console.error("Admin dashboard error:", error);
-    res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
+    return res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
   }
 };
 
@@ -347,7 +347,7 @@ exports.studentDashboard = async (req, res) => {
       ])
     ]);
 
-    res.json({
+    return res.json({
       stats: {
         totalStudents,
         totalActivities,
@@ -365,6 +365,6 @@ exports.studentDashboard = async (req, res) => {
 
   } catch (error) {
     console.error("Student dashboard error:", error);
-    res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
+    return res.status(500).json({ message: "Internal Server Error. Please Try Again Later" });
   }
 };
