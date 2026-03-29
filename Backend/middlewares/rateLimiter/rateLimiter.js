@@ -7,12 +7,6 @@ const keyGen2 = (req) => {
 };
 const keyGen = (req) => {
 
-        console.log("---- DEBUG ----");
-    console.log("originalUrl:", req.originalUrl);
-    console.log("baseUrl:", req.baseUrl);
-    console.log("path:", req.path);
-    console.log("----------------");
-
 
     if (req.user?.id) return `user-${req.user.id}`;
 
@@ -29,8 +23,6 @@ const keyGen = (req) => {
         return `${cleanIP}-${identifier}`;
     }
 
-    console.log("\n======================global limiter testing===============\n")
-    console.log("cleanIP = ", cleanIP, "\n\n")
     return cleanIP;
 };
 
