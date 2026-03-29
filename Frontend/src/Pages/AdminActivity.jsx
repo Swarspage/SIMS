@@ -629,24 +629,16 @@ export default function AdminActivity() {
   const fetchActivities = async (page = 1) => {
     setLoading(true);
     try {
-      // Exclude 'year' from backend params to prevent 400 Joi validation errors
-      const { year, ...safeFilters } = appliedFilters;
-
       const params = {
         page,
         limit,
-        ...safeFilters,
+        ...appliedFilters,
       };
       const response = await activityService.getAllActivities(params);
 
-      // Perform client-side 'year' filtering because backend is strictly hardcoded to FY/SY/TY while DB is SE/TE/BE
-      let data = response.data || [];
-      if (year) {
-        data = data.filter((activity) => activity?.student?.year === year || activity?.studentYear === year);
-      }
-
-      const total = year ? data.length : (response.total || 0);
-      const totalP = year ? Math.ceil(data.length / limit) || 1 : (response.totalPages || 1);
+      const data = response.data || [];
+      const total = response.total || 0;
+      const totalP = response.totalPages || 1;
 
       setActivities(data);
       setTotalRecords(total);
@@ -664,10 +656,7 @@ export default function AdminActivity() {
 
   const handleExport = async () => {
     try {
-      const params = {};
-      if (searchQuery) params.search = searchQuery;
-
-      const blob = await activityService.exportActivities(params);
+      const blob = await activityService.exportActivities(appliedFilters);
       const url = window.URL.createObjectURL(new Blob([blob]));
       const link = document.createElement("a");
       link.href = url;

@@ -819,24 +819,16 @@ export default function AdminAchievements() {
   const fetchAchievements = async (page = 1) => {
     setLoading(true);
     try {
-      // Exclude 'year' from backend params to prevent 400 Joi validation errors
-      const { year, ...safeFilters } = appliedFilters;
-
       const params = {
         page,
         limit,
-        ...safeFilters
+        ...appliedFilters
       };
       const response = await achievementService.getAllAchievements(params);
 
-      // Perform client-side 'year' filtering because backend is strictly hardcoded to FY/SY/TY while DB is SE/TE/BE
-      let data = response.data || [];
-      if (year) {
-        data = data.filter((achievement) => achievement?.student?.year === year || achievement?.studentYear === year);
-      }
-
-      const total = year ? data.length : (response.total || 0);
-      const totalP = year ? Math.ceil(data.length / limit) || 1 : (response.totalPages || 1);
+      const data = response.data || [];
+      const total = response.total || 0;
+      const totalP = response.totalPages || 1;
 
       setAchievements(data);
       setTotalRecords(total);
@@ -854,11 +846,7 @@ export default function AdminAchievements() {
 
   const handleExport = async () => {
     try {
-      const params = {
-        ...appliedFilters
-      };
-
-      const blob = await achievementService.exportAchievements(params);
+      const blob = await achievementService.exportAchievements(appliedFilters);
       const url = window.URL.createObjectURL(new Blob([blob]));
       const link = document.createElement("a");
       link.href = url;
@@ -986,7 +974,7 @@ export default function AdminAchievements() {
           >
             <option value="">All Types</option>
             <option value="Winner">Winner</option>
-            <option value="Runnerup">Runner-up</option>
+            <option value="Runner-up">Runner-up</option>
             <option value="Participation">Participation</option>
           </select>
 
