@@ -136,6 +136,7 @@ const admissionCreateSchema = Joi.object({
   abortEarly: false
 });
 
+
 // UPDATE ADMISSION => student | pending only
 const admissionUpdateSchema = Joi.object({
   rollno: Joi.string()
@@ -181,8 +182,12 @@ const admissionUpdateSchema = Joi.object({
       "boolean.base": "Scholarship status must be true or false."
     }),
 
+  // FIX: Use Joi.optional().strip() in `otherwise` so that when `isScholarshipApplied`
+  // is NOT re-sent in the request (undefined), the field is silently accepted/stripped
+  // instead of being blocked by Joi.forbidden(). This allows admin to send only
+  // `scholarshipNotAppliedReason` without repeating the parent boolean.
   scholarshipNotAppliedReason: Joi.when("isScholarshipApplied", {
-    is: false,                 // only when explicitly false
+    is: false,
     then: Joi.string()
       .trim()
       .min(5)
@@ -204,15 +209,21 @@ const admissionUpdateSchema = Joi.object({
   mahadbtFilledDate: Joi.when("isMahadbtFormSubmitted", {
     is: true,
     then: Joi.date().max('now').required().messages({
-      "date.max" : "MahaDBT form filled date cannot be in the future.",
+      "date.max": "MahaDBT form filled date cannot be in the future.",
       "any.required": "MahaDBT form filled date is required.",
       "date.base": "MahaDBT form filled date must be a valid date."
     }),
-    otherwise: Joi.forbidden()
+    is: false,
+    then: Joi.optional().strip(),
+    otherwise: Joi.date().max('now').optional().messages({
+      "date.max": "MahaDBT form filled date cannot be in the future.",
+      "date.base": "MahaDBT form filled date must be a valid date."
+    })
   }),
 
+  // FIX: Same pattern — when parent boolean is absent, strip instead of forbid.
   mahadbtNotFilledReason: Joi.when("isMahadbtFormSubmitted", {
-    is: false,                 // only when explicitly false
+    is: false,
     then: Joi.string()
       .trim()
       .valid(...MAHADBT_NOT_FILLED_REASONS)
@@ -229,17 +240,24 @@ const admissionUpdateSchema = Joi.object({
     .optional()
     .messages({ "boolean.base": "Migration certificate status must be true or false." }),
 
+  //Same pattern for migrationExpectedDate — allow update without re-sending
+  // hasMigrationCertificate. When it's absent (undefined), treat as optional.
   migrationExpectedDate: Joi.when("hasMigrationCertificate", {
     is: true,
     then: Joi.date().required().messages({
       "any.required": "Migration expected date is required.",
       "date.base": "Migration expected date must be a valid date."
     }),
-    otherwise: Joi.forbidden()
+    is: false,
+    then: Joi.optional().strip(),
+    otherwise: Joi.date().optional().messages({
+      "date.base": "Migration expected date must be a valid date."
+    })
   }),
 
+  // Same pattern — strip instead of forbid when parent boolean is absent.
   migrationNotAvailableReason: Joi.when("hasMigrationCertificate", {
-    is: false,                 // only when explicitly false
+    is: false,
     then: Joi.string()
       .trim()
       .min(5)
