@@ -423,6 +423,25 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
     initForm();
   }, [isOpen, internship]);
 
+  // Handle auto-calculation of duration whenever dates change
+  // Matches the backend's Math.round(diffDays / 30) logic
+  useEffect(() => {
+    if (formData.startDate && formData.endDate) {
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
+        const diffDays = (end - start) / (1000 * 60 * 60 * 24);
+        const diffMonths = Math.round(diffDays / 30) || 0;
+
+        // Auto-update durationMonths if it differs and within valid range (1-6)
+        if (diffMonths > 0 && diffMonths <= 6 && parseInt(formData.durationMonths) !== diffMonths) {
+          setFormData(prev => ({ ...prev, durationMonths: diffMonths.toString() }));
+        }
+      }
+    }
+  }, [formData.startDate, formData.endDate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -676,11 +695,11 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
                   name="description"
                   required
                   minLength="10"
-                  maxLength="500"
+                  maxLength="300"
                   value={formData.description}
                   onChange={handleChange}
                   rows="3"
-                  placeholder="Describe your responsibilities and achievements..."
+                  placeholder="Describe your responsibilities and achievements (Max 300 chars)..."
                   className={inputClass}
                 ></textarea>
               </div>
@@ -865,24 +884,9 @@ export default function AdminInternship() {
   };
 
   const handleSaveInternship = (updatedItem) => {
-    if (internshipToEdit) {
-      // Local update for edits
-      setInternships((prev) =>
-        prev.map((i) =>
-          i._id === updatedItem._id
-            ? {
-                ...updatedItem,
-                studentName: i.studentName || updatedItem.studentName,
-                studentID: i.studentID || updatedItem.studentID,
-                studentYear: i.studentYear || updatedItem.studentYear,
-              }
-            : i
-        )
-      );
-    } else {
-      // For new records, refetch to maintain sorting/pagination
-      fetchInternships(currentPage);
-    }
+    // ALWAYS refetch to ensure all populated fields (studentName, studentID, etc.)
+    // are updated correctly on the view cards from the backend response.
+    fetchInternships(currentPage);
   };
 
   const handleDelete = async (id) => {
@@ -933,8 +937,8 @@ export default function AdminInternship() {
           <div className="flex flex-wrap gap-3 w-full md:w-auto md:ml-auto">
             <button
               onClick={() => {
-                setAppliedFilters({
-                  search: searchQuery || undefined,
+                const sanitizedFilters = {
+                  search: searchQuery.trim() || undefined,
                   year: filterYear || undefined,
                   division: filterDivision || undefined,
                   isPaid: filterIsPaid || undefined,
@@ -942,7 +946,12 @@ export default function AdminInternship() {
                   startDateTo: startDateTo || undefined,
                   endDateFrom: endDateFrom || undefined,
                   endDateTo: endDateTo || undefined,
-                });
+                };
+                // Remove empty keys
+                Object.keys(sanitizedFilters).forEach(key => 
+                  (sanitizedFilters[key] === undefined || sanitizedFilters[key] === "") && delete sanitizedFilters[key]
+                );
+                setAppliedFilters(sanitizedFilters);
                 setCurrentPage(1);
               }}
               className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-2"
