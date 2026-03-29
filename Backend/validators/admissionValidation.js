@@ -13,19 +13,6 @@ const textWithNumberRegex = /^(?!\d+$)[A-Za-z0-9\s.,!?'\-]+$/;
 // CREATE ADMISSION
 const admissionCreateSchema = Joi.object({
   
-  div: Joi.string()
-    .trim()
-    .pattern(textWithNumberRegex)
-    .max(10)
-    .noProfanity()
-    .required()
-    .messages({
-      "string.pattern.base": "Division must contain only letters, numbers and allowed characters.",
-      "string.noProfanity": "Division contains inappropriate language.",
-      "string.empty": "Division cannot be empty.",
-      "any.required": "Division is required."
-    }),
-
   rollno: Joi.string()
     .trim()
     .pattern(/^\d+$/)
@@ -195,7 +182,7 @@ const admissionUpdateSchema = Joi.object({
     }),
 
   scholarshipNotAppliedReason: Joi.when("isScholarshipApplied", {
-    is: Joi.valid(false),      //only when explicity false
+    is: false,                 // only when explicitly false
     then: Joi.string()
       .trim()
       .min(5)
@@ -207,7 +194,7 @@ const admissionUpdateSchema = Joi.object({
         "string.min": "Reason must be at least 5 characters long.",
         "string.empty": "Reason cannot be empty."
       }),
-    otherwise: Joi.forbidden()
+    otherwise: Joi.optional().strip()  // undefined or true → silently drop
   }),
 
   isMahadbtFormSubmitted: Joi.boolean()
@@ -225,17 +212,17 @@ const admissionUpdateSchema = Joi.object({
   }),
 
   mahadbtNotFilledReason: Joi.when("isMahadbtFormSubmitted", {
-    is: Joi.valid(false),
+    is: false,                 // only when explicitly false
     then: Joi.string()
       .trim()
       .valid(...MAHADBT_NOT_FILLED_REASONS)
-      .required() // It's required IF they are sending "isMahadbtFormSubmitted: false"
+      .required()
       .messages({
         "any.only": "Please select a valid reason from the list.",
         "any.required": "Reason is required if MahaDBT form is not submitted.",
         "string.empty": "Reason cannot be empty."
       }),
-    otherwise: Joi.forbidden() 
+    otherwise: Joi.optional().strip()  // undefined or true → silently drop
   }),
 
   hasMigrationCertificate: Joi.boolean()
@@ -252,7 +239,7 @@ const admissionUpdateSchema = Joi.object({
   }),
 
   migrationNotAvailableReason: Joi.when("hasMigrationCertificate", {
-    is: Joi.valid(false),
+    is: false,                 // only when explicitly false
     then: Joi.string()
       .trim()
       .min(5)
@@ -264,7 +251,7 @@ const admissionUpdateSchema = Joi.object({
         "string.min": "Reason must be at least 5 characters long.",
         "string.empty": "Reason cannot be empty."
       }),
-    otherwise: Joi.forbidden()
+    otherwise: Joi.optional().strip()  // undefined or true → silently drop
   })
 })
   .min(1)

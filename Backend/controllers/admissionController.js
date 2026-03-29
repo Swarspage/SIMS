@@ -168,7 +168,9 @@ const updateAdmission = async (req, res) => {
       return res.status(404).json({ success: false, message: "Admission not found" });
     }
 
-    if (admission.status !== "pending") {
+    // Students and Division Incharges can only edit pending admissions.
+    // Admins can edit regardless of status (pending, approved, rejected).
+    if (req.user.role !== "admin" && admission.status !== "pending") {
       return res.status(400).json({
         success: false,
         message: "Cannot update after approval or rejection",
@@ -221,7 +223,9 @@ const deleteAdmission = async (req, res) => {
       return res.status(404).json({ success: false, message: "Admission not found" });
     }
 
-    if (admission.status !== "pending") {
+    // Admin can delete any admission regardless of status.
+    // Student and Division Incharge can only delete pending admissions.
+    if (req.user.role !== "admin" && admission.status !== "pending") {
       return res.status(400).json({
         success: false,
         message: "Cannot delete after approval or rejection",
@@ -378,7 +382,9 @@ const updateAdmissionStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Admission not found" });
     }
 
-    if (admission.status !== "pending") {
+    // Admin can change status on any admission (e.g. fix a wrongly approved/rejected one).
+    // Division Incharge can only act on pending admissions.
+    if (req.user.role !== "admin" && admission.status !== "pending") {
       return res.status(400).json({
         success: false,
         message: "Cannot change status after approval or rejection",
