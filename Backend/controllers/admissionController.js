@@ -168,9 +168,10 @@ const updateAdmission = async (req, res) => {
       return res.status(404).json({ success: false, message: "Admission not found" });
     }
 
-    // Students and Division Incharges can only edit pending admissions.
-    // Admins can edit regardless of status (pending, approved, rejected).
-    if (req.user.role !== "admin" && admission.status !== "pending") {
+    // Admins can edit regardless of status.
+    // Students can also edit regardless of status (they may need to correct details).
+    // Only Division Incharges are restricted to pending admissions.
+    if (req.user.role === "divisionIncharge" && admission.status !== "pending") {
       return res.status(400).json({
         success: false,
         message: "Cannot update after approval or rejection",
