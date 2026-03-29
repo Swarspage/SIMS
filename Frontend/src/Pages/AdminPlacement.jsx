@@ -677,11 +677,11 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
               </div>
               <div>
                 <label className={labelClass}>Passout Year *</label>
-                <input type="text" name="passoutYear" placeholder="e.g. 2024" required value={formData.passoutYear} onChange={handleChange} className={inputClass} />
+                <input type="text" name="passoutYear" placeholder="e.g. 2023-24" required value={formData.passoutYear} onChange={handleChange} className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>Joining Year *</label>
-                <input type="text" name="joiningYear" placeholder="e.g. 2024" required value={formData.joiningYear} onChange={handleChange} className={inputClass} />
+                <input type="text" name="joiningYear" placeholder="e.g. 2024-25" required value={formData.joiningYear} onChange={handleChange} className={inputClass} />
               </div>
             </div>
           </section>
@@ -864,43 +864,15 @@ export default function AdminPlacement() {
   };
 
   const handleSavePlacement = (updatedItem) => {
-    if (placementToEdit) {
-      setPlacements((prev) =>
-        prev.map((p) =>
-          p._id === updatedItem._id
-            ? {
-                ...updatedItem,
-                stuID: p.stuID || updatedItem.stuID,
-                studentName: p.studentName || updatedItem.studentName,
-                studentID: p.studentID || updatedItem.studentID,
-                studentYear: p.studentYear || updatedItem.studentYear,
-              }
-            : p
-        )
-      );
-    } else {
-      fetchPlacements(currentPage);
-    }
+    // ALWAYS refetch for both edit and new to ensure all 
+    // populated fields (student name, ID, year) are visible.
+    fetchPlacements(currentPage);
   };
 
   const handleSaveHigherStudy = (updatedItem) => {
-    if (higherStudyToEdit) {
-      setHigherStudies((prev) =>
-        prev.map((h) =>
-          h._id === updatedItem._id
-            ? {
-                ...updatedItem,
-                stuID: h.stuID || updatedItem.stuID,
-                studentName: h.studentName || updatedItem.studentName,
-                studentID: h.studentID || updatedItem.studentID,
-                studentYear: h.studentYear || updatedItem.studentYear,
-              }
-            : h
-        )
-      );
-    } else {
-      fetchHigherStudies(currentPage);
-    }
+    // ALWAYS refetch for both edit and new to ensure all 
+    // populated fields (student name, ID, year) are visible.
+    fetchHigherStudies(currentPage);
   };
 
   const handleDeletePlacement = async (id) => {
@@ -1191,7 +1163,7 @@ export default function AdminPlacement() {
                 <option value="UPSC">UPSC</option>
               </select>
 
-              <input type="text" placeholder="Academic Year (e.g. 2023-24)" value={hsFilterAcademicYear}
+              <input type="text" placeholder="Academic Year (e.g. 2024-2025)" value={hsFilterAcademicYear}
                 onChange={(e) => setHsFilterAcademicYear(e.target.value)}
                 className="px-3 py-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
 
@@ -1424,8 +1396,8 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
         response = await higherStudiesService.updateHigherStudy(higherStudy._id, payload);
         toast.success("Higher study record updated successfully!");
       } else {
-        if (!marksheet) {
-          toast.error("Marksheet (PDF/Image) is required for new records.");
+        if (!marksheet || !idCardPhoto) {
+          toast.error("Both Marksheet and ID Card Photo are required for new records.");
           setLoading(false);
           return;
         }
@@ -1488,7 +1460,7 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
               </div>
               <div className="md:col-span-2">
                 <label className={labelClass}>Score *</label>
-                <input type="text" name="score" required value={formData.score} onChange={handleChange} placeholder="e.g. 98.5 percentile or 750" className={inputClass} />
+                <input type="text" name="score" required value={formData.score} onChange={handleChange} placeholder="e.g. 98.5% or 165/155" className={inputClass} />
               </div>
             </div>
           </section>
@@ -1511,7 +1483,7 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
               </div>
               <div>
                 <label className={labelClass}>
-                  ID Card Photo (Optional)
+                  ID Card Photo {!higherStudy && "*"}
                   <span className="block text-[10px] text-red-500 font-bold italic normal-case mt-1 leading-tight">
                     * Max 500KB, JPG/PNG only
                   </span>
@@ -1519,7 +1491,7 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
                 <input type="file" accept="image/jpeg, image/png, image/jpg" onChange={(e) => handleFileChange(e, setIdCardPhoto)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 focus:outline-none transition-all cursor-pointer" />
               </div>
             </div>
-            {!higherStudy && <p className="text-xs text-amber-600 mt-3 font-semibold px-2 flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Marksheet is strictly required when adding a new record.</p>}
+            {!higherStudy && <p className="text-xs text-amber-600 mt-3 font-semibold px-2 flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Both Marksheet and ID Card Photo are strictly required when adding a new record.</p>}
           </section>
 
           <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 py-6 flex justify-end gap-4 mt-8">

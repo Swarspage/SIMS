@@ -235,8 +235,12 @@ export default function StudentActivity() {
       // Type is handled by backend (forced to Committee)
       data.append("title", formData.title);
       data.append("description", formData.description);
-      data.append("date[from]", formData.dateFrom);
-      data.append("date[to]", formData.dateTo);
+      
+      // Send date as stringified JSON so Joi parses it correctly with convert: true
+      data.append("date", JSON.stringify({
+        from: formData.dateFrom,
+        to: formData.dateTo
+      }));
 
       if (certificate) {
         data.append("certificate", certificate);

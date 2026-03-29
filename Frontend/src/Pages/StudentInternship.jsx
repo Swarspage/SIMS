@@ -156,18 +156,23 @@ export default function StudentInternship() {
     fetchInternships();
   }, []);
 
-  // Auto-calculate duration
+  // Auto-calculate duration to match backend Joi exact validation
   useEffect(() => {
     if (formData.startDate && formData.endDate) {
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
       
       if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
-        const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-        // If the day of month of end date is less than start date, it's not a full month
-        // but for internship usually rounded up or strict diff is fine. 
-        // Let's use a simple month diff.
-        setFormData(prev => ({ ...prev, durationMonths: Math.max(1, months).toString() }));
+        // Backend math: Math.round(diffDays / 30) || 0
+        const diffDays = (end - start) / (1000 * 60 * 60 * 24);
+        const diffMonths = Math.round(diffDays / 30) || 0;
+        
+        setFormData((prev) => ({ 
+          ...prev, 
+          // Automatically cap to valid minimums on the form if desired, 
+          // but strict match requires sending exactly the calculated months
+          durationMonths: diffMonths.toString() 
+        }));
       }
     }
   }, [formData.startDate, formData.endDate]);

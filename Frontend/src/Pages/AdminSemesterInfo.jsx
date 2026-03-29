@@ -512,14 +512,14 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          
+
           {/* Basic Info */}
           <section>
             <div className="flex items-center gap-2 mb-6">
               <div className="h-6 w-1.5 bg-blue-600 rounded-full"></div>
               <h4 className="text-lg font-bold text-slate-800">Basic Info</h4>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
               <div>
                 <label className={labelClass}>Student ID *</label>
@@ -790,7 +790,7 @@ export default function AdminSemesterInfo() {
 
       const fullRecords = semRes.data || [];
       let matchingRecord = fullRecords.find(r => r._id === record._id);
-      
+
       if (matchingRecord) {
         // Ensure the readable studentID is available at the top level for the form
         matchingRecord.studentID = studentRes.data?.studentID;
