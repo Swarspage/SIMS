@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 import dmceLogo from "../assets/dmce_logo_new.png";
+import SEO from "../components/SEO";
 
 const PASSWORD_HINT =
   "8-14 characters with uppercase, lowercase, number & special character (@$!%*?&/)";
@@ -62,6 +63,8 @@ export default function SignupPage() {
   };
 
   return (
+    <>
+    <SEO title="Student Sign Up" description="Create an account on the DMCE Student Information Management System." url="/signup" />
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
@@ -221,5 +224,6 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

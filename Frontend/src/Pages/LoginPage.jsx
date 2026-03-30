@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { authService } from "../services/authService";
 import dmceLogo from "../assets/dmce_logo_new.png";
+import SEO from "../components/SEO";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -85,6 +86,8 @@ export default function LoginPage() {
   };
 
   return (
+    <>
+    <SEO title="Student Login" description="Login to the DMCE Student Information Management System." url="/login" />
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       {/* Login Container */}
       <div className="w-full max-w-md relative z-10">
@@ -244,5 +247,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

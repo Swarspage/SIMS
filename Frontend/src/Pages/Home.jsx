@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaLinkedin, FaGithub, FaGlobe, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import SEO from "../components/SEO";
 
 // Import Assets
 import dmceBuilding from "../assets/dmce_building.png";
@@ -55,7 +56,9 @@ const Home = () => {
   const prevEvent = () => setActiveEvent((prev) => (prev - 1 + events.length) % events.length);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 selection:bg-blue-500/30 overflow-x-hidden">
+    <>
+      <SEO title="Home - DMCE Computer Engineering" description="Welcome to Datta Meghe College of Engineering, Computer Engineering Department. Innovate, Create, Excel." url="/" />
+      <div className="min-h-screen bg-white text-gray-900 selection:bg-blue-500/30 overflow-x-hidden">
       {/* 
         ========================================
         HEADER SECTION
@@ -342,6 +345,7 @@ const Home = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 };
 

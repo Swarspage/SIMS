@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaLinkedin, FaGithub, FaGlobe, FaArrowLeft, FaCode, FaServer, FaPaintBrush, FaFileAlt } from "react-icons/fa";
+import SEO from "../components/SEO";
 
 // Import Assets
 import dmceLogo from "../assets/dmce_logo_new.png";
@@ -42,6 +43,8 @@ const MeetDevelopers = () => {
   }, []);
 
   return (
+    <>
+    <SEO title="Meet The Developers" description="Meet the student development team behind the DMCE SIMS platform." url="/developers" />
     <div className="min-h-screen w-full bg-slate-50 text-slate-900 flex flex-col relative selection:bg-blue-100">
 
       {/* Subtle Background Elements */}
@@ -136,6 +139,7 @@ const MeetDevelopers = () => {
         .reveal.active { opacity: 1; transform: translateY(0); }
       `}} />
     </div>
+    </>
   );
 };
 

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /signup
+Allow: /developers
+Disallow: /admin/
+Disallow: /student/
+Disallow: /division/
+Disallow: /division-incharge/
+
+Sitemap: https://sims.csidmce.com/sitemap.xml
