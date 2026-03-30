@@ -73,15 +73,24 @@ const createAdmission = async (req, res) => {
 
       stuID = student._id;
 
-      // Division Incharge restriction
-      if (
-        req.user.role === "divisionIncharge" &&
-        (student.year !== req.user.year || student.division !== req.user.division)
-      ) {
-        return res.status(403).json({
-          success: false,
-          message: "You can only manage students within your own division",
-        });
+      // Division Incharge restriction and student assignment logic
+      if (req.user.role === "divisionIncharge") {
+        if (!student.year && !student.division) {
+          // If the student has no assigned year and division, claim them for this division
+          await Student.findByIdAndUpdate(student._id, {
+            year: req.user.year,
+            division: req.user.division
+          });
+          // Update the localized lean object so admission gets the correct year/div
+          student.year = req.user.year;
+          student.division = req.user.division;
+        } else if (student.year !== req.user.year || student.division !== req.user.division) {
+          // Student is already assigned to a different division
+          return res.status(403).json({
+            success: false,
+            message: `Student already belongs to Year ${student.year || 'Unknown'} Div ${student.division || 'Unknown'} and cannot be added to your division.`,
+          });
+        }
       }
     }
 
