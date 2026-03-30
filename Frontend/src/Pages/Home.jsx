@@ -76,8 +76,8 @@ const Home = () => {
             <a href="#college" className="text-sm font-medium hover:text-[#1D3EA1] transition-colors uppercase">College</a>
             <a href="#about" className="text-sm font-medium hover:text-[#1D3EA1] transition-colors uppercase">About</a>
             <a href="#events" className="text-sm font-medium hover:text-[#1D3EA1] transition-colors uppercase">Events</a>
-            <button 
-              onClick={() => navigate("/developers")} 
+            <button
+              onClick={() => navigate("/developers")}
               className="text-sm font-bold flex items-center gap-2 text-gray-800 hover:text-[#1D3EA1] transition-colors group"
             >
               <span className="status-dot"></span>
@@ -111,8 +111,8 @@ const Home = () => {
             <a href="#college" className="block font-medium" onClick={() => setIsMenuOpen(false)}>COLLEGE</a>
             <a href="#about" className="block font-medium" onClick={() => setIsMenuOpen(false)}>ABOUT</a>
             <a href="#events" className="block font-medium" onClick={() => setIsMenuOpen(false)}>EVENTS</a>
-            <button 
-              className="flex items-center gap-3 font-bold text-gray-900 uppercase pr-4" 
+            <button
+              className="flex items-center gap-3 font-bold text-gray-900 uppercase pr-4"
               onClick={() => { setIsMenuOpen(false); navigate("/developers"); }}
             >
               <span className="status-dot"></span>
@@ -135,8 +135,7 @@ const Home = () => {
       */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-20">
         <div className="absolute inset-0 z-0 animate-hero-fade">
-          <img src={dmceBuilding} alt="DMCE Building" className="w-full h-full object-cover opacity-30 scale-105" />
-          <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white"></div>
+          <img src={dmceBuilding} alt="DMCE Building" className="w-full h-full object-cover opacity-70 scale-105" />
         </div>
 
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
@@ -150,8 +149,8 @@ const Home = () => {
             <h1 className="text-5xl sm:text-7xl md:text-8xl font-black mb-8 leading-[0.9] text-[#182137] animate-hero-slide animation-delay-100">
               INNOVATE.<br />CREATE.<br />EXCEL.
             </h1>
-            <p className="text-base md:text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed animate-hero-slide animation-delay-200">
-              The Department of Computer Engineering at <span className="text-[#1D3EA1] font-bold">DMCE</span> is where ambition meets opportunity.
+            <p className="text-base md:text-xl text-slate-800 font-semibold mb-12 max-w-2xl mx-auto leading-relaxed animate-hero-slide animation-delay-200 bg-white/60 backdrop-blur-md px-6 py-3 rounded-2xl shadow-sm ring-1 ring-white/50 inline-block">
+              The Department of Computer Engineering at <span className="text-[#1D3EA1] font-black">DMCE</span> is where ambition meets opportunity.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 animate-hero-slide animation-delay-300">
               <a

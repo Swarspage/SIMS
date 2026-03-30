@@ -161,17 +161,17 @@ export default function StudentInternship() {
     if (formData.startDate && formData.endDate) {
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
-      
+
       if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
         // Backend math: Math.round(diffDays / 30) || 0
         const diffDays = (end - start) / (1000 * 60 * 60 * 24);
         const diffMonths = Math.round(diffDays / 30) || 0;
-        
-        setFormData((prev) => ({ 
-          ...prev, 
+
+        setFormData((prev) => ({
+          ...prev,
           // Automatically cap to valid minimums on the form if desired, 
           // but strict match requires sending exactly the calculated months
-          durationMonths: diffMonths.toString() 
+          durationMonths: diffMonths.toString()
         }));
       }
     }
@@ -200,7 +200,7 @@ export default function StudentInternship() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === "stipend") {
       // Remove commas before saving to state
       const rawValue = value.replace(/,/g, "");
@@ -514,7 +514,7 @@ export default function StudentInternship() {
                       name="durationMonths"
                       value={formData.durationMonths}
                       onChange={handleChange}
-                      placeholder="1-12"
+                      placeholder="1-6"
                       min="1"
                       max="6"
                       className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
@@ -752,9 +752,9 @@ export default function StudentInternship() {
   const filteredInternships = internships.filter((internship) => {
     const matchesSearch = searchQuery
       ? (internship.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         internship.role?.toLowerCase().includes(searchQuery.toLowerCase()))
+        internship.role?.toLowerCase().includes(searchQuery.toLowerCase()))
       : true;
-    
+
     const matchesPaid = filterIsPaid
       ? (filterIsPaid === "paid" ? internship.stipendInfo?.isPaid : !internship.stipendInfo?.isPaid)
       : true;
