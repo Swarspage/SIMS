@@ -39,8 +39,9 @@ export default function StudentInformation() {
   const [studentPhoto, setStudentPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState("");
 
-  // Pre-defined options based on validators
-  const branches = ["Computer", "IT", "AIDS", "Civil", "Chemical", "Mechanical"];
+  // Pre-defined options — must match backend Joi valid() lists exactly
+  const branches = ["Computer"]; // Backend: Joi.string().valid("Computer") only
+  const today = new Date().toISOString().split("T")[0]; // Used for dob max
   const years = ["SE", "TE", "BE"];
   const divisions = ["A", "B", "C"];
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
@@ -165,9 +166,9 @@ export default function StudentInformation() {
   const handleChange = (e) => {
     let { name, value } = e.target;
 
-    // Enforce Capitalization for Name Fields
+    // Backend namePattern: /^[A-Z][a-z]+$/ — first letter uppercase, ALL remaining lowercase
     if (["firstName", "middleName", "lastName", "motherName"].includes(name) && value.length > 0) {
-      value = value.charAt(0).toUpperCase() + value.slice(1);
+      value = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -469,12 +470,14 @@ export default function StudentInformation() {
                 </div>
               </div>
 
-              <InputField label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} required pattern="[A-Za-z]+" title="Only alphabets allowed" />
-              <InputField label="Middle Name" name="middleName" value={formData.middleName} onChange={handleChange} required pattern="[A-Za-z]+" title="Only alphabets allowed" />
-              <InputField label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} required pattern="[A-Za-z]+" title="Only alphabets allowed" />
-              <InputField label="Mother Name" name="motherName" value={formData.motherName} onChange={handleChange} required pattern="[A-Za-z]+" title="Only alphabets allowed" />
+              {/* Backend namePattern: ^[A-Z][a-z]+$ — min 2, max 20, first letter cap, rest lowercase */}
+              <InputField label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} required pattern="[A-Z][a-z]{1,19}" maxLength={20} title="First letter must be capital, remaining lowercase only (e.g. Rahul)" />
+              <InputField label="Middle Name" name="middleName" value={formData.middleName} onChange={handleChange} required pattern="[A-Z][a-z]{1,19}" maxLength={20} title="First letter must be capital, remaining lowercase only (e.g. Kumar)" />
+              <InputField label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} required pattern="[A-Z][a-z]{1,19}" maxLength={20} title="First letter must be capital, remaining lowercase only (e.g. Sharma)" />
+              <InputField label="Mother Name" name="motherName" value={formData.motherName} onChange={handleChange} required pattern="[A-Z][a-z]{1,19}" maxLength={20} title="First letter must be capital, remaining lowercase only (e.g. Sunita)" />
 
-              <InputField label="Date of Birth" name="dob" type="date" value={formData.dob} onChange={handleChange} required />
+              {/* Backend: Joi.date().max('now') — cannot be future date */}
+              <InputField label="Date of Birth" name="dob" type="date" value={formData.dob} onChange={handleChange} required max={today} />
 
               <SelectField label="Blood Group" name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} options={bloodGroups} required />
               <SelectField label="Category" name="category" value={formData.category} onChange={handleChange} options={categories} required />
@@ -489,12 +492,14 @@ export default function StudentInformation() {
               Academic Details
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <InputField label="PRN" name="PRN" value={formData.PRN} onChange={handleChange} required pattern="[1-9][0-9]{15}" title="16 digits, cannot start with 0" maxLength={16} />
+              {/* Backend: /^\d{16}$/ — exactly 16 digits, leading 0 IS allowed */}
+              <InputField label="PRN" name="PRN" value={formData.PRN} onChange={handleChange} required pattern="\d{16}" title="Exactly 16 digits" maxLength={16} />
               <InputField label="ABC ID" name="abcId" value={formData.abcId} onChange={handleChange} required pattern="\d{12}" title="Exactly 12 digits" maxLength={12} />
               <SelectField label="Branch" name="branch" value={formData.branch} onChange={handleChange} options={branches} required />
               <SelectField label="Year" name="year" value={formData.year} onChange={handleChange} options={years} required />
               <SelectField label="Division" name="division" value={formData.division} onChange={handleChange} options={divisions} required />
-              <InputField label="Academic Year" name="academicYear" value={formData.academicYear} onChange={handleChange} required placeholder="e.g. 2024-2025" title="Format: YYYY-YYYY (e.g. 2024-2025)" />
+              {/* Backend: /^\d{4}-\d{4}$/ + consecutive years validation */}
+              <InputField label="Academic Year" name="academicYear" value={formData.academicYear} onChange={handleChange} required placeholder="e.g. 2024-2025" pattern="\d{4}-\d{4}" title="Format: YYYY-YYYY with consecutive years (e.g. 2024-2025)" />
             </div>
           </section>
 
@@ -540,10 +545,12 @@ export default function StudentInformation() {
                     FETCH LOCATION
                   </button>
                 </div>
-                <InputField label="Street / Building (Complete Address)" name="currentStreet" value={formData.currentStreet} onChange={handleChange} required />
+                {/* Backend addressPattern: /^[a-zA-Z0-9\s,./#()'-]+$/ max 300 */}
+                <InputField label="Street / Building (Complete Address)" name="currentStreet" value={formData.currentStreet} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={300} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="City" name="currentCity" value={formData.currentCity} onChange={handleChange} required />
-                  <InputField label="Pincode" name="pincode" value={formData.pincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6 digit pincode" maxLength={6} />
+                  {/* Backend: same addressPattern, max 200 */}
+                  <InputField label="City" name="currentCity" value={formData.currentCity} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={200} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
+                  <InputField label="Pincode" name="pincode" value={formData.pincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6-digit pincode, cannot start with 0" maxLength={6} />
                 </div>
               </div>
 
@@ -559,10 +566,12 @@ export default function StudentInformation() {
                     SAME AS CURRENT
                   </button>
                 </div>
-                <InputField label="Street / Building (Complete Address)" name="nativeStreet" value={formData.nativeStreet} onChange={handleChange} required />
+                {/* Backend addressPattern: /^[a-zA-Z0-9\s,./#()'-]+$/ max 300 */}
+                <InputField label="Street / Building (Complete Address)" name="nativeStreet" value={formData.nativeStreet} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={300} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="City" name="nativeCity" value={formData.nativeCity} onChange={handleChange} required />
-                  <InputField label="Pincode" name="nativePincode" value={formData.nativePincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6 digit pincode" maxLength={6} />
+                  {/* Backend: same addressPattern, max 200 */}
+                  <InputField label="City" name="nativeCity" value={formData.nativeCity} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={200} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
+                  <InputField label="Pincode" name="nativePincode" value={formData.nativePincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6-digit pincode, cannot start with 0" maxLength={6} />
                 </div>
               </div>
             </div>
