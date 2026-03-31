@@ -98,8 +98,8 @@ const addStudentDetailsSchema = Joi.object({
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    PRN: Joi.string().trim().pattern(/^[1-9]\d{15}$/).required().messages({
-        "string.pattern.base": "PRN must be a 16-digit number and cannot start with 0.",
+    PRN: Joi.string().trim().pattern(/^\d{16}$/).required().messages({
+        "string.pattern.base": "PRN must be a 16-digit number.",
         "string.empty": "PRN cannot be empty.",
         "any.required": "PRN is required."
     }),
@@ -245,9 +245,10 @@ const updateStudentSchema = Joi.object({
         "string.profanity": "Inappropriate Language Not Allowed.",
     }),
 
-    PRN: Joi.string().trim().pattern(/^[1-9]\d{15}$/).messages({
-        "string.pattern.base": "PRN must be a 16-digit number and cannot start with 0.",
-        "string.empty" : "PRN cannot be empty.",
+
+    PRN: Joi.string().trim().pattern(/^\d{16}$/).messages({
+        "string.pattern.base": "PRN must be a 16-digit number.",
+        "string.empty": "PRN cannot be empty.",
     }),
 
     branch: Joi.string().trim().valid("Computer").messages({
