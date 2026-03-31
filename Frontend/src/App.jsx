@@ -1,67 +1,170 @@
-//Trigger vercel redployment2
+//Trigger vercel redeployment2
+import { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Home from "./Pages/Home";
-import LoginPage from "./Pages/LoginPage";
-import AdminLoginPage from "./Pages/AdminLoginPage";
-import DivisionInchargeLogin from "./Pages/DivisionInchargeLogin"; // ✅ IMPORTED
-import SignupPage from "./Pages/SignupPage";
-import ForgotPasswordPage from "./Pages/ForgotPasswordPage";
-import ResetPasswordPage from "./Pages/ResetPasswordPage";
-import VerifyEmail from "./Pages/VerifyEmail";
+import { HelmetProvider } from "react-helmet-async";
 
-// Admin Pages
-import AdminStudentSection from "./Pages/AdminStudentSection";
-import AdminActivity from "./Pages/AdminActivity";
-import AdminAchievements from "./Pages/AdminAchievement";
-import AdminInternship from "./Pages/AdminInternship";
-import AdminDashboard from "./Pages/AdminDashboard";
-import AdminPlacement from "./Pages/AdminPlacement";
-import AdminAdmission from "./Pages/AdminAdmission";
-import AdminSemesterInfo from "./Pages/AdminSemesterInfo";
-import AdminDivisionIncharge from "./Pages/AdminDivisionIncharge";
-import MeetDevelopers from "./Pages/MeetDevelopers";
-
-// Student Pages
-import StudentActivity from "./Pages/StudentActivity";
-import StudentAdmission from "./Pages/StudentAdmission";
-import StudentInformation from "./Pages/StudentInfromation";
-import StudentAchievements from "./Pages/StudentAchievements";
-import StudentInternship from "./Pages/StudentInternship";
-import StudentPlacement from "./Pages/StudentPlacement";
-import StudentDashboard from "./Pages/StudentDashboard";
-import StudentSemesterInfo from "./Pages/StudentSemesterInfo";
-
-// Layouts
+// Layouts & ProtectedRoute (kept as eager — tiny files, always needed)
 import AdminLayout from "./layouts/AdminLayout";
 import StudentLayout from "./layouts/StudentLayout";
-
-// Protected Route Component
 import ProtectedRoute from "./components/ProtectedRoute";
 
-import { HelmetProvider } from "react-helmet-async";
+// ── Skeleton fallbacks ────────────────────────────────────────────
+import DashboardSkeleton from "./components/skeletons/DashboardSkeleton";
+import TablePageSkeleton from "./components/skeletons/TablePageSkeleton";
+import CardGridSkeleton from "./components/skeletons/CardGridSkeleton";
+import AuthPageSkeleton from "./components/skeletons/AuthPageSkeleton";
+import GeneralPageSkeleton from "./components/skeletons/GeneralPageSkeleton";
+
+// ── Lazy Public Pages ─────────────────────────────────────────────
+const Home                = lazy(() => import("./Pages/Home"));
+const LoginPage           = lazy(() => import("./Pages/LoginPage"));
+const AdminLoginPage      = lazy(() => import("./Pages/AdminLoginPage"));
+const DivisionInchargeLogin = lazy(() => import("./Pages/DivisionInchargeLogin"));
+const SignupPage           = lazy(() => import("./Pages/SignupPage"));
+const ForgotPasswordPage   = lazy(() => import("./Pages/ForgotPasswordPage"));
+const ResetPasswordPage    = lazy(() => import("./Pages/ResetPasswordPage"));
+const VerifyEmail          = lazy(() => import("./Pages/VerifyEmail"));
+const MeetDevelopers       = lazy(() => import("./Pages/MeetDevelopers"));
+
+// ── Lazy Admin Pages ──────────────────────────────────────────────
+const AdminDashboard       = lazy(() => import("./Pages/AdminDashboard"));
+const AdminStudentSection  = lazy(() => import("./Pages/AdminStudentSection"));
+const AdminActivity        = lazy(() => import("./Pages/AdminActivity"));
+const AdminAchievements    = lazy(() => import("./Pages/AdminAchievement"));
+const AdminInternship      = lazy(() => import("./Pages/AdminInternship"));
+const AdminPlacement       = lazy(() => import("./Pages/AdminPlacement"));
+const AdminAdmission       = lazy(() => import("./Pages/AdminAdmission"));
+const AdminSemesterInfo    = lazy(() => import("./Pages/AdminSemesterInfo"));
+const AdminDivisionIncharge = lazy(() => import("./Pages/AdminDivisionIncharge"));
+
+// ── Lazy Student Pages ────────────────────────────────────────────
+const StudentDashboard     = lazy(() => import("./Pages/StudentDashboard"));
+const StudentActivity      = lazy(() => import("./Pages/StudentActivity"));
+const StudentAdmission     = lazy(() => import("./Pages/StudentAdmission"));
+const StudentInformation   = lazy(() => import("./Pages/StudentInfromation"));
+const StudentAchievements  = lazy(() => import("./Pages/StudentAchievements"));
+const StudentInternship    = lazy(() => import("./Pages/StudentInternship"));
+const StudentPlacement     = lazy(() => import("./Pages/StudentPlacement"));
+const StudentSemesterInfo  = lazy(() => import("./Pages/StudentSemesterInfo"));
+
+// ── Helper: wrap a lazy page with its matching skeleton ──────────
+function SuspensePage({ skeleton: Skeleton, children }) {
+  return <Suspense fallback={<Skeleton />}>{children}</Suspense>;
+}
 
 const App = () => {
   return (
     <HelmetProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin/forgot-password" element={<ForgotPasswordPage role="admin" />} />
-          <Route path="/admin/reset-password/:token" element={<ResetPasswordPage role="admin" />} />
-          <Route path="/division/login" element={<DivisionInchargeLogin />} />
-          <Route path="/division-incharge/forgot-password" element={<ForgotPasswordPage role="division" />} />
-          <Route path="/division-incharge/reset-password/:token" element={<ResetPasswordPage role="division" />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage role="student" />} />
-          <Route path="/reset-password/:token" element={<ResetPasswordPage role="student" />} />
-          <Route path="/developers" element={<MeetDevelopers />} />
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+          {/* ── Public Routes ──────────────────────────────────────── */}
+          <Route
+            path="/"
+            element={
+              <SuspensePage skeleton={GeneralPageSkeleton}>
+                <Home />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <SuspensePage skeleton={AuthPageSkeleton}>
+                <LoginPage />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/admin/login"
+            element={
+              <SuspensePage skeleton={AuthPageSkeleton}>
+                <AdminLoginPage />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/admin/forgot-password"
+            element={
+              <SuspensePage skeleton={AuthPageSkeleton}>
+                <ForgotPasswordPage role="admin" />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/admin/reset-password/:token"
+            element={
+              <SuspensePage skeleton={AuthPageSkeleton}>
+                <ResetPasswordPage role="admin" />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/division/login"
+            element={
+              <SuspensePage skeleton={AuthPageSkeleton}>
+                <DivisionInchargeLogin />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/division-incharge/forgot-password"
+            element={
+              <SuspensePage skeleton={AuthPageSkeleton}>
+                <ForgotPasswordPage role="division" />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/division-incharge/reset-password/:token"
+            element={
+              <SuspensePage skeleton={AuthPageSkeleton}>
+                <ResetPasswordPage role="division" />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <SuspensePage skeleton={AuthPageSkeleton}>
+                <SignupPage />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <SuspensePage skeleton={AuthPageSkeleton}>
+                <ForgotPasswordPage role="student" />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/reset-password/:token"
+            element={
+              <SuspensePage skeleton={AuthPageSkeleton}>
+                <ResetPasswordPage role="student" />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/developers"
+            element={
+              <SuspensePage skeleton={GeneralPageSkeleton}>
+                <MeetDevelopers />
+              </SuspensePage>
+            }
+          />
+          <Route
+            path="/verify-email/:token"
+            element={
+              <SuspensePage skeleton={GeneralPageSkeleton}>
+                <VerifyEmail />
+              </SuspensePage>
+            }
+          />
 
-          {/* Admin Routes - PROTECTED */}
-          {/* Note: Updated requiredRole to allow 'division' role to access admin dashboard */}
+          {/* ── Admin Routes — PROTECTED ───────────────────────────── */}
+          {/* Note: allows admin / division / divisionIncharge roles */}
           <Route
             path="/admin"
             element={
@@ -71,18 +174,82 @@ const App = () => {
             }
           >
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="admission" element={<AdminAdmission />} />
-            <Route path="students" element={<AdminStudentSection />} />
-            <Route path="activities" element={<AdminActivity />} />
-            <Route path="achievements" element={<AdminAchievements />} />
-            <Route path="internships" element={<AdminInternship />} />
-            <Route path="placements" element={<AdminPlacement />} />
-            <Route path="semester-info" element={<AdminSemesterInfo />} />
-            <Route path="division-incharges" element={<AdminDivisionIncharge />} />
+
+            <Route
+              path="dashboard"
+              element={
+                <SuspensePage skeleton={DashboardSkeleton}>
+                  <AdminDashboard />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="admission"
+              element={
+                <SuspensePage skeleton={TablePageSkeleton}>
+                  <AdminAdmission />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="students"
+              element={
+                <SuspensePage skeleton={TablePageSkeleton}>
+                  <AdminStudentSection />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="activities"
+              element={
+                <SuspensePage skeleton={CardGridSkeleton}>
+                  <AdminActivity />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="achievements"
+              element={
+                <SuspensePage skeleton={CardGridSkeleton}>
+                  <AdminAchievements />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="internships"
+              element={
+                <SuspensePage skeleton={CardGridSkeleton}>
+                  <AdminInternship />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="placements"
+              element={
+                <SuspensePage skeleton={CardGridSkeleton}>
+                  <AdminPlacement />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="semester-info"
+              element={
+                <SuspensePage skeleton={CardGridSkeleton}>
+                  <AdminSemesterInfo />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="division-incharges"
+              element={
+                <SuspensePage skeleton={TablePageSkeleton}>
+                  <AdminDivisionIncharge />
+                </SuspensePage>
+              }
+            />
           </Route>
 
-          {/* Student Routes - PROTECTED */}
+          {/* ── Student Routes — PROTECTED ─────────────────────────── */}
           <Route
             path="/student"
             element={
@@ -92,17 +259,74 @@ const App = () => {
             }
           >
             <Route index element={<Navigate to="/student/dashboard" replace />} />
-            <Route path="dashboard" element={<StudentDashboard />} />
-            <Route path="admission" element={<StudentAdmission />} />
-            <Route path="information" element={<StudentInformation />} />
-            <Route path="activity" element={<StudentActivity />} />
-            <Route path="achievements" element={<StudentAchievements />} />
-            <Route path="internship" element={<StudentInternship />} />
-            <Route path="placement" element={<StudentPlacement />} />
-            <Route path="semester-info" element={<StudentSemesterInfo />} />
+
+            <Route
+              path="dashboard"
+              element={
+                <SuspensePage skeleton={DashboardSkeleton}>
+                  <StudentDashboard />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="admission"
+              element={
+                <SuspensePage skeleton={TablePageSkeleton}>
+                  <StudentAdmission />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="information"
+              element={
+                <SuspensePage skeleton={TablePageSkeleton}>
+                  <StudentInformation />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="activity"
+              element={
+                <SuspensePage skeleton={CardGridSkeleton}>
+                  <StudentActivity />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="achievements"
+              element={
+                <SuspensePage skeleton={CardGridSkeleton}>
+                  <StudentAchievements />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="internship"
+              element={
+                <SuspensePage skeleton={CardGridSkeleton}>
+                  <StudentInternship />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="placement"
+              element={
+                <SuspensePage skeleton={CardGridSkeleton}>
+                  <StudentPlacement />
+                </SuspensePage>
+              }
+            />
+            <Route
+              path="semester-info"
+              element={
+                <SuspensePage skeleton={CardGridSkeleton}>
+                  <StudentSemesterInfo />
+                </SuspensePage>
+              }
+            />
           </Route>
 
-          {/* Catch all - redirect to home */}
+          {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

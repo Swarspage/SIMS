@@ -214,3 +214,80 @@ html {
     opacity: 0;
     animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ============================================================
+   SKELETON / LAZY LOADING — Premium Shimmer System
+   ============================================================ */
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: -800px 0;
+    }
+    100% {
+        background-position: 800px 0;
+    }
+}
+
+@keyframes skeleton-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
+}
+
+/* Base skeleton block — apply to any placeholder element */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        #e2e8f0 25%,
+        #f1f5f9 50%,
+        #e2e8f0 75%
+    );
+    background-size: 800px 100%;
+    animation: skeleton-shimmer 1.6s infinite linear;
+    border-radius: 6px;
+}
+
+/* Lighter variant for card headers etc. */
+.skeleton-light {
+    background: linear-gradient(
+        90deg,
+        #f1f5f9 25%,
+        #f8fafc 50%,
+        #f1f5f9 75%
+    );
+    background-size: 800px 100%;
+    animation: skeleton-shimmer 1.6s infinite linear;
+    border-radius: 6px;
+}
+
+/* Circular skeleton for avatars / icons */
+.skeleton-circle {
+    background: linear-gradient(
+        90deg,
+        #e2e8f0 25%,
+        #f1f5f9 50%,
+        #e2e8f0 75%
+    );
+    background-size: 800px 100%;
+    animation: skeleton-shimmer 1.6s infinite linear;
+    border-radius: 50%;
+}
+
+/* Page fade-in when real content loads */
+@keyframes page-enter {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-enter {
+    animation: page-enter 0.35s ease-out forwards;
+}
