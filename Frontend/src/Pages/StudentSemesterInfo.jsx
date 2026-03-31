@@ -44,7 +44,7 @@ function SemInfoCard({ record, onEdit, onDelete, isDeleting }) {
 
                 {/* Score */}
                 <div className="mb-3 pb-3 border-b border-slate-100">
-                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Marks</p>
+                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">End Sem Marks</p>
                     <p className="text-sm font-bold text-slate-800">
                         {totalScore} / {totalOutOf}
                         <span className="ml-1 text-xs font-medium text-slate-500">({percentage}%)</span>
@@ -461,14 +461,14 @@ export default function StudentSemesterInfo() {
                             {/* ── Marks ── */}
                             <div>
                                 <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-4 pb-3 border-b-2 border-blue-500">
-                                    Subject Marks
+                                    End Semester Marks
                                     <span className="text-slate-400 text-xs font-normal ml-2 uppercase">(Optional)</span>
                                 </h2>
                                 <div className="space-y-3">
                                     {/* Header */}
                                     <div className="hidden sm:grid sm:grid-cols-[2fr_1fr_1fr_auto] gap-3 px-1">
                                         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Subject</span>
-                                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Score</span>
+                                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">End Sem Score</span>
                                         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Out Of</span>
                                         <span />
                                     </div>
@@ -485,7 +485,7 @@ export default function StudentSemesterInfo() {
                                                 type="number"
                                                 value={mark.score}
                                                 onChange={(e) => handleMarkChange(idx, "score", e.target.value)}
-                                                placeholder="Score"
+                                                placeholder="End Sem"
                                                 min="0"
                                                 className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             />

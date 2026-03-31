@@ -571,7 +571,11 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
     try {
       const payload = new FormData();
       Object.keys(formData).forEach((key) => {
-        payload.append(key, formData[key]);
+        let value = formData[key];
+        if (typeof value === "string") {
+          value = value.trim();
+        }
+        payload.append(key, value);
       });
 
       if (placementProof) {
@@ -1381,7 +1385,11 @@ function HigherStudyFormModal({ isOpen, onClose, higherStudy, onSave }) {
     try {
       const payload = new FormData();
       Object.keys(formData).forEach((key) => {
-        payload.append(key, formData[key]);
+        let value = formData[key];
+        if (typeof value === "string") {
+          value = value.trim();
+        }
+        payload.append(key, value);
       });
 
       if (marksheet) {

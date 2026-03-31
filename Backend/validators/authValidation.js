@@ -161,10 +161,10 @@ const adminResetPasswordSchema = Joi.object({
         "Password must be 8-14 characters with uppercase, lowercase, number and special character.",
       "any.required": "New password is required."
     })
-}).options({ 
-  stripUnknown: true, 
-  convert: true, 
-  abortEarly: false 
+}).options({
+  stripUnknown: true,
+  convert: true,
+  abortEarly: false
 });
 
 
@@ -180,10 +180,10 @@ const divisionInchargeResetPasswordSchema = Joi.object({
         "Password must be 8-14 characters with uppercase, lowercase, number and special character.",
       "any.required": "New password is required."
     })
-}).options({ 
-  stripUnknown: true, 
-  convert: true, 
-  abortEarly: false 
+}).options({
+  stripUnknown: true,
+  convert: true,
+  abortEarly: false
 });
 
 
@@ -193,7 +193,7 @@ module.exports = {
   adminLoginSchema,
   divisionInchargeLoginSchema,
   forgotPasswordSchema,
-  resetPasswordSchema ,
-  adminResetPasswordSchema ,
+  resetPasswordSchema,
+  adminResetPasswordSchema,
   divisionInchargeResetPasswordSchema
 };

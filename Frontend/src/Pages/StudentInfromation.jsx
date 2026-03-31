@@ -206,7 +206,7 @@ export default function StudentInformation() {
 
       // Append all text fields
       Object.keys(formData).forEach(key => {
-        data.append(key, formData[key]);
+        data.append(key, typeof formData[key] === 'string' ? formData[key].trim() : formData[key]);
       });
 
       // Append photo if selected

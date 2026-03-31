@@ -6,87 +6,86 @@ import Pagination from "../components/Common/Pagination";
 // ==================== COMPONENTS ====================
 
 function AdmissionCard({ admission, onView, onEdit, onDelete, isDeleting }) {
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "approved":
-        return "bg-green-50 text-green-700 border-green-200";
-      case "rejected":
-        return "bg-red-50 text-red-700 border-red-200";
-      default:
-        return "bg-amber-50 text-amber-700 border-amber-200";
-    }
-  };
-
   // Safe Data Extraction
   const studentId =
     typeof admission?.stuID === "string"
       ? admission.stuID
       : admission?.stuID?.studentID || "N/A";
 
-  const studentName =
-    typeof admission?.stuID === "object" && admission.stuID?.name
-      ? typeof admission.stuID.name === "object"
-        ? `${admission.stuID.name.firstName || ""} ${admission.stuID.name.lastName || ""
-          }`.trim() || "Student"
-        : admission.stuID.name
-      : "Student";
+  const studentNameRaw = typeof admission?.stuID === "object" && admission.stuID?.name
+    ? admission.stuID.name
+    : "Student";
+  
+  const studentName = typeof studentNameRaw === "object"
+    ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim() || "Student"
+    : studentNameRaw || "Student";
+
+  const getStatusStyle = (status) => {
+    switch (status?.toLowerCase()) {
+      case "approved":
+        return { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500", border: "border-emerald-100" };
+      case "rejected":
+        return { bg: "bg-rose-50", text: "text-rose-700", dot: "bg-rose-500", border: "border-rose-100" };
+      default:
+        return { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500", border: "border-amber-100" };
+    }
+  };
+
+  const statusStyle = getStatusStyle(admission?.status);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-500 overflow-hidden flex flex-col h-full group relative">
-      {/* Top Banner - Subtle Status Color */}
-      <div className={`h-20 w-full bg-gradient-to-br transition-all duration-300 ${admission?.status === 'approved' ? 'from-emerald-600 to-teal-700' : admission?.status === 'rejected' ? 'from-rose-600 to-red-700' : 'from-blue-600 to-indigo-700'}`}>
-        <div className="absolute top-4 right-4 z-10">
-          <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full bg-white/20 backdrop-blur-md text-white border border-white/20`}>
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group">
+      {/* Compact Top Accent */}
+      <div className={`h-1.5 w-full ${statusStyle.dot}`}></div>
+
+      {/* Card Body */}
+      <div className="p-5 flex flex-col flex-grow relative">
+        {/* Status Badge moved to Body */}
+        <div className="absolute top-4 right-4">
+          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border} shadow-sm`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot} animate-pulse`}></span>
             {admission?.status || "Pending"}
           </span>
         </div>
-      </div>
 
-      {/* Profile Photo (Initial-Avatar) */}
-      <div className="relative px-6 -mt-10 mb-4 flex items-end justify-between">
-        <div className="w-20 h-20 rounded-2xl bg-white p-1.5 shadow-xl group-hover:scale-105 transition-transform duration-500">
-          <div className={`w-full h-full rounded-xl flex items-center justify-center text-2xl font-black text-white shadow-inner bg-gradient-to-br ${admission?.status === 'approved' ? 'from-emerald-500 to-teal-600' : admission?.status === 'rejected' ? 'from-rose-500 to-red-600' : 'from-blue-500 to-indigo-600'}`}>
-            {studentName.charAt(0)}
-          </div>
-        </div>
-        <div className="text-right pb-1">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Student ID</p>
-          <p className="text-xs font-bold text-slate-700 font-mono tracking-tighter">{studentId}</p>
-        </div>
-      </div>
-
-      {/* Card Body */}
-      <div className="px-6 pb-6 flex flex-col flex-grow">
         <div className="mb-4">
-          <h3 className="text-lg font-black text-slate-900 tracking-tight leading-tight mb-0.5 group-hover:text-blue-600 transition-colors">
+          <div className="mb-1">
+            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] bg-blue-50 px-2 py-0.5 rounded">
+              Admission
+            </span>
+          </div>
+          <h3 className="text-base font-bold text-slate-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors">
             {studentName}
           </h3>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Admission Record</p>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID:</span>
+            <span className="text-xs font-semibold text-slate-600 font-mono tracking-tight">{studentId}</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-slate-100">
+        <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-50 mb-5">
           <div>
-            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Course</span>
-            <span className="text-xs font-bold text-slate-700 truncate block">{admission?.course || "N/A"}</span>
+            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Course</span>
+            <span className="text-xs font-semibold text-slate-700 truncate block">{admission?.course || "N/A"}</span>
           </div>
           <div className="text-right">
-            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Roll Number</span>
-            <span className="text-xs font-bold text-slate-700 block">{admission?.rollno || "N/A"}</span>
+            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Roll No</span>
+            <span className="text-xs font-semibold text-slate-700 block">{admission?.rollno || "N/A"}</span>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-auto flex flex-col gap-2">
+        {/* Action Buttons - Logic Unchanged */}
+        <div className="mt-auto space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => onView && onView(admission)}
-              className="px-3 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+              className="px-3 py-2.5 bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              View Details
+              View
             </button>
             <button
               onClick={() => onEdit && onEdit(admission)}
-              className="px-3 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all shadow-sm active:scale-95"
+              className="px-3 py-2.5 bg-blue-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-blue-700 transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2"
             >
               Edit
             </button>
@@ -94,12 +93,12 @@ function AdmissionCard({ admission, onView, onEdit, onDelete, isDeleting }) {
           <button
             onClick={() => onDelete && onDelete(admission._id)}
             disabled={isDeleting}
-            className={`w-full px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors border active:scale-95 ${isDeleting
-              ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+            className={`w-full px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all border active:scale-95 ${isDeleting
+              ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed"
               : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
               }`}
           >
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting ? "Deleting..." : "Delete Record"}
           </button>
         </div>
       </div>
@@ -285,6 +284,13 @@ function AddAdmissionModal({ isOpen, onClose, onAdded }) {
       setSaving(true);
 
       const submitData = { ...form };
+      // Trim all string inputs
+      Object.keys(submitData).forEach((key) => {
+        if (typeof submitData[key] === "string") {
+          submitData[key] = submitData[key].trim();
+        }
+      });
+
       // Clean up irrelevant fields based on booleans to prevent Joi errors
 
       if (submitData.isScholarshipApplied) {
@@ -518,7 +524,7 @@ function EditAdmissionModal({ isOpen, onClose, onSaved, admission }) {
 
         // Only include fields that modified and are not empty
         if (form[key] !== originalValue && form[key] !== "") {
-          updateData[key] = form[key];
+          updateData[key] = typeof form[key] === "string" ? form[key].trim() : form[key];
         }
       });
 
@@ -871,25 +877,23 @@ export default function AdminAdmission() {
       {/* FILTER BAR - Only showing filters supported by Backend Joi Schema */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 mb-8 flex flex-wrap gap-3 sm:gap-4 items-center">
         <div className="flex-1 min-w-[300px]">
-          <div className="relative">
-            <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <div className="relative group">
+            <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             <input
               type="text"
               placeholder="Search by course or academic year..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-bold placeholder:font-normal"
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm font-semibold placeholder:font-normal"
             />
           </div>
-          <p className="text-[10px] text-slate-500 mt-1.5 ml-1">
-            <span className="font-semibold text-blue-600">Note:</span> Search box filters by <strong className="text-slate-700">Course</strong> or other text fields.
-          </p>        </div>
+        </div>
 
         <div className="flex flex-wrap gap-3 items-center">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full md:w-auto px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm shadow-slate-100"
+            className="w-full md:w-auto px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none"
           >
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
@@ -900,7 +904,7 @@ export default function AdminAdmission() {
           <select
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}
-            className="w-full md:w-auto px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm shadow-slate-100"
+            className="w-full md:w-auto px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none"
           >
             <option value="">All Years</option>
             <option value="SE">SE</option>
@@ -911,7 +915,7 @@ export default function AdminAdmission() {
           <select
             value={scholarshipFilter}
             onChange={(e) => setScholarshipFilter(e.target.value)}
-            className="w-full md:w-auto px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm shadow-slate-100"
+            className="w-full md:w-auto px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none"
           >
             <option value="">Scholarship</option>
             <option value="true">Applied</option>
@@ -921,7 +925,7 @@ export default function AdminAdmission() {
           <select
             value={mahadbtFilter}
             onChange={(e) => setMahadbtFilter(e.target.value)}
-            className="w-full md:w-auto px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm shadow-slate-100"
+            className="w-full md:w-auto px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none"
           >
             <option value="">MahaDBT Form</option>
             <option value="true">Submitted</option>
@@ -931,7 +935,7 @@ export default function AdminAdmission() {
           <select
             value={migrationFilter}
             onChange={(e) => setMigrationFilter(e.target.value)}
-            className="w-full md:w-auto px-4 py-3 border border-slate-300 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold transition-all shadow-sm shadow-slate-100"
+            className="w-full md:w-auto px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none"
           >
             <option value="">Migration Cert.</option>
             <option value="true">Available</option>
@@ -939,44 +943,15 @@ export default function AdminAdmission() {
           </select>
         </div>
 
-        <div className="flex flex-wrap gap-3 w-full md:w-auto md:ml-auto">
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex-1 sm:flex-none px-6 py-3 bg-emerald-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-            Add
-          </button>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg p-2 flex-1 sm:flex-none">
-            <button
-              onClick={handleExport}
-              disabled={exporting || admissions.length === 0}
-              className={`w-full sm:w-auto px-6 py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${exporting || admissions.length === 0
-                  ? "bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200"
-                  : "bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100"
-                }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              {exporting ? "Exporting..." : "Export"}
-            </button>
-            <div className="text-[11px] text-slate-600 leading-tight normal-case tracking-normal font-medium text-left">
-              <span className="font-bold text-slate-800 block mb-0.5">How to export:</span>
-              1. Click <span className="font-bold text-slate-900">Find</span> to apply filters.<br />
-              2. Click <span className="font-bold text-blue-600">Export</span> to download data.
-            </div>
-          </div>
-
+        <div className="flex flex-wrap gap-3 w-full md:w-auto md:ml-auto items-center">
           <button
             onClick={handleFind}
-            className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-slate-900 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 group"
+            className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-2"
           >
-            <svg className="w-4 h-4 group-hover:scale-125 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            Find
+            Find Admission
           </button>
 
           {(searchQuery || yearFilter || statusFilter || scholarshipFilter || mahadbtFilter || migrationFilter) && (
@@ -989,8 +964,6 @@ export default function AdminAdmission() {
                 setMahadbtFilter("");
                 setMigrationFilter("");
                 setCurrentPage(1);
-
-                // Immediately fetch with empty params to bypass stale state values
                 setLoading(true);
                 admissionService.getAllAdmissions({ page: 1, limit }).then(response => {
                   setAdmissions(response.data || []);
@@ -998,12 +971,48 @@ export default function AdminAdmission() {
                   setTotalPages(response.totalPages || 1);
                 }).catch(console.error).finally(() => setLoading(false));
               }}
-              className="flex-1 sm:flex-none px-4 py-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="flex-1 sm:flex-none px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 transition flex items-center justify-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               Clear
             </button>
           )}
+
+          {/* Action Buttons Group */}
+          <div className="flex flex-wrap gap-3 w-full md:w-auto md:ml-auto">
+            {/* Export Section */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg p-2 flex-1 sm:flex-none">
+              <button
+                onClick={handleExport}
+                disabled={exporting || admissions.length === 0}
+                className={`w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm flex items-center justify-center gap-2 ${exporting || admissions.length === 0
+                  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                  : "bg-green-600 text-white hover:bg-green-700 shadow-xl shadow-green-100"
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {exporting ? "..." : "Export"}
+              </button>
+              <div className="text-[11px] text-slate-600 leading-tight">
+                <span className="font-semibold text-slate-800 block mb-0.5">How to export:</span>
+                1. Click <span className="font-semibold text-blue-600">Find</span> to filter.<br />
+                2. Click <span className="font-semibold text-green-600">Export</span> data.
+              </div>
+            </div>
+
+            {/* Add Button */}
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex-1 sm:flex-none px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Admission
+            </button>
+          </div>
         </div>
       </div>
 

@@ -391,12 +391,16 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
     try {
       const data = new FormData();
       Object.keys(formData).forEach((key) => {
+        let value = formData[key];
+        if (typeof value === 'string') {
+          value = value.trim();
+        }
         if (key === "dateFrom") {
-          data.append("date[from]", formData[key]);
+          data.append("date[from]", value);
         } else if (key === "dateTo") {
-          data.append("date[to]", formData[key]);
+          data.append("date[to]", value);
         } else {
-          data.append(key, formData[key]);
+          data.append(key, value);
         }
       });
       // Admin Hardcode: activity Type is always "Committee"
@@ -730,13 +734,13 @@ export default function AdminActivity() {
     <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Manage Activities</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Manage Curricular Activities</h1>
         <p className="text-slate-600 mt-2">
           Showing{" "}
           <span className="font-semibold text-blue-600">
             {totalRecords}
           </span>{" "}
-          activities
+          curricular activities
         </p>
       </div>
 
@@ -797,7 +801,7 @@ export default function AdminActivity() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Find Activities
+              Find Curricular Activities
             </button>
 
             {(searchQuery || selectedYear || selectedDivision) && (
@@ -842,7 +846,7 @@ export default function AdminActivity() {
               onClick={handleAddActivity}
               className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
             >
-              + Add Activity
+              + Add Curricular Activity
             </button>
           </div>
         </div>

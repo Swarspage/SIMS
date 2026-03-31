@@ -143,7 +143,7 @@ function DetailModal({ record, onClose }) {
                       <thead>
                         <tr className="border-b border-slate-50">
                           <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject Name</th>
-                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Score</th>
+                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">End Sem Score</th>
                           <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Out Of</th>
                           <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Percentage</th>
                         </tr>
@@ -264,97 +264,87 @@ function SemInfoCard({ record, onView, onDelete, onEdit, isDeleting }) {
   const attendancePct = record.attendance || 0;
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full group">
-      {/* Visual Indicator Top Bar */}
-      <div className={`h-1.5 bg-gradient-to-r ${attendancePct >= 75 ? 'from-blue-500 to-indigo-600' : 'from-red-500 to-orange-600'}`}></div>
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group">
+      {/* Compact Top Accent */}
+      <div className={`h-1.5 w-full ${attendancePct >= 75 ? 'bg-blue-500' : 'bg-red-500'}`}></div>
 
-      <div className="p-4 flex flex-col flex-grow">
-        {/* Top Info: Semester & Chips */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex gap-1.5">
-            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded uppercase tracking-tighter border border-indigo-100">
-              SEM {record.semester}
+      <div className="p-5 flex flex-col flex-grow relative">
+        {/* Chips and Badges moved to Body */}
+        <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
+          <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded-full uppercase tracking-wider border border-indigo-100 shadow-sm">
+            SEM {record.semester}
+          </span>
+          {record.isDefaulter && (
+            <span className="px-2.5 py-1 bg-red-50 text-red-700 text-[10px] font-bold rounded-full uppercase tracking-wider border border-red-100 shadow-sm animate-pulse">
+              DEFAULTER
             </span>
-            {record.isDefaulter && (
-              <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-black rounded uppercase tracking-tighter border border-red-200">
-                DEFAULTER
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] font-black text-slate-400 tracking-widest">{studentYear}</span>
+          )}
         </div>
 
         {/* Student Name & ID */}
         <div className="mb-4">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Student Info</p>
+          <div className="mb-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+              {studentYear} • Div {typeof record.stuID === 'object' ? record.stuID?.division : "N/A"}
+            </span>
+          </div>
           {loadingName ? (
             <div className="h-5 bg-slate-100 animate-pulse rounded w-3/4 mb-1"></div>
           ) : (
-            <h4 className="text-sm font-black text-slate-900 line-clamp-1">
+            <h4 className="text-base font-bold text-slate-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-1">
               {studentName || "Name Not Registered"}
             </h4>
           )}
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">ID:</span>
-            <span className="text-[10px] font-bold text-indigo-600">{studentID}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID:</span>
+            <span className="text-xs font-semibold text-indigo-600 font-mono tracking-tight">{studentID}</span>
           </div>
         </div>
 
-        <div className="h-px bg-slate-100 mb-4" />
+        <div className="h-px bg-slate-50 mb-4" />
 
         {/* Vital Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-4 mb-5">
           <div>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Attendance</p>
-            <div className="flex items-center gap-1.5">
-              <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div className={`h-full rounded-full transition-all duration-500 ${attendancePct >= 75 ? 'bg-blue-600' : 'bg-red-500'}`} style={{ width: `${attendancePct}%` }}></div>
-              </div>
-              <span className={`text-[11px] font-black ${attendancePct >= 75 ? 'text-blue-600' : 'text-red-500'}`}>{attendancePct}%</span>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex justify-between">
+              Attendance <span>{attendancePct}%</span>
+            </p>
+            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div className={`h-full rounded-full transition-all duration-700 ${attendancePct >= 75 ? 'bg-blue-500' : 'bg-red-500'}`} style={{ width: `${attendancePct}%` }}></div>
             </div>
           </div>
-          <div>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Backlogs</p>
-            <p className={`text-[11px] font-black ${record.kts?.length > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+          <div className="text-right">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Backlogs</p>
+            <p className={`text-xs font-bold ${record.kts?.length > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
               {record.kts?.length || 0} Subjects
             </p>
           </div>
         </div>
 
-        {/* Compliance Icons/Chips */}
-        <div className="flex gap-2 mb-4">
-          <div className={`flex-1 px-2 py-1 rounded-md text-[9px] font-black italic text-center border ${record.journalTaken ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
-            JRN: {record.journalTaken ? 'YES' : 'PEND'}
-          </div>
-          <div className={`flex-1 px-2 py-1 rounded-md text-[9px] font-black italic text-center border ${record.examFormFilled ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
-            EXM: {record.examFormFilled ? 'FILL' : 'PEND'}
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className=" space-y-2">
+        {/* Action Buttons - Logic Unchanged */}
+        <div className="mt-auto space-y-2">
           <button
             onClick={() => onView && onView(record)}
-            className="w-full px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+            className="w-full px-3 py-2.5 bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-slate-200 transition-all flex items-center justify-center gap-2 shadow-sm"
           >
-            View Evaluation
+            Full Evaluation
           </button>
-          <div className="flex gap-2 w-full">
+          <div className="flex gap-2">
             <button
               onClick={() => onEdit && onEdit(record)}
-              className="flex-1 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-lg hover:bg-amber-100 transition-colors border border-amber-100"
+              className="flex-1 px-3 py-2.5 bg-blue-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2"
             >
               Edit
             </button>
             <button
               onClick={() => onDelete && onDelete(record._id)}
               disabled={isDeleting}
-              className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors border ${isDeleting
-                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                : "bg-red-50 text-red-700 hover:bg-red-100 border-red-100"
+              className={`flex-1 px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all border ${isDeleting
+                ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed"
+                : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
                 }`}
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? "..." : "Delete"}
             </button>
           </div>
         </div>
@@ -463,7 +453,7 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
       const payload = {
         semester: Number(formData.semester),
         attendance: Number(formData.attendance),
-        kts: formData.kts.filter(kt => kt.trim() !== ""),
+        kts: formData.kts.filter(kt => kt.trim() !== "").map(kt => kt.trim()),
         marks: formData.marks.filter(m => m.subject.trim() !== "").map(m => ({
           subject: m.subject.trim(),
           score: Number(m.score),
@@ -473,7 +463,7 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
         examFormFilled: formData.examFormFilled
       };
 
-      if (!record) { payload.studentId = formData.studentId; }
+      if (!record) { payload.studentId = formData.studentId.trim(); }
 
       if (record) {
         await semInfoService.updateSemInfo(record._id, payload);
@@ -571,7 +561,7 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <div className="h-6 w-1.5 bg-indigo-500 rounded-full"></div>
-                <h4 className="text-lg font-bold text-slate-800">Subject Marks</h4>
+                <h4 className="text-lg font-bold text-slate-800">End Semester Marks</h4>
               </div>
               <button type="button" onClick={handleAddMark} className="px-4 py-2 bg-indigo-50 text-indigo-700 text-sm font-bold rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors shadow-sm">
                 + Add Subject
@@ -597,10 +587,10 @@ function SemInfoFormModal({ isOpen, onClose, record, onSave }) {
                         />
                       </div>
                       <div className="w-1/3 md:w-32">
-                        <label className={`${labelClass} hidden md:block opacity-0 group-hover:opacity-100 transition-opacity`}>Score</label>
+                        <label className={`${labelClass} hidden md:block opacity-0 group-hover:opacity-100 transition-opacity`}>End Sem Score</label>
                         <input
                           type="number"
-                          placeholder="Score"
+                          placeholder="End Sem"
                           required
                           min="0"
                           value={mark.score}

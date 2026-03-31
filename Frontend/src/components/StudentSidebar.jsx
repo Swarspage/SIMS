@@ -5,8 +5,8 @@ import logo from "../assets/logo.png";
 const menuItems = [
   { name: "Dashboard", path: "/student/dashboard" },
   { name: "Admission", path: "/student/admission" },
-  { name: "Information", path: "/student/information" },
-  { name: "Activities", path: "/student/activity" },
+  { name: "Personal Info", path: "/student/information" },
+  { name: "Curricular Activities", path: "/student/activity" },
   { name: "Achievements", path: "/student/achievements" },
   { name: "Internships", path: "/student/internship" },
   { name: "Placements & Higher Studies", path: "/student/placement" },
@@ -39,14 +39,14 @@ function getIcon(name, isActive) {
           <path d="M8.5 12.5l3.5 2 3.5-2" />
         </svg>
       );
-    case "Information":
+    case "Personal Info":
       return (
         <svg {...common} viewBox="0 0 24 24">
           <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4z" />
           <path d="M6 20v-1a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v1" />
         </svg>
       );
-    case "Activities":
+    case "Curricular Activities":
       return (
         <svg {...common} viewBox="0 0 24 24">
           <path d="M3 12h3l3 8 4-16 3 8h4" />

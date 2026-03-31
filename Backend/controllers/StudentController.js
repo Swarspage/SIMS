@@ -99,8 +99,8 @@ const importStudentIDs = async (req, res) => {
 
     // Check only two column
     const studentIDColIndex = headers.findIndex(h => h === "studentid") + 1;
-    const emailColIndex     = headers.findIndex(h => h === "email")     + 1;
- 
+    const emailColIndex = headers.findIndex(h => h === "email") + 1;
+
     if (studentIDColIndex === 0 || emailColIndex === 0) {
       return res.status(400).json({
         success: false,
@@ -108,18 +108,18 @@ const importStudentIDs = async (req, res) => {
       });
     }
 
-    const emailRegex  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const validRows   = [];
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const validRows = [];
     const invalidRows = [];
- 
+
     worksheet.eachRow((row, rowNumber) => {
       if (rowNumber === 1) return; // skip header
- 
+
       const studentID = getCellValue(row.getCell(studentIDColIndex));
       if (!studentID) return; // skip blank rows silently
- 
+
       const email = getCellValue(row.getCell(emailColIndex));
- 
+
       if (!email || !emailRegex.test(email)) {
         invalidRows.push({
           row: rowNumber,
@@ -128,10 +128,10 @@ const importStudentIDs = async (req, res) => {
         });
         return;
       }
- 
+
       validRows.push({ studentID, email: email.toLowerCase() });
     });
- 
+
     if (validRows.length === 0) {
       return res.status(400).json({
         success: false,
@@ -139,27 +139,27 @@ const importStudentIDs = async (req, res) => {
         ...(invalidRows.length > 0 && { invalidRows })
       });
     }
- 
+
     // Deduplicate within the file (keep first occurrence per studentID) 
     const uniqueStudents = [
       ...new Map(validRows.map(s => [s.studentID, s])).values()
     ];
- 
+
     //Check existing records in DB 
     const existingStudents = await Student.find({
       studentID: { $in: uniqueStudents.map(s => s.studentID) }
     }).select("studentID email");
- 
+
     const existingMap = new Map(existingStudents.map(s => [s.studentID, s]));
- 
+
     //Categorise each row 
-    const toInsert      = []; // brand-new students
+    const toInsert = []; // brand-new students
     const toUpdateEmail = []; // exists but no email yet → patch
-    const skipped       = []; // exists and already has an email → skip
- 
+    const skipped = []; // exists and already has an email → skip
+
     for (const s of uniqueStudents) {
       const existing = existingMap.get(s.studentID);
- 
+
       if (!existing) {
         toInsert.push({ studentID: s.studentID, email: s.email });
       } else if (!existing.email) {
@@ -168,16 +168,16 @@ const importStudentIDs = async (req, res) => {
         skipped.push(s.studentID);
       }
     }
- 
+
     // Persist
     let insertedCount = 0;
-    let updatedCount  = 0;
- 
+    let updatedCount = 0;
+
     if (toInsert.length > 0) {
       await Student.insertMany(toInsert);
       insertedCount = toInsert.length;
     }
- 
+
     if (toUpdateEmail.length > 0) {
       const bulkOps = toUpdateEmail.map(s => ({
         updateOne: {
@@ -188,25 +188,25 @@ const importStudentIDs = async (req, res) => {
       await Student.bulkWrite(bulkOps);
       updatedCount = toUpdateEmail.length;
     }
- 
+
     // Response 
     return res.status(200).json({
       success: true,
       message: "Student IDs and emails imported successfully",
       summary: {
-        totalRowsInFile  : validRows.length + invalidRows.length,
-        validRows        : validRows.length,
-        uniqueInFile     : uniqueStudents.length,
-        inserted         : insertedCount,
-        emailPatched     : updatedCount,
-        skipped          : skipped.length,
-        invalidEmailRows : invalidRows.length,
+        totalRowsInFile: validRows.length + invalidRows.length,
+        validRows: validRows.length,
+        uniqueInFile: uniqueStudents.length,
+        inserted: insertedCount,
+        emailPatched: updatedCount,
+        skipped: skipped.length,
+        invalidEmailRows: invalidRows.length,
       },
       ...(invalidRows.length > 0 && { invalidRows })
     });
- 
+
   } catch (error) {
-    errorLogger(error,req, "Import student ids Controller")
+    errorLogger(error, req, "Import student ids Controller")
     return res.status(500).json({
       success: false,
       message: "Error importing student data"
@@ -218,232 +218,232 @@ const importStudentIDs = async (req, res) => {
 
 //importExcelDataWithPasswords
 const importExcelDataWithPasswords = async (req, res) => {
-	try {
-		if (!req.file) {
-			return res.status(400).json({
-				success: false,
-				message: "No file uploaded"
-			});
-		}
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded"
+      });
+    }
 
-		if (!allowedTypes.includes(req.file.mimetype)) {
-			return res.status(400).json({ success: false, message: "" });
-		}
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ success: false, message: "" });
+    }
 
-		if (req.file.size > MAX_FILE_SIZE) {
-			return res.status(400).json({
-				success: false,
-				message: "Excel file size must be less than or equal to 1MB"
-			});
-		}
+    if (req.file.size > MAX_FILE_SIZE) {
+      return res.status(400).json({
+        success: false,
+        message: "Excel file size must be less than or equal to 1MB"
+      });
+    }
 
-		const workbook = new ExcelJS.Workbook();
-		await workbook.xlsx.load(req.file.buffer);
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(req.file.buffer);
 
-		const worksheet = workbook.worksheets[0];
-		if (!worksheet) {
-			return res.status(400).json({
-				success: false,
-				message: "Excel file is empty"
-			});
-		}
+    const worksheet = workbook.worksheets[0];
+    if (!worksheet) {
+      return res.status(400).json({
+        success: false,
+        message: "Excel file is empty"
+      });
+    }
 
-		const headerRow = worksheet.getRow(1);
-		const headers = headerRow.values
-		.slice(1)
-		.map(h => h?.toString().trim().toLowerCase());
+    const headerRow = worksheet.getRow(1);
+    const headers = headerRow.values
+      .slice(1)
+      .map(h => h?.toString().trim().toLowerCase());
 
-		const studentIDColIndex = headers.findIndex(h => h.includes("studentid")) + 1;
-		const emailColIndex = headers.findIndex(h => h.includes("email")) + 1;
+    const studentIDColIndex = headers.findIndex(h => h.includes("studentid")) + 1;
+    const emailColIndex = headers.findIndex(h => h.includes("email")) + 1;
 
-		if (studentIDColIndex === 0 || emailColIndex === 0) {
-			return res.status(400).json({
-				success: false,
-				message: "Excel must contain 'studentID' and 'email' columns"
-			});
-		}
+    if (studentIDColIndex === 0 || emailColIndex === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Excel must contain 'studentID' and 'email' columns"
+      });
+    }
 
-		const rawData = [];
+    const rawData = [];
 
-		worksheet.eachRow((row, rowNumber) => {
-			if (rowNumber === 1) return;
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
 
-			rawData.push({
-				studentID: getCellValue(row.getCell(studentIDColIndex)),
-				email: getCellValue(row.getCell(emailColIndex))
-			});
-		});
+      rawData.push({
+        studentID: getCellValue(row.getCell(studentIDColIndex)),
+        email: getCellValue(row.getCell(emailColIndex))
+      });
+    });
 
-		const filteredData = rawData.filter(i => i.studentID && i.email);
+    const filteredData = rawData.filter(i => i.studentID && i.email);
 
-		const receivedStudents = filteredData.map(s => ({
-			studentID: s.studentID,
-			email: s.email
-		}));
+    const receivedStudents = filteredData.map(s => ({
+      studentID: s.studentID,
+      email: s.email
+    }));
 
-		if (filteredData.length === 0) {
-			return res.status(400).json({
-				success: false,
-				message: "No valid studentID or email fields found"
-			});
-		}
+    if (filteredData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid studentID or email fields found"
+      });
+    }
 
-		if (filteredData.length > 100) {
-			return res.status(400).json({
-				success: false,
-				message: "Excel file can contain max 100 students due to email limits."
-			});
-		}
+    if (filteredData.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Excel file can contain max 100 students due to email limits."
+      });
+    }
 
-		const studentsToSave = [];
-		const emailJobs = [];
-		const failedStudents = [];
+    const studentsToSave = [];
+    const emailJobs = [];
+    const failedStudents = [];
 
-		for (const data of filteredData) {
-			const { error } = importExcelSchema.validate(data, { abortEarly: false });
+    for (const data of filteredData) {
+      const { error } = importExcelSchema.validate(data, { abortEarly: false });
 
-			if (error) {
-				failedStudents.push({
-				studentID: data.studentID,
-				email: data.email,
-				error: error.details.map(e => ({
-					field: e.path[0],
-					message: e.message
-				}))
-				});
-				continue;
-			}
+      if (error) {
+        failedStudents.push({
+          studentID: data.studentID,
+          email: data.email,
+          error: error.details.map(e => ({
+            field: e.path[0],
+            message: e.message
+          }))
+        });
+        continue;
+      }
 
-			const randomPassword = generateRandomPassword(14);
-			const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      const randomPassword = generateRandomPassword(14);
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-			studentsToSave.push({
-				studentID: data.studentID,
-				email: data.email,
-				password: hashedPassword
-			});
+      studentsToSave.push({
+        studentID: data.studentID,
+        email: data.email,
+        password: hashedPassword
+      });
 
-			emailJobs.push({
-				studentID: data.studentID,
-				email: data.email,
-				password: randomPassword
-			});
-		}
+      emailJobs.push({
+        studentID: data.studentID,
+        email: data.email,
+        password: randomPassword
+      });
+    }
 
-		// ---------------- CHECK EXISTING EMAILS ----------------
-		const existingStudents = await Student.find({
-			email: { $in: studentsToSave.map(s => s.email) }
-		}).select("email");
+    // ---------------- CHECK EXISTING EMAILS ----------------
+    const existingStudents = await Student.find({
+      email: { $in: studentsToSave.map(s => s.email) }
+    }).select("email");
 
-		const existingEmailSet = new Set(existingStudents.map(s => s.email));
+    const existingEmailSet = new Set(existingStudents.map(s => s.email));
 
-		// Mark duplicates as failed
-		studentsToSave.forEach(student => {
-			if (existingEmailSet.has(student.email)) {
-				failedStudents.push({
-					studentID: student.studentID,
-					email: student.email,
-					error: "Email already exists in database"
-				});
-			}
-		});
+    // Mark duplicates as failed
+    studentsToSave.forEach(student => {
+      if (existingEmailSet.has(student.email)) {
+        failedStudents.push({
+          studentID: student.studentID,
+          email: student.email,
+          error: "Email already exists in database"
+        });
+      }
+    });
 
-		// Filter only new students
-		const newStudents = studentsToSave.filter(
-			s => !existingEmailSet.has(s.email)
-		);
+    // Filter only new students
+    const newStudents = studentsToSave.filter(
+      s => !existingEmailSet.has(s.email)
+    );
 
-		// ---------------- INSERT NEW STUDENTS ----------------
-		let insertedStudents = [];
+    // ---------------- INSERT NEW STUDENTS ----------------
+    let insertedStudents = [];
 
-		if (newStudents.length > 0) {
-			insertedStudents = await Student.insertMany(newStudents);
-		}
+    if (newStudents.length > 0) {
+      insertedStudents = await Student.insertMany(newStudents);
+    }
 
-		const insertedEmailSet = new Set(insertedStudents.map(s => s.email));
+    const insertedEmailSet = new Set(insertedStudents.map(s => s.email));
 
-		const insertedStudentsList = insertedStudents.map(s => ({
-			studentID: s.studentID,
-			email: s.email
-		}));
+    const insertedStudentsList = insertedStudents.map(s => ({
+      studentID: s.studentID,
+      email: s.email
+    }));
 
-		// Send email only to inserted students
-		const validEmailJobs = emailJobs.filter(job =>
-			insertedEmailSet.has(job.email)
-		);
+    // Send email only to inserted students
+    const validEmailJobs = emailJobs.filter(job =>
+      insertedEmailSet.has(job.email)
+    );
 
-		let emailedStudents = [];
+    let emailedStudents = [];
 
 
-		// -------- Send email in batches: 5 emails, 3s delay --------
-		const BATCH_SIZE = 5;
-		const DELAY = 3000;
+    // -------- Send email in batches: 5 emails, 3s delay --------
+    const BATCH_SIZE = 5;
+    const DELAY = 3000;
 
-		const sendWithDelay = (ms) => new Promise(res => setTimeout(res, ms));
+    const sendWithDelay = (ms) => new Promise(res => setTimeout(res, ms));
 
-		for (let i = 0; i < validEmailJobs.length; i += BATCH_SIZE) {
-			const batch = validEmailJobs.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < validEmailJobs.length; i += BATCH_SIZE) {
+      const batch = validEmailJobs.slice(i, i + BATCH_SIZE);
 
-			await Promise.all(
-				batch.map(async (job) => {
-					try {
+      await Promise.all(
+        batch.map(async (job) => {
+          try {
 
             await sendEmailBrevo({
-                toEmail: job.email,
-                subject: "Student Account Created",
-                htmlContent: `
+              toEmail: job.email,
+              subject: "Student Account Created",
+              htmlContent: `
                   <h2>Hello ${job.studentID},</h2>
                   <p>Your Student account has been created. Please save this email so that even if you forget password, you can get back to this email. As currently we dont have a way to reset password in the system yet.</p>
                   <p><b>Email:</b> ${job.email}</p>
                   <p><b>Password:</b> ${job.password}</p>
                 `
-              });
-
-              
-
-						// Push to array only after successful send
-						emailedStudents.push({
-							studentID: job.studentID,
-							email: job.email
-						});
-
-					} catch (err) {
-						console.error(`Email failed for ${job.studentID}:`, err.message);
-
-						failedStudents.push({
-							studentID: job.studentID,
-							email: job.email,
-							error: "Email failed to send"
-						});
-					}
-				})
-			);
+            });
 
 
-			if (i + BATCH_SIZE < validEmailJobs.length) {
-				await sendWithDelay(DELAY);
-			}
-		}
 
-		return res.status(200).json({
-			success: true,
-			message: `Import completed`,
-			summary: {
-				received: filteredData.length,
-				inserted: insertedStudents.length,
-				emailed: emailedStudents.length,
-				failed: failedStudents.length
-			},
-			receivedStudents,
-			insertedStudents: insertedStudentsList,
-			emailedStudents,
-			failedStudents
-		});
+            // Push to array only after successful send
+            emailedStudents.push({
+              studentID: job.studentID,
+              email: job.email
+            });
 
-	} catch (error) {
-		console.error("Import error:", error);
-		return res.status(500).json({ success: false, message: "Error importing Excel data" });
-	}
+          } catch (err) {
+            console.error(`Email failed for ${job.studentID}:`, err.message);
+
+            failedStudents.push({
+              studentID: job.studentID,
+              email: job.email,
+              error: "Email failed to send"
+            });
+          }
+        })
+      );
+
+
+      if (i + BATCH_SIZE < validEmailJobs.length) {
+        await sendWithDelay(DELAY);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Import completed`,
+      summary: {
+        received: filteredData.length,
+        inserted: insertedStudents.length,
+        emailed: emailedStudents.length,
+        failed: failedStudents.length
+      },
+      receivedStudents,
+      insertedStudents: insertedStudentsList,
+      emailedStudents,
+      failedStudents
+    });
+
+  } catch (error) {
+    console.error("Import error:", error);
+    return res.status(500).json({ success: false, message: "Error importing Excel data" });
+  }
 };
 
 
@@ -654,7 +654,7 @@ const addStudentDetails = async (req, res) => {
       return res.status(401).json({ success: false, message: "Unauthorized access" });
     }
 
-    
+
     const existingStudent = await Student.findById(studentId);
 
     if (!existingStudent) {
@@ -738,7 +738,7 @@ const addStudentDetails = async (req, res) => {
         parentEmail: value.parentEmail,
         abcId: value.abcId,
         studentPhoto,
-        academicYear : value.academicYear,
+        academicYear: value.academicYear,
       },
       { new: true }
     );
@@ -757,7 +757,7 @@ const addStudentDetails = async (req, res) => {
       return res.status(400).json({ success: false, message: "This PRN already already exists." });
     }
 
-    errorLogger(err,req, "Add Student Details Controller")
+    errorLogger(err, req, "Add Student Details Controller")
 
     // Rollback uploaded file if DB save fails
     if (!dbSaved && uploadedFiles) {
@@ -811,7 +811,7 @@ const updateStudent = async (req, res) => {
     // Verify for division Incharge
     if (req.user.role === "divisionIncharge") {
 
-      if ( student.year !== req.user.year || student.division !== req.user.division ) {
+      if (student.year !== req.user.year || student.division !== req.user.division) {
         return res.status(403).json({ success: false, message: "You can only update your division's student details." });
       }
     }
@@ -884,8 +884,8 @@ const updateStudent = async (req, res) => {
     }
 
     if (Object.keys(updatedData).length === 0) {
-			return res.status(400).json({ success: false, message: "No valid fields provided for update" });
-		}
+      return res.status(400).json({ success: false, message: "No valid fields provided for update" });
+    }
 
     // Update student in DB
     const updatedStudent = await Student.findByIdAndUpdate(
@@ -912,7 +912,7 @@ const updateStudent = async (req, res) => {
     return res.status(200).json({ success: true, message: "Student updated successfully", data: updatedStudent });
 
   } catch (err) {
-    errorLogger(err,req, "Update Student Controller")
+    errorLogger(err, req, "Update Student Controller")
 
     // Rollback uploaded file if DB save fails
     if (!dbSaved && uploadedFiles) {
@@ -968,122 +968,122 @@ const deleteStudent = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Student deleted successfully" });
   } catch (err) {
-    errorLogger(err,req, "Delete Student Controller")
+    errorLogger(err, req, "Delete Student Controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
 // GET STUDENTS (with optional pagination + export) — admin and divisionIncharge only
 const getStudents = async (req, res) => {
-    try {
-        const isExport = req.query.export === 'true';
+  try {
+    const isExport = req.query.export === 'true';
 
-        // Validate input using Joi
-        const { error, value } = getStudentsValidation.validate(req.query, {
-            abortEarly: false,
-            stripUnknown: true,
-        });
-        if (error) {
-            const validationErrors = error.details.map(err => ({
-                field: err.path[0],
-                message: err.message,
-            }));
-            return res.status(400).json({ success: false, message: 'Validation failed', errors: validationErrors });
-        }
-
-        // Use defaults
-        const pageNum   = value.page  || 1;
-        const limitNum  = Math.min(value.limit || 10, 50);
-        const skip      = (pageNum - 1) * limitNum;
-
-        // Build filter
-        const filter = {};
-
-        if (req.user.role === 'divisionIncharge') {
-            filter.division = req.user.division;
-            filter.year     = req.user.year;
-        } else if (req.user.role === 'admin') {
-            if (value.division) filter.division = value.division;
-            if (value.year)     filter.year     = value.year;
-            if (value.branch)   filter.branch   = value.branch;
-        } else {
-            return res.status(403).json({ success: false, message: 'Unauthorized role.' });
-        }
-
-        // Name filters
-        if (value.firstName)  filter['name.firstName']  = { $regex: value.firstName,  $options: 'i' };
-        if (value.middleName) filter['name.middleName'] = { $regex: value.middleName, $options: 'i' };
-        if (value.lastName)   filter['name.lastName']   = { $regex: value.lastName,   $options: 'i' };
-        if (value.motherName) filter['name.motherName'] = { $regex: value.motherName, $options: 'i' };
-
-        // Other filters
-        if (value.city)       filter['currentAddress.city'] = { $regex: value.city, $options: 'i' };
-        if (value.bloodGroup) filter.bloodGroup = value.bloodGroup;
-        if (value.category)   filter.category   = value.category;
-        if (value.academicYear) filter.academicYear = value.academicYear;
-
-        // Search
-        if (value.search) {
-            const safeSearch = value.search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-            filter.$or = [
-                { 'name.firstName':  { $regex: safeSearch, $options: 'i' } },
-                { 'name.middleName': { $regex: safeSearch, $options: 'i' } },
-                { 'name.lastName':   { $regex: safeSearch, $options: 'i' } },
-                { 'name.motherName': { $regex: safeSearch, $options: 'i' } },
-            ];
-        }
-
-        // Filter by whether student has filled in their details
-        if (value.detailsFilled === true) {
-            filter.PRN = { $exists: true, $ne: null };
-        } else if (value.detailsFilled === false) {
-            filter.$and = [
-                ...(filter.$and || []),
-                { $or: [{ PRN: { $exists: false } }, { PRN: null }] }
-            ];
-        }
-
-
-        // Export branch
-        if (isExport) {
-            const students = await Student.find(filter)
-                .select('-password')
-                .sort({ createdAt: -1 })
-                .limit(5000) // hard cap - to prevent excessive data being injected in memory which can lead to server crash(or some component of system crashes).
-                .lean();
-
-            const rows   = students.map(transformStudent);
-            const buffer = await exportToExcel(rows, 'Students', studentColumnMap);
-            if (!buffer) return res.status(500).json({ success: false, message: 'Export failed.' });
-
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename="students.xlsx"');
-            return res.send(buffer);
-        }
-
-        // Paginated branch 
-        const [total, students] = await Promise.all([
-            Student.countDocuments(filter),
-            Student.find(filter)
-                .skip(skip)
-                .limit(limitNum)
-                .select('-password')
-                .sort({ createdAt: -1 })
-                .lean(),
-        ]);
-
-        return res.json({
-            success:    true,
-            data:       students,
-            total,
-            page:       pageNum,
-            totalPages: Math.ceil(total / limitNum),
-        });
-
-    } catch (err) {
-        errorLogger(err,req, "Get Students Controller")
-        return res.status(500).json({ success: false, message: 'Some Error Occurred. Please Try Again Later.' });
+    // Validate input using Joi
+    const { error, value } = getStudentsValidation.validate(req.query, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
+    if (error) {
+      const validationErrors = error.details.map(err => ({
+        field: err.path[0],
+        message: err.message,
+      }));
+      return res.status(400).json({ success: false, message: 'Validation failed', errors: validationErrors });
     }
+
+    // Use defaults
+    const pageNum = value.page || 1;
+    const limitNum = Math.min(value.limit || 10, 50);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build filter
+    const filter = {};
+
+    if (req.user.role === 'divisionIncharge') {
+      filter.division = req.user.division;
+      filter.year = req.user.year;
+    } else if (req.user.role === 'admin') {
+      if (value.division) filter.division = value.division;
+      if (value.year) filter.year = value.year;
+      if (value.branch) filter.branch = value.branch;
+    } else {
+      return res.status(403).json({ success: false, message: 'Unauthorized role.' });
+    }
+
+    // Name filters
+    if (value.firstName) filter['name.firstName'] = { $regex: value.firstName, $options: 'i' };
+    if (value.middleName) filter['name.middleName'] = { $regex: value.middleName, $options: 'i' };
+    if (value.lastName) filter['name.lastName'] = { $regex: value.lastName, $options: 'i' };
+    if (value.motherName) filter['name.motherName'] = { $regex: value.motherName, $options: 'i' };
+
+    // Other filters
+    if (value.city) filter['currentAddress.city'] = { $regex: value.city, $options: 'i' };
+    if (value.bloodGroup) filter.bloodGroup = value.bloodGroup;
+    if (value.category) filter.category = value.category;
+    if (value.academicYear) filter.academicYear = value.academicYear;
+
+    // Search
+    if (value.search) {
+      const safeSearch = value.search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+      filter.$or = [
+        { 'name.firstName': { $regex: safeSearch, $options: 'i' } },
+        { 'name.middleName': { $regex: safeSearch, $options: 'i' } },
+        { 'name.lastName': { $regex: safeSearch, $options: 'i' } },
+        { 'name.motherName': { $regex: safeSearch, $options: 'i' } },
+      ];
+    }
+
+    // Filter by whether student has filled in their details
+    if (value.detailsFilled === true) {
+      filter.PRN = { $exists: true, $ne: null };
+    } else if (value.detailsFilled === false) {
+      filter.$and = [
+        ...(filter.$and || []),
+        { $or: [{ PRN: { $exists: false } }, { PRN: null }] }
+      ];
+    }
+
+
+    // Export branch
+    if (isExport) {
+      const students = await Student.find(filter)
+        .select('-password')
+        .sort({ createdAt: -1 })
+        .limit(5000) // hard cap - to prevent excessive data being injected in memory which can lead to server crash(or some component of system crashes).
+        .lean();
+
+      const rows = students.map(transformStudent);
+      const buffer = await exportToExcel(rows, 'Students', studentColumnMap);
+      if (!buffer) return res.status(500).json({ success: false, message: 'Export failed.' });
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename="students.xlsx"');
+      return res.send(buffer);
+    }
+
+    // Paginated branch 
+    const [total, students] = await Promise.all([
+      Student.countDocuments(filter),
+      Student.find(filter)
+        .skip(skip)
+        .limit(limitNum)
+        .select('-password')
+        .sort({ createdAt: -1 })
+        .lean(),
+    ]);
+
+    return res.json({
+      success: true,
+      data: students,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+    });
+
+  } catch (err) {
+    errorLogger(err, req, "Get Students Controller")
+    return res.status(500).json({ success: false, message: 'Some Error Occurred. Please Try Again Later.' });
+  }
 };
 
 // GET STUDENTS (with optional pagination) --admin and divisionIncharge only
@@ -1212,7 +1212,7 @@ const getSingleStudent = async (req, res) => {
 
     return res.status(200).json({ success: true, data: student });
   } catch (error) {
-    errorLogger(error,req, "Get single Student Controller")
+    errorLogger(error, req, "Get single Student Controller")
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -1234,11 +1234,11 @@ const getStudentById = async (req, res) => {
 
     return res.status(200).json({ success: true, data: student });
   } catch (error) {
-    errorLogger(error,req, "Get Student by id Controller")
+    errorLogger(error, req, "Get Student by id Controller")
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 
 };
 
 
-module.exports = { importStudentIDs , addStudentDetails, getStudentById, getStudents, getSingleStudent, updateStudent, deleteStudent, importExcelDataWithPasswords, exportAllStudentsToExcel };
+module.exports = { importStudentIDs, addStudentDetails, getStudentById, getStudents, getSingleStudent, updateStudent, deleteStudent, importExcelDataWithPasswords, exportAllStudentsToExcel };

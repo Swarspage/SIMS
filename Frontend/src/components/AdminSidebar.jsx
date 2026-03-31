@@ -7,7 +7,7 @@ const menuItems = [
   { name: "Admission", path: "/admin/admission" },
   { name: "Students", path: "/admin/students" },
   { name: "Division Incharges", path: "/admin/division-incharges" },
-  { name: "Activities", path: "/admin/activities" },
+  { name: "Curricular Activities", path: "/admin/activities" },
   { name: "Achievements", path: "/admin/achievements" },
   { name: "Internships", path: "/admin/internships" },
   { name: "Placements", path: "/admin/placements" },
@@ -47,7 +47,7 @@ function getIcon(name, isActive) {
           <path d="M6 20v-1a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v1" />
         </svg>
       );
-    case "Activities":
+    case "Curricular Activities":
       return (
         <svg {...common} viewBox="0 0 24 24">
           <path d="M3 12h3l3 8 4-16 3 8h4" />

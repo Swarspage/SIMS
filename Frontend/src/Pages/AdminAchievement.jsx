@@ -458,12 +458,12 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
       const data = new FormData();
 
       // Append form fields
-      data.append('studentId', formData.stuID);
-      data.append('title', formData.title);
+      data.append('studentId', typeof formData.stuID === 'string' ? formData.stuID.trim() : formData.stuID);
+      data.append('title', formData.title.trim());
       data.append('category', formData.category);
       data.append('achievementType', formData.achievementType);
-      data.append('issuedBy', formData.issuedBy);
-      data.append('description', formData.description);
+      data.append('issuedBy', formData.issuedBy.trim());
+      data.append('description', formData.description.trim());
 
       // Date object restructuring based on backend validation logic
       data.append('dateFrom', formData.dateFrom);
@@ -475,7 +475,7 @@ function AchievementFormModal({ isOpen, onClose, achievement, onSave }) {
       }
 
       if (formData.certification_course) {
-        data.append('certification_course', formData.certification_course);
+        data.append('certification_course', formData.certification_course.trim());
       }
 
       // Append files

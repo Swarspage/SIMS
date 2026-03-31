@@ -29,6 +29,8 @@ const Home = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeEvent, setActiveEvent] = useState(0);
+  const [showLoginDropdown, setShowLoginDropdown] = useState(false);
+  const loginRef = useRef(null);
 
   // Scroll Reveal Logic
   useEffect(() => {
@@ -54,6 +56,17 @@ const Home = () => {
 
   const nextEvent = () => setActiveEvent((prev) => (prev + 1) % events.length);
   const prevEvent = () => setActiveEvent((prev) => (prev - 1 + events.length) % events.length);
+
+  // Handle click outside login dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (loginRef.current && !loginRef.current.contains(event.target)) {
+        setShowLoginDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <>
@@ -89,15 +102,29 @@ const Home = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
-            <div className="hidden md:block relative group">
-              <button className="px-6 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full hover:bg-blue-800 transition-all shine-effect">
+            <div className="hidden md:block relative" ref={loginRef}>
+              <button 
+                onClick={() => setShowLoginDropdown(!showLoginDropdown)}
+                className="px-6 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full hover:bg-blue-800 transition-all shine-effect"
+              >
                 Login
               </button>
-              <div className="absolute right-0 mt-2 w-48 glass-card rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 border border-gray-200 overflow-hidden">
-                <button onClick={() => navigate("/login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors">Student Login</button>
-                <button onClick={() => navigate("/admin/login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors border-t border-gray-100">Admin Login</button>
-                <button onClick={() => navigate("/division/login")} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors border-t border-gray-100">Division Login</button>
-              </div>
+              {showLoginDropdown && (
+                <div className="absolute right-0 mt-2 w-56 glass-card rounded-xl shadow-xl border border-gray-200 overflow-hidden animate-fadeIn z-[60]">
+                  <button onClick={() => { navigate("/login"); setShowLoginDropdown(false); }} className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-blue-50 transition-colors flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    Student Login
+                  </button>
+                  <button onClick={() => { navigate("/admin/login"); setShowLoginDropdown(false); }} className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-blue-50 transition-colors border-t border-gray-100 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                    Admin Login
+                  </button>
+                  <button onClick={() => { navigate("/division/login"); setShowLoginDropdown(false); }} className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-blue-50 transition-colors border-t border-gray-100 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    Division Incharge Login
+                  </button>
+                </div>
+              )}
             </div>
             <button className="p-2 text-gray-900 md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,9 +150,9 @@ const Home = () => {
             </button>
             <div className="pt-4 space-y-2 border-t border-gray-100">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-2">Portals</p>
-              <button onClick={() => navigate("/login")} className="w-full py-3 bg-[#1D3EA1] text-white rounded-xl font-bold transition-colors">Student Login</button>
-              <button onClick={() => navigate("/admin/login")} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Admin Login</button>
-              <button onClick={() => navigate("/division/login")} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Division Login</button>
+              <button onClick={() => { setIsMenuOpen(false); navigate("/login"); }} className="w-full py-3 bg-[#1D3EA1] text-white rounded-xl font-bold transition-colors">Student Login</button>
+              <button onClick={() => { setIsMenuOpen(false); navigate("/admin/login"); }} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Admin Login</button>
+              <button onClick={() => { setIsMenuOpen(false); navigate("/division/login"); }} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Division Incharge Login</button>
             </div>
           </div>
         )}

@@ -7,7 +7,7 @@ const DivisionIncharge = require("../models/DivisionIncharge");
 const Student = require("../models/Student.js")
 const Admin = require('../models/Admin.js');
 const sendEmailBrevo = require("../services/sendEmailBrevo");
-const { signupSchema, loginSchema, adminLoginSchema, divisionInchargeLoginSchema , forgotPasswordSchema , resetPasswordSchema , adminResetPasswordSchema , divisionInchargeResetPasswordSchema } = require('../validators/authValidation.js');
+const { signupSchema, loginSchema, adminLoginSchema, divisionInchargeLoginSchema, forgotPasswordSchema, resetPasswordSchema, adminResetPasswordSchema, divisionInchargeResetPasswordSchema } = require('../validators/authValidation.js');
 const errorLogger = require("../helpers/winston/errorLogger");
 
 
@@ -20,7 +20,7 @@ const cookieOptions = {
   secure: true,
   sameSite: "lax", // First-party via Vercel reverse proxy — "lax" is safer than "none"
 };
- 
+
 //signup
 exports.signup = async (req, res) => {
   try {
@@ -36,7 +36,7 @@ exports.signup = async (req, res) => {
     const { studentID, email, password } = value;
 
     // Check student exists (added by admin) also email(added by admin)
-    const student = await Student.findOne({ studentID , email });
+    const student = await Student.findOne({ studentID, email });
 
     if (!student) {
       return res.status(400).json({
@@ -53,7 +53,7 @@ exports.signup = async (req, res) => {
     // Hash and save password (but account stays inactive until email verified)
     student.password = await bcrypt.hash(password, 10);
 
-     // Generate verification token
+    // Generate verification token
     const rawToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
 
@@ -85,7 +85,7 @@ exports.signup = async (req, res) => {
     });
 
   } catch (error) {
-    errorLogger(error,req,"Signup controller");
+    errorLogger(error, req, "Signup controller");
     return res.status(500).json({
       success: false,
       message: "Internal Server Error"
@@ -169,7 +169,7 @@ exports.login = async (req, res) => {
     });
 
   } catch (error) {
-    errorLogger(error,req,"login controller")
+    errorLogger(error, req, "login controller")
     return res.status(500).json({
       success: false,
       message: "Internal Server Error"
@@ -209,7 +209,7 @@ exports.verifyEmail = async (req, res) => {
     });
 
   } catch (error) {
-    errorLogger(error,req,"Verify email controller")
+    errorLogger(error, req, "Verify email controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
@@ -225,19 +225,19 @@ exports.adminLogin = async (req, res) => {
     const { value, error } = adminLoginSchema.validate(req.body, { abortEarly: false });
     if (error) {
       const validationErrors = error.details.map(err => ({
-          field: err.path[0],
-          message: err.message
+        field: err.path[0],
+        message: err.message
       }));
 
       return res.status(400).json({
-          success: false,
-          message: "Validation failed",
-          errors: validationErrors
+        success: false,
+        message: "Validation failed",
+        errors: validationErrors
       });
     }
 
 
-    const admin = await Admin.findOne({ email : value.email });
+    const admin = await Admin.findOne({ email: value.email });
     if (!admin) return res.status(400).json({ success: false, message: 'Invalid credentials' });
 
     const match = await bcrypt.compare(value.password, admin.password);
@@ -263,7 +263,7 @@ exports.adminLogin = async (req, res) => {
       },
     });
   } catch (error) {
-    errorLogger(error,req,"Admin Login controller")
+    errorLogger(error, req, "Admin Login controller")
     return res.status(500).json({ success: false, message: "Internal Server Error. Please try again later." });
   }
 };
@@ -286,7 +286,7 @@ exports.divisionInchargeLogin = async (req, res) => {
 
 
     // Find User
-    const divisionIncharge = await DivisionIncharge.findOne({ email : value.email });
+    const divisionIncharge = await DivisionIncharge.findOne({ email: value.email });
     if (!divisionIncharge) {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
@@ -321,7 +321,7 @@ exports.divisionInchargeLogin = async (req, res) => {
     });
 
   } catch (error) {
-    errorLogger(error,req,"Division Incharge Login controller")
+    errorLogger(error, req, "Division Incharge Login controller")
     return res.status(500).json({
       success: false,
       message: "Internal Server Error. Please try again later."
@@ -336,7 +336,7 @@ exports.logout = (req, res) => {
     res.clearCookie('token', { httpOnly: true, sameSite: "lax", secure: true });
     return res.status(200).json({ message: 'Logout successful' });
   } catch (err) {
-    errorLogger(error,req,"Logout controller")
+    errorLogger(error, req, "Logout controller")
     return res.status(500).json({ success: false, message: "Internal Server Error. Please try again later." });
   }
 };
@@ -345,9 +345,9 @@ exports.logout = (req, res) => {
 // FORGOT PASSWORD -> new auth -> student
 exports.forgotPassword = async (req, res) => {
   try {
-    const { error , value } = forgotPasswordSchema.validate(req.body);
+    const { error, value } = forgotPasswordSchema.validate(req.body);
 
-    if(error) {
+    if (error) {
       return res.status(400).json({
         success: false,
         message: error.details[0].message
@@ -408,7 +408,7 @@ exports.forgotPassword = async (req, res) => {
       toEmail: student.email,
       subject: "Password Reset Request",
       htmlContent: htmlContent
-    }); 
+    });
 
     return res.status(200).json({
       success: true,
@@ -416,7 +416,7 @@ exports.forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-    errorLogger(error,req,"Forgot Password Controller")
+    errorLogger(error, req, "Forgot Password Controller")
     return res.status(500).json({
       success: false,
       message: "Internal Server Error"
@@ -430,9 +430,9 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
 
-    const { error , value } = resetPasswordSchema.validate(req.body);
+    const { error, value } = resetPasswordSchema.validate(req.body);
 
-    if(error) {
+    if (error) {
       return res.status(400).json({
         success: false,
         message: error.details[0].message
@@ -488,7 +488,7 @@ exports.resetPassword = async (req, res) => {
     });
 
   } catch (error) {
-  errorLogger(error,req,"Reset Password controller")
+    errorLogger(error, req, "Reset Password controller")
     return res.status(500).json({
       success: false,
       message: "Internal Server Error"
@@ -536,7 +536,7 @@ exports.adminForgotPassword = async (req, res) => {
     return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
 
   } catch (error) {
-    errorLogger(error,req,"Admin Forgot Password controller")
+    errorLogger(error, req, "Admin Forgot Password controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
@@ -572,7 +572,7 @@ exports.adminResetPassword = async (req, res) => {
     return res.status(200).json({ success: true, message: "Admin password reset successful" });
 
   } catch (error) {
-    errorLogger(error,req,"Admin Reset Password controller")
+    errorLogger(error, req, "Admin Reset Password controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
@@ -584,44 +584,44 @@ exports.divisionInchargeForgotPassword = async (req, res) => {
     if (error) {
       return res.status(400).json({ success: false, message: error.details[0].message });
     }
- 
+
     const divisionIncharge = await DivisionIncharge.findOne({ email: value.email });
     if (!divisionIncharge) {
       // Don't reveal whether division incharge exists — generic message
       return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
     }
- 
+
     const resetToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
- 
+
     divisionIncharge.resetPasswordToken = hashedToken;
     divisionIncharge.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 min
     await divisionIncharge.save();
- 
+
     const resetURL = `${process.env.FRONTEND_URL}/division-incharge/reset-password/${resetToken}`;
- 
+
     const htmlContent = `
       <h2>Hello ${divisionIncharge.name || "Division Incharge"},</h2>
       <p>You are requested to reset your password.</p>
       <p><a href="${resetURL}">Click here to reset your password</a></p>
       <p>This link expires in 15 minutes.</p>
     `;
- 
+
     await sendEmailBrevo({
       toEmail: divisionIncharge.email,
       subject: "Division Incharge Password Reset Request",
       htmlContent,
     });
- 
+
     return res.status(200).json({ success: true, message: "If that email exists, a reset link has been sent." });
- 
+
   } catch (error) {
-  errorLogger(error,req,"Division Incharge Forgot Password controller")
+    errorLogger(error, req, "Division Incharge Forgot Password controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
- 
- 
+
+
 //division incharge -> reset pass
 exports.divisionInchargeResetPassword = async (req, res) => {
   try {
@@ -629,31 +629,30 @@ exports.divisionInchargeResetPassword = async (req, res) => {
     if (error) {
       return res.status(400).json({ success: false, message: error.details[0].message });
     }
- 
+
     const { token } = req.params;
     const { newPassword } = value;
- 
+
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
- 
+
     const divisionIncharge = await DivisionIncharge.findOne({
       resetPasswordToken: hashedToken,
       resetPasswordExpire: { $gt: Date.now() },
     });
- 
+
     if (!divisionIncharge) {
       return res.status(400).json({ success: false, message: "Invalid or expired token" });
     }
- 
+
     divisionIncharge.password = await bcrypt.hash(newPassword, 10);
     divisionIncharge.resetPasswordToken = undefined;
     divisionIncharge.resetPasswordExpire = undefined;
     await divisionIncharge.save();
- 
+
     return res.status(200).json({ success: true, message: "Division Incharge password reset successful" });
- 
+
   } catch (error) {
-    errorLogger(error,req,"Division Incharge Reset Password controller")
+    errorLogger(error, req, "Division Incharge Reset Password controller")
     return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
-

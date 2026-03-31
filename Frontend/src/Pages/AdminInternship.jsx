@@ -488,9 +488,9 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
       const data = new FormData();
 
       // Append form fields
-      if (!internship) data.append('studentId', stuIDToUse);
-      data.append('companyName', formData.companyName);
-      data.append('role', formData.role);
+      if (!internship) data.append('studentId', typeof stuIDToUse === 'string' ? stuIDToUse.trim() : stuIDToUse);
+      data.append('companyName', formData.companyName.trim());
+      data.append('role', formData.role.trim());
       data.append('durationMonths', formData.durationMonths);
       data.append('startDate', formData.startDate);
       data.append('endDate', formData.endDate);
@@ -498,7 +498,7 @@ function InternshipFormModal({ isOpen, onClose, internship, onSave }) {
       if (formData.isPaid === "true" && formData.stipend) {
         data.append('stipend', formData.stipend);
       }
-      data.append('description', formData.description);
+      data.append('description', formData.description.trim());
 
       // Append files if selected
       if (files.internshipReport) data.append('internshipReport', files.internshipReport);
