@@ -63,6 +63,11 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
       value = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
     }
 
+    // Strip non-digit characters from numeric-only fields
+    if (["PRN", "abcId", "mobileNo", "parentMobileNo", "pincode", "nativePincode"].includes(name)) {
+      value = value.replace(/\D/g, "");
+    }
+
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
