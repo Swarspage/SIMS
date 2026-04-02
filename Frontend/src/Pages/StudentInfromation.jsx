@@ -179,6 +179,30 @@ export default function StudentInformation() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // These fields must contain ONLY digits, no spaces/dashes/symbols
+  const numericFields = ["PRN", "abcId", "mobileNo", "parentMobileNo", "pincode", "nativePincode"];
+
+  // Mobile autofill / paste can BYPASS onChange on some Android browsers.
+  // This intercepts paste at the DOM level and forces digit-only values.
+  const handleNumericPaste = (e) => {
+    const name = e.target.name;
+    if (!numericFields.includes(name)) return;
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData("text");
+    const cleaned = pasted.replace(/\D/g, "");
+    setFormData((prev) => ({ ...prev, [name]: cleaned }));
+  };
+
+  // Catches autofill that slips past onChange (e.g. browser pre-populates field)
+  const handleNumericBlur = (e) => {
+    const { name, value } = e.target;
+    if (!numericFields.includes(name)) return;
+    const cleaned = value.replace(/\D/g, "");
+    if (cleaned !== value) {
+      setFormData((prev) => ({ ...prev, [name]: cleaned }));
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -498,8 +522,8 @@ export default function StudentInformation() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Backend: /^\d{16}$/ — exactly 16 digits, leading 0 IS allowed */}
-              <InputField label="PRN" name="PRN" value={formData.PRN} onChange={handleChange} required pattern="\d{16}" title="Exactly 16 digits" maxLength={16} inputMode="numeric" />
-              <InputField label="ABC ID" name="abcId" value={formData.abcId} onChange={handleChange} required pattern="\d{12}" title="Exactly 12 digits" maxLength={12} inputMode="numeric" />
+              <InputField label="PRN" name="PRN" value={formData.PRN} onChange={handleChange} onPaste={handleNumericPaste} onBlur={handleNumericBlur} required pattern="\d{16}" title="Exactly 16 digits" maxLength={16} inputMode="numeric" autoComplete="off" autoCorrect="off" spellCheck="false" />
+              <InputField label="ABC ID" name="abcId" value={formData.abcId} onChange={handleChange} onPaste={handleNumericPaste} onBlur={handleNumericBlur} required pattern="\d{12}" title="Exactly 12 digits" maxLength={12} inputMode="numeric" autoComplete="off" autoCorrect="off" spellCheck="false" />
               <SelectField label="Branch" name="branch" value={formData.branch} onChange={handleChange} options={branches} required />
               <SelectField label="Year" name="year" value={formData.year} onChange={handleChange} options={years} required />
               <SelectField label="Division" name="division" value={formData.division} onChange={handleChange} options={divisions} required />
@@ -515,8 +539,8 @@ export default function StudentInformation() {
               Contact Details
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <InputField label="Mobile Number" name="mobileNo" value={formData.mobileNo} onChange={handleChange} required pattern="[6-9]\d{9}" title="10 digit Indian mobile number" maxLength={10} />
-              <InputField label="Parent Mobile No" name="parentMobileNo" value={formData.parentMobileNo} onChange={handleChange} required pattern="[6-9]\d{9}" title="10 digit Indian mobile number" maxLength={10} />
+              <InputField label="Mobile Number" name="mobileNo" value={formData.mobileNo} onChange={handleChange} onPaste={handleNumericPaste} onBlur={handleNumericBlur} required pattern="[6-9]\d{9}" title="10 digit Indian mobile number" maxLength={10} inputMode="numeric" autoComplete="off" />
+              <InputField label="Parent Mobile No" name="parentMobileNo" value={formData.parentMobileNo} onChange={handleChange} onPaste={handleNumericPaste} onBlur={handleNumericBlur} required pattern="[6-9]\d{9}" title="10 digit Indian mobile number" maxLength={10} inputMode="numeric" autoComplete="off" />
               <InputField label="Parent Email" name="parentEmail" type="email" value={formData.parentEmail} onChange={handleChange} required />
             </div>
           </section>
