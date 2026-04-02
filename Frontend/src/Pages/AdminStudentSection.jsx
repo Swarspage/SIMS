@@ -56,7 +56,13 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
   if (!isOpen) return null;
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+
+    // Auto-capitalize names: first letter upper, rest lower
+    if (["firstName", "middleName", "lastName", "motherName"].includes(name) && value.length > 0) {
+      value = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    }
+
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
@@ -125,18 +131,18 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
                 <h4 className="text-lg font-bold text-slate-800">Personal Information</h4>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
-                <div><label className={labelClass}>First Name</label><input type="text" name="firstName" value={form.firstName} onChange={handleInputChange} className={inputClass} /></div>
-                <div><label className={labelClass}>Middle Name</label><input type="text" name="middleName" value={form.middleName} onChange={handleInputChange} className={inputClass} /></div>
-                <div><label className={labelClass}>Last Name</label><input type="text" name="lastName" value={form.lastName} onChange={handleInputChange} className={inputClass} /></div>
-                <div><label className={labelClass}>Mother's Name</label><input type="text" name="motherName" value={form.motherName} onChange={handleInputChange} className={inputClass} /></div>
-                <div><label className={labelClass}>Date of Birth</label><input type="date" name="dob" value={form.dob} onChange={handleInputChange} className={inputClass} /></div>
-                <div><label className={labelClass}>Blood Group</label>
-                  <select name="bloodGroup" value={form.bloodGroup} onChange={handleInputChange} className={inputClass}>
+                <div><label className={labelClass}>First Name <span className="text-red-500">*</span></label><input type="text" name="firstName" value={form.firstName} onChange={handleInputChange} className={inputClass} required pattern="[A-Z][a-z]{1,19}" maxLength={20} title="First letter must be capital, remaining lowercase only (e.g. Rahul)" /></div>
+                <div><label className={labelClass}>Middle Name <span className="text-red-500">*</span></label><input type="text" name="middleName" value={form.middleName} onChange={handleInputChange} className={inputClass} required pattern="[A-Z][a-z]{1,19}" maxLength={20} title="First letter must be capital, remaining lowercase only (e.g. Kumar)" /></div>
+                <div><label className={labelClass}>Last Name <span className="text-red-500">*</span></label><input type="text" name="lastName" value={form.lastName} onChange={handleInputChange} className={inputClass} required pattern="[A-Z][a-z]{1,19}" maxLength={20} title="First letter must be capital, remaining lowercase only (e.g. Sharma)" /></div>
+                <div><label className={labelClass}>Mother's Name <span className="text-red-500">*</span></label><input type="text" name="motherName" value={form.motherName} onChange={handleInputChange} className={inputClass} required pattern="[A-Z][a-z]{1,19}" maxLength={20} title="First letter must be capital, remaining lowercase only (e.g. Sunita)" /></div>
+                <div><label className={labelClass}>Date of Birth <span className="text-red-500">*</span></label><input type="date" name="dob" value={form.dob} onChange={handleInputChange} className={inputClass} required max={new Date().toISOString().split("T")[0]} /></div>
+                <div><label className={labelClass}>Blood Group <span className="text-red-500">*</span></label>
+                  <select name="bloodGroup" value={form.bloodGroup} onChange={handleInputChange} className={inputClass} required>
                     <option value="">Select</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option>
                   </select>
                 </div>
-                <div><label className={labelClass}>Category</label>
-                  <select name="category" value={form.category} onChange={handleInputChange} className={inputClass}>
+                <div><label className={labelClass}>Category <span className="text-red-500">*</span></label>
+                  <select name="category" value={form.category} onChange={handleInputChange} className={inputClass} required>
                     <option value="">Select</option><option value="Open">Open</option><option value="EWS">EWS</option><option value="EBC">EBC</option><option value="OBC">OBC</option><option value="SC">SC</option><option value="ST">ST</option><option value="Other">Other</option>
                   </select>
                 </div>
@@ -150,19 +156,19 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
                 <h4 className="text-lg font-bold text-slate-800">Academic Information</h4>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
-                <div><label className={labelClass}>PRN Number</label><input type="text" name="PRN" value={form.PRN} onChange={handleInputChange} className={inputClass} /></div>
-                <div><label className={labelClass}>Year</label>
-                  <select name="year" value={form.year} onChange={handleInputChange} className={inputClass}>
+                <div><label className={labelClass}>PRN Number <span className="text-red-500">*</span></label><input type="text" name="PRN" value={form.PRN} onChange={handleInputChange} className={inputClass} required pattern="\d{16}" maxLength={16} title="Exactly 16 digits" inputMode="numeric" /></div>
+                <div><label className={labelClass}>Year <span className="text-red-500">*</span></label>
+                  <select name="year" value={form.year} onChange={handleInputChange} className={inputClass} required>
                     <option value="">Select</option><option value="SE">SE</option><option value="TE">TE</option><option value="BE">BE</option>
                   </select>
                 </div>
-                <div><label className={labelClass}>Division</label>
-                  <select name="division" value={form.division} onChange={handleInputChange} className={inputClass}>
+                <div><label className={labelClass}>Division <span className="text-red-500">*</span></label>
+                  <select name="division" value={form.division} onChange={handleInputChange} className={inputClass} required>
                     <option value="">Select</option><option value="A">A</option><option value="B">B</option><option value="C">C</option>
                   </select>
                 </div>
-                <div><label className={labelClass}>Academic Year</label><input type="text" name="academicYear" placeholder="2024-2025" value={form.academicYear} onChange={handleInputChange} className={inputClass} /></div>
-                <div><label className={labelClass}>ABC ID</label><input type="text" name="abcId" value={form.abcId} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Academic Year <span className="text-red-500">*</span></label><input type="text" name="academicYear" placeholder="2024-2025" value={form.academicYear} onChange={handleInputChange} className={inputClass} required pattern="\d{4}-\d{4}" title="Format: YYYY-YYYY with consecutive years (e.g. 2024-2025)" /></div>
+                <div><label className={labelClass}>ABC ID <span className="text-red-500">*</span></label><input type="text" name="abcId" value={form.abcId} onChange={handleInputChange} className={inputClass} required pattern="\d{12}" maxLength={12} title="Exactly 12 digits" inputMode="numeric" /></div>
               </div>
             </section>
 
@@ -173,9 +179,9 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
                 <h4 className="text-lg font-bold text-slate-800">Contact Details & Photo</h4>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
-                <div><label className={labelClass}>Mobile No</label><input type="text" name="mobileNo" value={form.mobileNo} onChange={handleInputChange} className={inputClass} /></div>
-                <div><label className={labelClass}>Parent Mobile No</label><input type="text" name="parentMobileNo" value={form.parentMobileNo} onChange={handleInputChange} className={inputClass} /></div>
-                <div><label className={labelClass}>Parent Email</label><input type="email" name="parentEmail" value={form.parentEmail} onChange={handleInputChange} className={inputClass} /></div>
+                <div><label className={labelClass}>Mobile No <span className="text-red-500">*</span></label><input type="text" name="mobileNo" value={form.mobileNo} onChange={handleInputChange} className={inputClass} required pattern="[6-9]\d{9}" maxLength={10} title="10 digit Indian mobile number" inputMode="numeric" /></div>
+                <div><label className={labelClass}>Parent Mobile No <span className="text-red-500">*</span></label><input type="text" name="parentMobileNo" value={form.parentMobileNo} onChange={handleInputChange} className={inputClass} required pattern="[6-9]\d{9}" maxLength={10} title="10 digit Indian mobile number" inputMode="numeric" /></div>
+                <div><label className={labelClass}>Parent Email <span className="text-red-500">*</span></label><input type="email" name="parentEmail" value={form.parentEmail} onChange={handleInputChange} className={inputClass} required /></div>
                 <div className="sm:col-span-2 md:col-span-3">
                   <label className={labelClass}>
                     Update Student Photo (Optional)
@@ -209,10 +215,10 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
                     <div className="p-2 bg-orange-100 rounded-xl text-orange-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></div> Current Address
                   </h5>
                   <div className="space-y-5 flex-1 content-start h-full">
-                    <div><label className={labelClass}>Street</label><input type="text" name="currentStreet" value={form.currentStreet} onChange={handleInputChange} className={inputClass} /></div>
+                    <div><label className={labelClass}>Street <span className="text-red-500">*</span></label><input type="text" name="currentStreet" value={form.currentStreet} onChange={handleInputChange} className={inputClass} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={300} title="Letters, numbers, spaces and: , . / # ( ) ' -" /></div>
                     <div className="grid grid-cols-2 gap-5">
-                      <div><label className={labelClass}>City</label><input type="text" name="currentCity" value={form.currentCity} onChange={handleInputChange} className={inputClass} /></div>
-                      <div><label className={labelClass}>Pincode</label><input type="text" name="pincode" value={form.pincode} onChange={handleInputChange} className={inputClass} /></div>
+                      <div><label className={labelClass}>City <span className="text-red-500">*</span></label><input type="text" name="currentCity" value={form.currentCity} onChange={handleInputChange} className={inputClass} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={200} title="Letters, numbers, spaces and: , . / # ( ) ' -" /></div>
+                      <div><label className={labelClass}>Pincode <span className="text-red-500">*</span></label><input type="text" name="pincode" value={form.pincode} onChange={handleInputChange} className={inputClass} required pattern="[1-9][0-9]{5}" maxLength={6} title="6-digit pincode, cannot start with 0" inputMode="numeric" /></div>
                     </div>
                   </div>
                 </div>
@@ -222,10 +228,10 @@ function EditStudentModal({ isOpen, onClose, onSaved, student }) {
                     <div className="p-2 bg-indigo-100 rounded-xl text-indigo-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div> Native Address
                   </h5>
                   <div className="space-y-5">
-                    <div><label className={labelClass}>Street</label><input type="text" name="nativeStreet" value={form.nativeStreet} onChange={handleInputChange} className={inputClass} /></div>
+                    <div><label className={labelClass}>Street <span className="text-red-500">*</span></label><input type="text" name="nativeStreet" value={form.nativeStreet} onChange={handleInputChange} className={inputClass} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={300} title="Letters, numbers, spaces and: , . / # ( ) ' -" /></div>
                     <div className="grid grid-cols-2 gap-5">
-                      <div><label className={labelClass}>City</label><input type="text" name="nativeCity" value={form.nativeCity} onChange={handleInputChange} className={inputClass} /></div>
-                      <div><label className={labelClass}>Pincode</label><input type="text" name="nativePincode" value={form.nativePincode} onChange={handleInputChange} className={inputClass} /></div>
+                      <div><label className={labelClass}>City <span className="text-red-500">*</span></label><input type="text" name="nativeCity" value={form.nativeCity} onChange={handleInputChange} className={inputClass} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={200} title="Letters, numbers, spaces and: , . / # ( ) ' -" /></div>
+                      <div><label className={labelClass}>Pincode <span className="text-red-500">*</span></label><input type="text" name="nativePincode" value={form.nativePincode} onChange={handleInputChange} className={inputClass} required pattern="[1-9][0-9]{5}" maxLength={6} title="6-digit pincode, cannot start with 0" inputMode="numeric" /></div>
                     </div>
                   </div>
                 </div>

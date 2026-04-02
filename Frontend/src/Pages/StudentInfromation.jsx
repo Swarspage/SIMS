@@ -493,8 +493,8 @@ export default function StudentInformation() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Backend: /^\d{16}$/ — exactly 16 digits, leading 0 IS allowed */}
-              <InputField label="PRN" name="PRN" value={formData.PRN} onChange={handleChange} required pattern="\d{16}" title="Exactly 16 digits" maxLength={16} />
-              <InputField label="ABC ID" name="abcId" value={formData.abcId} onChange={handleChange} required pattern="\d{12}" title="Exactly 12 digits" maxLength={12} />
+              <InputField label="PRN" name="PRN" value={formData.PRN} onChange={handleChange} required pattern="\d{16}" title="Exactly 16 digits" maxLength={16} inputMode="numeric" />
+              <InputField label="ABC ID" name="abcId" value={formData.abcId} onChange={handleChange} required pattern="\d{12}" title="Exactly 12 digits" maxLength={12} inputMode="numeric" />
               <SelectField label="Branch" name="branch" value={formData.branch} onChange={handleChange} options={branches} required />
               <SelectField label="Year" name="year" value={formData.year} onChange={handleChange} options={years} required />
               <SelectField label="Division" name="division" value={formData.division} onChange={handleChange} options={divisions} required />
@@ -550,7 +550,7 @@ export default function StudentInformation() {
                 <div className="grid grid-cols-2 gap-4">
                   {/* Backend: same addressPattern, max 200 */}
                   <InputField label="City" name="currentCity" value={formData.currentCity} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={200} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
-                  <InputField label="Pincode" name="pincode" value={formData.pincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6-digit pincode, cannot start with 0" maxLength={6} />
+                  <InputField label="Pincode" name="pincode" value={formData.pincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6-digit pincode, cannot start with 0" maxLength={6} inputMode="numeric" />
                 </div>
               </div>
 
@@ -571,7 +571,7 @@ export default function StudentInformation() {
                 <div className="grid grid-cols-2 gap-4">
                   {/* Backend: same addressPattern, max 200 */}
                   <InputField label="City" name="nativeCity" value={formData.nativeCity} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={200} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
-                  <InputField label="Pincode" name="nativePincode" value={formData.nativePincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6-digit pincode, cannot start with 0" maxLength={6} />
+                  <InputField label="Pincode" name="nativePincode" value={formData.nativePincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6-digit pincode, cannot start with 0" maxLength={6} inputMode="numeric" />
                 </div>
               </div>
             </div>

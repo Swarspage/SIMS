@@ -109,12 +109,18 @@ const Home = () => {
 
             <div className="flex items-center space-x-4">
               <div className="hidden md:block relative" ref={loginRef}>
-                <button
-                  onClick={() => setShowLoginDropdown(!showLoginDropdown)}
-                  className="px-6 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full hover:bg-blue-800 transition-all shine-effect"
-                >
-                  Login
-                </button>
+                  <button
+                    onClick={() => setShowLoginDropdown(!showLoginDropdown)}
+                    className="px-5 py-2 text-sm font-bold text-[#1D3EA1] border-2 border-[#1D3EA1] rounded-full hover:bg-blue-50 transition-all"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => navigate("/signup")}
+                    className="px-5 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full hover:bg-blue-800 transition-all shine-effect"
+                  >
+                    Sign Up
+                  </button>
                 {showLoginDropdown && (
                   <div className="absolute right-0 mt-2 w-56 glass-card rounded-xl shadow-xl border border-gray-200 overflow-hidden animate-fadeIn z-[60]">
                     <button onClick={() => { navigate("/login"); setShowLoginDropdown(false); }} className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-blue-50 transition-colors flex items-center gap-2">
@@ -155,9 +161,11 @@ const Home = () => {
               </button>
               <div className="pt-4 space-y-2 border-t border-gray-100">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-2">Portals</p>
-                <button onClick={() => { setIsMenuOpen(false); navigate("/login"); }} className="w-full py-3 bg-[#1D3EA1] text-white rounded-xl font-bold transition-colors">Student Login</button>
-                <button onClick={() => { setIsMenuOpen(false); navigate("/admin/login"); }} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Admin Login</button>
-                <button onClick={() => { setIsMenuOpen(false); navigate("/division/login"); }} className="w-full py-3 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Division Incharge Login</button>
+                <button onClick={() => { setIsMenuOpen(false); navigate("/login"); }} className="w-full py-3 bg-[#1D3EA1] text-white rounded-xl font-bold transition-colors shadow-md">Student Login</button>
+                <button onClick={() => { setIsMenuOpen(false); navigate("/signup"); }} className="w-full py-3 bg-white border-2 border-[#1D3EA1] text-[#1D3EA1] rounded-xl font-bold transition-colors">Create Account / Sign Up</button>
+                <div className="pt-2"></div>
+                <button onClick={() => { setIsMenuOpen(false); navigate("/admin/login"); }} className="w-full py-2.5 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Admin Login</button>
+                <button onClick={() => { setIsMenuOpen(false); navigate("/division/login"); }} className="w-full py-2.5 bg-gray-100 text-gray-900 rounded-xl font-bold transition-colors">Division Incharge Login</button>
               </div>
             </div>
           )}

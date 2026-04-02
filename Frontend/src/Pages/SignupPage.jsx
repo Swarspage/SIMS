@@ -203,16 +203,16 @@ export default function SignupPage() {
 
           {/* Footer */}
           <div className="bg-gray-50 px-8 py-4 border-t border-gray-200 text-center space-y-2">
-            <p className="text-sm text-gray-600">
-              Already have an account?{" "}
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm text-gray-600">Already have an account?</p>
               <button
                 type="button"
                 onClick={() => navigate("/login")}
-                className="text-[#1D3EA1] font-semibold hover:underline"
+                className="w-full py-2.5 px-4 bg-white border-2 border-[#1D3EA1] text-[#1D3EA1] text-sm font-bold rounded-lg hover:bg-blue-50 transition-all duration-300"
               >
-                Login
+                Go to Login
               </button>
-            </p>
+            </div>
             <button
               type="button"
               onClick={() => navigate("/")}
