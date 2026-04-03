@@ -81,13 +81,13 @@ export default function StudentInformation() {
           if (data && data.address) {
             const city = data.address.city || data.address.town || data.address.village || data.address.suburb || "";
             const pincode = data.address.postcode || "";
-            
+
             setFormData((prev) => ({
               ...prev,
               currentCity: city,
               pincode: pincode || prev.pincode, // Keep existing if new is empty
             }));
-            
+
             if (city) {
               toast.success(`Location fetched: ${city}`);
             }
@@ -557,7 +557,7 @@ export default function StudentInformation() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">
                   <h3 className="text-md font-bold text-orange-900">Current Address</h3>
-                  <button 
+                  <button
                     type="button"
                     onClick={fetchCurrentLocation}
                     disabled={geoLoading}
@@ -575,10 +575,10 @@ export default function StudentInformation() {
                   </button>
                 </div>
                 {/* Backend addressPattern: /^[a-zA-Z0-9\s,./#()'-]+$/ max 300 */}
-                <InputField label="Street / Building (Complete Address)" name="currentStreet" value={formData.currentStreet} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={300} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
+                <InputField label="Street / Building (Complete Address)" name="currentStreet" value={formData.currentStreet} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()' -]+" maxLength={300} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
                 <div className="grid grid-cols-2 gap-4">
                   {/* Backend: same addressPattern, max 200 */}
-                  <InputField label="City" name="currentCity" value={formData.currentCity} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={200} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
+                  <InputField label="City" name="currentCity" value={formData.currentCity} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()' -]+" maxLength={200} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
                   <InputField label="Pincode" name="pincode" value={formData.pincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6-digit pincode, cannot start with 0" maxLength={6} inputMode="numeric" />
                 </div>
               </div>
@@ -587,7 +587,7 @@ export default function StudentInformation() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center bg-orange-50 p-3 rounded-lg border-l-4 border-orange-400 shadow-sm">
                   <h3 className="text-md font-bold text-orange-900">Native Address</h3>
-                  <button 
+                  <button
                     type="button"
                     onClick={copyCurrentAddress}
                     className="text-xs bg-orange-200 hover:bg-orange-300 text-orange-800 px-3 py-1 rounded-md font-bold transition-all"
@@ -596,10 +596,10 @@ export default function StudentInformation() {
                   </button>
                 </div>
                 {/* Backend addressPattern: /^[a-zA-Z0-9\s,./#()'-]+$/ max 300 */}
-                <InputField label="Street / Building (Complete Address)" name="nativeStreet" value={formData.nativeStreet} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={300} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
+                <InputField label="Street / Building (Complete Address)" name="nativeStreet" value={formData.nativeStreet} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()' -]+" maxLength={300} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
                 <div className="grid grid-cols-2 gap-4">
                   {/* Backend: same addressPattern, max 200 */}
-                  <InputField label="City" name="nativeCity" value={formData.nativeCity} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()'\-]+" maxLength={200} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
+                  <InputField label="City" name="nativeCity" value={formData.nativeCity} onChange={handleChange} required pattern="[a-zA-Z0-9 ,./#()' -]+" maxLength={200} title="Letters, numbers, spaces and: , . / # ( ) ' -" />
                   <InputField label="Pincode" name="nativePincode" value={formData.nativePincode} onChange={handleChange} required pattern="[1-9][0-9]{5}" title="6-digit pincode, cannot start with 0" maxLength={6} inputMode="numeric" />
                 </div>
               </div>
