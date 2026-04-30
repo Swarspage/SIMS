@@ -109,18 +109,18 @@ const Home = () => {
 
             <div className="flex items-center space-x-4">
               <div className="hidden md:block relative" ref={loginRef}>
-                  <button
-                    onClick={() => setShowLoginDropdown(!showLoginDropdown)}
-                    className="px-5 py-2 text-sm font-bold text-[#1D3EA1] border-2 border-[#1D3EA1] rounded-full hover:bg-blue-50 transition-all"
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={() => navigate("/signup")}
-                    className="px-5 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full hover:bg-blue-800 transition-all shine-effect"
-                  >
-                    Sign Up
-                  </button>
+                <button
+                  onClick={() => setShowLoginDropdown(!showLoginDropdown)}
+                  className="px-5 py-2 text-sm font-bold text-[#1D3EA1] border-2 border-[#1D3EA1] rounded-full hover:bg-blue-50 transition-all"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => navigate("/signup")}
+                  className="px-5 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full hover:bg-blue-800 transition-all shine-effect"
+                >
+                  Sign Up
+                </button>
                 {showLoginDropdown && (
                   <div className="absolute right-0 mt-2 w-56 glass-card rounded-xl shadow-xl border border-gray-200 overflow-hidden animate-fadeIn z-[60]">
                     <button onClick={() => { navigate("/login"); setShowLoginDropdown(false); }} className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-blue-50 transition-colors flex items-center gap-2">
