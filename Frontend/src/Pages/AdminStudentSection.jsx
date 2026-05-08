@@ -340,6 +340,110 @@ function StudentCard({ student, onViewProfile, onEdit, onDelete, isDeleting }) {
   );
 }
 
+// Student List Row Component (for List/Table view)
+function StudentListRow({ student, onViewProfile, onEdit, onDelete, isDeleting, index }) {
+  return (
+    <tr
+      className={`border-b border-slate-100 hover:bg-blue-50/40 transition-colors group ${
+        index % 2 === 0 ? "bg-white" : "bg-slate-50/50"
+      }`}
+    >
+      {/* Index */}
+      <td className="px-4 py-3 text-sm text-slate-400 font-medium text-center">
+        {index + 1}
+      </td>
+
+      {/* Avatar + Name */}
+      <td className="px-4 py-3 min-w-[200px]">
+        <div className="flex items-center gap-3">
+          <img
+            src={student.studentPhoto?.url || avatar}
+            alt="avatar"
+            className="w-9 h-9 rounded-full object-cover border-2 border-blue-200 flex-shrink-0"
+          />
+          <div className="min-w-0">
+            <div className="font-semibold text-slate-800 text-sm leading-tight truncate">
+              {student.name?.firstName} {student.name?.middleName} {student.name?.lastName}
+            </div>
+            <div className="text-xs text-slate-400 mt-0.5 truncate max-w-[180px]">{student.email}</div>
+          </div>
+        </div>
+      </td>
+
+      {/* Student ID */}
+      <td className="px-4 py-3 min-w-[130px]">
+        <span className="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md whitespace-nowrap">
+          {student.studentID || "N/A"}
+        </span>
+      </td>
+
+      {/* Branch / Year / Division */}
+      <td className="px-4 py-3 min-w-[150px]">
+        <div className="flex flex-wrap gap-1">
+          <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+            {student.branch || "—"}
+          </span>
+          <span className="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+            {student.year || "—"}
+          </span>
+          {student.division && (
+            <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+              Div {student.division}
+            </span>
+          )}
+        </div>
+      </td>
+
+      {/* PRN */}
+      <td className="px-4 py-3 min-w-[160px]">
+        <span className="text-xs font-mono text-red-600 font-semibold">{student.PRN || "N/A"}</span>
+      </td>
+
+      {/* Mobile */}
+      <td className="px-4 py-3 min-w-[120px]">
+        <span className="text-sm text-slate-700">{student.mobileNo || "—"}</span>
+      </td>
+
+      {/* Actions */}
+      <td className="px-4 py-3 min-w-[140px]">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => onViewProfile(student)}
+            disabled={isDeleting}
+            className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+          >
+            View
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(student); }}
+            disabled={isDeleting}
+            className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors border border-emerald-200 disabled:opacity-50"
+            title="Edit Student"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(student._id); }}
+            disabled={isDeleting}
+            className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors border border-red-200 disabled:opacity-50 flex items-center justify-center"
+            title="Delete Student"
+          >
+            {isDeleting ? (
+              <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 // Full Page Student Profile View
 function StudentProfileView({ student, onBack, onEdit, onDelete, isDeleting }) {
   return (
@@ -713,6 +817,7 @@ export default function AdminStudentSection() {
   // View state - changed from sidebar to full page
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [viewMode, setViewMode] = useState("list"); // "list" or "profile"
+  const [displayMode, setDisplayMode] = useState("grid"); // "grid" | "list" — student card display toggle
 
   // Add/Edit Modals State
 
@@ -953,19 +1058,53 @@ export default function AdminStudentSection() {
   return (
     <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Manage Students</h1>
-        <p className="text-slate-600 mt-2">
-          Showing{" "}
-          <span className="font-semibold text-blue-600">
-            {students.length}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-slate-900">
-            {students.length}
-          </span>{" "}
-          students
-        </p>
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Manage Students</h1>
+          <p className="text-slate-600 mt-2">
+            Showing{" "}
+            <span className="font-semibold text-blue-600">{students.length}</span>
+            {" "}of{" "}
+            <span className="font-semibold text-slate-900">{totalRecords}</span>
+            {" "}students
+          </p>
+        </div>
+
+        {/* Grid / List View Toggle */}
+        <div className="flex items-center gap-2 mt-1 flex-shrink-0">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">View:</span>
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+            <button
+              onClick={() => setDisplayMode("grid")}
+              title="Grid View"
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+                displayMode === "grid"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+              Grid
+            </button>
+            <div className="w-px bg-slate-200"></div>
+            <button
+              onClick={() => setDisplayMode("list")}
+              title="List View"
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+                displayMode === "list"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              List
+            </button>
+          </div>
+        </div>
       </div>
 
       <>
@@ -1220,20 +1359,55 @@ export default function AdminStudentSection() {
             </div>
           )}
 
-          {/* Students Grid */}
+          {/* Students Grid / List */}
           {!loading && !error && students.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {students.map((s) => (
-                <StudentCard
-                  key={s._id}
-                  student={s}
-                  onViewProfile={handleViewProfile}
-                  onEdit={handleEditStudent}
-                  onDelete={handleDeleteStudent}
-                  isDeleting={deletingId === s._id}
-                />
-              ))}
-            </div>
+            displayMode === "grid" ? (
+              // ── GRID VIEW ────────────────────────────────
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {students.map((s) => (
+                  <StudentCard
+                    key={s._id}
+                    student={s}
+                    onViewProfile={handleViewProfile}
+                    onEdit={handleEditStudent}
+                    onDelete={handleDeleteStudent}
+                    isDeleting={deletingId === s._id}
+                  />
+                ))}
+              </div>
+            ) : (
+              // ── LIST VIEW ────────────────────────────────
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 border-b-2 border-slate-200 text-left">
+                        <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-10">#</th>
+                        <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[200px]">Student</th>
+                        <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[130px]">Student ID</th>
+                        <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[150px]">Branch / Year / Div</th>
+                        <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[160px]">PRN</th>
+                        <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[120px]">Mobile</th>
+                        <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[140px]">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map((s, i) => (
+                        <StudentListRow
+                          key={s._id}
+                          student={s}
+                          index={i}
+                          onViewProfile={handleViewProfile}
+                          onEdit={handleEditStudent}
+                          onDelete={handleDeleteStudent}
+                          isDeleting={deletingId === s._id}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
           )}
 
           {/* Pagination Component */}

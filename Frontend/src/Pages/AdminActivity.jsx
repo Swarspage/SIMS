@@ -138,6 +138,51 @@ function ActivityCard({ activity, onView, onDelete, onEdit, isDeleting }) {
   );
 }
 
+// Activity List Row Component
+function ActivityListRow({ activity, onView, onEdit, onDelete, isDeleting }) {
+  const student = activity?.student || activity?.stuID;
+  const studentID = student?.studentID && student.studentID !== "N/A" ? student.studentID : "N/A";
+  const studentYear = student?.year && student.year !== "N/A" ? student.year : "N/A";
+  const studentNameRaw = student?.name;
+  const studentName = studentNameRaw &&
+    (studentNameRaw.firstName || studentNameRaw.lastName) &&
+    `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim() !== "N/A"
+    ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim()
+    : "N/A";
+
+  return (
+    <tr className="border-b border-slate-100 hover:bg-blue-50/40 transition-colors group">
+      <td className="px-4 py-3 text-xs font-mono text-slate-500 whitespace-nowrap">{studentID}</td>
+      <td className="px-4 py-3">
+        <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-700 transition-colors">{studentName}</p>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{studentYear}</p>
+      </td>
+      <td className="px-4 py-3">
+        <p className="text-sm font-bold text-blue-600 line-clamp-1">{activity?.title || "N/A"}</p>
+        <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{activity?.description || "—"}</p>
+      </td>
+      <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+        {activity?.date?.from && !isNaN(new Date(activity.date.from).getTime())
+          ? new Date(activity.date.from).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })
+          : "N/A"}
+        {" — "}
+        {activity?.date?.to && !isNaN(new Date(activity.date.to).getTime())
+          ? new Date(activity.date.to).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })
+          : "Present"}
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => onView && onView(activity)} className="px-2.5 py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded-lg hover:bg-blue-700 transition-colors">View</button>
+          <button onClick={() => onEdit && onEdit(activity)} className="px-2.5 py-1.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-lg hover:bg-amber-100 border border-amber-200 transition-colors">Edit</button>
+          <button onClick={() => onDelete && onDelete(activity._id)} disabled={isDeleting} className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg border transition-colors ${isDeleting ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-red-50 text-red-700 hover:bg-red-100 border-red-200"}` }>
+            {isDeleting ? "..." : "Delete"}
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 // Detail View Modal Component
 function DetailModal({ activity, onClose }) {
   const [student, setStudent] = React.useState(null);
@@ -602,8 +647,9 @@ function ActivityFormModal({ isOpen, onClose, activity, onSave }) {
   );
 }
 
-// Main Admin Activity Component
+// Main Admin Activities Page Component
 export default function AdminActivity() {
+  const [displayMode, setDisplayMode] = useState("grid"); // 'grid' | 'list'
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -733,15 +779,44 @@ export default function AdminActivity() {
   return (
     <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Manage Curricular Activities</h1>
-        <p className="text-slate-600 mt-2">
-          Showing{" "}
-          <span className="font-semibold text-blue-600">
-            {totalRecords}
-          </span>{" "}
-          curricular activities
-        </p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Manage Curricular Activities</h1>
+          <p className="text-slate-600 mt-2">
+            Showing{" "}
+            <span className="font-semibold text-blue-600">
+              {totalRecords}
+            </span>{" "}
+            curricular activities
+          </p>
+        </div>
+        {/* Grid / List Toggle */}
+        <div className="flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-xl p-1 self-start sm:self-auto">
+          <button
+            onClick={() => setDisplayMode("grid")}
+            title="Grid View"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              displayMode === "grid"
+                ? "bg-white text-blue-700 shadow-sm border border-slate-200"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+            Grid
+          </button>
+          <button
+            onClick={() => setDisplayMode("list")}
+            title="List View"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              displayMode === "list"
+                ? "bg-white text-blue-700 shadow-sm border border-slate-200"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            List
+          </button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -895,20 +970,48 @@ export default function AdminActivity() {
           </div>
         )}
 
-        {/* Activities Grid - 4 columns for compact cards */}
+        {/* Activities Grid/List */}
         {!loading && !error && activities.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {activities.map((activity) => (
-              <ActivityCard
-                key={activity?._id}
-                activity={activity}
-                onView={handleView}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                isDeleting={deletingId === activity?._id}
-              />
-            ))}
-          </div>
+          displayMode === "grid" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {activities.map((activity) => (
+                <ActivityCard
+                  key={activity?._id}
+                  activity={activity}
+                  onView={handleView}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  isDeleting={deletingId === activity?._id}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Stu. ID</th>
+                    <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Student</th>
+                    <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Title / Description</th>
+                    <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Duration</th>
+                    <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activities.map((activity) => (
+                    <ActivityListRow
+                      key={activity?._id}
+                      activity={activity}
+                      onView={handleView}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      isDeleting={deletingId === activity?._id}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         )}
 
         {/* Pagination Component */}

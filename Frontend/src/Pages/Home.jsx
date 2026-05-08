@@ -111,13 +111,13 @@ const Home = () => {
               <div className="hidden md:block relative" ref={loginRef}>
                 <button
                   onClick={() => setShowLoginDropdown(!showLoginDropdown)}
-                  className="px-5 py-2 text-sm font-bold text-[#1D3EA1] border-2 border-[#1D3EA1] rounded-full hover:bg-blue-50 transition-all"
+                  className="px-5 mx-2 py-2 text-sm font-bold text-[#1D3EA1] border-2 border-[#1D3EA1] rounded-full hover:bg-blue-50 transition-all"
                 >
                   Login
                 </button>
                 <button
                   onClick={() => navigate("/signup")}
-                  className="px-5 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full hover:bg-blue-800 transition-all shine-effect"
+                  className="px-5 mx-2 py-2 text-sm font-bold text-white bg-[#1D3EA1] rounded-full hover:bg-blue-800 transition-all shine-effect"
                 >
                   Sign Up
                 </button>

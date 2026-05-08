@@ -251,6 +251,88 @@ function HigherStudyCard({ higherStudy, onView, onDelete, onEdit, isDeleting }) 
   );
 }
 
+// Placement List Row Component
+function PlacementListRow({ placement, onView, onDelete, onEdit, isDeleting }) {
+  const studentNameRaw = placement.studentName;
+  const studentName = studentNameRaw && 
+    (studentNameRaw.firstName || studentNameRaw.lastName) &&
+    `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim() !== "N/A"
+    ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim()
+    : "N/A";
+  const studentID = placement.studentID && placement.studentID !== "N/A" ? placement.studentID : "N/A";
+  const studentYear = placement.studentYear && placement.studentYear !== "N/A" ? placement.studentYear : "N/A";
+
+  return (
+    <tr className="border-b border-slate-100 hover:bg-blue-50/40 transition-colors group">
+      <td className="px-4 py-3 text-xs font-mono text-slate-500 whitespace-nowrap">{studentID}</td>
+      <td className="px-4 py-3">
+        <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-700 transition-colors">{studentName}</p>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{studentYear}</p>
+      </td>
+      <td className="px-4 py-3">
+        <p className="text-sm font-bold text-blue-600 line-clamp-1">{placement?.companyName || "N/A"}</p>
+        <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{placement?.role || "—"}</p>
+      </td>
+      <td className="px-4 py-3">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-green-50 text-green-700 border-green-200">
+          ₹{placement?.package ? `${placement.package} LPA` : "N/A"}
+        </span>
+      </td>
+      <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+        <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-semibold rounded border border-slate-200">
+          {placement?.placementType || "N/A"}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => onView && onView(placement)} className="px-2.5 py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded-lg hover:bg-blue-700 transition-colors">View</button>
+          <button onClick={() => onEdit && onEdit(placement)} className="px-2.5 py-1.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-lg hover:bg-amber-100 border border-amber-200 transition-colors">Edit</button>
+          <button onClick={() => onDelete && onDelete(placement._id)} disabled={isDeleting} className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg border transition-colors ${isDeleting ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-red-50 text-red-700 hover:bg-red-100 border-red-200"}` }>
+            {isDeleting ? "..." : "Delete"}
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+// Higher Study List Row Component
+function HigherStudyListRow({ higherStudy, onView, onDelete, onEdit, isDeleting }) {
+  const studentNameRaw = higherStudy.studentName;
+  const studentName = studentNameRaw 
+    ? `${studentNameRaw.firstName || ""} ${studentNameRaw.lastName || ""}`.trim()
+    : "N/A";
+  const studentID = higherStudy.studentID || "N/A";
+  const studentYear = higherStudy.studentYear || "N/A";
+
+  return (
+    <tr className="border-b border-slate-100 hover:bg-blue-50/40 transition-colors group">
+      <td className="px-4 py-3 text-xs font-mono text-slate-500 whitespace-nowrap">{studentID}</td>
+      <td className="px-4 py-3">
+        <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-700 transition-colors">{studentName}</p>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{studentYear}</p>
+      </td>
+      <td className="px-4 py-3">
+        <p className="text-sm font-bold text-blue-600 line-clamp-1">{higherStudy?.examName || "N/A"}</p>
+      </td>
+      <td className="px-4 py-3">
+        <span className="text-sm font-black text-slate-800">
+          {higherStudy?.score || "N/A"}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => onView && onView(higherStudy)} className="px-2.5 py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded-lg hover:bg-blue-700 transition-colors">View</button>
+          <button onClick={() => onEdit && onEdit(higherStudy)} className="px-2.5 py-1.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-lg hover:bg-amber-100 border border-amber-200 transition-colors">Edit</button>
+          <button onClick={() => onDelete && onDelete(higherStudy._id)} disabled={isDeleting} className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg border transition-colors ${isDeleting ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-red-50 text-red-700 hover:bg-red-100 border-red-200"}` }>
+            {isDeleting ? "..." : "Delete"}
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 // Detail View Modal Component
 function DetailModal({ item, type, onClose }) {
   const [studentDetails, setStudentDetails] = useState(null);
@@ -727,8 +809,9 @@ function PlacementFormModal({ isOpen, onClose, placement, onSave }) {
   );
 }
 
-// Main Admin Placement Component
-export default function AdminPlacement() {
+// Main Admin Placements Page Component
+export default function AdminPlacements() {
+  const [displayMode, setDisplayMode] = useState("grid"); // 'grid' | 'list'
   const [activeTab, setActiveTab] = useState("placements");
   const [placements, setPlacements] = useState([]);
   const [higherStudies, setHigherStudies] = useState([]);
@@ -980,15 +1063,44 @@ export default function AdminPlacement() {
   return (
     <main className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Career Outcomes</h1>
-        <p className="text-slate-600 mt-2">
-          Manage{" "}
-          <span className="font-semibold text-blue-600">
-            {totalRecords}
-          </span>{" "}
-          {activeTab === "placements" ? "placements" : "higher studies"}
-        </p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Career Outcomes</h1>
+          <p className="text-slate-600 mt-2">
+            Manage{" "}
+            <span className="font-semibold text-blue-600">
+              {totalRecords}
+            </span>{" "}
+            {activeTab === "placements" ? "placements" : "higher studies"}
+          </p>
+        </div>
+        {/* Grid / List Toggle */}
+        <div className="flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-xl p-1 self-start sm:self-auto">
+          <button
+            onClick={() => setDisplayMode("grid")}
+            title="Grid View"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              displayMode === "grid"
+                ? "bg-white text-blue-700 shadow-sm border border-slate-200"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+            Grid
+          </button>
+          <button
+            onClick={() => setDisplayMode("list")}
+            title="List View"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              displayMode === "list"
+                ? "bg-white text-blue-700 shadow-sm border border-slate-200"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            List
+          </button>
+        </div>
       </div>
 
       {/* Filters & Tabs */}
@@ -1249,31 +1361,80 @@ export default function AdminPlacement() {
           </div>
         )}
 
-        {/* Cards Grid - 4 Columns */}
+        {/* Cards Grid/List */}
         {!loading && !error && currentData.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {activeTab === "placements"
-              ? placements.map((p) => (
-                <PlacementCard
-                  key={p._id}
-                  placement={p}
-                  onView={handleViewPlacement}
-                  onEdit={(placement) => { setPlacementToEdit(placement); setIsPlacementModalOpen(true); }}
-                  onDelete={handleDeletePlacement}
-                  isDeleting={deletingId === p._id}
-                />
-              ))
-              : higherStudies.map((h) => (
-                <HigherStudyCard
-                  key={h._id}
-                  higherStudy={h}
-                  onView={handleViewHigherStudy}
-                  onEdit={(hs) => { setHigherStudyToEdit(hs); setIsHigherStudyModalOpen(true); }}
-                  onDelete={handleDeleteHigherStudy}
-                  isDeleting={deletingId === h._id}
-                />
-              ))}
-          </div>
+          displayMode === "grid" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {activeTab === "placements"
+                ? placements.map((p) => (
+                  <PlacementCard
+                    key={p._id}
+                    placement={p}
+                    onView={handleViewPlacement}
+                    onEdit={(placement) => { setPlacementToEdit(placement); setIsPlacementModalOpen(true); }}
+                    onDelete={handleDeletePlacement}
+                    isDeleting={deletingId === p._id}
+                  />
+                ))
+                : higherStudies.map((h) => (
+                  <HigherStudyCard
+                    key={h._id}
+                    higherStudy={h}
+                    onView={handleViewHigherStudy}
+                    onEdit={(hs) => { setHigherStudyToEdit(hs); setIsHigherStudyModalOpen(true); }}
+                    onDelete={handleDeleteHigherStudy}
+                    isDeleting={deletingId === h._id}
+                  />
+                ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Stu. ID</th>
+                    <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Student</th>
+                    {activeTab === "placements" ? (
+                      <>
+                        <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Company / Role</th>
+                        <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Package</th>
+                        <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Type</th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Exam Name</th>
+                        <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Score</th>
+                      </>
+                    )}
+                    <th className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeTab === "placements"
+                    ? placements.map((p) => (
+                      <PlacementListRow
+                        key={p._id}
+                        placement={p}
+                        onView={handleViewPlacement}
+                        onEdit={(placement) => { setPlacementToEdit(placement); setIsPlacementModalOpen(true); }}
+                        onDelete={handleDeletePlacement}
+                        isDeleting={deletingId === p._id}
+                      />
+                    ))
+                    : higherStudies.map((h) => (
+                      <HigherStudyListRow
+                        key={h._id}
+                        higherStudy={h}
+                        onView={handleViewHigherStudy}
+                        onEdit={(hs) => { setHigherStudyToEdit(hs); setIsHigherStudyModalOpen(true); }}
+                        onDelete={handleDeleteHigherStudy}
+                        isDeleting={deletingId === h._id}
+                      />
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          )
         )}
 
         {/* Pagination Component */}
