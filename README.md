@@ -7,7 +7,7 @@
 
 A centralized, full-stack platform for streamlined academic record handling, student management, and administrative tracking. Built with the MERN stack.
 
-🔗 **[Live Deployment Link](https://your-deployment-link.com)** *(Add your link here)*
+🔗 **[Live Deployment Link](https://sims.csidmce.com)** 
 
 ---
 
@@ -47,20 +47,6 @@ Educational institutions often struggle with fragmented data. Student records, a
 - **User Management**: Add, update, or remove users (Students, Incharges, Admins) securely.
 - **Data Export & Reporting**: Generate detailed Excel reports for placements, achievements, and academic performance.
 - **System Configuration**: Manage master data such as academic years, departments, and subjects.
-
----
-
-## 📸 Screenshots
-
-*(Replace these placeholder images with actual screenshots of your application)*
-
-| Dashboard | Student Profile |
-| :---: | :---: |
-| <img src="https://via.placeholder.com/800x450.png?text=Dashboard+Screenshot" alt="Dashboard" width="100%"> | <img src="https://via.placeholder.com/800x450.png?text=Profile+Screenshot" alt="Profile" width="100%"> |
-
-| Achievements Tracking | Admin Panel |
-| :---: | :---: |
-| <img src="https://via.placeholder.com/800x450.png?text=Achievements+Screenshot" alt="Achievements" width="100%"> | <img src="https://via.placeholder.com/800x450.png?text=Admin+Panel+Screenshot" alt="Admin Panel" width="100%"> |
 
 ---
 
