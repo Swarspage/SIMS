@@ -1,13 +1,23 @@
 # 🎓 Student Information Management System (SIMS)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#-contribution-guide)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 
 A centralized, full-stack platform for streamlined academic record handling, student management, and administrative tracking. Built with the MERN stack.
 
 🔗 **[Live Deployment Link](https://your-deployment-link.com)** *(Add your link here)*
+
+---
+
+## 📖 Documentation
+
+For detailed information about the system architecture, roles, and development best practices, please refer to the following documents:
+
+- **[User Roles & Architecture](docs/roles-and-architecture.md)**: Deep dive into RBAC and page structures.
+- **[Development Learnings](docs/development-learnings.md)**: Lessons learned during development and best practices.
+- **[Contribution Guide](CONTRIBUTING.md)**: How to get started with contributing to this project.
 
 ---
 
@@ -144,15 +154,8 @@ Access the application at `http://localhost:5173`.
 
 ## 🤝 Contribution Guide
 
-We welcome contributions! Whether you're fixing bugs, improving documentation, or proposing new features, your help is appreciated.
+We welcome contributions! Please see our **[CONTRIBUTING.md](CONTRIBUTING.md)** for detailed instructions on how to get started.
 
-1. **Fork** the repository and create your feature branch: `git checkout -b feature/AmazingFeature`
-2. **Ensure** you follow the coding standards and add comments where necessary.
-3. **Commit** your changes: `git commit -m 'Add some AmazingFeature'`
-4. **Push** to the branch: `git push origin feature/AmazingFeature`
-5. **Open a Pull Request** against the `main` branch.
-
-Please check the issues tab for beginner-friendly tasks or to discuss major changes before implementing them.
 
 ---
 
