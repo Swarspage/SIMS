@@ -40,20 +40,6 @@ Educational institutions often struggle with fragmented data. Student records, a
 
 ---
 
-## 📸 Screenshots
-
-*(Replace these placeholder images with actual screenshots of your application)*
-
-| Dashboard | Student Profile |
-| :---: | :---: |
-| <img src="https://via.placeholder.com/800x450.png?text=Dashboard+Screenshot" alt="Dashboard" width="100%"> | <img src="https://via.placeholder.com/800x450.png?text=Profile+Screenshot" alt="Profile" width="100%"> |
-
-| Achievements Tracking | Admin Panel |
-| :---: | :---: |
-| <img src="https://via.placeholder.com/800x450.png?text=Achievements+Screenshot" alt="Achievements" width="100%"> | <img src="https://via.placeholder.com/800x450.png?text=Admin+Panel+Screenshot" alt="Admin Panel" width="100%"> |
-
----
-
 ## 🛠️ Tech Stack
 
 ### Frontend
