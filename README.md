@@ -7,7 +7,7 @@
 
 A centralized, full-stack platform for streamlined academic record handling, student management, and administrative tracking. Built with the MERN stack.
 
-🔗 **[Live Deployment Link](https://your-deployment-link.com)** *(Add your link here)*
+🔗 **[Live Deployment Link](https://sims.csidmce.com)** 
 
 ---
 
