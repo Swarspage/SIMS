@@ -23,9 +23,7 @@ For detailed information about the system architecture, roles, and development b
 
 ## 🎯 What Problem It Solves
 
-Educational institutions often struggle with fragmented data. Student records, achievements, placement tracking, and academic progress are frequently scattered across spreadsheets, physical files, or disconnected legacy systems. 
-
-**SIMS** provides a "single source of truth" that bridges the gap between students, division incharges, and administrators. It eliminates data silos, reduces manual paperwork, ensures data accuracy, and empowers students to actively track and manage their academic journey in a unified dashboard.
+SIMS is a public open-source student information management system that centralizes academic records, verification, placements, and administrative tracking. The repository currently has 4 GitHub stars and 399 commits, and I actively maintain it as a long-term project with a live deployment, contribution workflow, and ongoing roadmap for future scalability and integrations.
 
 ---
 
@@ -77,8 +75,8 @@ Educational institutions often struggle with fragmented data. Student records, a
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/TechMe103/Student_Website.git
-cd Student-Website
+git clone https://github.com/Swarspage/SIMS.git
+cd SIMS
 ```
 
 ### 2. Backend Configuration
